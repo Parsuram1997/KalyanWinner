@@ -11,30 +11,32 @@ export default function PanelChartPage() {
           Yearly results for Kalyan Matka games.
         </p>
       </div>
-      <div className="overflow-x-auto rounded-lg border">
-        <div className="min-w-max">
+      <div className="rounded-lg border">
+        <div className="w-full">
           {weeklyData.map((week, weekIndex) => (
             <div key={weekIndex} className="flex flex-col border-b last:border-b-0">
-              <div className="flex">
-                <div className="w-28 flex-shrink-0 bg-muted p-1 text-center font-semibold text-sm">
+              <div className="flex bg-muted font-semibold text-sm">
+                <div className="w-28 flex-shrink-0 p-1 text-center">
                   Date
                 </div>
                 {["MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
-                  <div key={day} className="flex-1 border-l bg-muted p-1 text-center font-semibold text-sm">
+                  <div key={day} className="flex-1 border-l p-1 text-center">
                     {day}
                   </div>
                 ))}
               </div>
               <div className="flex">
-                <div className="w-28 flex-shrink-0 flex items-center justify-center p-1 text-xs text-center text-muted-foreground">
-                  {week.dateRange}
+                <div className="w-28 flex-shrink-0 flex flex-col items-center justify-center p-1 text-xs text-center text-muted-foreground">
+                  <span>{week.dateRange.split(' to ')[0]}</span>
+                  <span>to</span>
+                  <span>{week.dateRange.split(' to ')[1]}</span>
                 </div>
                 {week.results.map((day, dayIndex) => (
                   <div key={dayIndex} className="flex-1 border-l text-center p-1">
                     {day ? (
                       <div>
                         <div className="text-xs text-muted-foreground">{day.openPanna}</div>
-                        <div className={`font-bold text-xl my-0.5 ${day.isRed ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
+                        <div className={`font-bold text-lg sm:text-xl my-0.5 ${day.isRed ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
                         <div className="text-xs text-muted-foreground">{day.closePanna}</div>
                       </div>
                     ) : (
