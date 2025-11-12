@@ -29,7 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { MinusCircle, PlusCircle } from "lucide-react";
+import { MinusCircle, PlusCircle, QrCode } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -166,6 +166,7 @@ export default function WalletPage() {
   const [withdrawAmount, setWithdrawAmount] = useState("2000");
   const [isAddFundsOpen, setAddFundsOpen] = useState(false);
   const [isWithdrawOpen, setWithdrawOpen] = useState(false);
+  const [addMethod, setAddMethod] = useState("upi");
   const [withdrawMethod, setWithdrawMethod] = useState("bank");
 
   const handleAddFunds = () => {
@@ -178,17 +179,16 @@ export default function WalletPage() {
       });
       return;
     }
-    // Proceed with payment logic
+    
     toast({
-      title: "Processing Payment",
-      description: `Redirecting to add ₹${amount} to your wallet.`,
+      title: "Deposit Initiated",
+      description: `Your request to add ₹${amount} has been received. Please complete the payment.`,
     });
     setAddFundsOpen(false);
   };
 
   const handleWithdraw = () => {
     const today = new Date();
-    // Sunday is 0
     if (today.getDay() !== 0) {
       toast({
         variant: "destructive",
@@ -207,10 +207,10 @@ export default function WalletPage() {
       });
       return;
     }
-    // Proceed with withdrawal logic
+    
     toast({
       title: "Withdrawal Requested",
-      description: `Your request to withdraw ₹${amount} is being processed.`,
+      description: `Your request to withdraw ₹${amount} is being processed. Funds will be transferred within 24 hours.`,
     });
     setWithdrawOpen(false);
   };
@@ -255,7 +255,7 @@ export default function WalletPage() {
                 <DialogHeader>
                   <DialogTitle>Add Funds to Wallet</DialogTitle>
                   <DialogDescription>
-                    Minimum deposit is ₹500. You will be redirected to the payment gateway.
+                    Minimum deposit is ₹500.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -272,10 +272,67 @@ export default function WalletPage() {
                       placeholder="e.g. 1000"
                     />
                   </div>
+                  <RadioGroup defaultValue={addMethod} onValueChange={setAddMethod} className="grid grid-cols-2 gap-4 my-2">
+                    <div>
+                      <RadioGroupItem value="upi" id="add-upi" className="peer sr-only" />
+                      <Label
+                        htmlFor="add-upi"
+                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      >
+                        UPI
+                      </Label>
+                    </div>
+                     <div>
+                      <RadioGroupItem value="bank" id="add-bank" className="peer sr-only" />
+                      <Label
+                        htmlFor="add-bank"
+                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      >
+                        Bank Transfer
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {addMethod === 'upi' && (
+                    <div className="flex flex-col items-center gap-4 text-center">
+                      <div className="bg-white p-2 rounded-md border">
+                        <QrCode className="h-32 w-32" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">Scan the QR or use the UPI ID below.</p>
+                      <Input
+                        readOnly
+                        value="your-upi-id@okhdfcbank"
+                        className="text-center font-mono"
+                      />
+                       <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText("your-upi-id@okhdfcbank")}>Copy UPI ID</Button>
+                    </div>
+                  )}
+
+                  {addMethod === "bank" && (
+                     <div className="space-y-4 rounded-md border p-4 text-sm">
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">Name:</span>
+                          <span className="font-medium">Kalyan Winner Pvt Ltd</span>
+                      </div>
+                       <div className="flex justify-between">
+                          <span className="text-muted-foreground">Account:</span>
+                          <span className="font-medium">123456789012</span>
+                      </div>
+                       <div className="flex justify-between">
+                          <span className="text-muted-foreground">IFSC:</span>
+                           <span className="font-medium">HDFC0001234</span>
+                      </div>
+                       <div className="flex justify-between">
+                          <span className="text-muted-foreground">Type:</span>
+                          <span className="font-medium">Current Account</span>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
                 <DialogFooter>
                   <Button onClick={handleAddFunds} className="w-full">
-                    Proceed to Payment
+                    I have paid
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -504,5 +561,3 @@ export default function WalletPage() {
     </div>
   );
 }
-
-    
