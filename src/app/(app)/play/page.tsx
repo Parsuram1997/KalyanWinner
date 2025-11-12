@@ -215,7 +215,10 @@ function BetForm({
             <div className="space-y-2 rounded-lg border p-3">
               <div className="flex justify-between items-center">
                 <h4 className="text-sm font-medium">Your Bets</h4>
-                <span className="text-xs font-mono text-muted-foreground">Total: ₹{totalBetAmount}</span>
+                <div className="text-xs font-mono text-muted-foreground text-right">
+                  <div>Total: ₹{totalBetAmount}</div>
+                  <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div>
+                </div>
               </div>
               <div className="flex flex-col gap-2">
                 {bets.map((bet, index) => (
