@@ -32,6 +32,76 @@ import { PlusCircle } from "lucide-react";
 import { useState } from "react";
 
 const transactions = [
+    {
+    id: "txn15",
+    date: "2024-07-25",
+    description: "Win on Jodi 23 (Kalyan Night)",
+    type: "Credit",
+    amount: 4750.0,
+  },
+  {
+    id: "txn14",
+    date: "2024-07-25",
+    description: "Bet on Jodi 23 (Kalyan Night)",
+    type: "Debit",
+    amount: -50.0,
+  },
+  {
+    id: "txn13",
+    date: "2024-07-24",
+    description: "Wallet Deposit via Card",
+    type: "Credit",
+    amount: 2000.0,
+  },
+  {
+    id: "txn12",
+    date: "2024-07-23",
+    description: "Bet on Open Panna 112 (Kalyan Morning)",
+    type: "Debit",
+    amount: -100.0,
+  },
+  {
+    id: "txn11",
+    date: "2024-07-23",
+    description: "Bet on Close Single 8 (Kalyan Night)",
+    type: "Debit",
+    amount: -200.0,
+  },
+  {
+    id: "txn10",
+    date: "2024-07-22",
+    description: "Win on Close Panna 789 (Kalyan Morning)",
+    type: "Credit",
+    amount: 1400.0,
+  },
+  {
+    id: "txn9",
+    date: "2024-07-22",
+    description: "Bet on Close Panna 789 (Kalyan Morning)",
+    type: "Debit",
+    amount: -10.0,
+  },
+  {
+    id: "txn8",
+    date: "2024-07-21",
+    description: "Withdrawal to Bank Account",
+    type: "Debit",
+    amount: -2000.0,
+  },
+  {
+    id: "txn7",
+    date: "2024-07-21",
+    description: "Bet on Jodi 99 (Kalyan Night)",
+    type: "Debit",
+    amount: -25.0,
+  },
+  {
+    id: "txn6",
+    date: "2024-07-20",
+    description: "Wallet Deposit via Netbanking",
+    type: "Credit",
+    amount: 300.0,
+  },
   {
     id: "txn1",
     date: "2024-07-20",
@@ -68,6 +138,8 @@ const transactions = [
     amount: -1000.0,
   },
 ];
+
+const recentTransactions = transactions.slice(0, 15);
 
 export default function WalletPage() {
   const [amount, setAmount] = useState("1000");
@@ -167,7 +239,7 @@ export default function WalletPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map((txn) => (
+                {recentTransactions.map((txn) => (
                   <TableRow key={txn.id}>
                     <TableCell className="font-medium">{txn.date}</TableCell>
                     <TableCell>{txn.description}</TableCell>
@@ -199,7 +271,7 @@ export default function WalletPage() {
           </div>
           {/* Mobile List */}
           <div className="grid gap-4 md:hidden">
-            {transactions.map((txn) => (
+            {recentTransactions.map((txn) => (
               <div
                 key={txn.id}
                 className="flex items-center justify-between gap-4 p-3 -m-3 rounded-lg hover:bg-muted/50"
