@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle } from "lucide-react";
+import { MinusCircle, PlusCircle } from "lucide-react";
 import { useState } from "react";
 
 const transactions = [
@@ -142,7 +142,8 @@ const transactions = [
 const recentTransactions = transactions.slice(0, 15);
 
 export default function WalletPage() {
-  const [amount, setAmount] = useState("1000");
+  const [addAmount, setAddAmount] = useState("1000");
+  const [withdrawAmount, setWithdrawAmount] = useState("500");
 
   return (
     <div className="flex flex-col gap-6">
@@ -173,10 +174,10 @@ export default function WalletPage() {
           <CardHeader>
             <CardTitle className="text-lg">Manage Funds</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="w-full">
+                <Button>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Funds
                 </Button>
               </DialogTrigger>
@@ -195,8 +196,8 @@ export default function WalletPage() {
                     </Label>
                     <Input
                       id="amount"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      value={addAmount}
+                      onChange={(e) => setAddAmount(e.target.value)}
                       className="col-span-3"
                       type="number"
                       placeholder="e.g. 1000"
@@ -210,8 +211,74 @@ export default function WalletPage() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <MinusCircle className="mr-2 h-4 w-4" /> Withdraw
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Withdraw Funds</DialogTitle>
+                  <DialogDescription>
+                    Enter the amount and your bank details for withdrawal.
+                    Funds will be transferred within 2-3 business days.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="withdraw-amount" className="text-right">
+                      Amount
+                    </Label>
+                    <Input
+                      id="withdraw-amount"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      className="col-span-3"
+                      type="number"
+                      placeholder="e.g. 500"
+                    />
+                  </div>
+                   <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="account-holder" className="text-right">
+                      Name
+                    </Label>
+                    <Input
+                      id="account-holder"
+                      className="col-span-3"
+                      placeholder="Account Holder Name"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="account-number" className="text-right">
+                      Account No.
+                    </Label>
+                    <Input
+                      id="account-number"
+                      className="col-span-3"
+                      placeholder="Bank Account Number"
+                    />
+                  </div>
+                   <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="ifsc-code" className="text-right">
+                      IFSC
+                    </Label>
+                    <Input
+                      id="ifsc-code"
+                      className="col-span-3"
+                      placeholder="IFSC Code"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="w-full">
+                    Request Withdrawal
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="pt-0">
             <p className="text-xs text-muted-foreground text-center w-full">
               Secure payments powered by Stripe & Razorpay.
             </p>
