@@ -84,9 +84,14 @@ function BetForm({
         toast({ variant: "destructive", title: "Invalid Bet", description: "Please enter both a number and amount." });
         return false;
     }
-    if(parseInt(amount) <= 0) {
+    const amountInt = parseInt(amount);
+    if(amountInt <= 0) {
         toast({ variant: "destructive", title: "Invalid Amount", description: "Amount must be greater than zero." });
         return false;
+    }
+    if (amountInt % 5 !== 0) {
+      toast({ variant: "destructive", title: "Invalid Amount", description: "Amount must be a multiple of 5." });
+      return false;
     }
     if (gameType.includes("Single")) {
         if (!/^\d$/.test(number)) {
@@ -130,9 +135,14 @@ function BetForm({
             toast({ variant: "destructive", title: "Invalid Sangam Bet", description: "Please fill out all fields." });
             isValid = false;
         }
-        if (parseInt(sangamAmount) <= 0) {
+        const sangamAmountInt = parseInt(sangamAmount);
+        if (sangamAmountInt <= 0) {
             toast({ variant: "destructive", title: "Invalid Amount", description: "Amount must be greater than zero." });
             isValid = false;
+        }
+        if (sangamAmountInt % 5 !== 0) {
+          toast({ variant: "destructive", title: "Invalid Amount", description: "Amount must be a multiple of 5." });
+          isValid = false;
         }
 
         if (gameType === "Half Sangam") {
