@@ -17,7 +17,13 @@ import { useState } from "react";
 
 const gameTypes = ["Single Digit", "Jodi", "Single Panna", "Double Panna"];
 
-function BetForm({ gameType }: { gameType: string }) {
+function BetForm({
+  gameType,
+  market,
+}: {
+  gameType: string;
+  market: string;
+}) {
   const { toast } = useToast();
   const [digit, setDigit] = useState("");
   const [points, setPoints] = useState("");
@@ -34,7 +40,7 @@ function BetForm({ gameType }: { gameType: string }) {
     }
     toast({
       title: "Bet Placed!",
-      description: `Your bet of ${points} points on ${digit} for ${gameType} has been placed.`,
+      description: `Your bet of ${points} points on ${digit} for ${gameType} (${market}) has been placed.`,
     });
     setDigit("");
     setPoints("");
@@ -46,14 +52,16 @@ function BetForm({ gameType }: { gameType: string }) {
         <CardHeader>
           <CardTitle>{gameType} Bet</CardTitle>
           <CardDescription>
-            Enter your desired number and the points to bet.
+            Enter your desired number and the points to bet for {market}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="digit">Digit / Jodi / Panna</Label>
+            <Label htmlFor={`${market}-${gameType}-digit`}>
+              Digit / Jodi / Panna
+            </Label>
             <Input
-              id="digit"
+              id={`${market}-${gameType}-digit`}
               placeholder={
                 gameType === "Jodi"
                   ? "e.g., 45"
@@ -66,9 +74,9 @@ function BetForm({ gameType }: { gameType: string }) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="points">Points</Label>
+            <Label htmlFor={`${market}-${gameType}-points`}>Points</Label>
             <Input
-              id="points"
+              id={`${market}-${gameType}-points`}
               type="number"
               placeholder="e.g., 10"
               value={points}
@@ -86,23 +94,39 @@ function BetForm({ gameType }: { gameType: string }) {
   );
 }
 
+const GameTypeTabs = ({ market }: { market: string }) => (
+  <Tabs defaultValue={gameTypes[0]} className="w-full">
+    <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+      {gameTypes.map((type) => (
+        <TabsTrigger key={type} value={type}>
+          {type}
+        </TabsTrigger>
+      ))}
+    </TabsList>
+    {gameTypes.map((type) => (
+      <TabsContent key={type} value={type}>
+        <BetForm gameType={type} market={market} />
+      </TabsContent>
+    ))}
+  </Tabs>
+);
+
 export default function PlayPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">Place Your Bet</h1>
-      <Tabs defaultValue={gameTypes[0]} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-          {gameTypes.map((type) => (
-            <TabsTrigger key={type} value={type}>
-              {type}
-            </TabsTrigger>
-          ))}
+
+      <Tabs defaultValue="kalyan-day" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
+          <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
         </TabsList>
-        {gameTypes.map((type) => (
-          <TabsContent key={type} value={type}>
-            <BetForm gameType={type} />
-          </TabsContent>
-        ))}
+        <TabsContent value="kalyan-day">
+          <GameTypeTabs market="Kalyan Day" />
+        </TabsContent>
+        <TabsContent value="kalyan-night">
+          <GameTypeTabs market="Kalyan Night" />
+        </TabsContent>
       </Tabs>
     </div>
   );
