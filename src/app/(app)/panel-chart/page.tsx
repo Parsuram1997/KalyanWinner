@@ -15,27 +15,27 @@ export default function PanelChartPage() {
         <div className="w-full overflow-x-auto">
           <div className="divide-y divide-border">
             {weeklyData.map((week, weekIndex) => (
-              <div key={weekIndex} className={`grid grid-cols-7 ${weekIndex === 0 ? 'bg-muted font-semibold text-sm' : ''}`}>
+              <div key={weekIndex} className={`grid grid-cols-7 ${weekIndex === 0 ? 'bg-muted font-semibold' : ''}`}>
                 <div className="p-1 text-center flex flex-col items-center justify-center text-xs">
                   {weekIndex === 0 ? (
-                    <span>Date</span>
+                    <span className="text-xs">Date</span>
                   ) : (
                     <>
-                      <span>{week.dateRange.split(" to ")[0]}</span>
-                      <span className="text-muted-foreground">to</span>
-                      <span>{week.dateRange.split(" to ")[1]}</span>
+                      <span className="text-[10px]">{week.dateRange.split(" to ")[0]}</span>
+                      <span className="text-muted-foreground text-[10px]">to</span>
+                      <span className="text-[10px]">{week.dateRange.split(" to ")[1]}</span>
                     </>
                   )}
                 </div>
                 {week.results.map((day, dayIndex) => (
                   <div key={dayIndex} className="border-l p-1 text-center">
                     {weekIndex === 0 ? (
-                      <div>{["MON", "TUE", "WED", "THU", "FRI", "SAT"][dayIndex]}</div>
+                      <div className="text-xs">{["MON", "TUE", "WED", "THU", "FRI", "SAT"][dayIndex]}</div>
                     ) : day ? (
                       <div>
-                        <div className="text-xs text-muted-foreground">{day.openPanna}</div>
-                        <div className={`font-bold text-base my-0.5 ${day.isRed ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
-                        <div className="text-xs text-muted-foreground">{day.closePanna}</div>
+                        <div className="text-[10px] text-muted-foreground">{day.openPanna}</div>
+                        <div className={`font-bold text-sm my-0.5 ${day.isRed ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
+                        <div className="text-[10px] text-muted-foreground">{day.closePanna}</div>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
