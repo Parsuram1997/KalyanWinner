@@ -89,7 +89,7 @@ export default function ChartsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[250px]">
+            <ChartContainer config={chartConfig} className="h-[200px] w-full">
               <BarChart accessibilityLayer data={panelChartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
@@ -118,7 +118,7 @@ export default function ChartsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[250px]">
+            <ChartContainer config={chartConfig} className="h-[200px] w-full">
               <LineChart
                 accessibilityLayer
                 data={digitTrendData}
@@ -166,7 +166,7 @@ export default function ChartsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[250px]">
+            <ChartContainer config={chartConfig} className="h-[200px] w-full">
               <BarChart accessibilityLayer data={jodiFrequencyData} layout="vertical">
                 <CartesianGrid horizontal={false} />
                 <YAxis
@@ -197,7 +197,7 @@ export default function ChartsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[250px]">
+            <ChartContainer config={chartConfig} className="h-[200px] w-full">
               <BarChart accessibilityLayer data={singleDigitFrequencyData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
