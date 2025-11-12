@@ -29,12 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="shrink-0" asChild>
-              <Link href="/dashboard">
-                <Coins className="h-5 w-5 text-primary" />
-              </Link>
-            </Button>
+          <div className="flex items-center justify-center">
             <h1 className="text-lg font-semibold tracking-tight text-primary">
               Kalyan Winner
             </h1>
