@@ -76,6 +76,16 @@ function BetForm({
       });
       return false;
     }
+
+    if (amountInt % 5 !== 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Amount",
+        description: "Bet amount must be a multiple of 5.",
+      });
+      return false;
+    }
+
     if (gameType === "Open" || gameType === "Close") {
       if (!/^\d$/.test(number)) {
         toast({
@@ -339,3 +349,5 @@ export default function PlayPage() {
     </div>
   );
 }
+
+    
