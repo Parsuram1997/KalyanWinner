@@ -21,8 +21,8 @@ const PanelChart = ({ title }: { title: string }) => {
           <div className="w-full overflow-x-auto">
             <div className="divide-y divide-border">
               {weeklyData.map((week, weekIndex) => (
-                <div key={weekIndex} className={`grid grid-cols-[80px_repeat(6,1fr)] ${weekIndex === 0 ? 'bg-muted font-semibold' : ''}`}>
-                  <div className="p-1 text-center flex flex-col items-center justify-center text-xs shrink-0">
+                <div key={weekIndex} className={`grid grid-cols-[auto_repeat(6,1fr)] ${weekIndex === 0 ? 'bg-muted font-semibold' : ''}`}>
+                  <div className="p-1 text-center flex flex-col items-center justify-center text-xs shrink-0 w-[80px]">
                     {weekIndex === 0 ? (
                       <span className="text-[10px] font-bold">Date</span>
                     ) : (
@@ -64,7 +64,7 @@ export default function PanelChartPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Kalyan Panel Chart 2023</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Kalyan Panel Chart 2023</h1>
         <p className="text-muted-foreground">
           Yearly results for Kalyan Matka games.
         </p>
