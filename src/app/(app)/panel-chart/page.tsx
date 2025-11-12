@@ -13,41 +13,37 @@ export default function PanelChartPage() {
       </div>
       <div className="rounded-lg border">
         <div className="w-full overflow-x-auto">
-          <div className="min-w-[640px]">
+          <div className="min-w-[640px] divide-y divide-border">
             {weeklyData.map((week, weekIndex) => (
-              <div key={weekIndex} className="flex flex-col border-b last:border-b-0">
-                <div className="flex bg-muted font-semibold text-sm">
-                  <div className="w-24 flex-shrink-0 p-1 text-center">
-                    Date
-                  </div>
-                  {["MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
-                    <div key={day} className="flex-1 border-l p-1 text-center">
-                      {day}
-                    </div>
-                  ))}
+              <div key={weekIndex} className={`grid grid-cols-7 ${weekIndex === 0 ? 'bg-muted font-semibold text-sm' : ''}`}>
+                <div className="p-1 text-center flex flex-col items-center justify-center text-xs">
+                  {weekIndex === 0 ? (
+                    <span>Date</span>
+                  ) : (
+                    <>
+                      <span>{week.dateRange.split(" to ")[0]}</span>
+                      <span className="text-muted-foreground">to</span>
+                      <span>{week.dateRange.split(" to ")[1]}</span>
+                    </>
+                  )}
                 </div>
-                <div className="flex">
-                  <div className="w-24 flex-shrink-0 flex flex-col items-center justify-center p-1 text-xs text-center text-muted-foreground">
-                    <span>{week.dateRange.split(' to ')[0]}</span>
-                    <span>to</span>
-                    <span>{week.dateRange.split(' to ')[1]}</span>
+                {week.results.map((day, dayIndex) => (
+                  <div key={dayIndex} className="border-l p-1 text-center">
+                    {weekIndex === 0 ? (
+                      <div>{["MON", "TUE", "WED", "THU", "FRI", "SAT"][dayIndex]}</div>
+                    ) : day ? (
+                      <div>
+                        <div className="text-xs text-muted-foreground">{day.openPanna}</div>
+                        <div className={`font-bold text-base my-0.5 ${day.isRed ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
+                        <div className="text-xs text-muted-foreground">{day.closePanna}</div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
+                        *
+                      </div>
+                    )}
                   </div>
-                  {week.results.map((day, dayIndex) => (
-                    <div key={dayIndex} className="flex-1 border-l text-center p-1">
-                      {day ? (
-                        <div>
-                          <div className="text-xs text-muted-foreground">{day.openPanna}</div>
-                          <div className={`font-bold text-lg sm:text-xl my-0.5 ${day.isRed ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
-                          <div className="text-xs text-muted-foreground">{day.closePanna}</div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
-                          *
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
             ))}
           </div>

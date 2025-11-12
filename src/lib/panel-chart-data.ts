@@ -62,6 +62,12 @@ export function getPanelChartData(): WeekData[] {
   const data: WeekData[] = [];
   const startDate = new Date("2023-01-02"); // First Monday of 2023
 
+  // Header row
+  data.push({
+    dateRange: "Date",
+    results: [null, null, null, null, null, null],
+  })
+
   for (let i = 0; i < 52; i++) {
     const weekStartDate = new Date(startDate);
     weekStartDate.setDate(startDate.getDate() + i * 7);
