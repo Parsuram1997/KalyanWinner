@@ -28,8 +28,8 @@ import { usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    if (!pathname.startsWith('/admin')) {
-      return null;
+    if (pathname === '/admin') {
+      return <>{children}</>;
     }
 
   return (
