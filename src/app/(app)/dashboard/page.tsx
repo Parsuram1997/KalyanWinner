@@ -33,40 +33,40 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
+            <CardTitle className="text-xs font-medium">Wallet Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹1,245.50</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xl font-bold">₹1,245.50</div>
+            <p className="text-[10px] text-muted-foreground">
               +20.1% from last month
             </p>
           </CardContent>
           <CardFooter>
-            <Button size="sm" asChild>
+            <Button size="xs" asChild>
               <Link href="/wallet">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Funds
+                <PlusCircle className="mr-1.5 h-3.5 w-3.5" /> Add Funds
               </Link>
             </Button>
           </CardFooter>
         </Card>
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle>Latest Result</CardTitle>
+            <CardTitle className="text-base">Latest Result</CardTitle>
             <CardDescription>Kalyan Morning - 20/07/2024</CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-center gap-4">
+          <CardContent className="flex items-center justify-center gap-2">
             <div className="flex flex-col items-center">
-              <span className="text-sm text-muted-foreground">Open</span>
-              <span className="text-4xl font-bold tracking-widest">128</span>
+              <span className="text-xs text-muted-foreground">Open</span>
+              <span className="text-2xl font-bold tracking-widest">128</span>
             </div>
-            <div className="flex flex-col items-center rounded-lg bg-primary px-4 py-2 text-primary-foreground">
-              <span className="text-5xl font-bold tracking-wider">13</span>
-              <span className="text-xs font-medium">Jodi</span>
+            <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+              <span className="text-3xl font-bold tracking-wider">13</span>
+              <span className="text-[10px] font-medium">Jodi</span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-sm text-muted-foreground">Close</span>
-              <span className="text-4xl font-bold tracking-widest">490</span>
+              <span className="text-xs text-muted-foreground">Close</span>
+              <span className="text-2xl font-bold tracking-widest">490</span>
             </div>
           </CardContent>
           <CardFooter>
@@ -77,12 +77,12 @@ export default function DashboardPage() {
         </Card>
         <Card className="md:col-span-2 lg:col-span-1 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Quick Bet</CardTitle>
+            <CardTitle className="text-base">Quick Bet</CardTitle>
             <CardDescription>Place a bet on popular numbers.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-2 gap-2">
             {quickBets.map((bet) => (
-              <Button variant="secondary" key={bet} asChild>
+              <Button variant="secondary" size="sm" key={bet} asChild>
                 <Link href="/play">{bet}</Link>
               </Button>
             ))}
