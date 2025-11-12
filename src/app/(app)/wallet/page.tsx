@@ -33,6 +33,8 @@ import { useToast } from "@/hooks/use-toast";
 import { MinusCircle, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 
 const transactions = [
     {
@@ -165,6 +167,7 @@ export default function WalletPage() {
   const [withdrawAmount, setWithdrawAmount] = useState("2000");
   const [isAddFundsOpen, setAddFundsOpen] = useState(false);
   const [isWithdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawMethod, setWithdrawMethod] = useState("bank");
 
   const handleAddFunds = () => {
     const amount = parseInt(addAmount, 10);
@@ -305,36 +308,72 @@ export default function WalletPage() {
                       placeholder="e.g. 2000"
                     />
                   </div>
-                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="account-holder" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="account-holder"
-                      className="col-span-3"
-                      placeholder="Account Holder Name"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="account-number" className="text-right">
-                      Account No.
-                    </Label>
-                    <Input
-                      id="account-number"
-                      className="col-span-3"
-                      placeholder="Bank Account Number"
-                    />
-                  </div>
-                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="ifsc-code" className="text-right">
-                      IFSC
-                    </Label>
-                    <Input
-                      id="ifsc-code"
-                      className="col-span-3"
-                      placeholder="IFSC Code"
-                    />
-                  </div>
+                  <RadioGroup defaultValue={withdrawMethod} onValueChange={setWithdrawMethod} className="grid grid-cols-2 gap-4 my-4">
+                    <div>
+                      <RadioGroupItem value="bank" id="bank" className="peer sr-only" />
+                      <Label
+                        htmlFor="bank"
+                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      >
+                        Bank Transfer
+                      </Label>
+                    </div>
+                    <div>
+                      <RadioGroupItem value="upi" id="upi" className="peer sr-only" />
+                      <Label
+                        htmlFor="upi"
+                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                      >
+                        UPI
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  {withdrawMethod === "bank" && (
+                    <div className="space-y-4">
+                       <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="account-holder" className="text-right">
+                          Name
+                        </Label>
+                        <Input
+                          id="account-holder"
+                          className="col-span-3"
+                          placeholder="Account Holder Name"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="account-number" className="text-right">
+                          Account No.
+                        </Label>
+                        <Input
+                          id="account-number"
+                          className="col-span-3"
+                          placeholder="Bank Account Number"
+                        />
+                      </div>
+                       <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="ifsc-code" className="text-right">
+                          IFSC
+                        </Label>
+                        <Input
+                          id="ifsc-code"
+                          className="col-span-3"
+                          placeholder="IFSC Code"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {withdrawMethod === "upi" && (
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="upi-id" className="text-right">
+                        UPI ID
+                      </Label>
+                      <Input
+                        id="upi-id"
+                        className="col-span-3"
+                        placeholder="yourname@upi"
+                      />
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button onClick={handleWithdraw} className="w-full">
