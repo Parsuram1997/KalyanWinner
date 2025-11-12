@@ -97,17 +97,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
-          <SidebarTrigger className="md:hidden" />
-          <div className="flex-1">
-            {/* Breadcrumbs or page title can go here */}
+        <div className="flex flex-col h-screen">
+          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
+            <SidebarTrigger className="md:hidden" />
+            <div className="flex-1">
+              {/* Breadcrumbs or page title can go here */}
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <UserNav />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-24">{children}</main>
+          <div className="sticky bottom-0 mt-auto grid grid-cols-2 gap-2 border-t bg-background/95 p-2 backdrop-blur-sm md:hidden">
+              <Button size="lg" asChild>
+                <Link href="/play?market=kalyan-day">
+                  <GanttChartSquare className="mr-2 h-5 w-5" />
+                  Kalyan Day
+                </Link>
+              </Button>
+              <Button size="lg" variant="secondary" asChild>
+                <Link href="/play?market=kalyan-night">
+                  <GanttChartSquare className="mr-2 h-5 w-5" />
+                  Kalyan Night
+                </Link>
+              </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <UserNav />
-          </div>
-        </header>
-        <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

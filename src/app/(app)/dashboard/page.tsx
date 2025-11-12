@@ -161,17 +161,17 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Button size="lg" className="h-16 text-lg" asChild>
           <Link href="/play?market=kalyan-day">
             <GanttChartSquare className="mr-2 h-6 w-6" />
-            Place Bet - Day
+            Kalyan Day
           </Link>
         </Button>
         <Button size="lg" className="h-16 text-lg" variant="secondary" asChild>
           <Link href="/play?market=kalyan-night">
             <GanttChartSquare className="mr-2 h-6 w-6" />
-            Place Bet - Night
+            Kalyan Night
           </Link>
         </Button>
       </div>
