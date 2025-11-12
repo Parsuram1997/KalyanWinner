@@ -157,8 +157,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <UserNav />
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-24">{children}</main>
-          <div className="sticky bottom-0 mt-auto border-t bg-background/95 p-2 backdrop-blur-sm md:hidden">
+          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 md:pb-6">{children}</main>
+          <div className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background/95 p-2 backdrop-blur-sm md:hidden">
               <BottomNav />
           </div>
         </div>
