@@ -52,7 +52,7 @@ export default function ChartsPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Panna Type Frequency</CardTitle>
@@ -70,7 +70,7 @@ export default function ChartsPage() {
                   tickMargin={10}
                   axisLine={false}
                 />
-                 <YAxis />
+                 <YAxis tickCount={5} />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent hideLabel />}
