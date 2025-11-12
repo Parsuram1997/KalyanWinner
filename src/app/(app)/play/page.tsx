@@ -15,7 +15,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
-const gameTypes = ["Single Digit", "Jodi", "Single Panna", "Double Panna"];
+const gameTypes = [
+  "Open Single",
+  "Close Single",
+  "Jodi",
+  "Open Panna",
+  "Close Panna",
+  "Half Sangam",
+  "Full Sangam",
+];
 
 function BetForm({
   gameType,
@@ -27,6 +35,34 @@ function BetForm({
   const { toast } = useToast();
   const [digit, setDigit] = useState("");
   const [points, setPoints] = useState("");
+  const [digit2, setDigit2] = useState(""); // For sangam
+
+  const getPlaceholder = () => {
+    switch (gameType) {
+      case "Jodi":
+        return "e.g., 45";
+      case "Open Panna":
+      case "Close Panna":
+        return "e.g., 128";
+      case "Half Sangam":
+        return "Open Panna / Close Digit";
+      case "Full Sangam":
+        return "Open Panna";
+      default:
+        return "e.g., 8";
+    }
+  };
+  
+    const getPlaceholder2 = () => {
+    switch (gameType) {
+      case "Half Sangam":
+        return "Close Digit / Open Digit";
+      case "Full Sangam":
+        return "Close Panna";
+      default:
+        return "";
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,16 +70,32 @@ function BetForm({
       toast({
         variant: "destructive",
         title: "Invalid Bet",
-        description: "Please enter both digit and points.",
+        description: "Please enter all required fields and points.",
       });
       return;
     }
+     if ((gameType === "Half Sangam" || gameType === "Full Sangam") && !digit2) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Bet",
+        description: "Please enter both numbers for Sangam.",
+      });
+      return;
+    }
+
+    let betDescription = `Your bet of ${points} points on ${digit}`;
+    if (gameType === "Half Sangam" || gameType === "Full Sangam") {
+        betDescription += ` - ${digit2}`;
+    }
+    betDescription += ` for ${gameType} (${market}) has been placed.`;
+
     toast({
       title: "Bet Placed!",
-      description: `Your bet of ${points} points on ${digit} for ${gameType} (${market}) has been placed.`,
+      description: betDescription,
     });
     setDigit("");
     setPoints("");
+    setDigit2("");
   };
 
   return (
@@ -58,21 +110,26 @@ function BetForm({
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor={`${market}-${gameType}-digit`}>
-              Digit / Jodi / Panna
+              {gameType === "Jodi" ? "Jodi" : gameType.includes("Panna") ? "Panna" : gameType.includes("Sangam") ? "Number 1" : "Digit"}
             </Label>
             <Input
               id={`${market}-${gameType}-digit`}
-              placeholder={
-                gameType === "Jodi"
-                  ? "e.g., 45"
-                  : gameType.includes("Panna")
-                  ? "e.g., 128"
-                  : "e.g., 8"
-              }
+              placeholder={getPlaceholder()}
               value={digit}
               onChange={(e) => setDigit(e.target.value)}
             />
           </div>
+           {(gameType === "Half Sangam" || gameType === "Full Sangam") && (
+            <div className="space-y-2">
+              <Label htmlFor={`${market}-${gameType}-digit2`}>Number 2</Label>
+              <Input
+                id={`${market}-${gameType}-digit2`}
+                placeholder={getPlaceholder2()}
+                value={digit2}
+                onChange={(e) => setDigit2(e.target.value)}
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor={`${market}-${gameType}-points`}>Points</Label>
             <Input
@@ -96,9 +153,9 @@ function BetForm({
 
 const GameTypeTabs = ({ market }: { market: string }) => (
   <Tabs defaultValue={gameTypes[0]} className="w-full">
-    <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
       {gameTypes.map((type) => (
-        <TabsTrigger key={type} value={type}>
+        <TabsTrigger key={type} value={type} className="text-xs px-2">
           {type}
         </TabsTrigger>
       ))}
