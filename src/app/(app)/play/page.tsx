@@ -24,8 +24,6 @@ const gameTypes = [
   "Jodi",
   "Open Panna",
   "Close Panna",
-  "Half Sangam",
-  "Full Sangam",
 ];
 
 type Bet = {
