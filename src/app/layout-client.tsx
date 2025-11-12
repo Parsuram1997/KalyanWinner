@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { cn } from "@/lib/utils";
 
 const bottomNavItems = [
   { href: "/play?market=kalyan-day", label: "Kalyan Day" },
@@ -34,16 +33,17 @@ const bottomNavItems = [
 
 const BottomNav = () => {
   const pathname = usePathname();
-  const searchParams = usePathname();
+  const searchParams = useSearchParams()?.get('market');
 
-  if (!pathname.startsWith("/play")) return null;
+  if (pathname !== "/play") return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-10 block border-t bg-background/80 backdrop-blur-sm md:hidden">
       <div className="grid h-16 grid-cols-2 gap-2 p-2">
         {bottomNavItems.map((item) => {
+          const market = item.label.split(" ").join("-").toLowerCase();
           const isActive =
-            pathname === "/play" && searchParams.includes(item.label.split(" ").join("-").toLowerCase());
+            pathname === "/play" && searchParams === market;
           return (
             <Button
               key={item.label}
@@ -69,6 +69,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith("/login") || pathname.startsWith("/signup")) {
     return <>{children}</>;
   }
+  
+  if (pathname.startsWith('/admin')) {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
