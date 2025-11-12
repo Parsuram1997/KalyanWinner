@@ -168,6 +168,7 @@ export default function WalletPage() {
   const [isWithdrawOpen, setWithdrawOpen] = useState(false);
   const [addMethod, setAddMethod] = useState("upi");
   const [withdrawMethod, setWithdrawMethod] = useState("bank");
+  const [utr, setUtr] = useState("");
 
   const handleAddFunds = () => {
     const amount = parseInt(addAmount, 10);
@@ -179,11 +180,20 @@ export default function WalletPage() {
       });
       return;
     }
+    if (!utr) {
+      toast({
+        variant: "destructive",
+        title: "UTR Number Required",
+        description: "Please enter the transaction UTR number.",
+      });
+      return;
+    }
     
     toast({
-      title: "Deposit Initiated",
-      description: `Your request to add ₹${amount} has been received. Please complete the payment.`,
+      title: "Deposit Request Submitted",
+      description: `Your request to add ₹${amount} with UTR ${utr} has been received and is being verified.`,
     });
+    setUtr("");
     setAddFundsOpen(false);
   };
 
@@ -255,7 +265,7 @@ export default function WalletPage() {
                 <DialogHeader>
                   <DialogTitle>Add Funds to Wallet</DialogTitle>
                   <DialogDescription>
-                    Minimum deposit is ₹500.
+                    Minimum deposit is ₹500. After payment, enter the UTR number and submit.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -329,10 +339,23 @@ export default function WalletPage() {
                     </div>
                   )}
 
+                  <div className="grid grid-cols-4 items-center gap-4 pt-4">
+                    <Label htmlFor="utr" className="text-right">
+                      UTR Number
+                    </Label>
+                    <Input
+                      id="utr"
+                      value={utr}
+                      onChange={(e) => setUtr(e.target.value)}
+                      className="col-span-3"
+                      placeholder="Transaction Reference ID"
+                    />
+                  </div>
+
                 </div>
                 <DialogFooter>
                   <Button onClick={handleAddFunds} className="w-full">
-                    I have paid
+                    Submit
                   </Button>
                 </DialogFooter>
               </DialogContent>
