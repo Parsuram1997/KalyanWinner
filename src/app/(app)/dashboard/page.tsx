@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -53,6 +54,7 @@ const latestResults = [
   {
     market: "Kalyan Day",
     date: "20/07/2024",
+    time: "04:30 PM",
     openPanna: "128",
     jodi: "13",
     closePanna: "490",
@@ -60,6 +62,7 @@ const latestResults = [
   {
     market: "Kalyan Night",
     date: "19/07/2024",
+    time: "10:30 PM",
     openPanna: "345",
     jodi: "21",
     closePanna: "678",
@@ -114,18 +117,23 @@ export default function DashboardPage() {
               {latestResults.map((result, index) => (
                 <CarouselItem key={index} className="h-full">
                   <CardContent className="p-6 pt-0 flex items-center justify-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs text-muted-foreground">Open</span>
-                        <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
+                    <div className="flex flex-col items-center gap-2 w-full">
+                       <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground">{result.date} - {result.time}</p>
                       </div>
-                      <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-                        <span className="text-3xl font-bold tracking-wider">{result.jodi}</span>
-                        <span className="text-[10px] font-medium">{result.market}</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs text-muted-foreground">Close</span>
-                        <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-muted-foreground">Open</span>
+                          <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
+                        </div>
+                        <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                          <span className="text-3xl font-bold tracking-wider">{result.jodi}</span>
+                          <span className="text-[10px] font-medium">{result.market}</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-muted-foreground">Close</span>
+                          <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -223,3 +231,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
