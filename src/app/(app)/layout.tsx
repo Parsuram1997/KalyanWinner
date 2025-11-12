@@ -32,6 +32,10 @@ const BottomNav = () => {
   const searchParams = useSearchParams();
   const market = searchParams.get('market');
 
+  if (pathname.startsWith('/admin')) {
+    return null;
+  }
+
   if (pathname !== '/play') {
     return (
       <div className="grid grid-cols-2 gap-2">
@@ -74,6 +78,10 @@ const BottomNav = () => {
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  if (pathname.startsWith('/admin')) {
+    return <>{children}</>;
+  }
   return (
     <SidebarProvider>
       <Sidebar>
@@ -146,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-dvh">
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1">
@@ -157,7 +165,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <UserNav />
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 md:pb-6">{children}</main>
+          <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
           <div className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background/95 p-2 backdrop-blur-sm md:hidden">
               <BottomNav />
           </div>

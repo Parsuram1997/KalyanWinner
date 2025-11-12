@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import AppLayout from "@/app/(app)/layout";
 
 export const metadata: Metadata = {
   title: "Kalyan Winner",
@@ -30,7 +31,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AppLayout>{children}</AppLayout>
           <Toaster />
         </ThemeProvider>
       </body>
