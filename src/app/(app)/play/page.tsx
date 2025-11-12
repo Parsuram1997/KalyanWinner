@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PlusCircle, Trash2, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -31,14 +31,20 @@ type Bet = {
 function BetForm({
   gameType,
   market,
+  walletBalance,
 }: {
   gameType: string;
   market: string;
+  walletBalance: number;
 }) {
   const { toast } = useToast();
   const [bets, setBets] = useState<Bet[]>([]);
   const [currentNumber, setCurrentNumber] = useState("");
   const [currentAmount, setCurrentAmount] = useState("");
+
+  const totalBetAmount = useMemo(() => {
+    return bets.reduce((sum, bet) => sum + parseInt(bet.amount || "0"), 0);
+  }, [bets]);
 
   const getPlaceholder = () => {
     switch (gameType) {
@@ -62,19 +68,11 @@ function BetForm({
       return false;
     }
     const amountInt = parseInt(amount);
-    if (amountInt <= 0) {
+    if (isNaN(amountInt) || amountInt <= 0) {
       toast({
         variant: "destructive",
         title: "Invalid Amount",
-        description: "Amount must be greater than zero.",
-      });
-      return false;
-    }
-    if (amountInt % 5 !== 0) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Amount",
-        description: "Amount must be a multiple of 5.",
+        description: "Amount must be a positive number.",
       });
       return false;
     }
@@ -106,6 +104,17 @@ function BetForm({
         return false;
       }
     }
+    
+    const newTotalAmount = totalBetAmount + amountInt;
+    if (newTotalAmount > walletBalance) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: `Your bet of ₹${amountInt} exceeds your wallet balance.`,
+      });
+      return false;
+    }
+
     return true;
   };
 
@@ -134,17 +143,22 @@ function BetForm({
       return;
     }
 
-    const totalAmount = bets.reduce(
-      (sum, bet) => sum + parseInt(bet.amount),
-      0
-    );
+    if (totalBetAmount > walletBalance) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: "Total bet amount exceeds your wallet balance.",
+      });
+      return;
+    }
+
     const betDescriptions = bets
-      .map((b) => `${b.number} (${b.amount} amt)`)
+      .map((b) => `${b.number} (₹${b.amount})`)
       .join(", ");
 
     toast({
       title: "Bets Placed!",
-      description: `Your bets for ${gameType} (${market}) have been placed: ${betDescriptions}`,
+      description: `Your bets for ${gameType} (${market}) totaling ₹${totalBetAmount} have been placed.`,
     });
     setBets([]);
   };
@@ -199,7 +213,10 @@ function BetForm({
 
           {bets.length > 0 && (
             <div className="space-y-2 rounded-lg border p-3">
-              <h4 className="text-sm font-medium">Your Bets</h4>
+              <div className="flex justify-between items-center">
+                <h4 className="text-sm font-medium">Your Bets</h4>
+                <span className="text-xs font-mono text-muted-foreground">Total: ₹{totalBetAmount}</span>
+              </div>
               <div className="flex flex-col gap-2">
                 {bets.map((bet, index) => (
                   <div
@@ -210,7 +227,7 @@ function BetForm({
                       <Badge variant="secondary" className="font-mono">
                         {bet.number}
                       </Badge>
-                      <span>{bet.amount} Amount</span>
+                      <span>₹{bet.amount}</span>
                     </div>
                     <Button
                       variant="ghost"
@@ -233,7 +250,7 @@ function BetForm({
             className="w-full"
             disabled={bets.length === 0}
           >
-            Place All Bets ({bets.length})
+            Place All Bets (Total: ₹{totalBetAmount})
           </Button>
         </CardFooter>
       </Card>
@@ -241,7 +258,7 @@ function BetForm({
   );
 }
 
-const GameTypeTabs = ({ market }: { market: string }) => (
+const GameTypeTabs = ({ market, walletBalance }: { market: string, walletBalance: number }) => (
   <Tabs defaultValue={allGameTypes[0]} className="w-full">
     <div className="flex flex-col gap-1">
       <TabsList className="grid grid-cols-3 h-auto">
@@ -261,18 +278,21 @@ const GameTypeTabs = ({ market }: { market: string }) => (
     </div>
     {allGameTypes.map((type) => (
       <TabsContent key={type} value={type}>
-        <BetForm gameType={type} market={market} />
+        <BetForm gameType={type} market={market} walletBalance={walletBalance} />
       </TabsContent>
     ))}
   </Tabs>
 );
 
 export default function PlayPage() {
+  // In a real app, this would come from a user context or API
+  const walletBalance = 1245.50; 
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Place Your Bet</h1>
+          <h1 className="text-xl font-bold tracking-tight">Place Your Bet</h1>
           <p className="text-muted-foreground">Select a market and game type to start.</p>
         </div>
         <Card className="w-fit">
@@ -281,7 +301,7 @@ export default function PlayPage() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold">₹1,245.50</div>
+            <div className="text-xl font-bold">₹{walletBalance.toFixed(2)}</div>
           </CardContent>
           <CardFooter className="pt-0">
              <Button variant="outline" size="xs" asChild>
@@ -305,10 +325,10 @@ export default function PlayPage() {
               <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
             </TabsList>
             <TabsContent value="kalyan-day">
-              <GameTypeTabs market="Kalyan Day" />
+              <GameTypeTabs market="Kalyan Day" walletBalance={walletBalance} />
             </TabsContent>
             <TabsContent value="kalyan-night">
-              <GameTypeTabs market="Kalyan Night" />
+              <GameTypeTabs market="Kalyan Night" walletBalance={walletBalance} />
             </TabsContent>
           </Tabs>
         </CardContent>
