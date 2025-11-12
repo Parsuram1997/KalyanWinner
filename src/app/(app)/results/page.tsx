@@ -101,7 +101,7 @@ const ResultsList = ({ resultsToShow }: { resultsToShow: Result[] }) => (
         <TableBody>
           {resultsToShow.map((result) => (
             <TableRow key={result.id}>
-              <TableCell className="font-medium">{result.date}</TableCell>
+              <TableCell className="font-medium">{result.date === new Date().toISOString().split('T')[0] ? 'Today' : result.date}</TableCell>
               <TableCell>
                 <Badge
                   variant={
@@ -134,7 +134,7 @@ const ResultsList = ({ resultsToShow }: { resultsToShow: Result[] }) => (
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="font-semibold text-base">{result.market}</p>
-              <p className="text-sm text-muted-foreground">{result.date}</p>
+              <p className="text-sm text-muted-foreground">{result.date === new Date().toISOString().split('T')[0] ? 'Today' : result.date}</p>
             </div>
             <Badge
               variant={
