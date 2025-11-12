@@ -1,17 +1,17 @@
-"use client"
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
-  BrainCircuit,
-  ClipboardList,
-  GanttChartSquare,
-  LayoutDashboard,
-  Wallet,
   Coins,
-  AreaChart,
-  TableProperties,
+  GanttChartSquare,
+  Home,
+  LineChart,
+  ListOrdered,
+  BarChart,
+  Wallet,
 } from "lucide-react";
-import { UserNav } from "@/components/user-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarProvider,
@@ -23,71 +23,59 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { usePathname, useSearchParams } from "next/navigation";
+import { UserNav } from "@/components/user-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+
+const bottomNavItems = [
+  { href: "/play?market=kalyan-day", label: "Kalyan Day" },
+  { href: "/play?market=kalyan-night", label: "Kalyan Night" },
+];
 
 const BottomNav = () => {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const market = searchParams.get('market');
+  const searchParams = usePathname();
 
-  if (pathname.startsWith('/admin')) {
-    return null;
-  }
-
-  if (pathname !== '/play') {
-    return (
-      <div className="grid grid-cols-2 gap-2">
-        <Button size="lg" asChild>
-          <Link href="/play?market=kalyan-day">
-            <GanttChartSquare className="mr-2 h-5 w-5" />
-            Kalyan Day
-          </Link>
-        </Button>
-        <Button size="lg" variant="secondary" asChild>
-          <Link href="/play?market=kalyan-night">
-            <GanttChartSquare className="mr-2 h-5 w-5" />
-            Kalyan Night
-          </Link>
-        </Button>
-      </div>
-    )
-  }
-
-  const isDayActive = market === 'kalyan-day';
-  const isNightActive = market === 'kalyan-night';
+  if (!pathname.startsWith("/play")) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <Button size="lg" variant={isDayActive ? 'default' : 'secondary'} asChild>
-        <Link href="/play?market=kalyan-day">
-          <GanttChartSquare className="mr-2 h-5 w-5" />
-          Kalyan Day
-        </Link>
-      </Button>
-      <Button size="lg" variant={isNightActive ? 'default' : 'secondary'} asChild>
-        <Link href="/play?market=kalyan-night">
-          <GanttChartSquare className="mr-2 h-5 w-5" />
-          Kalyan Night
-        </Link>
-      </Button>
+    <div className="fixed bottom-0 left-0 right-0 z-10 block border-t bg-background/80 backdrop-blur-sm md:hidden">
+      <div className="grid h-16 grid-cols-2 gap-2 p-2">
+        {bottomNavItems.map((item) => {
+          const isActive =
+            pathname === "/play" && searchParams.includes(item.label.split(" ").join("-").toLowerCase());
+          return (
+            <Button
+              key={item.label}
+              asChild
+              variant={isActive ? "default" : "secondary"}
+              className="h-full text-base"
+            >
+              <Link href={item.href}>
+                <GanttChartSquare className="mr-2 h-5 w-5" />
+                {item.label}
+              </Link>
+            </Button>
+          );
+        })}
+      </div>
     </div>
-  )
+  );
 };
-
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  if (pathname.startsWith('/admin')) {
+
+  if (pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/admin")) {
     return <>{children}</>;
   }
   return (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center justify-start">
-            <h1 className="text-lg font-semibold tracking-tight text-primary">
+          <div className="flex items-center justify-start gap-2">
+            <Coins className="w-8 h-8 text-primary" />
+            <h1 className="text-xl font-semibold tracking-tight text-primary">
               Kalyan Winner
             </h1>
           </div>
@@ -97,16 +85,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/dashboard">
-                  <LayoutDashboard />
+                  <Home />
                   Dashboard
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/wallet">
-                  <Wallet />
-                  Wallet
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -121,15 +101,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/results">
-                  <ClipboardList />
+                  <ListOrdered />
                   Results
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/panel-chart">
-                  <TableProperties />
+                  <BarChart />
                   Panel Chart
                 </Link>
               </SidebarMenuButton>
@@ -138,14 +118,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton asChild>
                 <Link href="/rates">
                   <Coins />
-                  Game Rates
+                  Rates
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/wallet">
+                  <Wallet />
+                  Wallet
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/analysis">
-                  <BrainCircuit />
+                  <LineChart />
                   AI Analysis
                 </Link>
               </SidebarMenuButton>
@@ -158,17 +146,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1">
-              {/* Breadcrumbs or page title can go here */}
+               <h1 className="text-lg font-semibold">Kalyan Winner</h1>
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <UserNav />
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
-          <div className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background/95 p-2 backdrop-blur-sm md:hidden">
-              <BottomNav />
-          </div>
+          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 md:pb-6">{children}</main>
+          <BottomNav />
         </div>
       </SidebarInset>
     </SidebarProvider>
