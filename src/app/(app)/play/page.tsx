@@ -173,19 +173,26 @@ export default function PlayPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">Place Your Bet</h1>
-
-      <Tabs defaultValue="kalyan-day" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
-          <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
-        </TabsList>
-        <TabsContent value="kalyan-day">
-          <GameTypeTabs market="Kalyan Day" />
-        </TabsContent>
-        <TabsContent value="kalyan-night">
-          <GameTypeTabs market="Kalyan Night" />
-        </TabsContent>
-      </Tabs>
+        <Card>
+            <CardHeader>
+                <CardTitle>Select Market</CardTitle>
+                <CardDescription>Choose between the Kalyan Day and Kalyan Night markets.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Tabs defaultValue="kalyan-day" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
+                      <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="kalyan-day">
+                      <GameTypeTabs market="Kalyan Day" />
+                    </TabsContent>
+                    <TabsContent value="kalyan-night">
+                      <GameTypeTabs market="Kalyan Night" />
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
     </div>
   );
 }
