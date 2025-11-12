@@ -272,7 +272,7 @@ export default function PlayPage() {
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Place Your Bet</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Place Your Bet</h1>
           <p className="text-muted-foreground">Select a market and game type to start.</p>
         </div>
         <Card className="w-fit">
