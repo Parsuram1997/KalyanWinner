@@ -13,7 +13,7 @@ export default function PanelChartPage() {
       </div>
       <div className="rounded-lg border">
         <div className="w-full overflow-x-auto">
-          <div className="min-w-[640px] divide-y divide-border">
+          <div className="divide-y divide-border">
             {weeklyData.map((week, weekIndex) => (
               <div key={weekIndex} className={`grid grid-cols-7 ${weekIndex === 0 ? 'bg-muted font-semibold text-sm' : ''}`}>
                 <div className="p-1 text-center flex flex-col items-center justify-center text-xs">
