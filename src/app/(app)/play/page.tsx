@@ -14,10 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { PlusCircle, Trash2, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 const gameTypesRow1 = ["Open", "Jodi", "Close"];
 const gameTypesRow2 = ["Open Panna", "Close Panna"];
@@ -297,9 +298,11 @@ const GameTypeTabs = ({ market, walletBalance }: { market: string, walletBalance
   </Tabs>
 );
 
-export default function PlayPage() {
+function PlayPageContent() {
+  const searchParams = useSearchParams();
+  const market = searchParams.get("market") || "kalyan-day";
   // In a real app, this would come from a user context or API
-  const walletBalance = 1245.50; 
+  const walletBalance = 1245.5;
 
   return (
     <div className="flex flex-col gap-6">
@@ -332,10 +335,10 @@ export default function PlayPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="kalyan-day" className="w-full">
+          <Tabs defaultValue={market} value={market} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
-              <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
+              <TabsTrigger value="kalyan-day" asChild><Link href="/play?market=kalyan-day">Kalyan Day</Link></TabsTrigger>
+              <TabsTrigger value="kalyan-night" asChild><Link href="/play?market=kalyan-night">Kalyan Night</Link></TabsTrigger>
             </TabsList>
             <TabsContent value="kalyan-day">
               <GameTypeTabs market="Kalyan Day" walletBalance={walletBalance} />
@@ -350,4 +353,10 @@ export default function PlayPage() {
   );
 }
 
-    
+export default function PlayPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PlayPageContent />
+    </Suspense>
+  );
+}

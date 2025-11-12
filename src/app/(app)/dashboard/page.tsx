@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, Wallet } from "lucide-react";
+import { DollarSign, GanttChartSquare, Wallet } from "lucide-react";
 import Link from "next/link";
 import {
   Table,
@@ -160,6 +160,22 @@ export default function DashboardPage() {
           </CardFooter>
         </Card>
       </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Button size="lg" className="h-16 text-lg" asChild>
+          <Link href="/play?market=kalyan-day">
+            <GanttChartSquare className="mr-2 h-6 w-6" />
+            Place Bet - Day
+          </Link>
+        </Button>
+        <Button size="lg" className="h-16 text-lg" variant="secondary" asChild>
+          <Link href="/play?market=kalyan-night">
+            <GanttChartSquare className="mr-2 h-6 w-6" />
+            Place Bet - Night
+          </Link>
+        </Button>
+      </div>
+      
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
@@ -231,5 +247,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
