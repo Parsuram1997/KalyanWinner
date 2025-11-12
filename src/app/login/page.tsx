@@ -50,9 +50,6 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" asChild>
               <Link href="/dashboard">Login</Link>
             </Button>
-            <Button variant="outline" className="w-full">
-              Login with Google
-            </Button>
           </div>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
