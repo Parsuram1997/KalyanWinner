@@ -17,72 +17,49 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const results = [
-  {
-    id: 1,
-    date: "2024-07-20",
-    market: "Kalyan Day",
-    openPanna: "128",
-    openDigit: "1",
-    closePanna: "490",
-    closeDigit: "3",
-    jodi: "13",
-  },
-  {
-    id: 2,
-    date: "2024-07-19",
-    market: "Kalyan Night",
-    openPanna: "345",
-    openDigit: "2",
-    closePanna: "678",
-    closeDigit: "1",
-    jodi: "21",
-  },
-  {
-    id: 3,
-    date: "2024-07-19",
-    market: "Kalyan Day",
-    openPanna: "579",
-    openDigit: "1",
-    closePanna: "224",
-    closeDigit: "8",
-    jodi: "18",
-  },
-  {
-    id: 4,
-    date: "2024-07-18",
-    market: "Kalyan Night",
-    openPanna: "112",
-    openDigit: "4",
-    closePanna: "380",
-    closeDigit: "1",
-    jodi: "41",
-  },
-  {
-    id: 5,
-    date: "2024-07-18",
-    market: "Kalyan Day",
-    openPanna: "690",
-    openDigit: "5",
-    closePanna: "137",
-    closeDigit: "1",
-    jodi: "51",
-  },
-  {
-    id: 6,
-    date: "2024-07-17",
-    market: "Kalyan Night",
-    openPanna: "456",
-    openDigit: "5",
-    closePanna: "789",
-    closeDigit: "4",
-    jodi: "54",
-  },
+    // Today
+  { id: 1, date: "2024-07-26", market: "Kalyan Day", openPanna: "128", openDigit: "1", closePanna: "490", closeDigit: "3", jodi: "13" },
+  { id: 2, date: "2024-07-26", market: "Kalyan Night", openPanna: "345", openDigit: "2", closePanna: "678", closeDigit: "1", jodi: "21" },
+  // Yesterday
+  { id: 3, date: "2024-07-25", market: "Kalyan Day", openPanna: "579", openDigit: "1", closePanna: "224", closeDigit: "8", jodi: "18" },
+  { id: 4, date: "2024-07-25", market: "Kalyan Night", openPanna: "112", openDigit: "4", closePanna: "380", closeDigit: "1", jodi: "41" },
+  // Day before
+  { id: 5, date: "2024-07-24", market: "Kalyan Day", openPanna: "690", openDigit: "5", closePanna: "137", closeDigit: "1", jodi: "51" },
+  { id: 6, date: "2024-07-24", market: "Kalyan Night", openPanna: "456", openDigit: "5", closePanna: "789", closeDigit: "4", jodi: "54" },
+  { id: 7, date: "2024-07-23", market: "Kalyan Day", openPanna: "248", openDigit: "4", closePanna: "159", closeDigit: "5", jodi: "45" },
+  { id: 8, date: "2024-07-23", market: "Kalyan Night", openPanna: "780", openDigit: "5", closePanna: "123", closeDigit: "6", jodi: "56" },
+  { id: 9, date: "2024-07-22", market: "Kalyan Day", openPanna: "357", openDigit: "5", closePanna: "889", closeDigit: "5", jodi: "55" },
+  { id: 10, date: "2024-07-22", market: "Kalyan Night", openPanna: "168", openDigit: "5", closePanna: "237", closeDigit: "2", jodi: "52" },
+  { id: 11, date: "2024-07-21", market: "Kalyan Day", openPanna: "120", openDigit: "3", closePanna: "470", closeDigit: "1", jodi: "31" },
+  { id: 12, date: "2024-07-21", market: "Kalyan Night", openPanna: "589", openDigit: "2", closePanna: "349", closeDigit: "6", jodi: "26" },
 ];
 
 type Result = (typeof results)[0];
 
-const kalyanDayResults = results.filter((r) => r.market.includes("Day"));
-const kalyanNightResults = results.filter((r) => r.market.includes("Night"));
+// Helper to format date string
+const getFormattedDate = (dateString: string) => {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  if (dateString === todayStr) {
+    return 'Today';
+  }
+  
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  if (dateString === yesterdayStr) {
+      return 'Yesterday'
+  }
+  
+  const [year, month, day] = dateString.split('-');
+  return `${day}/${month}/${year}`;
+};
+
+
+const kalyanDayResults = results.filter((r) => r.market.includes("Day")).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+const kalyanNightResults = results.filter((r) => r.market.includes("Night")).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 const ResultsList = ({ resultsToShow }: { resultsToShow: Result[] }) => (
   <>
@@ -101,7 +78,7 @@ const ResultsList = ({ resultsToShow }: { resultsToShow: Result[] }) => (
         <TableBody>
           {resultsToShow.map((result) => (
             <TableRow key={result.id}>
-              <TableCell className="font-medium">{result.date === new Date().toISOString().split('T')[0] ? 'Today' : result.date}</TableCell>
+              <TableCell className="font-medium">{getFormattedDate(result.date)}</TableCell>
               <TableCell>
                 <Badge
                   variant={
@@ -134,7 +111,7 @@ const ResultsList = ({ resultsToShow }: { resultsToShow: Result[] }) => (
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="font-semibold text-base">{result.market}</p>
-              <p className="text-sm text-muted-foreground">{result.date === new Date().toISOString().split('T')[0] ? 'Today' : result.date}</p>
+              <p className="text-sm text-muted-foreground">{getFormattedDate(result.date)}</p>
             </div>
             <Badge
               variant={
