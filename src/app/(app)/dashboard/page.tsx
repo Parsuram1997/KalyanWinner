@@ -45,7 +45,7 @@ export default function DashboardPage() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Latest Result</CardTitle>
-            <CardDescription>Kalyan Morning - 20/07/2024</CardDescription>
+            <CardDescription>Kalyan Day - 20/07/2024</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center gap-2">
             <div className="flex flex-col items-center">
@@ -110,7 +110,7 @@ export default function DashboardPage() {
                   <TableCell>
                     <div className="font-medium">Win on Single 8</div>
                     <div className="text-sm text-muted-foreground">
-                      Kalyan Morning
+                      Kalyan Day
                     </div>
                   </TableCell>
                   <TableCell>Won</TableCell>
@@ -144,7 +144,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">Win on Single 8</div>
-                  <div className="text-sm text-muted-foreground">Kalyan Morning - 2024-07-18</div>
+                  <div className="text-sm text-muted-foreground">Kalyan Day - 2024-07-18</div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold text-green-600">+₹950.00</div>

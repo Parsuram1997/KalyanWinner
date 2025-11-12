@@ -56,7 +56,7 @@ const transactions = [
   {
     id: "txn12",
     date: "2024-07-23",
-    description: "Bet on Open Panna 112 (Kalyan Morning)",
+    description: "Bet on Open Panna 112 (Kalyan Day)",
     type: "Debit",
     amount: -100.0,
   },
@@ -70,14 +70,14 @@ const transactions = [
   {
     id: "txn10",
     date: "2024-07-22",
-    description: "Win on Close Panna 789 (Kalyan Morning)",
+    description: "Win on Close Panna 789 (Kalyan Day)",
     type: "Credit",
     amount: 1400.0,
   },
   {
     id: "txn9",
     date: "2024-07-22",
-    description: "Bet on Close Panna 789 (Kalyan Morning)",
+    description: "Bet on Close Panna 789 (Kalyan Day)",
     type: "Debit",
     amount: -10.0,
   },
@@ -119,14 +119,14 @@ const transactions = [
   {
     id: "txn3",
     date: "2024-07-18",
-    description: "Win on Single 8 (Kalyan Morning)",
+    description: "Win on Single 8 (Kalyan Day)",
     type: "Credit",
     amount: 950.0,
   },
   {
     id: "txn4",
     date: "2024-07-18",
-    description: "Bet on Panel 128 (Kalyan Morning)",
+    description: "Bet on Panel 128 (Kalyan Day)",
     type: "Debit",
     amount: -50.0,
   },

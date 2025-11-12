@@ -37,7 +37,7 @@ const formSchema = z.object({
     .min(5, { message: "Please ask a specific question." }),
 });
 
-const sampleData = `Kalyan Morning Results:
+const sampleData = `Kalyan Day Results:
 20/07/2024: 128-13-490
 19/07/2024: 579-18-224
 18/07/2024: 690-51-137

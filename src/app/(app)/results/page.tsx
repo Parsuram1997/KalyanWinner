@@ -20,7 +20,7 @@ const results = [
   {
     id: 1,
     date: "2024-07-20",
-    market: "Kalyan Morning",
+    market: "Kalyan Day",
     openPanna: "128",
     openDigit: "1",
     closePanna: "490",
@@ -40,7 +40,7 @@ const results = [
   {
     id: 3,
     date: "2024-07-19",
-    market: "Kalyan Morning",
+    market: "Kalyan Day",
     openPanna: "579",
     openDigit: "1",
     closePanna: "224",
@@ -60,7 +60,7 @@ const results = [
   {
     id: 5,
     date: "2024-07-18",
-    market: "Kalyan Morning",
+    market: "Kalyan Day",
     openPanna: "690",
     openDigit: "5",
     closePanna: "137",
@@ -81,7 +81,7 @@ const results = [
 
 type Result = (typeof results)[0];
 
-const kalyanDayResults = results.filter((r) => r.market.includes("Morning"));
+const kalyanDayResults = results.filter((r) => r.market.includes("Day"));
 const kalyanNightResults = results.filter((r) => r.market.includes("Night"));
 
 const ResultsList = ({ resultsToShow }: { resultsToShow: Result[] }) => (
