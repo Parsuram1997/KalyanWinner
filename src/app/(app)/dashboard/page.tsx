@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, PlusCircle } from "lucide-react";
+import { DollarSign, Wallet } from "lucide-react";
 import Link from "next/link";
 import {
   Table,
@@ -82,7 +82,7 @@ export default function DashboardPage() {
           <CardFooter>
             <Button size="sm" asChild>
               <Link href="/wallet">
-                <PlusCircle className="mr-1.5 h-4 w-4" /> Add Funds
+                <Wallet className="mr-1.5 h-4 w-4" /> Manage Funds
               </Link>
             </Button>
           </CardFooter>
