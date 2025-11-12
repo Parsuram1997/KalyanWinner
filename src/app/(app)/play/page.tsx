@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
@@ -34,27 +35,38 @@ function BetForm({
   market: string;
 }) {
   const { toast } = useToast();
-  const [digit, setDigit] = useState("");
+  const [digits, setDigits] = useState("");
   const [points, setPoints] = useState("");
   const [digit2, setDigit2] = useState(""); // For sangam
 
   const getPlaceholder = () => {
+    const isMulti = !gameType.includes("Sangam");
+    let example = "";
     switch (gameType) {
       case "Jodi":
-        return "e.g., 45";
+        example = "45";
+        break;
       case "Open Panna":
       case "Close Panna":
-        return "e.g., 128";
+        example = "128";
+        break;
       case "Half Sangam":
         return "Open Panna / Close Digit";
       case "Full Sangam":
         return "Open Panna";
       default:
-        return "e.g., 8";
+        example = "8";
+        break;
     }
+    if (isMulti) {
+      return `e.g.,\n${example}\n${parseInt(example) + 1}\n${
+        parseInt(example) + 2
+      }`;
+    }
+    return `e.g., ${example}`;
   };
-  
-    const getPlaceholder2 = () => {
+
+  const getPlaceholder2 = () => {
     switch (gameType) {
       case "Half Sangam":
         return "Close Digit / Open Digit";
@@ -67,15 +79,17 @@ function BetForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!digit || !points) {
+    const numbers = digits.split("\n").filter((n) => n.trim() !== "");
+
+    if (numbers.length === 0 || !points) {
       toast({
         variant: "destructive",
         title: "Invalid Bet",
-        description: "Please enter all required fields and points.",
+        description: "Please enter at least one number and the points.",
       });
       return;
     }
-     if ((gameType === "Half Sangam" || gameType === "Full Sangam") && !digit2) {
+    if ((gameType === "Half Sangam" || gameType === "Full Sangam") && !digit2) {
       toast({
         variant: "destructive",
         title: "Invalid Bet",
@@ -83,21 +97,36 @@ function BetForm({
       });
       return;
     }
-
-    let betDescription = `Your bet of ${points} points on ${digit}`;
-    if (gameType === "Half Sangam" || gameType === "Full Sangam") {
-        betDescription += ` - ${digit2}`;
+     if (numbers.length > 1 && gameType.includes("Sangam")) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Bet",
+        description: "Only a single bet is allowed for Half Sangam or Full Sangam.",
+      });
+      return;
     }
-    betDescription += ` for ${gameType} (${market}) has been placed.`;
+
+    const totalPoints = numbers.length * parseInt(points);
+    let betDescription = `Your bet of ${points} points on ${numbers.join(
+      ", "
+    )} for ${gameType} (${market}) has been placed.`;
+     if (gameType === "Half Sangam" || gameType === "Full Sangam") {
+        betDescription = `Your bet of ${points} points on ${digits} - ${digit2} for ${gameType} (${market}) has been placed.`;
+    }
+
 
     toast({
       title: "Bet Placed!",
       description: betDescription,
+      footer: `Total Points: ${totalPoints}`,
     });
-    setDigit("");
+    setDigits("");
     setPoints("");
     setDigit2("");
   };
+  
+  const isSangam = gameType.includes("Sangam");
+
 
   return (
     <form onSubmit={handleSubmit}>
@@ -105,22 +134,40 @@ function BetForm({
         <CardHeader>
           <CardTitle>{gameType} Bet</CardTitle>
           <CardDescription>
-            Enter your desired number and the points to bet for {market}.
+            {isSangam
+              ? `Enter your numbers and points for ${market}.`
+              : `Enter one number per line. The same point value will be applied to each.`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor={`${market}-${gameType}-digit`}>
-              {gameType === "Jodi" ? "Jodi" : gameType.includes("Panna") ? "Panna" : gameType.includes("Sangam") ? "Number 1" : "Digit"}
+              {gameType === "Jodi"
+                ? "Jodi Number(s)"
+                : gameType.includes("Panna")
+                ? "Panna Number(s)"
+                : gameType.includes("Sangam")
+                ? "Number 1"
+                : "Digit(s)"}
             </Label>
-            <Input
+            {isSangam ? (
+              <Input
               id={`${market}-${gameType}-digit`}
               placeholder={getPlaceholder()}
-              value={digit}
-              onChange={(e) => setDigit(e.target.value)}
+              value={digits}
+              onChange={(e) => setDigits(e.target.value)}
             />
+            ) : (
+            <Textarea
+              id={`${market}-${gameType}-digit`}
+              placeholder={getPlaceholder()}
+              value={digits}
+              onChange={(e) => setDigits(e.target.value)}
+              className="min-h-[100px] font-mono text-sm"
+            />
+            )}
           </div>
-           {(gameType === "Half Sangam" || gameType === "Full Sangam") && (
+          {(gameType === "Half Sangam" || gameType === "Full Sangam") && (
             <div className="space-y-2">
               <Label htmlFor={`${market}-${gameType}-digit2`}>Number 2</Label>
               <Input
@@ -132,7 +179,9 @@ function BetForm({
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor={`${market}-${gameType}-points`}>Points</Label>
+            <Label htmlFor={`${market}-${gameType}-points`}>
+              Points (per number)
+            </Label>
             <Input
               id={`${market}-${gameType}-points`}
               type="number"
@@ -173,26 +222,28 @@ export default function PlayPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">Place Your Bet</h1>
-        <Card>
-            <CardHeader>
-                <CardTitle>Select Market</CardTitle>
-                <CardDescription>Choose between the Kalyan Day and Kalyan Night markets.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <Tabs defaultValue="kalyan-day" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
-                      <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="kalyan-day">
-                      <GameTypeTabs market="Kalyan Day" />
-                    </TabsContent>
-                    <TabsContent value="kalyan-night">
-                      <GameTypeTabs market="Kalyan Night" />
-                    </TabsContent>
-                </Tabs>
-            </CardContent>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Select Market</CardTitle>
+          <CardDescription>
+            Choose between the Kalyan Day and Kalyan Night markets.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="kalyan-day" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
+              <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
+            </TabsList>
+            <TabsContent value="kalyan-day">
+              <GameTypeTabs market="Kalyan Day" />
+            </TabsContent>
+            <TabsContent value="kalyan-night">
+              <GameTypeTabs market="Kalyan Night" />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }
