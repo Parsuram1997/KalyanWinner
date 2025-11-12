@@ -1,3 +1,4 @@
+"use client"
 import Link from "next/link";
 import {
   BrainCircuit,
@@ -23,6 +24,54 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { usePathname, useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+const BottomNav = () => {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const market = searchParams.get('market');
+
+  if (pathname !== '/play') {
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        <Button size="lg" asChild>
+          <Link href="/play?market=kalyan-day">
+            <GanttChartSquare className="mr-2 h-5 w-5" />
+            Kalyan Day
+          </Link>
+        </Button>
+        <Button size="lg" variant="secondary" asChild>
+          <Link href="/play?market=kalyan-night">
+            <GanttChartSquare className="mr-2 h-5 w-5" />
+            Kalyan Night
+          </Link>
+        </Button>
+      </div>
+    )
+  }
+
+  const isDayActive = market === 'kalyan-day';
+  const isNightActive = market === 'kalyan-night';
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Button size="lg" variant={isDayActive ? 'default' : 'secondary'} asChild>
+        <Link href="/play?market=kalyan-day">
+          <GanttChartSquare className="mr-2 h-5 w-5" />
+          Kalyan Day
+        </Link>
+      </Button>
+      <Button size="lg" variant={isNightActive ? 'default' : 'secondary'} asChild>
+        <Link href="/play?market=kalyan-night">
+          <GanttChartSquare className="mr-2 h-5 w-5" />
+          Kalyan Night
+        </Link>
+      </Button>
+    </div>
+  )
+};
+
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -109,19 +158,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6 pb-24">{children}</main>
-          <div className="sticky bottom-0 mt-auto grid grid-cols-2 gap-2 border-t bg-background/95 p-2 backdrop-blur-sm md:hidden">
-              <Button size="lg" asChild>
-                <Link href="/play?market=kalyan-day">
-                  <GanttChartSquare className="mr-2 h-5 w-5" />
-                  Kalyan Day
-                </Link>
-              </Button>
-              <Button size="lg" variant="secondary" asChild>
-                <Link href="/play?market=kalyan-night">
-                  <GanttChartSquare className="mr-2 h-5 w-5" />
-                  Kalyan Night
-                </Link>
-              </Button>
+          <div className="sticky bottom-0 mt-auto border-t bg-background/95 p-2 backdrop-blur-sm md:hidden">
+              <BottomNav />
           </div>
         </div>
       </SidebarInset>
