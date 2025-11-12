@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Wallet,
   Coins,
+  AreaChart,
 } from "lucide-react";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -69,6 +70,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/results">
                   <ClipboardList />
                   Results
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/charts">
+                  <AreaChart />
+                  Panel Chart
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
