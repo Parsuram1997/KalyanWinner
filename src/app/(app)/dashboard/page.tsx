@@ -4,6 +4,7 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const recentActivity = [
   { id: 1, description: "Bet on Jodi 45", market: "Kalyan Night", status: "Pending", date: "2024-07-20", amount: "-₹100.00", type: "debit" },
@@ -65,6 +68,20 @@ const latestResults = [
 
 
 export default function DashboardPage() {
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    setCurrent(api.selectedScrollSnap());
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
@@ -90,9 +107,9 @@ export default function DashboardPage() {
         <Card className="hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
           <CardHeader>
             <CardTitle className="text-base">Latest Result</CardTitle>
-            <CardDescription>Toggle between Day and Night results.</CardDescription>
+            <CardDescription>Swipe to see Day and Night results.</CardDescription>
           </CardHeader>
-          <Carousel className="w-full h-full flex flex-col">
+          <Carousel setApi={setApi} className="w-full h-full flex flex-col justify-center">
             <CarouselContent>
               {latestResults.map((result, index) => (
                 <CarouselItem key={index} className="h-full">
@@ -115,8 +132,20 @@ export default function DashboardPage() {
                 </CarouselItem>
               ))}
             </CarouselContent>
+            <div className="flex justify-center gap-2 mt-2">
+              {latestResults.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => api?.scrollTo(index)}
+                  className={cn(
+                    "h-2 w-2 rounded-full transition-colors",
+                    current === index ? "bg-primary" : "bg-muted"
+                  )}
+                />
+              ))}
+            </div>
           </Carousel>
-          <CardFooter className="mt-auto">
+          <CardFooter className="mt-auto pt-4">
             <Button variant="outline" size="sm" className="w-full" asChild>
               <Link href="/results">View All Results</Link>
             </Button>
@@ -194,5 +223,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
