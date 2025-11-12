@@ -154,7 +154,7 @@ function BetForm({
 
 const GameTypeTabs = ({ market }: { market: string }) => (
   <Tabs defaultValue={gameTypes[0]} className="w-full">
-    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+    <TabsList className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 h-auto">
       {gameTypes.map((type) => (
         <TabsTrigger key={type} value={type} className="text-xs px-2">
           {type}
