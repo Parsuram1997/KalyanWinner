@@ -19,19 +19,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-const quickBets = [
-  "123-45-678",
-  "432-98-123",
-  "567-89-101",
-  "111-33-555",
-  "246-22-789",
-  "357-55-135",
-];
-
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
@@ -75,19 +66,6 @@ export default function DashboardPage() {
               <Link href="/results">View All Results</Link>
             </Button>
           </CardFooter>
-        </Card>
-        <Card className="sm:col-span-2 lg:col-span-1 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-base">Quick Bet</CardTitle>
-            <CardDescription>Place a bet on popular numbers.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2">
-            {quickBets.map((bet) => (
-              <Button variant="secondary" size="sm" key={bet} asChild>
-                <Link href="/play">{bet}</Link>
-              </Button>
-            ))}
-          </CardContent>
         </Card>
       </div>
       <Card className="hover:shadow-lg transition-shadow">
