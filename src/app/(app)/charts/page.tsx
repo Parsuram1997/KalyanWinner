@@ -61,7 +61,7 @@ export default function ChartsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[250px]">
               <BarChart accessibilityLayer data={panelChartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
@@ -69,13 +69,14 @@ export default function ChartsPage() {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
+                  tick={{ fontSize: 12 }}
                 />
-                 <YAxis tickCount={5} />
+                 <YAxis tickCount={4} tick={{ fontSize: 12 }} />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent hideLabel />}
                 />
-                <Bar dataKey="count" fill="var(--color-count)" radius={8} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={4} barSize={40} />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -89,12 +90,12 @@ export default function ChartsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[250px]">
               <LineChart
                 accessibilityLayer
                 data={digitTrendData}
                 margin={{
-                  left: 12,
+                  left: 0,
                   right: 12,
                 }}
               >
@@ -105,8 +106,9 @@ export default function ChartsPage() {
                   axisLine={false}
                   tickMargin={8}
                    tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                   tick={{ fontSize: 12 }}
                 />
-                <YAxis domain={[0, 9]} tickCount={10} />
+                <YAxis domain={[0, 9]} tickCount={10} tick={{ fontSize: 12 }} />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent indicator="dot" />}
