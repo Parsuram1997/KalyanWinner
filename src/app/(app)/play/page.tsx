@@ -30,7 +30,7 @@ const gameTypes = [
 
 type Bet = {
   number: string;
-  points: string;
+  amount: string;
 };
 
 function BetForm({
@@ -43,12 +43,12 @@ function BetForm({
   const { toast } = useToast();
   const [bets, setBets] = useState<Bet[]>([]);
   const [currentNumber, setCurrentNumber] = useState("");
-  const [currentPoints, setCurrentPoints] = useState("");
+  const [currentAmount, setCurrentAmount] = useState("");
 
   // State for Sangam bets (since they are different)
   const [sangamNumber1, setSangamNumber1] = useState("");
   const [sangamNumber2, setSangamNumber2] = useState("");
-  const [sangamPoints, setSangamPoints] = useState("");
+  const [sangamAmount, setSangamAmount] = useState("");
 
   const isSangam = gameType.includes("Sangam");
 
@@ -80,17 +80,17 @@ function BetForm({
   };
   
   const handleAddBet = () => {
-    if (!currentNumber || !currentPoints) {
+    if (!currentNumber || !currentAmount) {
       toast({
         variant: "destructive",
         title: "Invalid Bet",
-        description: "Please enter both a number and points.",
+        description: "Please enter both a number and amount.",
       });
       return;
     }
-    setBets([...bets, { number: currentNumber, points: currentPoints }]);
+    setBets([...bets, { number: currentNumber, amount: currentAmount }]);
     setCurrentNumber("");
-    setCurrentPoints("");
+    setCurrentAmount("");
   };
 
   const handleRemoveBet = (index: number) => {
@@ -103,7 +103,7 @@ function BetForm({
     e.preventDefault();
 
     if (isSangam) {
-      if (!sangamNumber1 || !sangamNumber2 || !sangamPoints) {
+      if (!sangamNumber1 || !sangamNumber2 || !sangamAmount) {
         toast({
           variant: "destructive",
           title: "Invalid Sangam Bet",
@@ -113,12 +113,12 @@ function BetForm({
       }
       toast({
         title: "Bet Placed!",
-        description: `Your bet of ${sangamPoints} points on ${sangamNumber1} - ${sangamNumber2} for ${gameType} (${market}) has been placed.`,
-        footer: `Total Points: ${sangamPoints}`,
+        description: `Your bet of ${sangamAmount} on ${sangamNumber1} - ${sangamNumber2} for ${gameType} (${market}) has been placed.`,
+        footer: `Total Amount: ${sangamAmount}`,
       });
       setSangamNumber1("");
       setSangamNumber2("");
-      setSangamPoints("");
+      setSangamAmount("");
     } else {
       if (bets.length === 0) {
         toast({
@@ -129,13 +129,13 @@ function BetForm({
         return;
       }
 
-      const totalPoints = bets.reduce((sum, bet) => sum + parseInt(bet.points), 0);
-      const betDescriptions = bets.map(b => `${b.number} (${b.points} pts)`).join(', ');
+      const totalAmount = bets.reduce((sum, bet) => sum + parseInt(bet.amount), 0);
+      const betDescriptions = bets.map(b => `${b.number} (${b.amount} amt)`).join(', ');
 
       toast({
         title: "Bets Placed!",
         description: `Your bets for ${gameType} (${market}) have been placed: ${betDescriptions}`,
-        footer: `Total Points: ${totalPoints}`,
+        footer: `Total Amount: ${totalAmount}`,
       });
       setBets([]);
     }
@@ -149,7 +149,7 @@ function BetForm({
           <CardHeader>
             <CardTitle>{gameType} Bet</CardTitle>
             <CardDescription>
-              Enter your numbers and points for the {market} market.
+              Enter your numbers and amount for the {market} market.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -172,13 +172,13 @@ function BetForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor={`${market}-${gameType}-points`}>Points</Label>
+                <Label htmlFor={`${market}-${gameType}-amount`}>Amount</Label>
                 <Input
-                  id={`${market}-${gameType}-points`}
+                  id={`${market}-${gameType}-amount`}
                   type="number"
                   placeholder="e.g., 10"
-                  value={sangamPoints}
-                  onChange={(e) => setSangamPoints(e.target.value)}
+                  value={sangamAmount}
+                  onChange={(e) => setSangamAmount(e.target.value)}
                 />
               </div>
           </CardContent>
@@ -219,13 +219,13 @@ function BetForm({
                     />
                   </div>
                  <div className="w-28 space-y-2">
-                    <Label htmlFor={`${market}-${gameType}-points`}>Points</Label>
+                    <Label htmlFor={`${market}-${gameType}-amount`}>Amount</Label>
                     <Input
-                      id={`${market}-${gameType}-points`}
+                      id={`${market}-${gameType}-amount`}
                       type="number"
                       placeholder="e.g., 10"
-                      value={currentPoints}
-                      onChange={(e) => setCurrentPoints(e.target.value)}
+                      value={currentAmount}
+                      onChange={(e) => setCurrentAmount(e.target.value)}
                     />
                   </div>
                 <Button type="button" size="icon" onClick={handleAddBet} className="shrink-0">
@@ -242,7 +242,7 @@ function BetForm({
                         <div key={index} className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50 text-sm">
                            <div className="flex items-center gap-2">
                              <Badge variant="secondary" className="font-mono">{bet.number}</Badge>
-                             <span>{bet.points} Points</span>
+                             <span>{bet.amount} Amount</span>
                            </div>
                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveBet(index)}>
                                 <Trash2 className="h-4 w-4" />
