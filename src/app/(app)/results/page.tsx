@@ -90,42 +90,91 @@ export default function ResultsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Market</TableHead>
-                <TableHead>Open Panna</TableHead>
-                <TableHead>Jodi</TableHead>
-                <TableHead>Close Panna</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {results.map((result) => (
-                <TableRow key={result.id}>
-                  <TableCell className="font-medium">{result.date}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        result.market.includes("Night")
-                          ? "default"
-                          : "secondary"
-                      }
-                    >
-                      {result.market}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{result.openPanna}</TableCell>
-                  <TableCell>
-                    <div className="font-bold text-lg text-primary">
-                      {result.jodi}
-                    </div>
-                  </TableCell>
-                  <TableCell>{result.closePanna}</TableCell>
+          {/* Desktop Table */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Market</TableHead>
+                  <TableHead>Open Panna</TableHead>
+                  <TableHead>Jodi</TableHead>
+                  <TableHead>Close Panna</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {results.map((result) => (
+                  <TableRow key={result.id}>
+                    <TableCell className="font-medium">{result.date}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          result.market.includes("Night")
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
+                        {result.market}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{result.openPanna}</TableCell>
+                    <TableCell>
+                      <div className="font-bold text-lg text-primary">
+                        {result.jodi}
+                      </div>
+                    </TableCell>
+                    <TableCell>{result.closePanna}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile List */}
+          <div className="grid gap-4 md:hidden">
+            {results.map((result) => (
+              <div
+                key={result.id}
+                className="rounded-lg border bg-card text-card-foreground p-4"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <p className="font-semibold text-base">{result.market}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {result.date}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      result.market.includes("Night") ? "default" : "secondary"
+                    }
+                  >
+                    {result.market.split(" ")[1]}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-around text-center">
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-muted-foreground">Open</span>
+                    <span className="text-lg font-bold tracking-widest">
+                      {result.openPanna}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                    <span className="text-2xl font-bold tracking-wider">
+                      {result.jodi}
+                    </span>
+                    <span className="text-[10px] font-medium">Jodi</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-muted-foreground">Close</span>
+                    <span className="text-lg font-bold tracking-widest">
+                      {result.closePanna}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
