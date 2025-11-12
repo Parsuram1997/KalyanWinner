@@ -29,7 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-start">
             <h1 className="text-lg font-semibold tracking-tight text-primary">
               Kalyan Winner
             </h1>
