@@ -15,8 +15,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const gameTypesRow1 = ["Open Single", "Jodi", "Close Single"];
 const gameTypesRow2 = ["Open Panna", "Close Panna"];
@@ -269,7 +270,27 @@ const GameTypeTabs = ({ market }: { market: string }) => (
 export default function PlayPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Place Your Bet</h1>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Place Your Bet</h1>
+          <p className="text-muted-foreground">Select a market and game type to start.</p>
+        </div>
+        <Card className="w-fit">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Wallet</CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold">₹1,245.50</div>
+          </CardContent>
+          <CardFooter className="pt-0">
+             <Button variant="outline" size="xs" asChild>
+              <Link href="/wallet">Manage Funds</Link>
+             </Button>
+          </CardFooter>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Select Market</CardTitle>
