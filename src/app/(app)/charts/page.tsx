@@ -28,7 +28,7 @@ const digitTrendData = [
     { date: "2024-07-18", digit: 5 },
     { date: "2024-07-19", digit: 2 },
     { date: "2024-07-20", digit: 7 },
-    { date: "2024-07-21", digit-trend: 3 },
+    { date: "2024-07-21", digit: 3 },
 ];
 
 const chartConfig = {
