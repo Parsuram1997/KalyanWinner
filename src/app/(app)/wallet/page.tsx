@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 
-const transactions = [
+const initialTransactions = [
     {
     id: "txn15",
     date: "2024-07-25",
@@ -158,10 +159,10 @@ const transactions = [
   },
 ];
 
-const recentTransactions = transactions.slice(0, 15);
-
 export default function WalletPage() {
   const { toast } = useToast();
+  const [balance, setBalance] = useState(1245.50);
+  const [transactions, setTransactions] = useState(initialTransactions);
   const [addAmount, setAddAmount] = useState("1000");
   const [withdrawAmount, setWithdrawAmount] = useState("2000");
   const [isAddFundsOpen, setAddFundsOpen] = useState(false);
@@ -193,6 +194,19 @@ export default function WalletPage() {
       title: "Deposit Request Submitted",
       description: `Your request to add ₹${amount} with UTR ${utr} has been received and is being verified.`,
     });
+
+    const newTransaction = {
+      id: `txn${transactions.length + 1}`,
+      date: new Date().toISOString().split('T')[0],
+      description: `Wallet Deposit via ${addMethod.toUpperCase()}`,
+      type: "Credit" as "Credit",
+      amount: amount,
+      status: "Pending"
+    };
+
+    setBalance(balance + amount);
+    setTransactions([newTransaction, ...transactions]);
+
     setUtr("");
     setAddFundsOpen(false);
   };
@@ -217,6 +231,14 @@ export default function WalletPage() {
       });
       return;
     }
+     if (amount > balance) {
+      toast({
+        variant: 'destructive',
+        title: 'Insufficient Balance',
+        description: `You cannot withdraw more than your available balance of ₹${balance.toFixed(2)}.`,
+      });
+      return;
+    }
     
     toast({
       title: "Withdrawal Requested",
@@ -224,6 +246,8 @@ export default function WalletPage() {
     });
     setWithdrawOpen(false);
   };
+  
+  const recentTransactions = transactions.slice(0, 15);
 
   return (
     <div className="flex flex-col gap-6">
@@ -243,7 +267,10 @@ export default function WalletPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl sm:text-4xl font-bold tracking-tight">
-              ₹1,245.50
+              {balance.toLocaleString("en-IN", {
+                style: "currency",
+                currency: "INR",
+              })}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Your available funds to play.
@@ -493,7 +520,7 @@ export default function WalletPage() {
               <TableBody>
                 {recentTransactions.map((txn) => (
                   <TableRow key={txn.id}>
-                    <TableCell className="font-medium">{txn.date}</TableCell>
+                    <TableCell className="font-medium">{new Date(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
                     <TableCell>{txn.description}</TableCell>
                     <TableCell>
                       <span
@@ -511,6 +538,8 @@ export default function WalletPage() {
                         variant={
                           txn.status === "Won" || txn.status === "Completed"
                             ? "secondary"
+                            : txn.status === "Pending"
+                            ? "default"
                             : "outline"
                         }
                       >
@@ -541,7 +570,7 @@ export default function WalletPage() {
               >
                 <div>
                   <p className="font-medium text-sm">{txn.description}</p>
-                  <p className="text-xs text-muted-foreground">{txn.date}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
                   <div className="mt-1">
                      <span
                         className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
@@ -569,6 +598,8 @@ export default function WalletPage() {
                      variant={
                         txn.status === "Won" || txn.status === "Completed"
                           ? "secondary"
+                          : txn.status === "Pending"
+                          ? "default"
                           : "outline"
                       }
                       className="mt-1"
