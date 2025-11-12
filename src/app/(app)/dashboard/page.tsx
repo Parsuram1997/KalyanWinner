@@ -1,3 +1,11 @@
+
+"use client";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,25 +28,41 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 const recentActivity = [
-    { id: 1, description: "Bet on Jodi 45", market: "Kalyan Night", status: "Pending", date: "2024-07-20", amount: "-₹100.00", type: "debit" },
-    { id: 2, description: "Wallet Deposit", market: "via UPI", status: "Completed", date: "2024-07-19", amount: "+₹500.00", type: "credit" },
-    { id: 3, description: "Win on Single 8", market: "Kalyan Day", status: "Won", date: "2024-07-18", amount: "+₹950.00", type: "credit" },
-    { id: 4, description: "Bet on Open Panna 123", market: "Kalyan Day", status: "Lost", date: "2024-07-18", amount: "-₹50.00", type: "debit" },
-    { id: 5, description: "Withdrawal", market: "to Bank Account", status: "Completed", date: "2024-07-17", amount: "-₹1000.00", type: "debit" },
-    { id: 6, description: "Bet on Jodi 78", market: "Kalyan Night", status: "Pending", date: "2024-07-17", amount: "-₹200.00", type: "debit" },
-    { id: 7, description: "Win on Close Panna 456", market: "Kalyan Day", status: "Won", date: "2024-07-16", amount: "+₹1400.00", type: "credit" },
-    { id: 8, description: "Wallet Deposit", market: "via Card", status: "Completed", date: "2024-07-16", amount: "+₹2000.00", type: "credit" },
-    { id: 9, description: "Bet on Single 2", market: "Kalyan Night", status: "Lost", date: "2024-07-15", amount: "-₹150.00", type: "debit" },
-    { id: 10, description: "Win on Jodi 99", market: "Kalyan Day", status: "Won", date: "2024-07-15", amount: "+₹4750.00", type: "credit" },
-    { id: 11, description: "Bet on Jodi 99", market: "Kalyan Day", status: "Placed", date: "2024-07-15", amount: "-₹50.00", type: "debit" },
-    { id: 12, description: "Wallet Deposit", market: "via Netbanking", status: "Completed", date: "2024-07-14", amount: "+₹300.00", type: "credit" },
-    { id: 13, description: "Bet on Close Panna 789", market: "Kalyan Night", status: "Pending", date: "2024-07-14", amount: "-₹10.00", type: "debit" },
-    { id: 14, description: "Win on Open Single 1", market: "Kalyan Day", status: "Won", date: "2024-07-13", amount: "+₹95.00", type: "credit" },
-    { id: 15, description: "Bet on Jodi 13", market: "Kalyan Day", status: "Placed", date: "2024-07-13", amount: "-₹10.00", type: "debit" },
-    { id: 16, description: "Bet on Single 5", market: "Kalyan Night", status: "Lost", date: "2024-07-12", amount: "-₹50.00", type: "debit" },
+  { id: 1, description: "Bet on Jodi 45", market: "Kalyan Night", status: "Pending", date: "2024-07-20", amount: "-₹100.00", type: "debit" },
+  { id: 2, description: "Wallet Deposit", market: "via UPI", status: "Completed", date: "2024-07-19", amount: "+₹500.00", type: "credit" },
+  { id: 3, description: "Win on Single 8", market: "Kalyan Day", status: "Won", date: "2024-07-18", amount: "+₹950.00", type: "credit" },
+  { id: 4, description: "Bet on Open Panna 123", market: "Kalyan Day", status: "Lost", date: "2024-07-18", amount: "-₹50.00", type: "debit" },
+  { id: 5, description: "Withdrawal", market: "to Bank Account", status: "Completed", date: "2024-07-17", amount: "-₹1000.00", type: "debit" },
+  { id: 6, description: "Bet on Jodi 78", market: "Kalyan Night", status: "Pending", date: "2024-07-17", amount: "-₹200.00", type: "debit" },
+  { id: 7, description: "Win on Close Panna 456", market: "Kalyan Day", status: "Won", date: "2024-07-16", amount: "+₹1400.00", type: "credit" },
+  { id: 8, description: "Wallet Deposit", market: "via Card", status: "Completed", date: "2024-07-16", amount: "+₹2000.00", type: "credit" },
+  { id: 9, description: "Bet on Single 2", market: "Kalyan Night", status: "Lost", date: "2024-07-15", amount: "-₹150.00", type: "debit" },
+  { id: 10, description: "Win on Jodi 99", market: "Kalyan Day", status: "Won", date: "2024-07-15", amount: "+₹4750.00", type: "credit" },
+  { id: 11, description: "Bet on Jodi 99", market: "Kalyan Day", status: "Placed", date: "2024-07-15", amount: "-₹50.00", type: "debit" },
+  { id: 12, description: "Wallet Deposit", market: "via Netbanking", status: "Completed", date: "2024-07-14", amount: "+₹300.00", type: "credit" },
+  { id: 13, description: "Bet on Close Panna 789", market: "Kalyan Night", status: "Pending", date: "2024-07-14", amount: "-₹10.00", type: "debit" },
+  { id: 14, description: "Win on Open Single 1", market: "Kalyan Day", status: "Won", date: "2024-07-13", amount: "+₹95.00", type: "credit" },
+  { id: 15, description: "Bet on Jodi 13", market: "Kalyan Day", status: "Placed", date: "2024-07-13", amount: "-₹10.00", type: "debit" },
 ];
 
 const displayedActivity = recentActivity.slice(0, 15);
+
+const latestResults = [
+  {
+    market: "Kalyan Day",
+    date: "20/07/2024",
+    openPanna: "128",
+    jodi: "13",
+    closePanna: "490",
+  },
+  {
+    market: "Kalyan Night",
+    date: "19/07/2024",
+    openPanna: "345",
+    jodi: "21",
+    closePanna: "678",
+  },
+];
 
 
 export default function DashboardPage() {
@@ -64,25 +88,33 @@ export default function DashboardPage() {
             </Button>
           </CardFooter>
         </Card>
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Latest Result</CardTitle>
-            <CardDescription>Kalyan Day - 20/07/2024</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center gap-2">
-            <div className="flex flex-col items-center">
-              <span className="text-xs text-muted-foreground">Open</span>
-              <span className="text-2xl font-bold tracking-widest">128</span>
-            </div>
-            <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-              <span className="text-3xl font-bold tracking-wider">13</span>
-              <span className="text-[10px] font-medium">Jodi</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-xs text-muted-foreground">Close</span>
-              <span className="text-2xl font-bold tracking-widest">490</span>
-            </div>
-          </CardContent>
+        <Card className="hover:shadow-lg transition-shadow overflow-hidden">
+           <Carousel>
+            <CarouselContent>
+              {latestResults.map((result) => (
+                <CarouselItem key={result.market}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Latest Result</CardTitle>
+                    <CardDescription>{result.market} - {result.date}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex items-center justify-center gap-2">
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs text-muted-foreground">Open</span>
+                      <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
+                    </div>
+                    <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                      <span className="text-3xl font-bold tracking-wider">{result.jodi}</span>
+                      <span className="text-[10px] font-medium">Jodi</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs text-muted-foreground">Close</span>
+                      <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
+                    </div>
+                  </CardContent>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
           <CardFooter>
             <Button variant="outline" size="sm" className="w-full" asChild>
               <Link href="/results">View All Results</Link>
@@ -161,3 +193,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
