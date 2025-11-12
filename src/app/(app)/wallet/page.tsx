@@ -272,7 +272,7 @@ export default function WalletPage() {
                 <DialogHeader>
                   <DialogTitle>Withdraw Funds</DialogTitle>
                   <DialogDescription>
-                    Minimum withdrawal is ₹2000 (Sundays only). Funds will be transferred within 2-3 business days.
+                    Minimum withdrawal is ₹2000 (Sundays only). Funds will be transferred within 24 hours.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
