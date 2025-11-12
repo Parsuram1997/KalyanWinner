@@ -32,6 +32,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { MinusCircle, PlusCircle } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 const transactions = [
     {
@@ -40,6 +41,7 @@ const transactions = [
     description: "Win on Jodi 23 (Kalyan Night)",
     type: "Credit",
     amount: 4750.0,
+    status: "Won",
   },
   {
     id: "txn14",
@@ -47,6 +49,7 @@ const transactions = [
     description: "Bet on Jodi 23 (Kalyan Night)",
     type: "Debit",
     amount: -50.0,
+    status: "Placed",
   },
   {
     id: "txn13",
@@ -54,6 +57,7 @@ const transactions = [
     description: "Wallet Deposit via Card",
     type: "Credit",
     amount: 2000.0,
+    status: "Completed",
   },
   {
     id: "txn12",
@@ -61,6 +65,7 @@ const transactions = [
     description: "Bet on Open Panna 112 (Kalyan Day)",
     type: "Debit",
     amount: -100.0,
+    status: "Lost",
   },
   {
     id: "txn11",
@@ -68,6 +73,7 @@ const transactions = [
     description: "Bet on Close Single 8 (Kalyan Night)",
     type: "Debit",
     amount: -200.0,
+    status: "Lost",
   },
   {
     id: "txn10",
@@ -75,6 +81,7 @@ const transactions = [
     description: "Win on Close Panna 789 (Kalyan Day)",
     type: "Credit",
     amount: 1400.0,
+    status: "Won",
   },
   {
     id: "txn9",
@@ -82,6 +89,7 @@ const transactions = [
     description: "Bet on Close Panna 789 (Kalyan Day)",
     type: "Debit",
     amount: -10.0,
+    status: "Placed",
   },
   {
     id: "txn8",
@@ -89,6 +97,7 @@ const transactions = [
     description: "Withdrawal to Bank Account",
     type: "Debit",
     amount: -2000.0,
+    status: "Pending",
   },
   {
     id: "txn7",
@@ -96,6 +105,7 @@ const transactions = [
     description: "Bet on Jodi 99 (Kalyan Night)",
     type: "Debit",
     amount: -25.0,
+    status: "Lost",
   },
   {
     id: "txn6",
@@ -103,6 +113,7 @@ const transactions = [
     description: "Wallet Deposit via Netbanking",
     type: "Credit",
     amount: 300.0,
+    status: "Completed",
   },
   {
     id: "txn1",
@@ -110,6 +121,7 @@ const transactions = [
     description: "Bet on Jodi 45 (Kalyan Night)",
     type: "Debit",
     amount: -100.0,
+    status: "Lost",
   },
   {
     id: "txn2",
@@ -117,6 +129,7 @@ const transactions = [
     description: "Wallet Deposit via UPI",
     type: "Credit",
     amount: 500.0,
+    status: "Completed",
   },
   {
     id: "txn3",
@@ -124,6 +137,7 @@ const transactions = [
     description: "Win on Single 8 (Kalyan Day)",
     type: "Credit",
     amount: 950.0,
+    status: "Won",
   },
   {
     id: "txn4",
@@ -131,6 +145,7 @@ const transactions = [
     description: "Bet on Panel 128 (Kalyan Day)",
     type: "Debit",
     amount: -50.0,
+    status: "Placed",
   },
   {
     id: "txn5",
@@ -138,6 +153,7 @@ const transactions = [
     description: "Withdrawal to Bank Account",
     type: "Debit",
     amount: -1000.0,
+    status: "Completed",
   },
 ];
 
@@ -352,6 +368,7 @@ export default function WalletPage() {
                   <TableHead className="w-[120px]">Date</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead className="w-[100px]">Type</TableHead>
+                  <TableHead className="w-[120px]">Status</TableHead>
                   <TableHead className="text-right w-[150px]">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -370,6 +387,17 @@ export default function WalletPage() {
                       >
                         {txn.type}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          txn.status === "Won" || txn.status === "Completed"
+                            ? "secondary"
+                            : "outline"
+                        }
+                      >
+                        {txn.status}
+                      </Badge>
                     </TableCell>
                     <TableCell
                       className={`text-right font-semibold ${
@@ -391,11 +419,22 @@ export default function WalletPage() {
             {recentTransactions.map((txn) => (
               <div
                 key={txn.id}
-                className="flex items-center justify-between gap-4 p-3 -m-3 rounded-lg hover:bg-muted/50"
+                className="flex items-start justify-between gap-4 p-3 -m-3 rounded-lg hover:bg-muted/50"
               >
                 <div>
                   <p className="font-medium text-sm">{txn.description}</p>
                   <p className="text-xs text-muted-foreground">{txn.date}</p>
+                  <div className="mt-1">
+                     <span
+                        className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
+                          txn.type === "Credit"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
+                      >
+                        {txn.type}
+                      </span>
+                  </div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p
@@ -408,15 +447,16 @@ export default function WalletPage() {
                       currency: "INR",
                     })}
                   </p>
-                  <span
-                    className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
-                      txn.type === "Credit"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                    }`}
+                  <Badge
+                     variant={
+                        txn.status === "Won" || txn.status === "Completed"
+                          ? "secondary"
+                          : "outline"
+                      }
+                      className="mt-1"
                   >
-                    {txn.type}
-                  </span>
+                    {txn.status}
+                  </Badge>
                 </div>
               </div>
             ))}
@@ -426,3 +466,5 @@ export default function WalletPage() {
     </div>
   );
 }
+
+    
