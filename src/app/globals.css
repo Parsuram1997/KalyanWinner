@@ -80,6 +80,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply text-foreground font-body;
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(at 27% 37%, hsl(var(--secondary)) 0px, transparent 50%), radial-gradient(at 97% 21%, hsl(var(--accent)) 0px, transparent 50%), radial-gradient(at 52% 99%, hsl(var(--primary)) 0px, transparent 50%);
+  }
+
+  .dark body {
+     background-image: radial-gradient(at 27% 37%, hsl(var(--secondary)) 0px, transparent 50%), radial-gradient(at 97% 21%, hsl(var(--accent)) 0px, transparent 50%), radial-gradient(at 52% 99%, hsl(var(--primary)) 0px, transparent 50%);
   }
 }
