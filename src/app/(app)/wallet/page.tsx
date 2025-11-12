@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -370,7 +369,7 @@ export default function WalletPage() {
                       <Input
                         id="upi-id"
                         className="col-span-3"
-                        placeholder="yourname@upi"
+                        placeholder="upi id / mobile number"
                       />
                     </div>
                   )}
