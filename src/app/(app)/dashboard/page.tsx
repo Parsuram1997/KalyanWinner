@@ -19,6 +19,28 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
+const recentActivity = [
+    { id: 1, description: "Bet on Jodi 45", market: "Kalyan Night", status: "Pending", date: "2024-07-20", amount: "-₹100.00", type: "debit" },
+    { id: 2, description: "Wallet Deposit", market: "via UPI", status: "Completed", date: "2024-07-19", amount: "+₹500.00", type: "credit" },
+    { id: 3, description: "Win on Single 8", market: "Kalyan Day", status: "Won", date: "2024-07-18", amount: "+₹950.00", type: "credit" },
+    { id: 4, description: "Bet on Open Panna 123", market: "Kalyan Day", status: "Lost", date: "2024-07-18", amount: "-₹50.00", type: "debit" },
+    { id: 5, description: "Withdrawal", market: "to Bank Account", status: "Completed", date: "2024-07-17", amount: "-₹1000.00", type: "debit" },
+    { id: 6, description: "Bet on Jodi 78", market: "Kalyan Night", status: "Pending", date: "2024-07-17", amount: "-₹200.00", type: "debit" },
+    { id: 7, description: "Win on Close Panna 456", market: "Kalyan Day", status: "Won", date: "2024-07-16", amount: "+₹1400.00", type: "credit" },
+    { id: 8, description: "Wallet Deposit", market: "via Card", status: "Completed", date: "2024-07-16", amount: "+₹2000.00", type: "credit" },
+    { id: 9, description: "Bet on Single 2", market: "Kalyan Night", status: "Lost", date: "2024-07-15", amount: "-₹150.00", type: "debit" },
+    { id: 10, description: "Win on Jodi 99", market: "Kalyan Day", status: "Won", date: "2024-07-15", amount: "+₹4750.00", type: "credit" },
+    { id: 11, description: "Bet on Jodi 99", market: "Kalyan Day", status: "Placed", date: "2024-07-15", amount: "-₹50.00", type: "debit" },
+    { id: 12, description: "Wallet Deposit", market: "via Netbanking", status: "Completed", date: "2024-07-14", amount: "+₹300.00", type: "credit" },
+    { id: 13, description: "Bet on Close Panna 789", market: "Kalyan Night", status: "Pending", date: "2024-07-14", amount: "-₹10.00", type: "debit" },
+    { id: 14, description: "Win on Open Single 1", market: "Kalyan Day", status: "Won", date: "2024-07-13", amount: "+₹95.00", type: "credit" },
+    { id: 15, description: "Bet on Jodi 13", market: "Kalyan Day", status: "Placed", date: "2024-07-13", amount: "-₹10.00", type: "debit" },
+    { id: 16, description: "Bet on Single 5", market: "Kalyan Night", status: "Lost", date: "2024-07-12", amount: "-₹50.00", type: "debit" },
+];
+
+const displayedActivity = recentActivity.slice(0, 15);
+
+
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
@@ -84,73 +106,55 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Bet on Jodi 45</div>
-                    <div className="text-sm text-muted-foreground">
-                      Kalyan Night
-                    </div>
-                  </TableCell>
-                  <TableCell>Pending</TableCell>
-                  <TableCell>2024-07-20</TableCell>
-                  <TableCell className="text-right">-₹100.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Wallet Deposit</div>
-                    <div className="text-sm text-muted-foreground">
-                      via UPI
-                    </div>
-                  </TableCell>
-                  <TableCell>Completed</TableCell>
-                  <TableCell>2024-07-19</TableCell>
-                  <TableCell className="text-right text-green-600">+₹500.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Win on Single 8</div>
-                    <div className="text-sm text-muted-foreground">
-                      Kalyan Day
-                    </div>
-                  </TableCell>
-                  <TableCell>Won</TableCell>
-                  <TableCell>2024-07-18</TableCell>
-                  <TableCell className="text-right text-green-600">+₹950.00</TableCell>
-                </TableRow>
+                {displayedActivity.map((activity) => (
+                  <TableRow key={activity.id}>
+                    <TableCell>
+                      <div className="font-medium">{activity.description}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {activity.market}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                       <Badge 
+                        variant={
+                          activity.status === "Won" ? "default" :
+                          activity.status === "Completed" ? "secondary" :
+                          "outline"
+                        }
+                      >
+                        {activity.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{activity.date}</TableCell>
+                    <TableCell className={`text-right ${activity.type === 'credit' ? 'text-green-600' : ''}`}>
+                      {activity.amount}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
           <div className="grid gap-4 md:hidden">
-             <div className="flex items-center justify-between">
+            {displayedActivity.map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">Bet on Jodi 45</div>
-                  <div className="text-sm text-muted-foreground">Kalyan Night - 2024-07-20</div>
+                  <div className="font-medium">{activity.description}</div>
+                  <div className="text-sm text-muted-foreground">{activity.market} - {activity.date}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold">-₹100.00</div>
-                  <Badge variant="outline">Pending</Badge>
+                  <div className={`font-semibold ${activity.type === 'credit' ? 'text-green-600' : ''}`}>{activity.amount}</div>
+                   <Badge 
+                    variant={
+                      activity.status === "Won" ? "default" :
+                      activity.status === "Completed" ? "secondary" :
+                      "outline"
+                    }
+                  >
+                    {activity.status}
+                  </Badge>
                 </div>
               </div>
-               <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Wallet Deposit</div>
-                  <div className="text-sm text-muted-foreground">via UPI - 2024-07-19</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-green-600">+₹500.00</div>
-                  <Badge variant="secondary">Completed</Badge>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Win on Single 8</div>
-                  <div className="text-sm text-muted-foreground">Kalyan Day - 2024-07-18</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-green-600">+₹950.00</div>
-                  <Badge>Won</Badge>
-                </div>
-              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
