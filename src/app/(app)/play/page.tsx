@@ -79,15 +79,37 @@ function BetForm({
     }
   };
   
-  const handleAddBet = () => {
-    if (!currentNumber || !currentAmount) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Bet",
-        description: "Please enter both a number and amount.",
-      });
-      return;
+  const validateBet = (number: string, amount: string) => {
+    if (!number || !amount) {
+        toast({ variant: "destructive", title: "Invalid Bet", description: "Please enter both a number and amount." });
+        return false;
     }
+    if(parseInt(amount) <= 0) {
+        toast({ variant: "destructive", title: "Invalid Amount", description: "Amount must be greater than zero." });
+        return false;
+    }
+    if (gameType.includes("Single")) {
+        if (!/^\d$/.test(number)) {
+            toast({ variant: "destructive", title: "Invalid Number", description: "Single digit must be a single digit (0-9)." });
+            return false;
+        }
+    } else if (gameType === "Jodi") {
+        if (!/^\d{2}$/.test(number)) {
+            toast({ variant: "destructive", title: "Invalid Number", description: "Jodi must be two digits (00-99)." });
+            return false;
+        }
+    } else if (gameType.includes("Panna")) {
+        if (!/^\d{3}$/.test(number)) {
+            toast({ variant: "destructive", title: "Invalid Number", description: "Panna must be three digits (000-999)." });
+            return false;
+        }
+    }
+    return true;
+  };
+
+  const handleAddBet = () => {
+    if (!validateBet(currentNumber, currentAmount)) return;
+
     setBets([...bets, { number: currentNumber, amount: currentAmount }]);
     setCurrentNumber("");
     setCurrentAmount("");
@@ -103,22 +125,37 @@ function BetForm({
     e.preventDefault();
 
     if (isSangam) {
-      if (!sangamNumber1 || !sangamNumber2 || !sangamAmount) {
+        let isValid = true;
+        if (!sangamNumber1 || !sangamNumber2 || !sangamAmount) {
+            toast({ variant: "destructive", title: "Invalid Sangam Bet", description: "Please fill out all fields." });
+            isValid = false;
+        }
+        if (parseInt(sangamAmount) <= 0) {
+            toast({ variant: "destructive", title: "Invalid Amount", description: "Amount must be greater than zero." });
+            isValid = false;
+        }
+
+        if (gameType === "Half Sangam") {
+            if (!((/^\d{3}$/.test(sangamNumber1) && /^\d$/.test(sangamNumber2)) || (/^\d$/.test(sangamNumber1) && /^\d{3}$/.test(sangamNumber2)))) {
+                 toast({ variant: "destructive", title: "Invalid Half Sangam", description: "Half Sangam requires one Panna (3 digits) and one Single Digit." });
+                 isValid = false;
+            }
+        } else if (gameType === "Full Sangam") {
+            if (!/^\d{3}$/.test(sangamNumber1) || !/^\d{3}$/.test(sangamNumber2)) {
+                toast({ variant: "destructive", title: "Invalid Full Sangam", description: "Full Sangam requires two Pannas (3 digits each)." });
+                isValid = false;
+            }
+        }
+
+        if (!isValid) return;
+
         toast({
-          variant: "destructive",
-          title: "Invalid Sangam Bet",
-          description: "Please fill out all fields for the Sangam bet.",
+            title: "Bet Placed!",
+            description: `Your bet of ${sangamAmount} on ${sangamNumber1} - ${sangamNumber2} for ${gameType} (${market}) has been placed.`,
         });
-        return;
-      }
-      toast({
-        title: "Bet Placed!",
-        description: `Your bet of ${sangamAmount} on ${sangamNumber1} - ${sangamNumber2} for ${gameType} (${market}) has been placed.`,
-        footer: `Total Amount: ${sangamAmount}`,
-      });
-      setSangamNumber1("");
-      setSangamNumber2("");
-      setSangamAmount("");
+        setSangamNumber1("");
+        setSangamNumber2("");
+        setSangamAmount("");
     } else {
       if (bets.length === 0) {
         toast({
@@ -154,7 +191,7 @@ function BetForm({
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="space-y-2">
-                <Label htmlFor={`${market}-${gameType}-num1`}>Number 1</Label>
+                <Label htmlFor={`${market}-${gameType}-num1`}>{gameType === 'Half Sangam' ? 'Panna / Digit' : 'Open Panna'}</Label>
                 <Input
                   id={`${market}-${gameType}-num1`}
                   placeholder={getPlaceholder()}
@@ -163,7 +200,7 @@ function BetForm({
                 />
               </div>
                <div className="space-y-2">
-                <Label htmlFor={`${market}-${gameType}-num2`}>Number 2</Label>
+                <Label htmlFor={`${market}-${gameType}-num2`}>{gameType === 'Half Sangam' ? 'Digit / Panna' : 'Close Panna'}</Label>
                 <Input
                   id={`${market}-${gameType}-num2`}
                   placeholder={getPlaceholder2()}
