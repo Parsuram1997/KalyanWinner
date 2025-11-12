@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -89,37 +88,35 @@ export default function DashboardPage() {
           </CardFooter>
         </Card>
         <Card className="hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
-          <CardHeader className="pb-2">
+          <CardHeader>
             <CardTitle className="text-base">Latest Result</CardTitle>
-            <CardDescription>Swipe to see more</CardDescription>
+            <CardDescription>Toggle between Day and Night results.</CardDescription>
           </CardHeader>
-          <CardContent className="p-0 flex-grow">
-            <Carousel className="w-full h-full">
-              <CarouselContent className="h-full">
-                {latestResults.map((result, index) => (
-                  <CarouselItem key={index} className="h-full">
-                    <div className="flex flex-col h-full p-6 pt-0">
-                      <div className="flex-grow flex items-center justify-center gap-2">
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-muted-foreground">Open</span>
-                          <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
-                        </div>
-                        <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-                          <span className="text-3xl font-bold tracking-wider">{result.jodi}</span>
-                          <span className="text-[10px] font-medium">{result.market}</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-muted-foreground">Close</span>
-                          <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
-                        </div>
+          <Carousel className="w-full h-full flex flex-col">
+            <CarouselContent>
+              {latestResults.map((result, index) => (
+                <CarouselItem key={index} className="h-full">
+                  <CardContent className="p-6 pt-0 flex items-center justify-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-muted-foreground">Open</span>
+                        <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
+                      </div>
+                      <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                        <span className="text-3xl font-bold tracking-wider">{result.jodi}</span>
+                        <span className="text-[10px] font-medium">{result.market}</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-muted-foreground">Close</span>
+                        <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
                       </div>
                     </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          </CardContent>
-          <CardFooter>
+                  </CardContent>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+          <CardFooter className="mt-auto">
             <Button variant="outline" size="sm" className="w-full" asChild>
               <Link href="/results">View All Results</Link>
             </Button>
@@ -197,5 +194,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
