@@ -19,7 +19,7 @@ import { PlusCircle, Trash2, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
-const gameTypesRow1 = ["Open Single", "Jodi", "Close Single"];
+const gameTypesRow1 = ["Open", "Jodi", "Close"];
 const gameTypesRow2 = ["Open Panna", "Close Panna"];
 const allGameTypes = [...gameTypesRow1, ...gameTypesRow2];
 
@@ -78,7 +78,7 @@ function BetForm({
       });
       return false;
     }
-    if (gameType.includes("Single")) {
+    if (gameType === "Open" || gameType === "Close") {
       if (!/^\d$/.test(number)) {
         toast({
           variant: "destructive",
