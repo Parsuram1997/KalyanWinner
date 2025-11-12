@@ -92,11 +92,12 @@ export default function DashboardPage() {
             <CarouselContent>
               {latestResults.map((result, index) => (
                 <CarouselItem key={index}>
+                  <div className="flex flex-col h-full">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base">Latest Result</CardTitle>
                       <CardDescription>{result.market} - {result.date}</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex items-center justify-center gap-2">
+                    <CardContent className="flex-grow flex items-center justify-center gap-2">
                       <div className="flex flex-col items-center">
                         <span className="text-xs text-muted-foreground">Open</span>
                         <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
@@ -110,15 +111,16 @@ export default function DashboardPage() {
                         <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
                       </div>
                     </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" size="sm" className="w-full" asChild>
+                        <Link href="/results">View All Results</Link>
+                      </Button>
+                    </CardFooter>
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
           </Carousel>
-          <CardFooter>
-            <Button variant="outline" size="sm" className="w-full" asChild>
-              <Link href="/results">View All Results</Link>
-            </Button>
-          </CardFooter>
         </Card>
       </div>
       <Card className="hover:shadow-lg transition-shadow">
