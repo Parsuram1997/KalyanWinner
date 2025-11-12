@@ -61,7 +61,7 @@ export default function ChartsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[250px]">
+            <ChartContainer config={chartConfig} className="h-[150px] w-full sm:h-[200px]">
               <BarChart accessibilityLayer data={panelChartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
@@ -76,7 +76,7 @@ export default function ChartsPage() {
                   cursor={false}
                   content={<ChartTooltipContent hideLabel />}
                 />
-                <Bar dataKey="count" fill="var(--color-count)" radius={4} barSize={40} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={4} barSize={30} />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -90,7 +90,7 @@ export default function ChartsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[200px] w-full sm:h-[250px]">
+            <ChartContainer config={chartConfig} className="h-[150px] w-full sm:h-[200px]">
               <LineChart
                 accessibilityLayer
                 data={digitTrendData}
@@ -108,7 +108,7 @@ export default function ChartsPage() {
                    tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                    tick={{ fontSize: 12 }}
                 />
-                <YAxis domain={[0, 9]} tickCount={10} tick={{ fontSize: 12 }} />
+                <YAxis domain={[0, 9]} tickCount={5} tick={{ fontSize: 12 }} />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent indicator="dot" />}
