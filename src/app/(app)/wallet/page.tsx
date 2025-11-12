@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 import { MinusCircle, PlusCircle } from "lucide-react";
 import { useState } from "react";
 
@@ -142,8 +144,58 @@ const transactions = [
 const recentTransactions = transactions.slice(0, 15);
 
 export default function WalletPage() {
+  const { toast } = useToast();
   const [addAmount, setAddAmount] = useState("1000");
-  const [withdrawAmount, setWithdrawAmount] = useState("500");
+  const [withdrawAmount, setWithdrawAmount] = useState("2000");
+  const [isAddFundsOpen, setAddFundsOpen] = useState(false);
+  const [isWithdrawOpen, setWithdrawOpen] = useState(false);
+
+  const handleAddFunds = () => {
+    const amount = parseInt(addAmount, 10);
+    if (isNaN(amount) || amount < 500) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Amount",
+        description: "Minimum deposit amount is ₹500.",
+      });
+      return;
+    }
+    // Proceed with payment logic
+    toast({
+      title: "Processing Payment",
+      description: `Redirecting to add ₹${amount} to your wallet.`,
+    });
+    setAddFundsOpen(false);
+  };
+
+  const handleWithdraw = () => {
+    const today = new Date();
+    // Sunday is 0
+    if (today.getDay() !== 0) {
+      toast({
+        variant: "destructive",
+        title: "Withdrawal Not Allowed",
+        description: "Withdrawals are only processed on Sundays.",
+      });
+      return;
+    }
+
+    const amount = parseInt(withdrawAmount, 10);
+    if (isNaN(amount) || amount < 2000) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Amount",
+        description: "Minimum withdrawal amount is ₹2000.",
+      });
+      return;
+    }
+    // Proceed with withdrawal logic
+    toast({
+      title: "Withdrawal Requested",
+      description: `Your request to withdraw ₹${amount} is being processed.`,
+    });
+    setWithdrawOpen(false);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -175,7 +227,7 @@ export default function WalletPage() {
             <CardTitle className="text-lg">Manage Funds</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <Dialog>
+            <Dialog open={isAddFundsOpen} onOpenChange={setAddFundsOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Funds
@@ -185,8 +237,7 @@ export default function WalletPage() {
                 <DialogHeader>
                   <DialogTitle>Add Funds to Wallet</DialogTitle>
                   <DialogDescription>
-                    Enter the amount you want to add. You will be redirected to
-                    the payment gateway.
+                    Minimum deposit is ₹500. You will be redirected to the payment gateway.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -205,13 +256,13 @@ export default function WalletPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" className="w-full">
+                  <Button onClick={handleAddFunds} className="w-full">
                     Proceed to Payment
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            <Dialog>
+            <Dialog open={isWithdrawOpen} onOpenChange={setWithdrawOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <MinusCircle className="mr-2 h-4 w-4" /> Withdraw
@@ -221,8 +272,7 @@ export default function WalletPage() {
                 <DialogHeader>
                   <DialogTitle>Withdraw Funds</DialogTitle>
                   <DialogDescription>
-                    Enter the amount and your bank details for withdrawal.
-                    Funds will be transferred within 2-3 business days.
+                    Minimum withdrawal is ₹2000 (Sundays only). Funds will be transferred within 2-3 business days.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -236,7 +286,7 @@ export default function WalletPage() {
                       onChange={(e) => setWithdrawAmount(e.target.value)}
                       className="col-span-3"
                       type="number"
-                      placeholder="e.g. 500"
+                      placeholder="e.g. 2000"
                     />
                   </div>
                    <div className="grid grid-cols-4 items-center gap-4">
@@ -271,7 +321,7 @@ export default function WalletPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" className="w-full">
+                  <Button onClick={handleWithdraw} className="w-full">
                     Request Withdrawal
                   </Button>
                 </DialogFooter>
