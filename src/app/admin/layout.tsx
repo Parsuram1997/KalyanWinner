@@ -3,11 +3,9 @@ import Link from "next/link";
 import {
   Users,
   ClipboardList,
-  GanttChartSquare,
   LayoutDashboard,
   Wallet,
   Settings,
-  Coins,
   Shield,
 } from "lucide-react";
 import { UserNav } from "@/components/user-nav";
@@ -23,13 +21,9 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { usePathname } from "next/navigation";
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname();
-    const isLoginPage = pathname === '/admin';
-
   return (
     <SidebarProvider>
       <Sidebar>
@@ -41,52 +35,50 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h1>
           </div>
         </SidebarHeader>
-        {!isLoginPage && (
-          <SidebarContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/admin/dashboard">
-                    <LayoutDashboard />
-                    Dashboard
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/admin/users">
-                    <Users />
-                    Users
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/admin/manage-results">
-                    <ClipboardList />
-                    Manage Results
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/admin/transactions">
-                    <Wallet />
-                    Transactions
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/admin/settings">
-                    <Settings />
-                    App Settings
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-        )}
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard">
+                  <LayoutDashboard />
+                  Dashboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/users">
+                  <Users />
+                  Users
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/manage-results">
+                  <ClipboardList />
+                  Manage Results
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/transactions">
+                  <Wallet />
+                  Transactions
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/settings">
+                  <Settings />
+                  App Settings
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col h-dvh">
@@ -97,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              {!isLoginPage && <UserNav />}
+              <UserNav />
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>

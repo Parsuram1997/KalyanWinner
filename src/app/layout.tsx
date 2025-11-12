@@ -6,14 +6,24 @@ import AppLayout from "@/app/layout-client";
 import AdminLayout from "@/app/admin/layout";
 import { headers } from 'next/headers';
 import { Suspense } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Shield } from "lucide-react";
+import AdminLoginPage from "./admin/page";
 
 export const metadata: Metadata = {
   title: "Kalyan Winner",
   description: "Play, check results, and analyze trends for Kalyan Matka.",
 };
 
-function PathnameProvider({ app, admin }: { app: React.ReactNode, admin: React.ReactNode }) {
+function PathnameProvider({ app, admin, adminLogin }: { app: React.ReactNode, admin: React.ReactNode, adminLogin: React.ReactNode }) {
   const pathname = headers().get('x-next-pathname');
+  if (pathname === '/admin') {
+    return <>{adminLogin}</>;
+  }
   if (pathname?.startsWith('/admin')) {
     return <>{admin}</>;
   }
@@ -47,6 +57,7 @@ export default function RootLayout({
             <PathnameProvider 
               app={<AppLayout>{children}</AppLayout>}
               admin={<AdminLayout>{children}</AdminLayout>}
+              adminLogin={<AdminLoginPage />}
             />
           </Suspense>
           <Toaster />
