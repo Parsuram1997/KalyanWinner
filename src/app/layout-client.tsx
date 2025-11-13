@@ -66,11 +66,7 @@ const BottomNav = () => {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/login") || pathname.startsWith("/signup")) {
-    return <>{children}</>;
-  }
-  
-  if (pathname.startsWith('/admin')) {
+  if (pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith('/admin')) {
     return <>{children}</>;
   }
 
