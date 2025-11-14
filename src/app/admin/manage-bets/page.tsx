@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,9 +30,6 @@ const generateJodiBets = () => {
     return bets;
 };
 
-const digitBets = generateDigitBets();
-const jodiBets = generateJodiBets();
-
 const pannaStats = [
   { name: "Single Panna", totalBets: "1,250", totalAmount: "₹2,50,000" },
   { name: "Double Panna", totalBets: "980", totalAmount: "₹1,96,000" },
@@ -42,6 +40,14 @@ const pannaStats = [
 
 
 export default function ManageBetsPage() {
+    const [digitBets, setDigitBets] = useState<ReturnType<typeof generateDigitBets>>([]);
+    const [jodiBets, setJodiBets] = useState<ReturnType<typeof generateJodiBets>>([]);
+
+    useEffect(() => {
+        setDigitBets(generateDigitBets());
+        setJodiBets(generateJodiBets());
+    }, []);
+
   return (
     <div className="flex flex-col gap-6">
        <Card>
