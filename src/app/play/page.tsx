@@ -21,8 +21,15 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 const gameTypesRow1 = ["Open", "Jodi", "Close"];
-const gameTypesRow2 = ["Open Panna", "Close Panna"];
-const allGameTypes = [...gameTypesRow1, ...gameTypesRow2];
+const gameTypesRow2 = ["Single Panna", "Double Panna", "Triple Panna"];
+const gameTypesRow3 = ["Half Sangam", "Full Sangam"];
+const allGameTypes = [...gameTypesRow1, ...gameTypesRow2, ...gameTypesRow3];
+
+const gameTypeShortNames: { [key: string]: string } = {
+  "Single Panna": "SP",
+  "Double Panna": "DP",
+  "Triple Panna": "TP",
+};
 
 type Bet = {
   number: string;
@@ -51,13 +58,35 @@ function BetForm({
     switch (gameType) {
       case "Jodi":
         return "e.g., 45";
-      case "Open Panna":
-      case "Close Panna":
+      case "Single Panna":
+      case "Double Panna":
+      case "Triple Panna":
         return "e.g., 128";
+      case "Half Sangam":
+        return "e.g., 123 x 4";
+      case "Full Sangam":
+        return "e.g., 123 x 456";
       default:
         return "e.g., 8";
     }
   };
+
+  const getLabel = () => {
+    switch (gameType) {
+      case "Jodi":
+        return "Jodi Number";
+      case "Single Panna":
+      case "Double Panna":
+      case "Triple Panna":
+        return "Panna Number";
+      case "Half Sangam":
+      case "Full Sangam":
+        return "Sangam Number";
+      default:
+        return "Digit";
+    }
+  };
+
 
   const validateBet = (number: string, amount: string) => {
     if (!number || !amount) {
@@ -114,6 +143,24 @@ function BetForm({
         });
         return false;
       }
+    } else if (gameType === "Half Sangam") {
+        if (!/^\d{3}\s?x\s?\d$/.test(number)) {
+            toast({
+            variant: "destructive",
+            title: "Invalid Number",
+            description: "Half Sangam format must be 'Open Panna x Close Digit' (e.g., 123 x 4).",
+            });
+            return false;
+        }
+    } else if (gameType === "Full Sangam") {
+        if (!/^\d{3}\s?x\s?\d{3}$/.test(number)) {
+            toast({
+            variant: "destructive",
+            title: "Invalid Number",
+            description: "Full Sangam format must be 'Open Panna x Close Panna' (e.g., 123 x 456).",
+            });
+            return false;
+        }
     }
     
     const newTotalAmount = totalBetAmount + amountInt;
@@ -188,11 +235,7 @@ function BetForm({
           <div className="flex gap-2 items-end">
             <div className="flex-1 space-y-2">
               <Label htmlFor={`${market}-${gameType}-digit`}>
-                {gameType === "Jodi"
-                  ? "Jodi Number"
-                  : gameType.includes("Panna")
-                  ? "Panna Number"
-                  : "Digit"}
+                {getLabel()}
               </Label>
               <Input
                 id={`${market}-${gameType}-digit`}
@@ -274,17 +317,24 @@ function BetForm({
 
 const GameTypeTabs = ({ market, walletBalance }: { market: string, walletBalance: number }) => (
   <Tabs defaultValue={allGameTypes[0]} className="w-full">
-    <div className="flex flex-col gap-1">
-      <TabsList className="grid grid-cols-3 h-auto">
+    <div className="flex flex-col gap-1 items-center">
+      <TabsList className="grid w-full grid-cols-3">
         {gameTypesRow1.map((type) => (
-          <TabsTrigger key={type} value={type} className="text-xs px-2">
+          <TabsTrigger key={type} value={type}>
             {type}
           </TabsTrigger>
         ))}
       </TabsList>
-      <TabsList className="grid grid-cols-2 h-auto">
+      <TabsList className="grid w-full grid-cols-3">
         {gameTypesRow2.map((type) => (
-          <TabsTrigger key={type} value={type} className="text-xs px-2">
+          <TabsTrigger key={type} value={type}>
+            {gameTypeShortNames[type] || type}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      <TabsList className="grid w-full grid-cols-2">
+        {gameTypesRow3.map((type) => (
+          <TabsTrigger key={type} value={type}>
             {type}
           </TabsTrigger>
         ))}
