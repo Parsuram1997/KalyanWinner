@@ -1,12 +1,15 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ClipboardList, Wallet, GanttChartSquare } from "lucide-react";
+import { Users, ClipboardList, Wallet, GanttChartSquare, ArrowUpCircle, ArrowDownCircle, Hourglass } from "lucide-react";
 
 const stats = [
   { name: "Total Users", value: "1,250", icon: Users },
   { name: "Total Bets Placed", value: "8,420", icon: GanttChartSquare },
+  { name: "Total Deposit", value: "₹12,50,000", icon: ArrowUpCircle },
+  { name: "Total Withdrawal", value: "₹7,20,000", icon: ArrowDownCircle },
   { name: "Total Winnings", value: "₹5,40,500", icon: ClipboardList },
+  { name: "Pending Deposit", value: "5", icon: Hourglass },
   { name: "Pending Withdrawals", value: "12", icon: Wallet },
 ];
 
