@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { User, Wallet, Phone } from "lucide-react";
+import { useParams } from "next/navigation";
 
 // Mock data - in a real app, you would fetch this based on the userId
 const initialUsers = [
@@ -35,9 +36,11 @@ const recentActivity = [
   { id: 6, userId: "USR004", description: "Bet on Jodi 78", market: "Kalyan Night", status: "Pending", date: "2024-07-17", amount: "-₹200.00", type: "debit" },
 ];
 
-export default function UserDetailsPage({ params }: { params: { userId: string } }) {
-  const user = initialUsers.find((u) => u.id === params.userId);
-  const userBets = recentActivity.filter(activity => activity.userId === params.userId && activity.description.toLowerCase().includes('bet'));
+export default function UserDetailsPage() {
+  const params = useParams();
+  const userId = params.userId as string;
+  const user = initialUsers.find((u) => u.id === userId);
+  const userBets = recentActivity.filter(activity => activity.userId === userId && activity.description.toLowerCase().includes('bet'));
 
   if (!user) {
     return <div>User not found</div>;
