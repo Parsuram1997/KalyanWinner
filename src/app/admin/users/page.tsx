@@ -928,35 +928,14 @@ export default function ManageUsersPage() {
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>All Users</CardTitle>
-          <CardDescription>
-            Manage all registered users in the application.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
-            <div className="relative w-full sm:max-w-xs">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or mobile..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="flex justify-between items-start">
+            <div>
+                <CardTitle>All Users</CardTitle>
+                <CardDescription>
+                    Manage all registered users in the application.
+                </CardDescription>
             </div>
-
-            <div className="flex w-full sm:w-auto items-center gap-2">
-                <Tabs defaultValue="All" onValueChange={setFilter} className="w-full sm:w-auto">
-                    <TabsList className="w-full">
-                        <TabsTrigger value="All" className="px-2">All</TabsTrigger>
-                        <TabsTrigger value="Active" className="px-2">Active</TabsTrigger>
-                        <TabsTrigger value="Suspended" className="px-2">Suspended</TabsTrigger>
-                        <TabsTrigger value="Inactive" className="px-2">Inactive</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-
-
-              <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+             <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="shrink-0">
                     <PlusCircle className="h-4 w-4 mr-2" />
@@ -1027,7 +1006,27 @@ export default function ManageUsersPage() {
                   </form>
                 </DialogContent>
               </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row justify-start items-center gap-4 mb-4">
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or mobile..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
+            <Tabs defaultValue="All" onValueChange={setFilter} className="w-full sm:w-auto">
+                <TabsList className="w-full">
+                    <TabsTrigger value="All" className="px-2">All</TabsTrigger>
+                    <TabsTrigger value="Active" className="px-2">Active</TabsTrigger>
+                    <TabsTrigger value="Suspended" className="px-2">Suspended</TabsTrigger>
+                    <TabsTrigger value="Inactive" className="px-2">Inactive</TabsTrigger>
+                </TabsList>
+            </Tabs>
           </div>
           
            {/* Desktop Table */}
