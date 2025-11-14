@@ -126,7 +126,7 @@ const SidebarProvider = React.forwardRef<
         state,
         open,
         setOpen,
-        isMobile: isClient ? isMobile : false, // Prevent hydration mismatch
+        isMobile: isClient ? isMobile ?? false : false, // Prevent hydration mismatch
         openMobile,
         setOpenMobile,
         toggleSidebar,
