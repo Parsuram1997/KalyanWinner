@@ -17,17 +17,51 @@ const faqs = [
   {
     question: "How do I play the game on this app?",
     answer:
-      "First, you need to have funds in your wallet. If not, go to the 'Wallet' page to add funds. Then, navigate to the 'Play' page, select a market (Kalyan Day or Kalyan Night), choose a game type (like Jodi, Panna, etc.), enter your number and amount, and place your bet.",
+      "First, you need to have funds in your wallet. If not, go to the 'Wallet' page to add funds. Then, navigate to the 'Play' page, select a market (Kalyan Day or Kalyan Night), choose a game type, enter your number and amount, and place your bet.",
   },
-  {
+   {
     question: "What are the different game types?",
     answer:
-      "There are several game types available: Single Digit (0-9), Jodi (00-99), Single Panna (three unique digits), Double Panna (two digits are the same), Triple Panna (all three digits are the same), Half Sangam, and Full Sangam.",
+      "There are several game types: Single Digit (Ank), Jodi, Single Panna (SP), Double Panna (DP), Triple Panna (TP), Half Sangam, and Full Sangam. Each has a different betting method and payout rate.",
+  },
+  {
+    question: "What is Single Digit (Ank)?",
+    answer:
+      "In this type, you bet on a single number from 0 to 9 for either the 'Open' or 'Close' result. For example, you can bet on the number 5 for the Open result.",
+  },
+  {
+    question: "What is Jodi?",
+    answer:
+      "Jodi is a two-digit number from 00 to 99. It is formed by combining the Open single digit and the Close single digit. For example, if the Open result is 4 and the Close result is 8, the Jodi is 48.",
+  },
+  {
+    question: "What is Panna?",
+    answer: "A Panna is a three-digit number. The Open and Close results are both declared as Pannas. Pannas are of three types: Single Panna (SP), Double Panna (DP), and Triple Panna (TP)."
+  },
+  {
+    question: "What is a Single Panna (SP)?",
+    answer: "A Single Panna is a three-digit number where all three digits are unique. For example, 128, 357, 490."
+  },
+    {
+    question: "What is a Double Panna (DP)?",
+    answer: "A Double Panna is a three-digit number where two of the three digits are the same. For example, 112, 335, 880."
+  },
+    {
+    question: "What is a Triple Panna (TP)?",
+    answer: "A Triple Panna is a three-digit number where all three digits are the same. For example, 111, 555, 999."
+  },
+  {
+    question: "What is Half Sangam?",
+    answer: "In Half Sangam, you bet on a combination of one Panna and one single digit. There are two types: 1) Open Panna and the Close single digit, or 2) Close Panna and the Open single digit. For example, you can bet on Open Panna '123' and Close Digit '8'."
+  },
+  {
+    question: "What is Full Sangam?",
+    answer: "In Full Sangam, you bet on the complete result, which includes both the Open Panna and the Close Panna. For example, you can bet on Open Panna '123' and Close Panna '456'."
   },
   {
     question: "How are the results declared?",
     answer:
-      "Each result has two parts: an 'Open' result and a 'Close' result. Each part consists of a three-digit Panna. The sum of the digits of the Panna gives a single digit. The Jodi is formed by combining the Open single digit and the Close single digit.",
+      "Each result has two parts: an 'Open' result and a 'Close' result. Each part is a three-digit Panna. The sum of the digits of the Panna gives a single digit (Ank). The Jodi is formed by combining the Open single digit and the Close single digit.",
   },
   {
     question: "How can I check the results?",
