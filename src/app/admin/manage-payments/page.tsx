@@ -47,7 +47,7 @@ export default function ManagePaymentsPage() {
                     </TabsTrigger>
                     <TabsTrigger value="bank">
                         <Landmark className="mr-2 h-4 w-4" />
-                        Bank Account Details
+                        Bank Details
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="upi" className="mt-6">
