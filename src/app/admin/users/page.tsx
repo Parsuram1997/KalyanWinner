@@ -1035,8 +1035,7 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User ID</TableHead>
-                <TableHead>Name</TableHead>
+                <TableHead>User</TableHead>
                 <TableHead>Mobile</TableHead>
                 <TableHead>State</TableHead>
                 <TableHead>District</TableHead>
@@ -1048,8 +1047,10 @@ export default function UsersPage() {
             <TableBody>
               {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="py-2 px-4">{user.id}</TableCell>
-                  <TableCell className="py-2 px-4">{user.name}</TableCell>
+                  <TableCell className="py-2 px-4">
+                    <div className="font-medium">{user.name}</div>
+                    <div className="text-xs text-muted-foreground">{user.id}</div>
+                  </TableCell>
                   <TableCell className="py-2 px-4">{user.mobile}</TableCell>
                   <TableCell className="py-2 px-4">{user.state}</TableCell>
                   <TableCell className="py-2 px-4">{user.district}</TableCell>
