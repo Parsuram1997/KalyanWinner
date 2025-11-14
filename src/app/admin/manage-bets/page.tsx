@@ -244,16 +244,23 @@ export default function ManageBetsPage() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="open">
-                <TabsList className="grid w-full grid-cols-4 sm:grid-cols-4 lg:grid-cols-8">
-                    <TabsTrigger value="open">Open</TabsTrigger>
-                    <TabsTrigger value="close">Close</TabsTrigger>
-                    <TabsTrigger value="jodi">Jodi</TabsTrigger>
-                    <TabsTrigger value="single-panna">Single Panna</TabsTrigger>
-                    <TabsTrigger value="double-panna">Double Panna</TabsTrigger>
-                    <TabsTrigger value="triple-panna">Triple Panna</TabsTrigger>
-                    <TabsTrigger value="half-sangam">Half Sangam</TabsTrigger>
-                    <TabsTrigger value="full-sangam">Full Sangam</TabsTrigger>
-                </TabsList>
+                <div className="flex flex-col gap-1 items-center">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="open">Open</TabsTrigger>
+                        <TabsTrigger value="close">Close</TabsTrigger>
+                        <TabsTrigger value="jodi">Jodi</TabsTrigger>
+                    </TabsList>
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="single-panna">Single Panna</TabsTrigger>
+                        <TabsTrigger value="double-panna">Double Panna</TabsTrigger>
+                        <TabsTrigger value="triple-panna">Triple Panna</TabsTrigger>
+                    </TabsList>
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="half-sangam">Half Sangam</TabsTrigger>
+                        <TabsTrigger value="full-sangam">Full Sangam</TabsTrigger>
+                    </TabsList>
+                </div>
+                
 
                 <TabsContent value="open">
                     <SingleDigitTable data={openBets} type="Open" />
