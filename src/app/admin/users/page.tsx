@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useMemo } from "react";
 import {
@@ -36,11 +37,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const initialUsers = [
-  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
-  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
-  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
-  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
-  { id: "USR005", name: "Inactive User", mobile: "9876543214", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur" },
+  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", email: "ravi.k@example.com", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
+  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", email: "sunita.s@example.com", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
+  { id: "USR003", name: "Amit Patel", mobile: "9876543212", email: "amit.p@example.com", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
+  { id: "USR004", name: "Priya Singh", mobile: "9876543213", email: "priya.s@example.com", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
+  { id: "USR005", name: "Inactive User", mobile: "9876543214", email: "inactive.user@example.com", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur" },
 ];
 
 const states = [
@@ -887,6 +888,7 @@ export default function UsersPage() {
       id: `USR${String(users.length + 1).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
+      email: formData.get("email") as string,
       state: states.find(s => s.value === stateValue)?.label || '',
       district: formData.get("district") as string,
       balance: parseFloat(formData.get("balance") as string || '0'),
@@ -895,7 +897,7 @@ export default function UsersPage() {
     const password = formData.get("password") as string;
 
 
-    if (!newUser.name || !newUser.mobile || !password || !newUser.state || !newUser.district) {
+    if (!newUser.name || !newUser.mobile || !newUser.email || !password || !newUser.state || !newUser.district) {
         toast({
             variant: "destructive",
             title: "Validation Error",
@@ -923,7 +925,8 @@ export default function UsersPage() {
       })
       .filter(user =>
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.mobile.includes(searchQuery)
+        user.mobile.includes(searchQuery) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase())
       );
   }, [users, searchQuery, filterStatus]);
 
@@ -937,7 +940,7 @@ export default function UsersPage() {
                 <div className="relative flex-1 w-full sm:max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input 
-                      placeholder="Search by name or mobile..." 
+                      placeholder="Search by name, mobile, or email..." 
                       className="pl-8" 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -979,6 +982,12 @@ export default function UsersPage() {
                                         Mobile
                                     </Label>
                                     <Input id="mobile" name="mobile" className="col-span-3" placeholder="e.g., 9988776655" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="email" className="text-right">
+                                        Email
+                                    </Label>
+                                    <Input id="email" name="email" type="email" className="col-span-3" placeholder="e.g., user@example.com" />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="state" className="text-right">
@@ -1036,7 +1045,7 @@ export default function UsersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>User</TableHead>
-                <TableHead>Mobile</TableHead>
+                <TableHead>Contact</TableHead>
                 <TableHead>State</TableHead>
                 <TableHead>District</TableHead>
                 <TableHead>Balance</TableHead>
@@ -1051,7 +1060,10 @@ export default function UsersPage() {
                     <div className="font-medium">{user.name}</div>
                     <div className="text-xs text-muted-foreground">{user.id}</div>
                   </TableCell>
-                  <TableCell className="py-2 px-4">{user.mobile}</TableCell>
+                  <TableCell className="py-2 px-4">
+                    <div className="font-medium">{user.mobile}</div>
+                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                  </TableCell>
                   <TableCell className="py-2 px-4">{user.state}</TableCell>
                   <TableCell className="py-2 px-4">{user.district}</TableCell>
                   <TableCell className="py-2 px-4">₹{user.balance.toFixed(2)}</TableCell>
@@ -1076,3 +1088,5 @@ export default function UsersPage() {
     </div>
   );
 }
+
+    
