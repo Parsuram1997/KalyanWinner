@@ -38,14 +38,16 @@ export default function SettingsPage() {
           <CardDescription>Update the payout rates for different game types.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
+          <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
             {initialRates.map((rate, index) => (
               <div key={index} className="grid grid-cols-2 items-center gap-4">
-                <Label htmlFor={`rate-${index}`}>{rate.game}</Label>
-                <Input id={`rate-${index}`} defaultValue={rate.rate} />
+                <Label htmlFor={`rate-${index}`} className="text-base">{rate.game}</Label>
+                <Input id={`rate-${index}`} defaultValue={rate.rate} className="text-base" />
               </div>
             ))}
-            <Button type="submit">Save Changes</Button>
+            <div className="flex justify-center pt-4">
+                <Button type="submit">Save Changes</Button>
+            </div>
           </form>
         </CardContent>
       </Card>
