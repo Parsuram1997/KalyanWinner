@@ -40,6 +40,7 @@ const initialUsers = [
   { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
   { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
   { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
+  { id: "USR005", name: "Inactive User", mobile: "9876543214", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur" },
 ];
 
 const states = [
@@ -943,9 +944,10 @@ export default function UsersPage() {
                     />
                 </div>
                 <Tabs value={filterStatus} onValueChange={setFilterStatus} className="w-full sm:w-auto">
-                    <TabsList className="grid w-full grid-cols-3 sm:w-auto">
+                    <TabsList className="grid w-full grid-cols-4 sm:w-auto">
                         <TabsTrigger value="All">All</TabsTrigger>
                         <TabsTrigger value="Active">Active</TabsTrigger>
+                        <TabsTrigger value="Inactive">Inactive</TabsTrigger>
                         <TabsTrigger value="Suspended">Suspended</TabsTrigger>
                     </TabsList>
                 </Tabs>
@@ -1053,7 +1055,7 @@ export default function UsersPage() {
                   <TableCell className="py-2 px-4">{user.district}</TableCell>
                   <TableCell className="py-2 px-4">₹{user.balance.toFixed(2)}</TableCell>
                   <TableCell className="py-2 px-4">
-                    <Badge variant={user.status === "Active" ? "secondary" : "destructive"}>
+                    <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
                       {user.status}
                     </Badge>
                   </TableCell>
