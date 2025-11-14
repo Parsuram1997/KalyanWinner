@@ -126,32 +126,46 @@ const SingleDigitTable = ({ data, type }: { data: { digit: string; amount: numbe
     </Card>
 );
 
-const JodiTable = ({ data }: { data: { jodi: string; amount: number; }[] }) => (
+const JodiTable = ({ data }: { data: { jodi: string; amount: number }[] }) => {
+  const midPoint = Math.ceil(data.length / 2);
+  const firstHalf = data.slice(0, midPoint);
+  const secondHalf = data.slice(midPoint);
+
+  const renderTable = (bets: typeof data, title: string) => (
+    <div className="flex-1">
+        <h4 className="text-sm font-medium mb-2">{title}</h4>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Jodi</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {bets.map((bet) => (
+            <TableRow key={bet.jodi}>
+              <TableCell className="font-mono font-bold">{bet.jodi}</TableCell>
+              <TableCell className="text-right">₹{bet.amount.toLocaleString()}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  return (
     <Card className="mt-4">
-        <CardHeader>
-            <CardTitle>Jodi Bet Amounts</CardTitle>
-            <CardDescription>Total amount placed on each Jodi number (00-99).</CardDescription>
-        </CardHeader>
-        <CardContent>
-           <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-1/2">Jodi</TableHead>
-                        <TableHead className="w-1/2 text-right">Total Amount</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {data.map((bet) => (
-                        <TableRow key={bet.jodi}>
-                            <TableCell className="font-mono font-bold text-lg">{bet.jodi}</TableCell>
-                            <TableCell className="text-right">₹{bet.amount.toLocaleString()}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
+      <CardHeader>
+        <CardTitle>Jodi Bet Amounts</CardTitle>
+        <CardDescription>Total amount placed on each Jodi number (00-99).</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col md:flex-row gap-8">
+        {renderTable(firstHalf, "Jodi 00-49")}
+        {renderTable(secondHalf, "Jodi 50-99")}
+      </CardContent>
     </Card>
-);
+  );
+};
 
 const PannaTable = ({ data, type }: { data: { panna: string; amount: number; }[], type: string }) => (
      <Card className="mt-4">
