@@ -27,50 +27,92 @@ const transactions = [
 ];
 
 const TransactionTable = ({ items }: { items: typeof transactions }) => (
-    <Table>
-        <TableHeader>
-            <TableRow>
-                <TableHead>Transaction ID</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
+    <div>
+        {/* Desktop Table */}
+        <div className="hidden md:block">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Transaction ID</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {items.map((txn) => (
+                        <TableRow key={txn.id}>
+                            <TableCell>{txn.id}</TableCell>
+                            <TableCell>{txn.user}</TableCell>
+                            <TableCell>
+                                <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"}>
+                                    {txn.type}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>₹{txn.amount.toFixed(2)}</TableCell>
+                            <TableCell>{txn.date}</TableCell>
+                            <TableCell>
+                                <Badge variant={txn.status === "Approved" ? "default" : txn.status === "Pending" ? "secondary" : "destructive"}>
+                                    {txn.status}
+                                </Badge>
+                            </TableCell>
+                            <TableCell className="flex gap-2">
+                                {txn.status === "Pending" && (
+                                    <>
+                                        <Button variant="outline" size="sm">Approve</Button>
+                                        <Button variant="destructive" size="sm">Reject</Button>
+                                    </>
+                                )}
+                                {txn.status !== "Pending" && (
+                                    <Button variant="ghost" size="sm" disabled>Processed</Button>
+                                )}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="grid gap-4 md:hidden">
             {items.map((txn) => (
-                <TableRow key={txn.id}>
-                    <TableCell>{txn.id}</TableCell>
-                    <TableCell>{txn.user}</TableCell>
-                    <TableCell>
-                        <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"}>
-                            {txn.type}
-                        </Badge>
-                    </TableCell>
-                    <TableCell>₹{txn.amount.toFixed(2)}</TableCell>
-                    <TableCell>{txn.date}</TableCell>
-                    <TableCell>
-                        <Badge variant={txn.status === "Approved" ? "default" : txn.status === "Pending" ? "secondary" : "destructive"}>
+                <Card key={txn.id} className="p-4">
+                     <div className="flex justify-between items-start">
+                        <div>
+                            <p className="font-semibold">{txn.user}</p>
+                            <p className="text-xs text-muted-foreground">{txn.id} - {txn.date}</p>
+                        </div>
+                         <Badge variant={txn.status === "Approved" ? "default" : txn.status === "Pending" ? "secondary" : "destructive"}>
                             {txn.status}
                         </Badge>
-                    </TableCell>
-                    <TableCell className="flex gap-2">
-                        {txn.status === "Pending" && (
-                            <>
-                                <Button variant="outline" size="sm">Approve</Button>
-                                <Button variant="destructive" size="sm">Reject</Button>
-                            </>
-                        )}
-                        {txn.status !== "Pending" && (
-                             <Button variant="ghost" size="sm" disabled>Processed</Button>
-                        )}
-                    </TableCell>
-                </TableRow>
+                    </div>
+                     <div className="mt-4 space-y-2 text-sm">
+                         <div className="flex justify-between">
+                            <span className="text-muted-foreground">Type:</span>
+                            <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"} className="font-medium">
+                                {txn.type}
+                            </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Amount:</span>
+                            <span className="font-medium">₹{txn.amount.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    {txn.status === "Pending" && (
+                        <div className="mt-4 flex justify-end gap-2 border-t pt-4">
+                            <Button variant="outline" size="sm">Approve</Button>
+                            <Button variant="destructive" size="sm">Reject</Button>
+                        </div>
+                    )}
+                </Card>
             ))}
-        </TableBody>
-    </Table>
+        </div>
+         {items.length === 0 && <p className="text-center text-muted-foreground pt-8">No transactions found.</p>}
+    </div>
 )
 
 export default function TransactionsPage() {
@@ -87,18 +129,18 @@ export default function TransactionsPage() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="pending-deposits">
-                <TabsList>
-                    <TabsTrigger value="pending-deposits">Pending Deposits ({pendingDeposits.length})</TabsTrigger>
-                    <TabsTrigger value="pending-withdrawals">Pending Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
+                <TabsList className="w-full grid-cols-3 grid">
+                    <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
+                    <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
                     <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
                 </TabsList>
-                <TabsContent value="pending-deposits">
+                <TabsContent value="pending-deposits" className="mt-4">
                     <TransactionTable items={pendingDeposits} />
                 </TabsContent>
-                <TabsContent value="pending-withdrawals">
+                <TabsContent value="pending-withdrawals" className="mt-4">
                     <TransactionTable items={pendingWithdrawals} />
                 </TabsContent>
-                <TabsContent value="processed">
+                <TabsContent value="processed" className="mt-4">
                     <TransactionTable items={processedTransactions} />
                 </TabsContent>
             </Tabs>
