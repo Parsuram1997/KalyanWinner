@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -32,6 +32,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 const initialUsers = [
   { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
@@ -872,6 +874,8 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
   const { toast } = useToast();
 
   const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
@@ -910,20 +914,45 @@ export default function UsersPage() {
     console.log(`New user created with password: ${password}`);
   };
 
+  const filteredUsers = useMemo(() => {
+    return users
+      .filter(user => {
+        if (filterStatus === "All") return true;
+        return user.status === filterStatus;
+      })
+      .filter(user =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.mobile.includes(searchQuery)
+      );
+  }, [users, searchQuery, filterStatus]);
+
   return (
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>All Users</CardTitle>
           <CardDescription>View, search, and manage all registered users.</CardDescription>
-            <div className="flex items-center gap-2 pt-4">
-                <div className="relative flex-1">
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                <div className="relative flex-1 w-full sm:max-w-sm">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search users by name or mobile..." className="pl-8 max-w-sm" />
+                    <Input 
+                      placeholder="Search by name or mobile..." 
+                      className="pl-8" 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                 </div>
+                <Tabs value={filterStatus} onValueChange={setFilterStatus} className="w-full sm:w-auto">
+                    <TabsList className="grid w-full grid-cols-3 sm:w-auto">
+                        <TabsTrigger value="All">All</TabsTrigger>
+                        <TabsTrigger value="Active">Active</TabsTrigger>
+                        <TabsTrigger value="Suspended">Suspended</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+
                 <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setSelectedState(''); }}>
                     <DialogTrigger asChild>
-                        <Button>
+                        <Button className="w-full sm:w-auto">
                             <PlusCircle className="mr-2 h-4 w-4"/>
                             Add User
                         </Button>
@@ -1015,7 +1044,7 @@ export default function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="py-2 px-4">{user.id}</TableCell>
                   <TableCell className="py-2 px-4">{user.name}</TableCell>
