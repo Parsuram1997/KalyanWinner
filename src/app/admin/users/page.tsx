@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search } from "lucide-react";
+import { PlusCircle, Search, Edit, Trash } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -1059,10 +1059,12 @@ export default function UsersPage() {
                       {user.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="py-2 px-4">
+                  <TableCell className="py-2 px-4 flex gap-2">
                     <Button variant="outline" size="sm" asChild>
                         <Link href={`/admin/users/${user.id}`}>View</Link>
                     </Button>
+                     <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
+                     <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
