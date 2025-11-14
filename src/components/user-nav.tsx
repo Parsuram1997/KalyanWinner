@@ -37,7 +37,7 @@ export function UserNav() {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side="right" align="start" forceMount>
           <DropdownMenuLabel className="font-normal">
-             <div className="flex flex-col items-center space-y-2">
+             <div className="flex flex-col items-center space-y-2 py-2">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src="https://picsum.photos/seed/1/40/40" alt="@shadcn" data-ai-hint="profile picture" />
                   <AvatarFallback>U</AvatarFallback>
@@ -58,40 +58,21 @@ export function UserNav() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start items-center gap-2 p-2 h-auto">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="https://picsum.photos/seed/1/40/40" alt="@shadcn" data-ai-hint="profile picture" />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
-           <div className="flex flex-col items-start flex-1 truncate">
-            <p className="text-sm font-medium leading-none truncate">Username</p>
-            <p className="text-xs leading-none text-muted-foreground truncate">
-              user@example.com
-            </p>
-          </div>
-          <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-          <DropdownMenuLabel className="font-normal">
-             <div className="flex flex-col items-center space-y-2">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src="https://picsum.photos/seed/1/40/40" alt="@shadcn" data-ai-hint="profile picture" />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-              <p className="text-sm font-medium leading-none">Username</p>
-              <p className="text-xs leading-none text-muted-foreground">
-                user@example.com
-              </p>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/login"><LogOut className="mr-2"/>Log out</Link>
-          </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="w-full flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center text-center">
+        <Avatar className="h-12 w-12">
+          <AvatarImage src="https://picsum.photos/seed/1/40/40" alt="@shadcn" data-ai-hint="profile picture" />
+          <AvatarFallback>U</AvatarFallback>
+        </Avatar>
+        <p className="text-sm font-medium leading-none mt-2">Username</p>
+        <p className="text-xs leading-none text-muted-foreground mt-1">
+          user@example.com
+        </p>
+      </div>
+      <Button variant="ghost" className="w-full justify-center" asChild>
+        <Link href="/login"><LogOut className="mr-2"/>Log out</Link>
+      </Button>
+    </div>
   );
 }
+
