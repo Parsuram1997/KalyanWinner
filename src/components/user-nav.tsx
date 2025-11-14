@@ -17,8 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSidebar } from "./ui/sidebar";
-import { cn } from "@/lib/utils";
-import { LogOut, User as UserIcon, ChevronsUpDown } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 
 export function UserNav() {
@@ -58,7 +57,7 @@ export function UserNav() {
   }
 
   return (
-    <div className="w-full flex flex-col items-center gap-4">
+    <div className="w-full flex flex-col items-center gap-4 mb-2">
       <div className="flex flex-col items-center text-center">
         <Avatar className="h-12 w-12">
           <AvatarImage src="https://picsum.photos/seed/1/40/40" alt="@shadcn" data-ai-hint="profile picture" />
@@ -75,4 +74,3 @@ export function UserNav() {
     </div>
   );
 }
-
