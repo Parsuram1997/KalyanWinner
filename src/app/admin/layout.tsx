@@ -6,6 +6,7 @@ import {
   Wallet,
   Settings,
   Shield,
+  Ticket,
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link href="/admin/users">
                   <Users />
                   Users
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/manage-bets">
+                  <Ticket />
+                  Manage Bets
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
