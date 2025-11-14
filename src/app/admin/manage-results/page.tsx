@@ -27,7 +27,7 @@ export default function ManageResultsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Manage Results</h1>
+      
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">
             <CardHeader>
