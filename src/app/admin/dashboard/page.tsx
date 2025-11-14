@@ -9,6 +9,7 @@ const stats = [
   { name: "Inactive Users", value: "45", icon: UserX },
   { name: "Suspended Users", value: "5", icon: Ban },
   { name: "Total Bets Placed", value: "8,420", icon: GanttChartSquare },
+  { name: "All User Wallet Balance", value: "₹25,30,000", icon: Wallet },
   { name: "Total Deposit", value: "₹12,50,000", icon: ArrowUpCircle },
   { name: "Total Withdrawal", value: "₹7,20,000", icon: ArrowDownCircle },
   { name: "Total Winnings", value: "₹5,40,500", icon: ClipboardList },
@@ -21,7 +22,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.name}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
