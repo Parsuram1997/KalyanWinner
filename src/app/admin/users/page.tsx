@@ -56,12 +56,14 @@ export default function UsersPage() {
       balance: parseFloat(formData.get("balance") as string || '0'),
       status: "Active",
     };
+    const password = formData.get("password") as string;
 
-    if (!newUser.name || !newUser.mobile) {
+
+    if (!newUser.name || !newUser.mobile || !password) {
         toast({
             variant: "destructive",
             title: "Validation Error",
-            description: "Please fill in all required fields.",
+            description: "Please fill in all required fields, including password.",
         });
         return;
     }
@@ -72,6 +74,8 @@ export default function UsersPage() {
         title: "User Added",
         description: `${newUser.name} has been successfully added.`,
     });
+    // In a real app, you would also save the password securely.
+    console.log(`New user created with password: ${password}`);
   };
 
   return (
@@ -119,6 +123,12 @@ export default function UsersPage() {
                                         Balance
                                     </Label>
                                     <Input id="balance" name="balance" type="number" defaultValue="0" className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="password" className="text-right">
+                                        Password
+                                    </Label>
+                                    <Input id="password" name="password" type="password" className="col-span-3" placeholder="Set a password" />
                                 </div>
                             </div>
                             <DialogFooter>
