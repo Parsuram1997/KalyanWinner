@@ -389,12 +389,12 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "chikkamagaluru", "label": "Chikkamagaluru"},
         {"value": "chitradurga", "label": "Chitradurga"},
         {"value": "dakshina kannada", "label": "Dakshina Kannada"},
-        {"value": "davanagere", "label": "Davanagere"},
+        {"value": "davangere", "label": "Davangere"},
         {"value": "dharwad", "label": "Dharwad"},
         {"value": "gadag", "label": "Gadag"},
-        {"value": "kalaburagi", "label": "Kalaburagi"},
         {"value": "hassan", "label": "Hassan"},
         {"value": "haveri", "label": "Haveri"},
+        {"value": "kalaburagi", "label": "Kalaburagi"},
         {"value": "kodagu", "label": "Kodagu"},
         {"value": "kolar", "label": "Kolar"},
         {"value": "koppal", "label": "Koppal"},
@@ -540,11 +540,10 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "east jaintia hills", "label": "East Jaintia Hills"},
         {"value": "east khasi hills", "label": "East Khasi Hills"},
         {"value": "north garo hills", "label": "North Garo Hills"},
-        {"value": "ribhoi", "label": "Ri-Bhoi"},
+        {"value": "ribhoi", "label": "Ribhoi"},
         {"value": "south garo hills", "label": "South Garo Hills"},
         {"value": "south west garo hills", "label": "South West Garo Hills"},
         {"value": "south west khasi hills", "label": "South West Khasi Hills"},
-        {"value": "west garo hills", "label": "West Garo Hills"},
         {"value": "west jaintia hills", "label": "West Jaintia Hills"},
         {"value": "west khasi hills", "label": "West Khasi Hills"}
     ],
@@ -555,8 +554,7 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "lunglei", "label": "Lunglei"},
         {"value": "mamit", "label": "Mamit"},
         {"value": "saiha", "label": "Saiha"},
-        {"value": "serchhip", "label": "Serchhip"},
-        {"value": "kolasib", "label": "Kolasib"}
+        {"value": "serchhip", "label": "Serchhip"}
     ],
     NL: [
         {"value": "dimapur", "label": "Dimapur"},
@@ -697,13 +695,13 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "sivaganga", "label": "Sivaganga"},
         {"value": "thanjavur", "label": "Thanjavur"},
         {"value": "theni", "label": "Theni"},
-        {"value": "thiruvallur", "label": "Thiruvallur"},
-        {"value": "thiruvarur", "label": "Thiruvarur"},
         {"value": "thoothukudi", "label": "Thoothukudi"},
         {"value": "tiruchirappalli", "label": "Tiruchirappalli"},
         {"value": "tirunelveli", "label": "Tirunelveli"},
         {"value": "tiruppur", "label": "Tiruppur"},
+        {"value": "tiruvallur", "label": "Tiruvallur"},
         {"value": "tiruvannamalai", "label": "Tiruvannamalai"},
+        {"value": "tiruvarur", "label": "Tiruvarur"},
         {"value": "vellore", "label": "Vellore"},
         {"value": "viluppuram", "label": "Viluppuram"},
         {"value": "virudhunagar", "label": "Virudhunagar"}
@@ -712,10 +710,10 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "adilabad", "label": "Adilabad"},
         {"value": "bhadradri kothagudem", "label": "Bhadradri Kothagudem"},
         {"value": "hyderabad", "label": "Hyderabad"},
-        {"value": "jagtial", "label": "Jagtial"},
+        {"value": "jagitial", "label": "Jagitial"},
         {"value": "jangaon", "label": "Jangaon"},
-        {"value": "jayashankar", "label": "Jayashankar"},
-        {"value": "jogulamba", "label": "Jogulamba"},
+        {"value": "jayashankar bhoopalpally", "label": "Jayashankar Bhoopalpally"},
+        {"value": "jogulamba gadwal", "label": "Jogulamba Gadwal"},
         {"value": "kamareddy", "label": "Kamareddy"},
         {"value": "karimnagar", "label": "Karimnagar"},
         {"value": "khammam", "label": "Khammam"},
@@ -783,6 +781,7 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "barabanki", "label": "Barabanki"},
         {"value": "bareilly", "label": "Bareilly"},
         {"value": "basti", "label": "Basti"},
+        {"value": "bhadohi", "label": "Bhadohi"},
         {"value": "bijnor", "label": "Bijnor"},
         {"value": "budaun", "label": "Budaun"},
         {"value": "bulandshahr", "label": "Bulandshahr"},
@@ -795,7 +794,7 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "farrukhabad", "label": "Farrukhabad"},
         {"value": "fatehpur", "label": "Fatehpur"},
         {"value": "firozabad", "label": "Firozabad"},
-        {"value": "gautam budh nagar", "label": "Gautam Budh Nagar"},
+        {"value": "gautam buddha nagar", "label": "Gautam Buddha Nagar"},
         {"value": "ghaziabad", "label": "Ghaziabad"},
         {"value": "ghazipur", "label": "Ghazipur"},
         {"value": "gonda", "label": "Gonda"},
@@ -812,8 +811,8 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "kanpur nagar", "label": "Kanpur Nagar"},
         {"value": "kasganj", "label": "Kasganj"},
         {"value": "kaushambi", "label": "Kaushambi"},
+        {"value": "kheri", "label": "Kheri"},
         {"value": "kushinagar", "label": "Kushinagar"},
-        {"value": "lakhimpur kheri", "label": "Lakhimpur Kheri"},
         {"value": "lalitpur", "label": "Lalitpur"},
         {"value": "lucknow", "label": "Lucknow"},
         {"value": "maharajganj", "label": "Maharajganj"},
@@ -827,7 +826,7 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "muzaffarnagar", "label": "Muzaffarnagar"},
         {"value": "pilibhit", "label": "Pilibhit"},
         {"value": "pratapgarh", "label": "Pratapgarh"},
-        {"value": "raebareli", "label": "Raebareli"},
+        {"value": "rae bareli", "label": "Rae Bareli"},
         {"value": "rampur", "label": "Rampur"},
         {"value": "saharanpur", "label": "Saharanpur"},
         {"value": "sambhal", "label": "Sambhal"},
@@ -859,189 +858,180 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "murshidabad", "label": "Murshidabad"},
         {"value": "nadia", "label": "Nadia"},
         {"value": "north 24 parganas", "label": "North 24 Parganas"},
-        {"value": "paschim bardhaman", "label": "Paschim Bardhaman"},
         {"value": "paschim medinipur", "label": "Paschim Medinipur"},
-        {"value": "purba bardhaman", "label": "Purba Bardhaman"},
+        {"value": "paschim burdwan", "label": "Paschim Burdwan"},
+        {"value": "purba burdwan", "label": "Purba Burdwan"},
         {"value": "purba medinipur", "label": "Purba Medinipur"},
         {"value": "purulia", "label": "Purulia"},
         {"value": "south 24 parganas", "label": "South 24 Parganas"},
         {"value": "uttar dinajpur", "label": "Uttar Dinajpur"}
     ]
-};
+}
 
 
-type User = typeof initialUsers[0];
-
-export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedState, setSelectedState] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
+export default function ManageUsersPage() {
   const { toast } = useToast();
+  const [users, setUsers] = useState(initialUsers);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState("All");
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [selectedState, setSelectedState] = useState<string | null>(null);
 
-  const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const stateValue = formData.get("state") as string;
-    const newUser: User = {
-      id: `USR${String(users.length + 1).padStart(3, '0')}`,
+  const handleAddUser = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const newUser = {
+      id: `USR${(Math.random() * 1000).toFixed(0).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
       email: formData.get("email") as string,
-      state: states.find(s => s.value === stateValue)?.label || '',
-      district: formData.get("district") as string,
-      balance: parseFloat(formData.get("balance") as string || '0'),
-      status: "Active",
+      balance: 0,
+      status: "Active" as "Active",
+      state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
+      district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
     };
-    const password = formData.get("password") as string;
-
-
-    if (!newUser.name || !newUser.mobile || !newUser.email || !password || !newUser.state || !newUser.district) {
-        toast({
-            variant: "destructive",
-            title: "Validation Error",
-            description: "Please fill in all required fields.",
-        });
-        return;
-    }
-
     setUsers([newUser, ...users]);
-    setIsDialogOpen(false);
-    setSelectedState('');
+    setDialogOpen(false);
     toast({
-        title: "User Added",
-        description: `${newUser.name} has been successfully added.`,
+      title: "User Added",
+      description: `${newUser.name} has been added to the user list.`,
     });
-    // In a real app, you would also save the password securely.
-    console.log(`New user created with password: ${password}`);
   };
 
   const filteredUsers = useMemo(() => {
-    return users
-      .filter(user => {
-        if (filterStatus === "All") return true;
-        return user.status === filterStatus;
-      })
-      .filter(user =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.mobile.includes(searchQuery) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    let filtered = users;
+
+    if (filter !== "All") {
+      filtered = filtered.filter(user => user.status === filter);
+    }
+    
+    // In a real app, the 'Inactive' logic would involve checking the last bet date.
+    if (filter === "Inactive") {
+      // This is a placeholder. You would need to implement logic to check the last bet date.
+      // For now, it will show the one user with "Inactive" status from mock data.
+       filtered = users.filter(user => user.status === "Inactive");
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.mobile.includes(searchTerm)
       );
-  }, [users, searchQuery, filterStatus]);
+    }
+
+    return filtered;
+  }, [users, searchTerm, filter]);
 
   return (
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>All Users</CardTitle>
-          <CardDescription>View, search, and manage all registered users.</CardDescription>
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-                <div className="relative flex-1 w-full sm:max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search by name, mobile, or email..." 
-                      className="pl-8" 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-                <Tabs value={filterStatus} onValueChange={setFilterStatus} className="w-full sm:w-auto">
-                    <TabsList className="grid w-full grid-cols-4 sm:w-auto">
-                        <TabsTrigger value="All">All</TabsTrigger>
-                        <TabsTrigger value="Active">Active</TabsTrigger>
-                        <TabsTrigger value="Inactive">Inactive</TabsTrigger>
-                        <TabsTrigger value="Suspended">Suspended</TabsTrigger>
+          <CardDescription>
+            Manage all registered users in the application.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or mobile..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="flex w-full sm:w-auto items-center gap-2">
+                <Tabs defaultValue="All" onValueChange={setFilter} className="w-full sm:w-auto">
+                    <TabsList className="w-full">
+                        <TabsTrigger value="All" className="px-2">All</TabsTrigger>
+                        <TabsTrigger value="Active" className="px-2">Active</TabsTrigger>
+                        <TabsTrigger value="Suspended" className="px-2">Suspended</TabsTrigger>
+                        <TabsTrigger value="Inactive" className="px-2">Inactive</TabsTrigger>
                     </TabsList>
                 </Tabs>
 
-                <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setSelectedState(''); }}>
-                    <DialogTrigger asChild>
-                        <Button className="w-full sm:w-auto">
-                            <PlusCircle className="mr-2 h-4 w-4"/>
-                            Add User
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>Add New User</DialogTitle>
-                            <DialogDescription>
-                                Enter the details below to create a new user account.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleAddUser}>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="name" className="text-right">
-                                        Name
-                                    </Label>
-                                    <Input id="name" name="name" className="col-span-3" placeholder="e.g., Anjali Verma" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="mobile" className="text-right">
-                                        Mobile
-                                    </Label>
-                                    <Input id="mobile" name="mobile" className="col-span-3" placeholder="e.g., 9988776655" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="email" className="text-right">
-                                        Email
-                                    </Label>
-                                    <Input id="email" name="email" type="email" className="col-span-3" placeholder="e.g., user@example.com" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="state" className="text-right">
-                                        State
-                                    </Label>
-                                    <Select name="state" onValueChange={setSelectedState}>
-                                        <SelectTrigger className="col-span-3">
-                                            <SelectValue placeholder="Select a state" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {states.map(state => (
-                                                <SelectItem key={state.value} value={state.value}>{state.label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="district" className="text-right">
-                                        District
-                                    </Label>
-                                    <Select name="district" disabled={!selectedState}>
-                                        <SelectTrigger className="col-span-3">
-                                            <SelectValue placeholder="Select a district" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {selectedState && districts[selectedState]?.map(district => (
-                                                <SelectItem key={district.value} value={district.label}>{district.label}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="balance" className="text-right">
-                                        Balance
-                                    </Label>
-                                    <Input id="balance" name="balance" type="number" defaultValue="0" className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="password" className="text-right">
-                                        Password
-                                    </Label>
-                                    <Input id="password" name="password" type="text" className="col-span-3" placeholder="Set a password" />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit">Create User</Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+
+              <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="shrink-0">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add User
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New User</DialogTitle>
+                    <DialogDescription>
+                      Fill in the details to add a new user.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddUser} className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="name" className="text-right">
+                        Name
+                      </Label>
+                      <Input id="name" name="name" className="col-span-3" required />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="mobile" className="text-right">
+                        Mobile
+                      </Label>
+                      <Input id="mobile" name="mobile" className="col-span-3" required />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="email" className="text-right">
+                        Email
+                      </Label>
+                      <Input id="email" name="email" type="email" className="col-span-3" required />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="state" className="text-right">State</Label>
+                        <Select name="state" onValueChange={setSelectedState}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Select a state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {states.map(state => (
+                                    <SelectItem key={state.value} value={state.value}>{state.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="district" className="text-right">District</Label>
+                        <Select name="district" disabled={!selectedState}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Select a district" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {selectedState && districts[selectedState] && districts[selectedState].map(district => (
+                                    <SelectItem key={district.value} value={district.value}>{district.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="password" className="text-right">
+                        Password
+                      </Label>
+                      <Input id="password" name="password" type="text" className="col-span-3" required />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit">Create User</Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
-        </CardHeader>
-        <CardContent>
-          <div className="hidden md:block">
+          </div>
+          
+           {/* Desktop Table */}
+          <div className="hidden md:block rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1056,73 +1046,87 @@ export default function UsersPage() {
               <TableBody>
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="py-2 px-4">
+                    <TableCell>
                       <div className="font-medium">{user.name}</div>
                       <div className="text-xs text-muted-foreground">{user.id}</div>
                     </TableCell>
-                    <TableCell className="py-2 px-4">
-                      <div className="font-medium">{user.mobile}</div>
+                    <TableCell>
+                      <div>{user.mobile}</div>
                       <div className="text-xs text-muted-foreground">{user.email}</div>
                     </TableCell>
-                    <TableCell className="py-2 px-4">
-                      <div className="font-medium">{user.state}</div>
-                      <div className="text-xs text-muted-foreground">{user.district}</div>
+                    <TableCell>
+                      <div>{user.district}</div>
+                      <div className="text-xs text-muted-foreground">{user.state}</div>
                     </TableCell>
-                    <TableCell className="py-2 px-4">₹{user.balance.toFixed(2)}</TableCell>
-                    <TableCell className="py-2 px-4">
-                      <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
+                    <TableCell>₹{user.balance.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          user.status === "Active"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                      >
                         {user.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="py-2 px-4 flex gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                          <Link href={`/admin/users/${user.id}`}>View</Link>
+                    <TableCell className="flex gap-2">
+                      <Button variant="outline" size="icon" asChild>
+                        <Link href={`/admin/users/${user.id}`}><Search className="h-4 w-4" /></Link>
                       </Button>
                        <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
-                       <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                      <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
-          <div className="grid gap-4 md:hidden">
+
+          {/* Mobile Cards */}
+           <div className="grid gap-4 md:hidden">
             {filteredUsers.map((user) => (
-              <div key={user.id} className="rounded-lg border bg-card text-card-foreground p-4 space-y-4">
+              <Card key={user.id} className="p-4">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-semibold">{user.name}</div>
-                    <div className="text-xs text-muted-foreground">{user.id}</div>
-                  </div>
-                   <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
-                      {user.status}
+                    <div>
+                        <p className="font-semibold">{user.name}</p>
+                        <p className="text-xs text-muted-foreground">{user.id}</p>
+                    </div>
+                    <Badge variant={user.status === "Active" ? "secondary" : "destructive"}>
+                        {user.status}
                     </Badge>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                   <div>
-                     <div className="text-xs text-muted-foreground">Contact</div>
-                     <div className="font-medium">{user.mobile}</div>
-                     <div className="text-xs font-medium text-muted-foreground">{user.email}</div>
-                   </div>
-                   <div>
-                     <div className="text-xs text-muted-foreground">Location</div>
-                     <div className="font-medium">{user.district}, {user.state}</div>
-                   </div>
-                    <div>
-                     <div className="text-xs text-muted-foreground">Balance</div>
-                     <div className="font-medium">₹{user.balance.toFixed(2)}</div>
-                   </div>
+                <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Contact:</span>
+                        <div className="text-right">
+                            <p>{user.mobile}</p>
+                            <p className="text-xs">{user.email}</p>
+                        </div>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Location:</span>
+                        <div className="text-right">
+                           <p>{user.district}</p>
+                           <p className="text-xs">{user.state}</p>
+                        </div>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Balance:</span>
+                        <span>₹{user.balance.toFixed(2)}</span>
+                    </div>
                 </div>
-                <div className="flex gap-2 pt-2 border-t border-dashed">
-                    <Button variant="outline" size="sm" className="flex-1" asChild>
-                        <Link href={`/admin/users/${user.id}`}>View</Link>
-                    </Button>
-                     <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
-                     <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                <div className="mt-4 flex justify-end gap-2">
+                    <Button variant="outline" size="icon" asChild>
+                        <Link href={`/admin/users/${user.id}`}><Search className="h-4 w-4" /></Link>
+                      </Button>
+                    <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
+                    <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                 </div>
-              </div>
+              </Card>
             ))}
-          </div>
+           </div>
+
         </CardContent>
       </Card>
     </div>
