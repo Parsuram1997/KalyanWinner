@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -22,6 +23,8 @@ import {
   SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
+  SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -141,6 +144,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
+        <SidebarFooter>
+          <SidebarSeparator />
+          <UserNav />
+        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col h-dvh">
@@ -151,7 +158,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <UserNav />
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 md:pb-6">{children}</main>
