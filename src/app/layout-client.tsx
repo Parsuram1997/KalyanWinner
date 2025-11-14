@@ -11,6 +11,7 @@ import {
   ListOrdered,
   BarChart,
   Wallet,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -139,6 +140,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/analysis">
                   <LineChart />
                   AI Analysis
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/faq">
+                  <HelpCircle />
+                  FAQ
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
