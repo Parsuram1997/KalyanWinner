@@ -31,6 +31,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const initialUsers = [
   { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
@@ -39,21 +40,51 @@ const initialUsers = [
   { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
 ];
 
+const states = [
+    { value: "maharashtra", label: "Maharashtra" },
+    { value: "delhi", label: "Delhi" },
+    { value: "gujarat", label: "Gujarat" },
+    { value: "uttar-pradesh", label: "Uttar Pradesh" },
+];
+
+const districts: { [key: string]: { value: string, label: string }[] } = {
+    maharashtra: [
+        { value: "mumbai", label: "Mumbai" },
+        { value: "pune", label: "Pune" },
+        { value: "nagpur", label: "Nagpur" },
+    ],
+    delhi: [
+        { value: "new-delhi", label: "New Delhi" },
+        { value: "north-delhi", label: "North Delhi" },
+    ],
+    gujarat: [
+        { value: "ahmedabad", label: "Ahmedabad" },
+        { value: "surat", label: "Surat" },
+    ],
+    "uttar-pradesh": [
+        { value: "lucknow", label: "Lucknow" },
+        { value: "kanpur", label: "Kanpur" },
+    ]
+};
+
+
 type User = typeof initialUsers[0];
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedState, setSelectedState] = useState<string>('');
   const { toast } = useToast();
 
   const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const stateValue = formData.get("state") as string;
     const newUser: User = {
       id: `USR${String(users.length + 1).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
-      state: formData.get("state") as string,
+      state: states.find(s => s.value === stateValue)?.label || '',
       district: formData.get("district") as string,
       balance: parseFloat(formData.get("balance") as string || '0'),
       status: "Active",
@@ -72,6 +103,7 @@ export default function UsersPage() {
 
     setUsers([newUser, ...users]);
     setIsDialogOpen(false);
+    setSelectedState('');
     toast({
         title: "User Added",
         description: `${newUser.name} has been successfully added.`,
@@ -91,7 +123,7 @@ export default function UsersPage() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search users by name or mobile..." className="pl-8 max-w-sm" />
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setSelectedState(''); }}>
                     <DialogTrigger asChild>
                         <Button>
                             <PlusCircle className="mr-2 h-4 w-4"/>
@@ -123,13 +155,31 @@ export default function UsersPage() {
                                     <Label htmlFor="state" className="text-right">
                                         State
                                     </Label>
-                                    <Input id="state" name="state" className="col-span-3" placeholder="e.g., Maharashtra" />
+                                    <Select name="state" onValueChange={setSelectedState}>
+                                        <SelectTrigger className="col-span-3">
+                                            <SelectValue placeholder="Select a state" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {states.map(state => (
+                                                <SelectItem key={state.value} value={state.value}>{state.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="district" className="text-right">
                                         District
                                     </Label>
-                                    <Input id="district" name="district" className="col-span-3" placeholder="e.g., Mumbai" />
+                                    <Select name="district" disabled={!selectedState}>
+                                        <SelectTrigger className="col-span-3">
+                                            <SelectValue placeholder="Select a district" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {selectedState && districts[selectedState]?.map(district => (
+                                                <SelectItem key={district.value} value={district.label}>{district.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                  <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="balance" className="text-right">
