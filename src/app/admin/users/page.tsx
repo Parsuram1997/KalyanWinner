@@ -33,10 +33,10 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 const initialUsers = [
-  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active" },
-  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active" },
-  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended" },
-  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active" },
+  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
+  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
+  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
+  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
 ];
 
 type User = typeof initialUsers[0];
@@ -53,17 +53,19 @@ export default function UsersPage() {
       id: `USR${String(users.length + 1).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
+      state: formData.get("state") as string,
+      district: formData.get("district") as string,
       balance: parseFloat(formData.get("balance") as string || '0'),
       status: "Active",
     };
     const password = formData.get("password") as string;
 
 
-    if (!newUser.name || !newUser.mobile || !password) {
+    if (!newUser.name || !newUser.mobile || !password || !newUser.state || !newUser.district) {
         toast({
             variant: "destructive",
             title: "Validation Error",
-            description: "Please fill in all required fields, including password.",
+            description: "Please fill in all required fields.",
         });
         return;
     }
@@ -118,6 +120,18 @@ export default function UsersPage() {
                                     </Label>
                                     <Input id="mobile" name="mobile" className="col-span-3" placeholder="e.g., 9988776655" />
                                 </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="state" className="text-right">
+                                        State
+                                    </Label>
+                                    <Input id="state" name="state" className="col-span-3" placeholder="e.g., Maharashtra" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="district" className="text-right">
+                                        District
+                                    </Label>
+                                    <Input id="district" name="district" className="col-span-3" placeholder="e.g., Mumbai" />
+                                </div>
                                  <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="balance" className="text-right">
                                         Balance
@@ -146,6 +160,8 @@ export default function UsersPage() {
                 <TableHead>User ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Mobile</TableHead>
+                <TableHead>State</TableHead>
+                <TableHead>District</TableHead>
                 <TableHead>Balance</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -157,6 +173,8 @@ export default function UsersPage() {
                   <TableCell className="py-2 px-4">{user.id}</TableCell>
                   <TableCell className="py-2 px-4">{user.name}</TableCell>
                   <TableCell className="py-2 px-4">{user.mobile}</TableCell>
+                  <TableCell className="py-2 px-4">{user.state}</TableCell>
+                  <TableCell className="py-2 px-4">{user.district}</TableCell>
                   <TableCell className="py-2 px-4">₹{user.balance.toFixed(2)}</TableCell>
                   <TableCell className="py-2 px-4">
                     <Badge variant={user.status === "Active" ? "secondary" : "destructive"}>

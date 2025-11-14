@@ -16,15 +16,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { User, Wallet, Phone } from "lucide-react";
+import { User, Wallet, Phone, MapPin, Map } from "lucide-react";
 import { useParams } from "next/navigation";
 
 // Mock data - in a real app, you would fetch this based on the userId
 const initialUsers = [
-  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active" },
-  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active" },
-  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended" },
-  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active" },
+  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
+  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
+  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
+  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
 ];
 
 const recentActivity = [
@@ -58,12 +58,26 @@ export default function UserDetailsPage() {
           </CardTitle>
           <CardDescription>User ID: {user.id}</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <div className="flex items-center gap-3">
             <Phone className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">Mobile</p>
               <p className="font-medium">{user.mobile}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <MapPin className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">State</p>
+              <p className="font-medium">{user.state}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Map className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">District</p>
+              <p className="font-medium">{user.district}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
