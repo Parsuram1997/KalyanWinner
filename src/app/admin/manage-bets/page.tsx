@@ -251,9 +251,9 @@ export default function ManageBetsPage() {
                         <TabsTrigger value="jodi">Jodi</TabsTrigger>
                     </TabsList>
                     <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="single-panna">Single Panna</TabsTrigger>
-                        <TabsTrigger value="double-panna">Double Panna</TabsTrigger>
-                        <TabsTrigger value="triple-panna">Triple Panna</TabsTrigger>
+                        <TabsTrigger value="single-panna">SP</TabsTrigger>
+                        <TabsTrigger value="double-panna">DP</TabsTrigger>
+                        <TabsTrigger value="triple-panna">TP</TabsTrigger>
                     </TabsList>
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="half-sangam">Half Sangam</TabsTrigger>
