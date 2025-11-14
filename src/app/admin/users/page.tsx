@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 const initialUsers = [
   { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active" },
@@ -153,7 +154,9 @@ export default function UsersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="py-2 px-4">
-                    <Button variant="outline" size="sm">View</Button>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/admin/users/${user.id}`}>View</Link>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
