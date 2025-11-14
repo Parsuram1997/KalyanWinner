@@ -1029,7 +1029,7 @@ export default function UsersPage() {
                                     <Label htmlFor="password" className="text-right">
                                         Password
                                     </Label>
-                                    <Input id="password" name="password" type="password" className="col-span-3" placeholder="Set a password" />
+                                    <Input id="password" name="password" type="text" className="col-span-3" placeholder="Set a password" />
                                 </div>
                             </div>
                             <DialogFooter>
@@ -1089,5 +1089,3 @@ export default function UsersPage() {
     </div>
   );
 }
-
-    
