@@ -5,17 +5,16 @@ import { Toaster } from "@/components/ui/toaster";
 import AppLayout from "@/app/layout-client";
 import { headers } from 'next/headers';
 import { Suspense } from "react";
-import AdminLayout from "./admin/layout";
 
 export const metadata: Metadata = {
   title: "Kalyan Winner",
   description: "Play, check results, and analyze trends for Kalyan Matka.",
 };
 
-function PathnameLayout({ app, admin }: { app: React.ReactNode, admin: React.ReactNode }) {
+function PathnameLayout({ app, children }: { app: React.ReactNode, children: React.ReactNode }) {
   const pathname = headers().get('x-next-pathname');
   if (pathname?.startsWith('/admin')) {
-    return <>{admin}</>;
+    return <>{children}</>;
   }
   return <>{app}</>;
 }
@@ -46,8 +45,9 @@ export default function RootLayout({
           <Suspense fallback={<div>Loading...</div>}>
             <PathnameLayout 
               app={<AppLayout>{children}</AppLayout>}
-              admin={<AdminLayout>{children}</AdminLayout>}
-            />
+            >
+              {children}
+            </PathnameLayout>
           </Suspense>
           <Toaster />
         </ThemeProvider>
