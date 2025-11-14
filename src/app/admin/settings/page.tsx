@@ -29,7 +29,6 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">App Settings</h1>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
