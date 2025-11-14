@@ -1041,49 +1041,88 @@ export default function UsersPage() {
             </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Balance</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="py-2 px-4">
-                    <div className="font-medium">{user.name}</div>
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Balance</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="py-2 px-4">
+                      <div className="font-medium">{user.name}</div>
+                      <div className="text-xs text-muted-foreground">{user.id}</div>
+                    </TableCell>
+                    <TableCell className="py-2 px-4">
+                      <div className="font-medium">{user.mobile}</div>
+                      <div className="text-xs text-muted-foreground">{user.email}</div>
+                    </TableCell>
+                    <TableCell className="py-2 px-4">
+                      <div className="font-medium">{user.state}</div>
+                      <div className="text-xs text-muted-foreground">{user.district}</div>
+                    </TableCell>
+                    <TableCell className="py-2 px-4">₹{user.balance.toFixed(2)}</TableCell>
+                    <TableCell className="py-2 px-4">
+                      <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
+                        {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-2 px-4 flex gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                          <Link href={`/admin/users/${user.id}`}>View</Link>
+                      </Button>
+                       <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
+                       <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="grid gap-4 md:hidden">
+            {filteredUsers.map((user) => (
+              <div key={user.id} className="rounded-lg border bg-card text-card-foreground p-4 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-semibold">{user.name}</div>
                     <div className="text-xs text-muted-foreground">{user.id}</div>
-                  </TableCell>
-                  <TableCell className="py-2 px-4">
-                    <div className="font-medium">{user.mobile}</div>
-                    <div className="text-xs text-muted-foreground">{user.email}</div>
-                  </TableCell>
-                  <TableCell className="py-2 px-4">
-                    <div className="font-medium">{user.state}</div>
-                    <div className="text-xs text-muted-foreground">{user.district}</div>
-                  </TableCell>
-                  <TableCell className="py-2 px-4">₹{user.balance.toFixed(2)}</TableCell>
-                  <TableCell className="py-2 px-4">
-                    <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
+                  </div>
+                   <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
                       {user.status}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="py-2 px-4 flex gap-2">
-                    <Button variant="outline" size="sm" asChild>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                   <div>
+                     <div className="text-xs text-muted-foreground">Contact</div>
+                     <div className="font-medium">{user.mobile}</div>
+                     <div className="text-xs font-medium text-muted-foreground">{user.email}</div>
+                   </div>
+                   <div>
+                     <div className="text-xs text-muted-foreground">Location</div>
+                     <div className="font-medium">{user.district}, {user.state}</div>
+                   </div>
+                    <div>
+                     <div className="text-xs text-muted-foreground">Balance</div>
+                     <div className="font-medium">₹{user.balance.toFixed(2)}</div>
+                   </div>
+                </div>
+                <div className="flex gap-2 pt-2 border-t border-dashed">
+                    <Button variant="outline" size="sm" className="flex-1" asChild>
                         <Link href={`/admin/users/${user.id}`}>View</Link>
                     </Button>
                      <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
                      <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
