@@ -32,19 +32,49 @@ const generateJodiBets = () => {
     return bets;
 };
 
-// For Panna (Open/Close)
-const generatePannaBets = () => {
+// For Panna (Single, Double, Triple)
+const generatePannaBets = (type: "single" | "double" | "triple") => {
     const bets = [];
-    // Generating a smaller, more readable list for the example
-    for (let i = 0; i < 20; i++) {
-        let panna = Math.floor(Math.random() * 900) + 100;
-        bets.push({
-            panna: panna.toString(),
-            amount: Math.floor(Math.random() * 500) + 10,
-        });
+    const generatedPannas = new Set<string>();
+
+    const isValidPanna = (panna: string) => {
+        const digits = panna.split('');
+        if (type === "single") {
+            return digits[0] !== digits[1] && digits[1] !== digits[2] && digits[0] !== digits[2];
+        }
+        if (type === "double") {
+            return (digits[0] === digits[1] && digits[1] !== digits[2]) || 
+                   (digits[1] === digits[2] && digits[0] !== digits[1]) ||
+                   (digits[0] === digits[2] && digits[0] !== digits[1]);
+        }
+        if (type === "triple") {
+            return digits[0] === digits[1] && digits[1] === digits[2];
+        }
+        return false;
+    };
+    
+    let count = 0;
+    while (count < 15) {
+        let panna;
+        if (type === "triple") {
+            const digit = Math.floor(Math.random() * 10);
+            panna = `${digit}${digit}${digit}`;
+        } else {
+             panna = (Math.floor(Math.random() * 900) + 100).toString().padStart(3, '0');
+        }
+
+        if (isValidPanna(panna) && !generatedPannas.has(panna)) {
+            generatedPannas.add(panna);
+            bets.push({
+                panna: panna,
+                amount: Math.floor(Math.random() * 500) + 10,
+            });
+            count++;
+        }
     }
     return bets.sort((a,b) => parseInt(a.panna) - parseInt(b.panna));
 };
+
 
 // For Sangam (Half/Full)
 const generateSangamBets = (isFullSangam = false) => {
@@ -171,8 +201,9 @@ export default function ManageBetsPage() {
     const [openBets, setOpenBets] = useState<ReturnType<typeof generateSingleDigitBets>>([]);
     const [closeBets, setCloseBets] = useState<ReturnType<typeof generateSingleDigitBets>>([]);
     const [jodiBets, setJodiBets] = useState<ReturnType<typeof generateJodiBets>>([]);
-    const [openPannaBets, setOpenPannaBets] = useState<ReturnType<typeof generatePannaBets>>([]);
-    const [closePannaBets, setClosePannaBets] = useState<ReturnType<typeof generatePannaBets>>([]);
+    const [singlePannaBets, setSinglePannaBets] = useState<ReturnType<typeof generatePannaBets>>([]);
+    const [doublePannaBets, setDoublePannaBets] = useState<ReturnType<typeof generatePannaBets>>([]);
+    const [triplePannaBets, setTriplePannaBets] = useState<ReturnType<typeof generatePannaBets>>([]);
     const [halfSangamBets, setHalfSangamBets] = useState<ReturnType<typeof generateSangamBets>>([]);
     const [fullSangamBets, setFullSangamBets] = useState<ReturnType<typeof generateSangamBets>>([]);
 
@@ -181,8 +212,9 @@ export default function ManageBetsPage() {
         setOpenBets(generateSingleDigitBets());
         setCloseBets(generateSingleDigitBets());
         setJodiBets(generateJodiBets());
-        setOpenPannaBets(generatePannaBets());
-        setClosePannaBets(generatePannaBets());
+        setSinglePannaBets(generatePannaBets("single"));
+        setDoublePannaBets(generatePannaBets("double"));
+        setTriplePannaBets(generatePannaBets("triple"));
         setHalfSangamBets(generateSangamBets(false));
         setFullSangamBets(generateSangamBets(true));
     }, []);
@@ -201,12 +233,13 @@ export default function ManageBetsPage() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="open">
-                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7">
+                <TabsList className="grid w-full grid-cols-4 sm:grid-cols-4 lg:grid-cols-8">
                     <TabsTrigger value="open">Open</TabsTrigger>
                     <TabsTrigger value="close">Close</TabsTrigger>
                     <TabsTrigger value="jodi">Jodi</TabsTrigger>
-                    <TabsTrigger value="open-panna">Open Panna</TabsTrigger>
-                    <TabsTrigger value="close-panna">Close Panna</TabsTrigger>
+                    <TabsTrigger value="single-panna">Single Panna</TabsTrigger>
+                    <TabsTrigger value="double-panna">Double Panna</TabsTrigger>
+                    <TabsTrigger value="triple-panna">Triple Panna</TabsTrigger>
                     <TabsTrigger value="half-sangam">Half Sangam</TabsTrigger>
                     <TabsTrigger value="full-sangam">Full Sangam</TabsTrigger>
                 </TabsList>
@@ -223,14 +256,18 @@ export default function ManageBetsPage() {
                     <JodiGrid data={jodiBets} />
                 </TabsContent>
 
-                <TabsContent value="open-panna">
-                    <PannaTable data={openPannaBets} type="Open Panna" />
-                </TabsContent>
-
-                <TabsContent value="close-panna">
-                    <PannaTable data={closePannaBets} type="Close Panna" />
+                <TabsContent value="single-panna">
+                    <PannaTable data={singlePannaBets} type="Single Panna" />
                 </TabsContent>
                 
+                <TabsContent value="double-panna">
+                    <PannaTable data={doublePannaBets} type="Double Panna" />
+                </TabsContent>
+
+                <TabsContent value="triple-panna">
+                    <PannaTable data={triplePannaBets} type="Triple Panna" />
+                </TabsContent>
+
                 <TabsContent value="half-sangam">
                     <SangamTable data={halfSangamBets} type="Half Sangam" />
                 </TabsContent>
