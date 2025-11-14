@@ -43,9 +43,8 @@ const generatePannaBets = (type: "single" | "double" | "triple") => {
             return digits[0] !== digits[1] && digits[1] !== digits[2] && digits[0] !== digits[2];
         }
         if (type === "double") {
-            return (digits[0] === digits[1] && digits[1] !== digits[2]) || 
-                   (digits[1] === digits[2] && digits[0] !== digits[1]) ||
-                   (digits[0] === digits[2] && digits[0] !== digits[1]);
+            const d = digits.map(Number).sort();
+            return (d[0] === d[1] && d[1] !== d[2]) || (d[1] === d[2] && d[0] !== d[1]);
         }
         if (type === "triple") {
             return digits[0] === digits[1] && digits[1] === digits[2];
@@ -53,14 +52,18 @@ const generatePannaBets = (type: "single" | "double" | "triple") => {
         return false;
     };
     
-    let count = 0;
-    while (count < 15) {
+    let attempts = 0;
+    while (bets.length < 15 && attempts < 1000) {
         let panna;
         if (type === "triple") {
             const digit = Math.floor(Math.random() * 10);
             panna = `${digit}${digit}${digit}`;
         } else {
-             panna = (Math.floor(Math.random() * 900) + 100).toString().padStart(3, '0');
+             panna = (Math.floor(Math.random() * 900) + 100).toString();
+             // Ensure panna is 3 digits, handling cases like "012"
+             while (panna.length < 3) {
+                panna = `0${panna}`;
+             }
         }
 
         if (isValidPanna(panna) && !generatedPannas.has(panna)) {
@@ -69,8 +72,8 @@ const generatePannaBets = (type: "single" | "double" | "triple") => {
                 panna: panna,
                 amount: Math.floor(Math.random() * 500) + 10,
             });
-            count++;
         }
+        attempts++;
     }
     return bets.sort((a,b) => parseInt(a.panna) - parseInt(b.panna));
 };
@@ -123,21 +126,29 @@ const SingleDigitTable = ({ data, type }: { data: { digit: string; amount: numbe
     </Card>
 );
 
-const JodiGrid = ({ data }: { data: { jodi: string; amount: number; }[] }) => (
+const JodiTable = ({ data }: { data: { jodi: string; amount: number; }[] }) => (
     <Card className="mt-4">
         <CardHeader>
             <CardTitle>Jodi Bet Amounts</CardTitle>
             <CardDescription>Total amount placed on each Jodi number (00-99).</CardDescription>
         </CardHeader>
         <CardContent>
-           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-4">
-                {data.map((bet) => (
-                    <div key={bet.jodi} className="p-2 border rounded-md text-center bg-muted/50">
-                        <div className="font-mono font-bold text-lg">{bet.jodi}</div>
-                        <div className="text-xs text-muted-foreground">₹{bet.amount.toLocaleString()}</div>
-                    </div>
-                ))}
-           </div>
+           <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-1/2">Jodi</TableHead>
+                        <TableHead className="w-1/2 text-right">Total Amount</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {data.map((bet) => (
+                        <TableRow key={bet.jodi}>
+                            <TableCell className="font-mono font-bold text-lg">{bet.jodi}</TableCell>
+                            <TableCell className="text-right">₹{bet.amount.toLocaleString()}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
         </CardContent>
     </Card>
 );
@@ -253,7 +264,7 @@ export default function ManageBetsPage() {
                 </TabsContent>
 
                 <TabsContent value="jodi">
-                    <JodiGrid data={jodiBets} />
+                    <JodiTable data={jodiBets} />
                 </TabsContent>
 
                 <TabsContent value="single-panna">
