@@ -143,16 +143,16 @@ export default function UsersPage() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.mobile}</TableCell>
-                  <TableCell>₹{user.balance.toFixed(2)}</TableCell>
-                  <TableCell>
+                  <TableCell className="py-2 px-4">{user.id}</TableCell>
+                  <TableCell className="py-2 px-4">{user.name}</TableCell>
+                  <TableCell className="py-2 px-4">{user.mobile}</TableCell>
+                  <TableCell className="py-2 px-4">₹{user.balance.toFixed(2)}</TableCell>
+                  <TableCell className="py-2 px-4">
                     <Badge variant={user.status === "Active" ? "secondary" : "destructive"}>
                       {user.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2 px-4">
                     <Button variant="outline" size="sm">View</Button>
                   </TableCell>
                 </TableRow>
