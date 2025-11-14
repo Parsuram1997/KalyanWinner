@@ -1046,8 +1046,7 @@ export default function UsersPage() {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Contact</TableHead>
-                <TableHead>State</TableHead>
-                <TableHead>District</TableHead>
+                <TableHead>Location</TableHead>
                 <TableHead>Balance</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -1064,8 +1063,10 @@ export default function UsersPage() {
                     <div className="font-medium">{user.mobile}</div>
                     <div className="text-xs text-muted-foreground">{user.email}</div>
                   </TableCell>
-                  <TableCell className="py-2 px-4">{user.state}</TableCell>
-                  <TableCell className="py-2 px-4">{user.district}</TableCell>
+                  <TableCell className="py-2 px-4">
+                    <div className="font-medium">{user.state}</div>
+                    <div className="text-xs text-muted-foreground">{user.district}</div>
+                  </TableCell>
                   <TableCell className="py-2 px-4">₹{user.balance.toFixed(2)}</TableCell>
                   <TableCell className="py-2 px-4">
                     <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
