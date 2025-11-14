@@ -22,7 +22,7 @@ export default function AdminDashboardPage() {
               <stat.icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-xl font-bold">{stat.value}</div>
             </CardContent>
           </Card>
         ))}
