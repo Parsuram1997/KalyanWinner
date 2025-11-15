@@ -9,6 +9,7 @@ const stats = [
   { name: "Inactive Users", value: "45", icon: UserX },
   { name: "Suspended Users", value: "5", icon: Ban },
   { name: "Total Enrollers", value: "15", icon: UserPlus },
+  { name: "Total Enroller Commission", value: "₹9,850", icon: Wallet },
   { name: "Total Bets Placed", value: "8,420", icon: GanttChartSquare },
   { name: "All User Wallet Balance", value: "₹25,30,000", icon: Wallet },
   { name: "Total Deposit", value: "₹12,50,000", icon: ArrowUpCircle },
