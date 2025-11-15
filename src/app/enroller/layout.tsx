@@ -5,12 +5,12 @@ import {
   LayoutDashboard,
   Coins,
   GanttChartSquare,
-  Home,
   LineChart,
   ListOrdered,
   BarChart,
   Wallet,
   HelpCircle,
+  UserPlus,
 } from "lucide-react";
 import {
   Sidebar,
@@ -29,7 +29,6 @@ import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { headers } from "next/headers";
 import EnrollerLoginPage from "./page";
-import { UserPlus } from "lucide-react";
 
 export default function EnrollerLayout({ children }: { children: React.ReactNode }) {
   const pathname = headers().get('x-next-pathname');
