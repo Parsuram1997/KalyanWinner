@@ -15,6 +15,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,16 @@ const initialUsers = [
   { id: "USR003", name: "Amit Patel", mobile: "9876543212", email: "amit.p@example.com", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
   { id: "USR004", name: "Priya Singh", mobile: "9876543213", email: "priya.s@example.com", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
   { id: "USR005", name: "Inactive User", mobile: "9876543214", email: "inactive.user@example.com", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur" },
+  { id: "USR006", name: "Rohan Das", mobile: "9876543215", email: "rohan.d@example.com", balance: 750.00, status: "Active", state: "West Bengal", district: "Kolkata" },
+  { id: "USR007", name: "Anita Desai", mobile: "9876543216", email: "anita.d@example.com", balance: 15000.00, status: "Active", state: "Karnataka", district: "Bengaluru Urban" },
+  { id: "USR008", name: "Suresh Gupta", mobile: "9876543217", email: "suresh.g@example.com", balance: 25.00, status: "Active", state: "Madhya Pradesh", district: "Indore" },
+  { id: "USR009", name: "Meena Iyer", mobile: "9876543218", email: "meena.i@example.com", balance: 0.00, status: "Suspended", state: "Tamil Nadu", district: "Chennai" },
+  { id: "USR010", name: "Vikram Rathore", mobile: "9876543219", email: "vikram.r@example.com", balance: 800.25, status: "Active", state: "Rajasthan", district: "Jaipur" },
+  { id: "USR011", name: "Kavita Reddy", mobile: "9876543220", email: "kavita.r@example.com", balance: 3200.00, status: "Active", state: "Telangana", district: "Hyderabad" },
+  { id: "USR012", name: "John Doe", mobile: "9876543221", email: "john.d@example.com", balance: 10.00, status: "Inactive", state: "Goa", district: "North Goa" },
 ];
+
+const USERS_PER_PAGE = 10;
 
 const states = [
   { "value": "AN", "label": "Andaman and Nicobar Islands" },
@@ -876,6 +886,7 @@ export default function ManageUsersPage() {
   const [filter, setFilter] = useState("All");
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleAddUser = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -923,6 +934,15 @@ export default function ManageUsersPage() {
 
     return filtered;
   }, [users, searchTerm, filter]);
+  
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+    const endIndex = startIndex + USERS_PER_PAGE;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage]);
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -1016,10 +1036,16 @@ export default function ManageUsersPage() {
                 placeholder="Search by name or mobile..."
                 className="pl-8"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                }}
               />
             </div>
-            <Tabs defaultValue="All" onValueChange={setFilter} className="w-full sm:w-auto">
+            <Tabs defaultValue="All" onValueChange={(value) => {
+                setFilter(value);
+                setCurrentPage(1);
+            }} className="w-full sm:w-auto">
                 <TabsList className="w-full">
                     <TabsTrigger value="All" className="px-2">All</TabsTrigger>
                     <TabsTrigger value="Active" className="px-2">Active</TabsTrigger>
@@ -1043,7 +1069,7 @@ export default function ManageUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium">{user.name}</div>
@@ -1084,7 +1110,7 @@ export default function ManageUsersPage() {
 
           {/* Mobile Cards */}
            <div className="grid gap-4 md:hidden">
-            {filteredUsers.map((user) => (
+            {paginatedUsers.map((user) => (
               <Card key={user.id} className="p-4">
                 <div className="flex justify-between items-start">
                     <div>
@@ -1125,9 +1151,31 @@ export default function ManageUsersPage() {
               </Card>
             ))}
            </div>
-
         </CardContent>
+        <CardFooter>
+           <div className="flex items-center justify-between w-full">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );
 }
+
+    
