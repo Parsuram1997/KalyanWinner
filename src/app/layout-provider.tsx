@@ -11,21 +11,21 @@ export default function LayoutProvider({ children }: { children: React.ReactNode
   
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin') {
-      return <>{children}</>
+      return <>{children}</>;
     }
     return <AdminLayout>{children}</AdminLayout>;
   }
 
   if (pathname.startsWith('/enroller')) {
      if (pathname === '/enroller') {
-      return <>{children}</>
+      return <>{children}</>;
     }
     return <EnrollerLayout>{children}</EnrollerLayout>;
   }
 
   // Handle root login/signup pages that shouldn't have the main layout
-  if (pathname === '/login' || pathname === '/signup') {
-    return <>{children}</>
+  if (pathname === '/login' || pathname === '/signup' || pathname === '/') {
+    return <>{children}</>;
   }
 
   return <AppLayout>{children}</AppLayout>;

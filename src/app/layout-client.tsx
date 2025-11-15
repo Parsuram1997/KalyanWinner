@@ -27,20 +27,14 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { usePathname } from 'next/navigation';
 import { useState, useEffect } from "react";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  if (pathname.startsWith('/admin') || pathname.startsWith('/enroller')) {
-    return <>{children}</>;
-  }
 
   return (
     <SidebarProvider>
