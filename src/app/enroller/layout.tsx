@@ -3,6 +3,14 @@ import Link from "next/link";
 import {
   Users,
   LayoutDashboard,
+  Coins,
+  GanttChartSquare,
+  Home,
+  LineChart,
+  ListOrdered,
+  BarChart,
+  Wallet,
+  HelpCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,6 +70,63 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarSeparator className="my-2" />
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/play">
+                  <GanttChartSquare />
+                  Play
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/results">
+                  <ListOrdered />
+                  Results
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/panel-chart">
+                  <BarChart />
+                  Panel Chart
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/rates">
+                  <Coins />
+                  Rates
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/wallet">
+                  <Wallet />
+                  Wallet
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/analysis">
+                  <LineChart />
+                  AI Analysis
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/faq">
+                  <HelpCircle />
+                  FAQ
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
@@ -86,5 +151,3 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
     </SidebarProvider>
   );
 }
-
-    
