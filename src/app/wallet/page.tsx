@@ -261,7 +261,7 @@ export default function WalletPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
           <CardHeader>
             <CardTitle className="text-lg">Current Balance</CardTitle>
           </CardHeader>
@@ -277,7 +277,7 @@ export default function WalletPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gradient-to-bl from-secondary/20 to-background/30">
           <CardHeader>
             <CardTitle className="text-lg">Manage Funds</CardTitle>
           </CardHeader>
@@ -497,7 +497,7 @@ export default function WalletPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="bg-gradient-to-tr from-card to-secondary/10">
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>
           <CardDescription>
