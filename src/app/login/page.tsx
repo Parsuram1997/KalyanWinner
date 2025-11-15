@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,9 +53,8 @@ export default function LoginPage() {
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline">
-              Sign up
+            <Link href="/admin" className="underline">
+              Admin login
             </Link>
           </div>
         </CardContent>

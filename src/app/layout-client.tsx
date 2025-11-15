@@ -1,17 +1,121 @@
 
 'use client'
-import { useState, useEffect } from 'react'
 
-export default function ClientLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [isClient, setIsClient] = useState(false)
+import Link from "next/link";
+import Image from 'next/image';
+import {
+  LayoutDashboard,
+  Wallet,
+  Ticket,
+  ClipboardList,
+  GanttChartSquare,
+  HelpCircle,
+  Coins
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarProvider,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+  SidebarFooter,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
+import { UserNav } from "@/components/user-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
 
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  return <>{isClient ? children : null}</>
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center justify-center">
+            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/dashboard">
+                  <LayoutDashboard />
+                  Dashboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/play">
+                  <Ticket />
+                  Play
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/results">
+                  <ClipboardList />
+                  Results
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/wallet">
+                  <Wallet />
+                  Wallet
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/analysis">
+                  <GanttChartSquare />
+                  Analysis
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/rates">
+                  <Coins />
+                  Rates
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/faq">
+                  <HelpCircle />
+                  FAQ
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarSeparator />
+          <UserNav />
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <div className="flex flex-col h-dvh">
+          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
+            <SidebarTrigger className="md:hidden" />
+            <div className="flex-1">
+               {/* This space is for the page title, which can be managed globally if needed */}
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }

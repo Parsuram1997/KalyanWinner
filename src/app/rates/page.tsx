@@ -1,3 +1,6 @@
+
+"use client";
+
 import {
   Card,
   CardContent,
@@ -16,26 +19,20 @@ import {
 import { Coins } from "lucide-react";
 
 const rates = [
-  { game: "Single Digit", rate: "10 ka 100" },
-  { game: "Jodi", rate: "10 ka 950" },
-  { game: "Single Panna", rate: "10 ka 1400" },
-  { game: "Double Panna", rate: "10 ka 2800" },
-  { game: "Triple Panna", rate: "10 ka 7000" },
-  { game: "Half Sangam", rate: "10 ka 10,000" },
-  { game: "Full Sangam", rate: "10 ka 1,00,000" },
+    { game: "Single Digit (Ank)", rate: "₹95" },
+    { game: "Jodi", rate: "₹950" },
+    { game: "Single Panna (SP)", rate: "₹1,400" },
+    { game: "Double Panna (DP)", rate: "₹2,800" },
+    { game: "Triple Panna (TP)", rate: "₹7,000" },
+    { game: "Half Sangam", rate: "₹10,000" },
+    { game: "Full Sangam", rate: "₹1,00,000" },
 ];
+
 
 export default function RatesPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Game Rates</h1>
-        <p className="text-muted-foreground">
-          View the payout rates for different game types.
-        </p>
-      </div>
-
-      <Card>
+    <div className="flex justify-center items-start p-4">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Coins className="h-6 w-6" />

@@ -1,12 +1,14 @@
 
+'use client';
+
 import Link from "next/link";
+import Image from 'next/image';
 import {
   Users,
   ClipboardList,
   LayoutDashboard,
   Wallet,
   Settings,
-  Shield,
   Ticket,
   Landmark,
 } from "lucide-react";
@@ -25,19 +27,14 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import ClientLayout from "../layout-client";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClientLayout>
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center justify-start gap-2">
-             <Shield className="w-6 h-6 text-primary" />
-            <h1 className="text-lg font-semibold tracking-tight text-primary">
-              Admin Panel
-            </h1>
+          <div className="flex items-center justify-center">
+            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -81,7 +78,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   Transactions
                 </Link>
               </SidebarMenuButton>
-            </SidebarMenuItem>.
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/admin/manage-payments">
@@ -120,6 +117,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </SidebarInset>
     </SidebarProvider>
-    </ClientLayout>
   );
 }

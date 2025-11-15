@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import AppLayout from "@/app/layout-client";
-import { Suspense } from "react";
+import LayoutProvider from "@/app/layout-provider";
 
 export const metadata: Metadata = {
   title: "Kalyan Winner",
@@ -19,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/kalyanwinnerlogo.png" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -33,11 +33,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Suspense fallback={<div>Loading...</div>}>
-            <AppLayout>
-              {children}
-            </AppLayout>
-          </Suspense>
+          <LayoutProvider>{children}</LayoutProvider>
           <Toaster />
         </ThemeProvider>
       </body>
