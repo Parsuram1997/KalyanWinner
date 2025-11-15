@@ -10,7 +10,8 @@ import {
   ClipboardList,
   GanttChartSquare,
   HelpCircle,
-  Coins
+  Coins,
+  Users
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,8 +28,18 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { usePathname } from 'next/navigation';
+
+// A temporary flag to simulate user role
+const isEnroller = true;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  if (pathname.startsWith('/admin')) {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -63,6 +74,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/panel-chart">
+                  <GanttChartSquare />
+                  Panel Chart
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/wallet">
@@ -79,6 +98,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {isEnroller && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/enroller/users">
+                    <Users />
+                    Enrolled Users
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/rates">
