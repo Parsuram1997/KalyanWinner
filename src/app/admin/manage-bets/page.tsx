@@ -116,8 +116,8 @@ const SingleDigitTable = ({ data, type }: { data: { digit: string; amount: numbe
                 <TableBody>
                     {data.map((bet) => (
                         <TableRow key={bet.digit}>
-                            <TableCell className="font-mono font-bold text-lg">{bet.digit}</TableCell>
-                            <TableCell className="text-right">₹{bet.amount.toLocaleString()}</TableCell>
+                            <TableCell className="font-mono font-bold text-lg py-1">{bet.digit}</TableCell>
+                            <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
