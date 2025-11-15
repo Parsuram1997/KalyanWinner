@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 function PathnameLayout({ app, children }: { app: React.ReactNode, children: React.ReactNode }) {
   const pathname = headers().get('x-next-pathname');
-  if (pathname?.startsWith('/admin')) {
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/enroller')) {
     return <>{children}</>;
   }
   return <>{app}</>;

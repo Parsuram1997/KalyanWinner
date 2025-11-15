@@ -9,18 +9,18 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Coins } from "lucide-react";
+import { UserPlus } from "lucide-react";
 
-export default function LoginPage() {
+export default function EnrollerLoginPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader>
           <div className="flex flex-col items-center text-center mb-4">
-            <Coins className="h-10 w-10 mb-2 text-primary" />
-            <CardTitle className="text-2xl font-bold">Kalyan Winner</CardTitle>
+            <UserPlus className="h-10 w-10 mb-2 text-primary" />
+            <CardTitle className="text-2xl font-bold">Enroller Panel</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              Enter your credentials to access the enroller dashboard.
             </CardDescription>
           </div>
         </CardHeader>
@@ -31,33 +31,18 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="enroller@example.com"
                 required
+                defaultValue="enroller@example.com"
               />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="#"
-                  className="ml-auto inline-block text-sm underline"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-              <Input id="password" type="password" required />
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" required defaultValue="password" />
             </div>
             <Button type="submit" className="w-full" asChild>
-              <Link href="/dashboard">Login</Link>
+              <Link href="/enroller/dashboard">Login</Link>
             </Button>
-          </div>
-          <div className="mt-4 text-center text-sm flex justify-center gap-4">
-            <Link href="/admin" className="underline text-muted-foreground">
-              Admin Login
-            </Link>
-            <Link href="/enroller" className="underline text-muted-foreground">
-              Enroller Login
-            </Link>
           </div>
         </CardContent>
       </Card>
