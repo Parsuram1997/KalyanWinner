@@ -27,19 +27,8 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { headers } from "next/headers";
-import EnrollerLoginPage from "./page";
 
 export default function EnrollerLayout({ children }: { children: React.ReactNode }) {
-  const pathname = headers().get('x-next-pathname');
-
-  // A mock auth check. In a real app, you'd check a session.
-  const isLoggedIn = pathname !== '/enroller';
-
-  if (!isLoggedIn) {
-    return <EnrollerLoginPage />;
-  }
-
   return (
     <SidebarProvider>
       <Sidebar>

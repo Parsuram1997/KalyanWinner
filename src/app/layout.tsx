@@ -5,38 +5,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import AppLayout from "@/app/layout-client";
 import { Suspense } from "react";
-import AdminLayout from "./admin/layout";
-import EnrollerLayout from "./enroller/layout";
-import { headers } from "next/headers";
-import AdminLoginPage from "./admin/page";
-import EnrollerLoginPage from "./enroller/page";
 
 export const metadata: Metadata = {
   title: "Kalyan Winner",
   description: "Play, check results, and analyze trends for Kalyan Matka.",
 };
-
-function PathnameLayout({ children }: { children: React.ReactNode }) {
-  const pathname = headers().get('x-next-pathname') || '';
-
-  if (pathname.startsWith('/admin')) {
-    if (pathname === '/admin') {
-      return <AdminLoginPage />;
-    }
-    return <AdminLayout>{children}</AdminLayout>;
-  }
-  
-  if (pathname.startsWith('/enroller')) {
-     if (pathname === '/enroller') {
-      return <EnrollerLoginPage />;
-    }
-    return <EnrollerLayout>{children}</EnrollerLayout>
-  }
-  
-  // For all other routes, use AppLayout
-  return <AppLayout>{children}</AppLayout>;
-}
-
 
 export default function RootLayout({
   children,
@@ -61,9 +34,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Suspense fallback={<div>Loading...</div>}>
-            <PathnameLayout>
+            <AppLayout>
               {children}
-            </PathnameLayout>
+            </AppLayout>
           </Suspense>
           <Toaster />
         </ThemeProvider>
