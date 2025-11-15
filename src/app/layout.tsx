@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import LayoutProvider from "@/app/layout-provider";
+import AppLayout from "./layout-client";
 
 export const metadata: Metadata = {
   title: "Kalyan Winner",
@@ -33,7 +33,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LayoutProvider>{children}</LayoutProvider>
+          <AppLayout>{children}</AppLayout>
           <Toaster />
         </ThemeProvider>
       </body>

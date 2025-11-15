@@ -1,5 +1,5 @@
 
-'use client'
+'use client';
 
 import Link from "next/link";
 import Image from 'next/image';
@@ -28,13 +28,22 @@ import {
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useState, useEffect } from "react";
+import { usePathname } from 'next/navigation';
+
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  // Conditionally render layout for non-auth, non-admin, non-enroller pages
+  if (pathname.startsWith('/admin') || pathname.startsWith('/enroller') || pathname === '/login' || pathname === '/signup' || pathname === '/') {
+    return <>{children}</>;
+  }
+
 
   return (
     <SidebarProvider>
