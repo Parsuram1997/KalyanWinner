@@ -25,19 +25,8 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { headers } from "next/headers";
-import AdminLoginPage from "./page";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname = headers().get('x-next-pathname');
-
-  // A mock auth check. In a real app, you'd check a session.
-  const isLoggedIn = pathname !== '/admin';
-
-  if (!isLoggedIn) {
-    return <AdminLoginPage />;
-  }
-
   return (
     <SidebarProvider>
       <Sidebar>
