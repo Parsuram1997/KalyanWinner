@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, GanttChartSquare, Wallet } from "lucide-react";
+import { DollarSign, Wallet } from "lucide-react";
 import Link from "next/link";
 import {
   Table,
@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 const recentActivity = [
@@ -48,7 +48,7 @@ const recentActivity = [
   { id: 15, description: "Bet on Jodi 13", market: "Kalyan Day", status: "Placed", date: "2024-07-13", amount: "-₹10.00", type: "debit" },
 ];
 
-const displayedActivity = recentActivity.slice(0, 15);
+const ACTIVITY_PER_PAGE = 5;
 
 const latestResults = [
   {
@@ -73,6 +73,15 @@ const latestResults = [
 export default function DashboardPage() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE);
+
+  const paginatedActivity = useMemo(() => {
+    const startIndex = (currentPage - 1) * ACTIVITY_PER_PAGE;
+    const endIndex = startIndex + ACTIVITY_PER_PAGE;
+    return recentActivity.slice(startIndex, endIndex);
+  }, [currentPage]);
 
   useEffect(() => {
     if (!api) {
@@ -179,7 +188,7 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {displayedActivity.map((activity) => (
+                {paginatedActivity.map((activity) => (
                   <TableRow key={activity.id}>
                     <TableCell>
                       <div className="font-medium">{activity.description}</div>
@@ -208,7 +217,7 @@ export default function DashboardPage() {
             </Table>
           </div>
           <div className="grid gap-4 md:hidden">
-            {displayedActivity.map((activity) => (
+            {paginatedActivity.map((activity) => (
               <div key={activity.id} className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">{activity.description}</div>
@@ -229,12 +238,29 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+           <div className="flex items-center justify-between mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-    
 
     
