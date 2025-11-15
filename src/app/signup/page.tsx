@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,8 +16,8 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
       <Card className="mx-auto max-w-sm w-full">
-        <CardHeader>
-          <div className="flex flex-col items-center text-center mb-4">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col items-center text-center">
             <Coins className="h-10 w-10 mb-2 text-primary" />
             <CardTitle className="text-2xl font-bold">Kalyan Winner</CardTitle>
             <CardDescription>
@@ -24,7 +25,7 @@ export default function SignupPage() {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="full-name">Full Name</Label>
