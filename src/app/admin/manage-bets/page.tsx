@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -239,8 +240,7 @@ const SangamTable = ({ data, type }: { data: { sangam: string; amount: number; }
     </Card>
 );
 
-
-export default function ManageBetsPage() {
+const MarketBetSummary = ({ marketName }: { marketName: string }) => {
     const [openBets, setOpenBets] = useState<ReturnType<typeof generateSingleDigitBets>>([]);
     const [closeBets, setCloseBets] = useState<ReturnType<typeof generateSingleDigitBets>>([]);
     const [jodiBets, setJodiBets] = useState<ReturnType<typeof generateJodiBets>>([]);
@@ -250,8 +250,8 @@ export default function ManageBetsPage() {
     const [halfSangamBets, setHalfSangamBets] = useState<ReturnType<typeof generateSangamBets>>([]);
     const [fullSangamBets, setFullSangamBets] = useState<ReturnType<typeof generateSangamBets>>([]);
 
-
     useEffect(() => {
+        // In a real app, you would fetch data based on marketName
         setOpenBets(generateSingleDigitBets());
         setCloseBets(generateSingleDigitBets());
         setJodiBets(generateJodiBets());
@@ -260,8 +260,64 @@ export default function ManageBetsPage() {
         setTriplePannaBets(generatePannaBets("triple"));
         setHalfSangamBets(generateSangamBets(false));
         setFullSangamBets(generateSangamBets(true));
-    }, []);
+    }, [marketName]);
 
+    return (
+        <Tabs defaultValue="open" className="mt-4">
+            <div className="flex flex-col gap-1 items-center">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="open">Open</TabsTrigger>
+                    <TabsTrigger value="close">Close</TabsTrigger>
+                    <TabsTrigger value="jodi">Jodi</TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="single-panna">SP</TabsTrigger>
+                    <TabsTrigger value="double-panna">DP</TabsTrigger>
+                    <TabsTrigger value="triple-panna">TP</TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="half-sangam">Half Sangam</TabsTrigger>
+                    <TabsTrigger value="full-sangam">Full Sangam</TabsTrigger>
+                </TabsList>
+            </div>
+            
+            <TabsContent value="open">
+                <SingleDigitTable data={openBets} type="Open" />
+            </TabsContent>
+            
+            <TabsContent value="close">
+                 <SingleDigitTable data={closeBets} type="Close" />
+            </TabsContent>
+
+            <TabsContent value="jodi">
+                <JodiTable data={jodiBets} />
+            </TabsContent>
+
+            <TabsContent value="single-panna">
+                <PannaTable data={singlePannaBets} type="Single Panna" />
+            </TabsContent>
+            
+            <TabsContent value="double-panna">
+                <PannaTable data={doublePannaBets} type="Double Panna" />
+            </TabsContent>
+
+            <TabsContent value="triple-panna">
+                <PannaTable data={triplePannaBets} type="Triple Panna" />
+            </TabsContent>
+
+            <TabsContent value="half-sangam">
+                <SangamTable data={halfSangamBets} type="Half Sangam" />
+            </TabsContent>
+
+            <TabsContent value="full-sangam">
+                 <SangamTable data={fullSangamBets} type="Full Sangam" />
+            </TabsContent>
+        </Tabs>
+    );
+};
+
+
+export default function ManageBetsPage() {
   return (
     <div className="flex flex-col gap-6">
        <Card>
@@ -271,61 +327,21 @@ export default function ManageBetsPage() {
             <span>Betting Summary</span>
           </CardTitle>
           <CardDescription>
-            An overview of total bets placed across different game types and numbers.
+            An overview of total bets placed across different game types and numbers for each market.
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <Tabs defaultValue="open">
-                <div className="flex flex-col gap-1 items-center">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="open">Open</TabsTrigger>
-                        <TabsTrigger value="close">Close</TabsTrigger>
-                        <TabsTrigger value="jodi">Jodi</TabsTrigger>
-                    </TabsList>
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="single-panna">SP</TabsTrigger>
-                        <TabsTrigger value="double-panna">DP</TabsTrigger>
-                        <TabsTrigger value="triple-panna">TP</TabsTrigger>
-                    </TabsList>
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="half-sangam">Half Sangam</TabsTrigger>
-                        <TabsTrigger value="full-sangam">Full Sangam</TabsTrigger>
-                    </TabsList>
-                </div>
-                
-
-                <TabsContent value="open">
-                    <SingleDigitTable data={openBets} type="Open" />
+            <Tabs defaultValue="kalyan-day">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
+                    <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
+                </TabsList>
+                <TabsContent value="kalyan-day">
+                    <MarketBetSummary marketName="Kalyan Day" />
                 </TabsContent>
-                
-                <TabsContent value="close">
-                     <SingleDigitTable data={closeBets} type="Close" />
+                <TabsContent value="kalyan-night">
+                    <MarketBetSummary marketName="Kalyan Night" />
                 </TabsContent>
-
-                <TabsContent value="jodi">
-                    <JodiTable data={jodiBets} />
-                </TabsContent>
-
-                <TabsContent value="single-panna">
-                    <PannaTable data={singlePannaBets} type="Single Panna" />
-                </TabsContent>
-                
-                <TabsContent value="double-panna">
-                    <PannaTable data={doublePannaBets} type="Double Panna" />
-                </TabsContent>
-
-                <TabsContent value="triple-panna">
-                    <PannaTable data={triplePannaBets} type="Triple Panna" />
-                </TabsContent>
-
-                <TabsContent value="half-sangam">
-                    <SangamTable data={halfSangamBets} type="Half Sangam" />
-                </TabsContent>
-
-                <TabsContent value="full-sangam">
-                     <SangamTable data={fullSangamBets} type="Full Sangam" />
-                </TabsContent>
-
             </Tabs>
         </CardContent>
       </Card>
