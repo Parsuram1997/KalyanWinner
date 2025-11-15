@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 45 90% 95%;
+    --background: 80 90% 95%;
     --foreground: 20 15% 25%;
     --card: 30 80% 98%;
     --card-foreground: 20 15% 25%;
@@ -12,11 +12,11 @@
     --popover-foreground: 20 15% 25%;
     --primary: 160 80% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 30 80% 90%;
+    --secondary: 90 80% 90%;
     --secondary-foreground: 20 15% 25%;
     --muted: 30 50% 92%;
     --muted-foreground: 20 10% 45%;
-    --accent: 160 80% 90%;
+    --accent: 60 80% 90%;
     --accent-foreground: 20 15% 25%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -29,7 +29,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --sidebar-background: 45 90% 97%;
+    --sidebar-background: 80 90% 97%;
     --sidebar-foreground: 20 15% 25%;
     --sidebar-primary: 160 80% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -40,7 +40,7 @@
   }
 
   .dark {
-    --background: 220 10% 10%;
+    --background: 80 10% 10%;
     --foreground: 210 10% 90%;
     --card: 220 10% 12%;
     --card-foreground: 210 10% 90%;
@@ -48,11 +48,11 @@
     --popover-foreground: 210 10% 90%;
     --primary: 160 70% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 20%;
+    --secondary: 90 15% 20%;
     --secondary-foreground: 210 10% 90%;
     --muted: 220 15% 15%;
     --muted-foreground: 210 10% 65%;
-    --accent: 220 15% 25%;
+    --accent: 60 15% 25%;
     --accent-foreground: 210 10% 90%;
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
@@ -64,11 +64,11 @@
     --chart-3: 220 80% 55%;
     --chart-4: 230 65% 60%;
     --chart-5: 240 75% 55%;
-    --sidebar-background: 220 10% 12%;
+    --sidebar-background: 80 10% 12%;
     --sidebar-foreground: 210 10% 90%;
     --sidebar-primary: 160 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 20%;
+    --sidebar-accent: 160 15% 20%;
     --sidebar-accent-foreground: 210 10% 90%;
     --sidebar-border: 220 15% 20%;
     --sidebar-ring: 160 70% 55%;
@@ -82,10 +82,10 @@
   body {
     @apply text-foreground font-body;
     background-color: hsl(var(--background));
-    background-image: radial-gradient(at 27% 37%, hsl(var(--secondary), 0.3) 0px, transparent 50%), radial-gradient(at 97% 21%, hsl(var(--accent), 0.4) 0px, transparent 50%), radial-gradient(at 52% 99%, hsl(var(--primary), 0.2) 0px, transparent 50%);
+    background-image: linear-gradient(to right, hsl(var(--secondary), 0.3), hsl(var(--accent), 0.3));
   }
 
   .dark body {
-     background-image: radial-gradient(at 27% 37%, hsl(var(--secondary), 0.2) 0px, transparent 50%), radial-gradient(at 97% 21%, hsl(var(--accent), 0.2) 0px, transparent 50%), radial-gradient(at 52% 99%, hsl(var(--primary), 0.2) 0px, transparent 50%);
+     background-image: linear-gradient(to right, hsl(var(--secondary), 0.2), hsl(var(--accent), 0.2));
   }
 }
