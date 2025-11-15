@@ -1,5 +1,6 @@
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users } from "lucide-react";
 
 export default function EnrollerLoginPage() {
   return (
@@ -18,7 +18,7 @@ export default function EnrollerLoginPage() {
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="pb-2">
           <div className="flex flex-col items-center text-center">
-            <Users className="h-10 w-10 mb-2 text-primary" />
+            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain mb-2" />
             <CardTitle className="text-2xl font-bold">Enroller Panel</CardTitle>
             <CardDescription>
               Enter your credentials to access the enroller dashboard.
