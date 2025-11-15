@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState, useEffect, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Ticket } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // --- Mock Data Generation ---
 
@@ -127,31 +128,15 @@ const SingleDigitTable = ({ data, type }: { data: { digit: string; amount: numbe
 );
 
 const JodiTable = ({ data }: { data: { jodi: string; amount: number }[] }) => {
-  const midPoint = Math.ceil(data.length / 2);
-  const firstHalf = data.slice(0, midPoint);
-  const secondHalf = data.slice(midPoint);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
-  const renderTable = (bets: typeof data, title: string) => (
-    <div className="flex-1">
-        <h4 className="text-sm font-medium mb-2">{title}</h4>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Jodi</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {bets.map((bet) => (
-            <TableRow key={bet.jodi}>
-              <TableCell className="font-mono font-bold py-1">{bet.jodi}</TableCell>
-              <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return data.slice(startIndex, endIndex);
+  }, [data, currentPage]);
 
   return (
     <Card className="mt-4">
@@ -159,10 +144,43 @@ const JodiTable = ({ data }: { data: { jodi: string; amount: number }[] }) => {
         <CardTitle>Jodi Bet Amounts</CardTitle>
         <CardDescription>Total amount placed on each Jodi number (00-99).</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col md:flex-row gap-8">
-        {renderTable(firstHalf, "Jodi 00-49")}
-        {renderTable(secondHalf, "Jodi 50-99")}
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Jodi</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map((bet) => (
+              <TableRow key={bet.jodi}>
+                <TableCell className="font-mono font-bold py-1">{bet.jodi}</TableCell>
+                <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
+       <CardFooter className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </CardFooter>
     </Card>
   );
 };
