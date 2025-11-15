@@ -29,8 +29,6 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import AdminLayout from "./admin/layout";
-import EnrollerLayout from "./enroller/layout";
 import LoginPage from "./login/page";
 import SignupPage from "./signup/page";
 import AdminLoginPage from "./admin/page";
@@ -76,18 +74,16 @@ const BottomNav = () => {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname === '/login') return <LoginPage />;
-  if (pathname === '/signup') return <SignupPage />;
-  if (pathname === '/admin') return <AdminLoginPage />;
-  if (pathname === '/enroller') return <EnrollerLoginPage />;
-
-  if (pathname.startsWith('/admin')) {
-    return <AdminLayout>{children}</AdminLayout>;
+  if (pathname === '/login' || pathname === '/signup' || pathname === '/admin' || pathname === '/enroller') {
+    return <>{children}</>;
+  }
+  
+  // Next.js will automatically use the correct layout for admin and enroller routes.
+  // We don't need to manually wrap them here.
+  if (pathname.startsWith('/admin') || pathname.startsWith('/enroller')) {
+    return <>{children}</>;
   }
 
-  if (pathname.startsWith('/enroller')) {
-    return <EnrollerLayout>{children}</EnrollerLayout>;
-  }
 
   return (
     <SidebarProvider>
