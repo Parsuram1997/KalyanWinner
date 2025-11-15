@@ -277,7 +277,7 @@ export default function WalletPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-bl from-secondary/20 to-background/30">
+        <Card className="bg-gradient-to-bl from-secondary/20 to-accent/10">
           <CardHeader>
             <CardTitle className="text-lg">Manage Funds</CardTitle>
           </CardHeader>
