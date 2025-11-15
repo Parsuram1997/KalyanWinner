@@ -1026,7 +1026,6 @@ export default function EnrolledUsersPage() {
                   <TableHead>Location</TableHead>
                   <TableHead>Total Deposit</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1055,11 +1054,6 @@ export default function EnrolledUsersPage() {
                       >
                         {user.status}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="flex gap-2">
-                      <Button variant="outline" size="icon" asChild>
-                        <Link href={`/admin/users/${user.id}`}><Search className="h-4 w-4" /></Link>
-                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1099,11 +1093,6 @@ export default function EnrolledUsersPage() {
                         <span className="text-muted-foreground">Total Deposit:</span>
                         <span>₹{user.totalDeposit.toFixed(2)}</span>
                     </div>
-                </div>
-                <div className="mt-4 flex justify-end gap-2">
-                    <Button variant="outline" size="icon" asChild>
-                        <Link href={`/admin/users/${user.id}`}><Search className="h-4 w-4" /></Link>
-                      </Button>
                 </div>
               </Card>
             ))}
