@@ -12,6 +12,7 @@ import {
   BarChart,
   Wallet,
   HelpCircle,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,10 +30,6 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import LoginPage from "./login/page";
-import SignupPage from "./signup/page";
-import AdminLoginPage from "./admin/page";
-import EnrollerLoginPage from "./enroller/page";
 
 const bottomNavItems = [
   { href: "/play?market=kalyan-day", label: "Kalyan Day" },
@@ -74,11 +71,12 @@ const BottomNav = () => {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/admin' || pathname === '/enroller';
-  const isAdminRoute = pathname.startsWith('/admin');
-  const isEnrollerRoute = pathname.startsWith('/enroller');
+  // This is a mock role. In a real app, you'd get this from your auth context.
+  const userRole = 'enroller'; // Can be 'user' or 'enroller'
 
-  if (isAuthPage || isAdminRoute || isEnrollerRoute) {
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/admin' || pathname === '/enroller';
+
+  if (isAuthPage) {
     return <>{children}</>;
   }
 
@@ -103,6 +101,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {userRole === 'enroller' && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/enroller/users">
+                    <Users />
+                    Enrolled Users
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/play">
