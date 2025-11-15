@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -160,7 +161,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
         <Button size="lg" className="h-16 text-lg" asChild>
           <Link href="/play?market=kalyan-day">
             <GanttChartSquare className="mr-2 h-6 w-6" />
@@ -246,3 +247,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
