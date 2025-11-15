@@ -240,7 +240,7 @@ const SangamTable = ({ data, type }: { data: { sangam: string; amount: number; }
     </Card>
 );
 
-const MarketBetSummary = ({ marketName }: { marketName: string }) => {
+const MarketBetSummary = ({ marketName, dateFilter }: { marketName: string, dateFilter: string }) => {
     const [openBets, setOpenBets] = useState<ReturnType<typeof generateSingleDigitBets>>([]);
     const [closeBets, setCloseBets] = useState<ReturnType<typeof generateSingleDigitBets>>([]);
     const [jodiBets, setJodiBets] = useState<ReturnType<typeof generateJodiBets>>([]);
@@ -251,7 +251,8 @@ const MarketBetSummary = ({ marketName }: { marketName: string }) => {
     const [fullSangamBets, setFullSangamBets] = useState<ReturnType<typeof generateSangamBets>>([]);
 
     useEffect(() => {
-        // In a real app, you would fetch data based on marketName
+        // In a real app, you would fetch data based on marketName AND dateFilter
+        console.log(`Fetching data for ${marketName} on ${dateFilter}`);
         setOpenBets(generateSingleDigitBets());
         setCloseBets(generateSingleDigitBets());
         setJodiBets(generateJodiBets());
@@ -260,7 +261,7 @@ const MarketBetSummary = ({ marketName }: { marketName: string }) => {
         setTriplePannaBets(generatePannaBets("triple"));
         setHalfSangamBets(generateSangamBets(false));
         setFullSangamBets(generateSangamBets(true));
-    }, [marketName]);
+    }, [marketName, dateFilter]);
 
     return (
         <Tabs defaultValue="open" className="mt-4">
@@ -318,6 +319,7 @@ const MarketBetSummary = ({ marketName }: { marketName: string }) => {
 
 
 export default function ManageBetsPage() {
+  const [dateFilter, setDateFilter] = useState("today");
   return (
     <div className="flex flex-col gap-6">
        <Card>
@@ -331,20 +333,29 @@ export default function ManageBetsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <Tabs defaultValue="kalyan-day">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
-                    <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
+             <Tabs defaultValue="today" onValueChange={setDateFilter} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="today">Today</TabsTrigger>
+                    <TabsTrigger value="yesterday">Yesterday</TabsTrigger>
                 </TabsList>
-                <TabsContent value="kalyan-day">
-                    <MarketBetSummary marketName="Kalyan Day" />
-                </TabsContent>
-                <TabsContent value="kalyan-night">
-                    <MarketBetSummary marketName="Kalyan Night" />
-                </TabsContent>
+
+                <Tabs defaultValue="kalyan-day">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
+                        <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="kalyan-day">
+                        <MarketBetSummary marketName="Kalyan Day" dateFilter={dateFilter} />
+                    </TabsContent>
+                    <TabsContent value="kalyan-night">
+                        <MarketBetSummary marketName="Kalyan Night" dateFilter={dateFilter} />
+                    </TabsContent>
+                </Tabs>
             </Tabs>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    
