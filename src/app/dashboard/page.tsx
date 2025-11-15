@@ -88,7 +88,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="bg-gradient-to-br from-primary/20 to-accent/20 hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -107,7 +107,7 @@ export default function DashboardPage() {
             </Button>
           </CardFooter>
         </Card>
-        <Card className="hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
+        <Card className="bg-gradient-to-tl from-secondary/20 to-background hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
           <CardHeader>
             <CardTitle className="text-base">Latest Result</CardTitle>
             <CardDescription>Swipe to see Day and Night results.</CardDescription>
@@ -163,7 +163,7 @@ export default function DashboardPage() {
 
       
       
-      <Card className="hover:shadow-lg transition-shadow">
+      <Card className="bg-gradient-to-tr from-accent/10 to-background hover:shadow-lg transition-shadow">
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
@@ -234,5 +234,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
