@@ -40,7 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
   
   // Conditionally render layout for non-auth, non-admin, non-enroller pages
-  if (pathname.startsWith('/admin') || pathname.startsWith('/enroller') || pathname === '/login' || pathname === '/signup' || pathname === '/') {
+  if (pathname.startsWith('/admin') || pathname === '/login' || pathname === '/signup' || pathname === '/' || pathname.startsWith('/enroller')) {
     return <>{children}</>;
   }
 
@@ -50,7 +50,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarHeader className="p-0 px-2">
           <div className="hidden md:flex items-center justify-center">
-            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />
+            
           </div>
         </SidebarHeader>
         <SidebarContent>
