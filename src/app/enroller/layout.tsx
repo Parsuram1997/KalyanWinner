@@ -1,0 +1,83 @@
+
+'use client';
+
+import Link from "next/link";
+import Image from 'next/image';
+import {
+  Users,
+  LayoutDashboard,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarProvider,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+  SidebarFooter,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
+import { UserNav } from "@/components/user-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { useState, useEffect } from "react";
+
+export default function EnrollerLayout({ children }: { children: React.ReactNode }) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader className="p-0 px-2">
+          <div className="hidden md:flex items-center justify-center">
+            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/enroller/dashboard">
+                  <LayoutDashboard />
+                  Dashboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/enroller/users">
+                  <Users />
+                  Enrolled Users
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarSeparator />
+          <UserNav />
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <div className="flex flex-col h-dvh">
+          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
+            <SidebarTrigger className="md:hidden" />
+            <div className="flex-1 flex justify-center">
+               {isClient && <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}

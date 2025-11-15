@@ -11,7 +11,6 @@ import {
   GanttChartSquare,
   HelpCircle,
   Coins,
-  Users
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,9 +30,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from "react";
 
-// A temporary flag to simulate user role
-const isEnroller = true;
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
@@ -42,7 +38,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setIsClient(true);
   }, []);
 
-  if (pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin') || pathname.startsWith('/enroller')) {
     return <>{children}</>;
   }
 
@@ -104,16 +100,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {isEnroller && (
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/enroller/users">
-                    <Users />
-                    Enrolled Users
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/rates">
