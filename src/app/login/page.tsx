@@ -52,9 +52,13 @@ export default function LoginPage() {
               <Link href="/dashboard">Login</Link>
             </Button>
           </div>
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center text-sm flex justify-center items-center gap-2">
             <Link href="/admin" className="underline">
               Admin login
+            </Link>
+             <span>|</span>
+            <Link href="/enroller" className="underline">
+              Enroller login
             </Link>
           </div>
         </CardContent>
