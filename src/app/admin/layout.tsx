@@ -11,6 +11,7 @@ import {
   Settings,
   Ticket,
   Landmark,
+  UserPlus,
 } from "lucide-react";
 import {
   Sidebar,
@@ -65,6 +66,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link href="/admin/users">
                   <Users />
                   Users
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/enrollers">
+                  <UserPlus />
+                  Enrollers
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
