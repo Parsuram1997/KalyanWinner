@@ -74,7 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // This is a mock role. In a real app, you'd get this from your auth context.
   const userRole = 'enroller'; // Can be 'user' or 'enroller'
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/admin' || pathname === '/enroller';
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/admin' || pathname.startsWith('/admin/');
 
   if (isAuthPage) {
     return <>{children}</>;
