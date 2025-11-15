@@ -144,8 +144,8 @@ const JodiTable = ({ data }: { data: { jodi: string; amount: number }[] }) => {
         <TableBody>
           {bets.map((bet) => (
             <TableRow key={bet.jodi}>
-              <TableCell className="font-mono font-bold">{bet.jodi}</TableCell>
-              <TableCell className="text-right">₹{bet.amount.toLocaleString()}</TableCell>
+              <TableCell className="font-mono font-bold py-1">{bet.jodi}</TableCell>
+              <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -184,8 +184,8 @@ const PannaTable = ({ data, type }: { data: { panna: string; amount: number; }[]
                 <TableBody>
                     {data.map((bet, index) => (
                         <TableRow key={index}>
-                            <TableCell className="font-mono font-bold">{bet.panna}</TableCell>
-                            <TableCell className="text-right">₹{bet.amount.toLocaleString()}</TableCell>
+                            <TableCell className="font-mono font-bold py-1">{bet.panna}</TableCell>
+                            <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -211,8 +211,8 @@ const SangamTable = ({ data, type }: { data: { sangam: string; amount: number; }
                 <TableBody>
                     {data.map((bet, index) => (
                         <TableRow key={index}>
-                            <TableCell className="font-mono font-bold">{bet.sangam}</TableCell>
-                            <TableCell className="text-right">₹{bet.amount.toLocaleString()}</TableCell>
+                            <TableCell className="font-mono font-bold py-1">{bet.sangam}</TableCell>
+                            <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
