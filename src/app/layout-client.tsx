@@ -74,16 +74,13 @@ const BottomNav = () => {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname === '/login' || pathname === '/signup' || pathname === '/admin' || pathname === '/enroller') {
-    return <>{children}</>;
-  }
-  
-  // Next.js will automatically use the correct layout for admin and enroller routes.
-  // We don't need to manually wrap them here.
-  if (pathname.startsWith('/admin') || pathname.startsWith('/enroller')) {
-    return <>{children}</>;
-  }
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/admin' || pathname === '/enroller';
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isEnrollerRoute = pathname.startsWith('/enroller');
 
+  if (isAuthPage || isAdminRoute || isEnrollerRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <SidebarProvider>
