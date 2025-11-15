@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { MinusCircle, PlusCircle, QrCode } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -159,6 +159,8 @@ const initialTransactions = [
   },
 ];
 
+const TRANSACTIONS_PER_PAGE = 10;
+
 export default function WalletPage() {
   const { toast } = useToast();
   const [balance, setBalance] = useState(1245.50);
@@ -170,6 +172,16 @@ export default function WalletPage() {
   const [addMethod, setAddMethod] = useState("upi");
   const [withdrawMethod, setWithdrawMethod] = useState("bank");
   const [utr, setUtr] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(transactions.length / TRANSACTIONS_PER_PAGE);
+
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * TRANSACTIONS_PER_PAGE;
+    const endIndex = startIndex + TRANSACTIONS_PER_PAGE;
+    return transactions.slice(startIndex, endIndex);
+  }, [transactions, currentPage]);
+
 
   const handleAddFunds = () => {
     const amount = parseInt(addAmount, 10);
@@ -247,7 +259,6 @@ export default function WalletPage() {
     setWithdrawOpen(false);
   };
   
-  const recentTransactions = transactions.slice(0, 15);
 
   return (
     <div className="flex flex-col gap-6">
@@ -518,7 +529,7 @@ export default function WalletPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentTransactions.map((txn) => (
+                {paginatedTransactions.map((txn) => (
                   <TableRow key={txn.id}>
                     <TableCell className="font-medium">{new Date(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
                     <TableCell>{txn.description}</TableCell>
@@ -563,7 +574,7 @@ export default function WalletPage() {
           </div>
           {/* Mobile List */}
           <div className="grid gap-4 md:hidden">
-            {recentTransactions.map((txn) => (
+            {paginatedTransactions.map((txn) => (
               <div
                 key={txn.id}
                 className="flex items-start justify-between gap-4 p-3 -m-3 rounded-lg hover:bg-muted/50"
@@ -610,8 +621,29 @@ export default function WalletPage() {
               </div>
             ))}
           </div>
+          <div className="flex items-center justify-between mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    
