@@ -1,22 +1,34 @@
+
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import AppLayout from "@/app/layout-client";
-import { headers } from 'next/headers';
 import { Suspense } from "react";
+import AdminLayout from "./admin/layout";
+import EnrollerLayout from "./enroller/layout";
+import { headers } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Kalyan Winner",
   description: "Play, check results, and analyze trends for Kalyan Matka.",
 };
 
-function PathnameLayout({ app, children }: { app: React.ReactNode, children: React.ReactNode }) {
-  const pathname = headers().get('x-next-pathname');
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/enroller')) {
-    return <>{children}</>;
+function PathnameLayout({ children }: { children: React.ReactNode }) {
+  const pathname = headers().get('x-next-pathname') || '';
+
+  if (pathname.startsWith('/admin')) {
+    // AdminLayout handles its own children rendering logic
+    return <AdminLayout>{children}</AdminLayout>;
   }
-  return <>{app}</>;
+  
+  if (pathname.startsWith('/enroller')) {
+     // EnrollerLayout handles its own children rendering logic
+    return <EnrollerLayout>{children}</EnrollerLayout>
+  }
+  
+  // For all other routes, use AppLayout
+  return <AppLayout>{children}</AppLayout>;
 }
 
 
@@ -43,9 +55,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Suspense fallback={<div>Loading...</div>}>
-            <PathnameLayout 
-              app={<AppLayout>{children}</AppLayout>}
-            >
+            <PathnameLayout>
               {children}
             </PathnameLayout>
           </Suspense>

@@ -70,6 +70,8 @@ const BottomNav = () => {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  // If the path is one of these, we don't want to show the main app layout.
+  // The layout for these routes is handled in their own layout files.
   if (pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith('/admin') || pathname.startsWith('/enroller')) {
     return <>{children}</>;
   }
