@@ -973,7 +973,7 @@ export default function ManageUsersPage() {
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-                <CardTitle>All Users</CardTitle>
+                <CardTitle>Manage Users</CardTitle>
                 <CardDescription>
                     Manage all registered users in the application.
                 </CardDescription>
