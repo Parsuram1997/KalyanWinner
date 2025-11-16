@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
-import { PlusCircle, Trash2, Wallet } from "lucide-react";
+import { PlusCircle, Trash2, Wallet, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -349,14 +349,21 @@ export default function PlaceBetPage() {
                     Market: <span className="font-semibold text-primary">{marketName}</span>
                 </p>
             </div>
-            <Card className="hidden sm:block">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Wallet</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+            <Card className="hidden sm:block bg-gradient-to-br from-primary/20 to-accent/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
                 <div className="text-xl font-bold">₹{walletBalance.toFixed(2)}</div>
-            </CardContent>
+              </CardContent>
+               <CardFooter>
+                <Button size="sm" asChild>
+                  <Link href="/wallet">
+                    <Wallet className="mr-1.5 h-4 w-4" /> Manage Funds
+                  </Link>
+                </Button>
+              </CardFooter>
             </Card>
       </div>
 
