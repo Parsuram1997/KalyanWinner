@@ -4,16 +4,14 @@
 import { getApp, initializeApp, getApps, App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import { firebaseConfig } from "@/firebase/config";
 
 // Initialize Firebase Admin SDK
 function getFirebaseAdminApp(): App {
   if (getApps().length > 0) {
     return getApp();
   }
-  return initializeApp({
-    projectId: firebaseConfig.projectId
-  });
+  // Initialize without arguments to use Application Default Credentials
+  return initializeApp();
 }
 
 // This function is no longer needed as password reset will be handled via email.
