@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Ticket, PlusCircle, Edit, Trash } from "lucide-react";
+import { Settings, PlusCircle, Edit, Trash } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -118,7 +118,7 @@ export default function ManageBetTypesPage() {
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Ticket className="h-6 w-6" />
+              <Settings className="h-6 w-6" />
               <span>Manage Bet Types</span>
             </CardTitle>
             <CardDescription>

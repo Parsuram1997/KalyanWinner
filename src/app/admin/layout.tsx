@@ -90,9 +90,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/admin/manage-bets">
+                <Link href="/admin/manage-bidding">
                   <Ticket />
-                  Manage Bets
+                  Manage Bidding
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/manage-bets">
+                  <Settings />
+                  Manage Bet Types
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
