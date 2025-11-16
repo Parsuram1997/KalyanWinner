@@ -1,39 +1,43 @@
 
 "use client";
 
-import Link from "next/link";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
-import { useAuth } from "@/firebase";
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-
+import { doc } from "firebase/firestore";
+import { Skeleton } from "./ui/skeleton";
 
 export function UserNav() {
   const auth = useAuth();
+  const { user: authUser, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
 
+  const userDocRef = useMemoFirebase(
+    () => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null),
+    [firestore, authUser]
+  );
+  const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
+
+  const isLoading = isUserLoading || isUserDataLoading;
+
   const handleLogout = async () => {
+    if (!auth) return;
     try {
       await auth.signOut();
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out.",
       });
+      // Redirect to a public page after logout
       router.push('/login');
     } catch (error) {
       toast({
@@ -43,33 +47,38 @@ export function UserNav() {
       });
     }
   };
-  
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src="https://picsum.photos/seed/1/40/40" alt="@shadcn" data-ai-hint="profile picture" />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" side="bottom" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Username</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  user@example.com
-                </p>
+
+  if (isLoading) {
+      return (
+          <div className="flex items-center gap-2 p-1">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <div className="flex-1 space-y-1">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-24" />
+                   <Skeleton className="h-3 w-28" />
               </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2"/>Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-       </div>
-    )
+          </div>
+      )
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-2 rounded-md border p-2">
+        <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+            <AvatarImage src={authUser?.photoURL || "https://picsum.photos/seed/1/40/40"} alt="User avatar" data-ai-hint="profile picture" />
+            <AvatarFallback>{userData?.name?.[0] || authUser?.email?.[0] || 'U'}</AvatarFallback>
+            </Avatar>
+            <div className="text-xs">
+                <p className="font-semibold text-foreground truncate">{userData?.name || 'User'}</p>
+                <p className="text-muted-foreground">{userData?.customId}</p>
+                 <p className="text-muted-foreground truncate">{userData?.email}</p>
+                <p className="text-muted-foreground">{userData?.mobile}</p>
+            </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
+            <LogOut className="mr-2 h-4 w-4"/>
+            Log out
+        </Button>
+    </div>
+  );
 }
