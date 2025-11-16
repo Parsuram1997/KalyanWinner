@@ -15,7 +15,8 @@ import { ArrowLeft, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const betTypes = [
-    { name: "Single Digit", slug: "single-digit", description: "Bet on a single number from 0-9 for Open or Close." },
+    { name: "Open Digit", slug: "open-digit", description: "Bet on a single number from 0-9 for the Open result." },
+    { name: "Close Digit", slug: "close-digit", description: "Bet on a single number from 0-9 for the Close result." },
     { name: "Jodi", slug: "jodi", description: "Bet on a two-digit number from 00-99." },
     { name: "Single Panna", slug: "single-panna", description: "Bet on a three-digit number with unique digits." },
     { name: "Double Panna", slug: "double-panna", description: "Bet on a three-digit number with two identical digits." },

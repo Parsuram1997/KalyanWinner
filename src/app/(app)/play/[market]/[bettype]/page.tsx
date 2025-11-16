@@ -54,7 +54,7 @@ function BetForm({
         return "e.g., 123 x 4";
       case "Full Sangam":
         return "e.g., 123 x 456";
-      default: // Single Digit
+      default: // Open Digit, Close Digit
         return "e.g., 8";
     }
   };
@@ -70,7 +70,7 @@ function BetForm({
       case "Half Sangam":
       case "Full Sangam":
         return "Sangam Number";
-      default: // Single Digit
+      default: // Open Digit, Close Digit
         return "Digit";
     }
   };
@@ -104,12 +104,12 @@ function BetForm({
       return false;
     }
 
-    if (gameType === "Single Digit") {
+    if (gameType === "Open Digit" || gameType === "Close Digit") {
       if (!/^\d$/.test(number)) {
         toast({
           variant: "destructive",
           title: "Invalid Number",
-          description: "Single digit must be a single digit (0-9).",
+          description: "Digit must be a single digit (0-9).",
         });
         return false;
       }
