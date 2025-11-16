@@ -1167,25 +1167,25 @@ export default function ManageUsersPage() {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">Loading users...</TableCell>
+                    <TableCell colSpan={6} className="text-center py-1">Loading users...</TableCell>
                   </TableRow>
                 )}
                 {!isLoading && paginatedUsers.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-muted-foreground">{user.customId}</div>
+                    <TableCell className="py-1">
+                      <div className="font-medium text-xs">{user.name}</div>
+                      <div className="text-muted-foreground text-xs">{user.customId}</div>
                     </TableCell>
-                    <TableCell>
-                      <div>{user.email}</div>
-                      <div className="text-muted-foreground">{user.mobile}</div>
+                    <TableCell className="py-1">
+                      <div className="text-xs">{user.email}</div>
+                      <div className="text-muted-foreground text-xs">{user.mobile}</div>
                     </TableCell>
-                    <TableCell>
-                      <div>{user.state}</div>
-                      <div className="text-muted-foreground">{user.district}</div>
+                    <TableCell className="py-1">
+                      <div className="text-xs">{user.state}</div>
+                      <div className="text-muted-foreground text-xs">{user.district}</div>
                     </TableCell>
-                    <TableCell>₹{(user.balance || 0).toFixed(2)}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs py-1">₹{(user.balance || 0).toFixed(2)}</TableCell>
+                    <TableCell className="py-1">
                       <Badge
                         variant={
                           user.status === "Active"
@@ -1196,7 +1196,7 @@ export default function ManageUsersPage() {
                         {user.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="flex gap-2">
+                    <TableCell className="flex gap-2 py-1">
                        <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link>
                        </Button>
@@ -1369,5 +1369,7 @@ export default function ManageUsersPage() {
     </div>
   );
 }
+
+    
 
     
