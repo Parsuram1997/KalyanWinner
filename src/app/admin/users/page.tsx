@@ -1152,7 +1152,7 @@ export default function ManageUsersPage() {
           </div>
           
            {/* Desktop Table */}
-          <div className="hidden md:block rounded-md border">
+          <div className="hidden md:block rounded-md border text-xs">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1174,15 +1174,15 @@ export default function ManageUsersPage() {
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium">{user.name}</div>
-                      <div className="text-xs text-muted-foreground">{user.customId}</div>
+                      <div className="text-muted-foreground">{user.customId}</div>
                     </TableCell>
                     <TableCell>
                       <div>{user.email}</div>
-                      <div className="text-sm text-muted-foreground">{user.mobile}</div>
+                      <div className="text-muted-foreground">{user.mobile}</div>
                     </TableCell>
                     <TableCell>
                       <div>{user.state}</div>
-                      <div className="text-sm text-muted-foreground">{user.district}</div>
+                      <div className="text-muted-foreground">{user.district}</div>
                     </TableCell>
                     <TableCell>₹{(user.balance || 0).toFixed(2)}</TableCell>
                     <TableCell>
@@ -1239,7 +1239,7 @@ export default function ManageUsersPage() {
                         {user.status}
                     </Badge>
                 </div>
-                <div className="mt-4 space-y-2 text-sm">
+                <div className="mt-4 space-y-2 text-xs">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Contact:</span>
                         <div className="text-right">
@@ -1369,3 +1369,5 @@ export default function ManageUsersPage() {
     </div>
   );
 }
+
+    
