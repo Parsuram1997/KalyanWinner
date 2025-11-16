@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Ticket } from "lucide-react";
+import { Ticket } from "lucide-react";
 
 const betTypes = [
     { name: "Open Digit", slug: "open-digit", description: "Bet on a single number from 0-9 for the Open result." },
@@ -32,11 +32,6 @@ export default function ChooseBetTypePage() {
   return (
     <div className="flex flex-col gap-6">
        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
-              <Link href="/play">
-                  <ArrowLeft className="h-4 w-4" />
-              </Link>
-          </Button>
           <div>
               <h1 className="text-2xl font-bold tracking-tight">Choose Bet Type</h1>
               <p className="text-muted-foreground">Market: <span className="font-semibold text-primary">{marketName}</span></p>
