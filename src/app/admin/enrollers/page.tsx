@@ -1132,6 +1132,7 @@ export default function ManageEnrollersPage() {
                 <TableRow>
                   <TableHead>Enroller</TableHead>
                   <TableHead>Contact</TableHead>
+                  <TableHead>Location</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -1139,7 +1140,7 @@ export default function ManageEnrollersPage() {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">Loading enrollers...</TableCell>
+                    <TableCell colSpan={5} className="text-center">Loading enrollers...</TableCell>
                   </TableRow>
                 )}
                 {!isLoading && paginatedEnrollers.map((enroller) => (
@@ -1151,6 +1152,10 @@ export default function ManageEnrollersPage() {
                     <TableCell>
                       <div>{enroller.email}</div>
                       <div className="text-sm text-muted-foreground">{enroller.mobile}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div>{enroller.state}</div>
+                      <div className="text-sm text-muted-foreground">{enroller.district}</div>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -1209,6 +1214,13 @@ export default function ManageEnrollersPage() {
                         <div className="text-right">
                             <p>{enroller.email}</p>
                             <p className="text-muted-foreground">{enroller.mobile}</p>
+                        </div>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Location:</span>
+                        <div className="text-right">
+                           <p>{enroller.state}</p>
+                           <p className="text-xs">{enroller.district}</p>
                         </div>
                     </div>
                 </div>
@@ -1293,3 +1305,5 @@ export default function ManageEnrollersPage() {
     </div>
   );
 }
+
+    
