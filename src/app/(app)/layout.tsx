@@ -11,6 +11,7 @@ import {
   GanttChartSquare,
   HelpCircle,
   Coins,
+  Clock,
 } from "lucide-react";
 import {
   Sidebar,
@@ -61,6 +62,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/play">
                   <Ticket />
                   Play
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/game-timings">
+                  <Clock />
+                  Game Timings
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
