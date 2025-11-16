@@ -52,7 +52,7 @@ export default function ChooseBetTypePage() {
             </CardHeader>
             <CardContent className="flex-grow" />
             <div className="p-6 pt-0">
-               <Button asChild className="w-full" variant={bet.slug === "jodi" ? "default" : "outline"}>
+               <Button asChild className="w-full">
                 <Link href={cn("/play", marketSlug, bet.slug)}>
                   <Ticket className="mr-2 h-4 w-4" />
                   Place Bet
