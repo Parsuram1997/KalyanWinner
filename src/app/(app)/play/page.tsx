@@ -30,6 +30,9 @@ const markets = [
   { name: "Tara Mumbai Day", slug: "tara-mumbai-day", open: "01:35 PM", close: "02:35 PM" },
   { name: "Tara Mumbai Night", slug: "tara-mumbai-night", open: "10:00 PM", close: "12:00 AM" },
   { name: "Main Ratan", slug: "main-ratan", open: "09:00 PM", close: "11:00 PM" },
+  { name: "Ratan Morning", slug: "ratan-morning", open: "10:00 AM", close: "11:00 AM" },
+  { name: "Ratan Day", slug: "ratan-day", open: "03:00 PM", close: "05:00 PM" },
+  { name: "Ratan Night", slug: "ratan-night", open: "09:10 PM", close: "11:10 PM" },
 ];
 
 export default function MarketSelectionPage() {
