@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -17,11 +17,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
-import { signInWithEmailAndPassword, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { resetPassword } from "@/app/actions/auth-actions";
+import { getEmailForMobile } from "@/app/actions/auth-actions";
 
-type View = "login" | "forgot_password_mobile" | "forgot_password_otp" | "forgot_password_new";
+type View = "login" | "forgot_password";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,103 +30,55 @@ export default function LoginPage() {
   const firestore = useFirestore();
 
   const [view, setView] = useState<View>("login");
-
   const [mobileNumber, setMobileNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  
-  const recaptchaVerifier = useRef<RecaptchaVerifier | null>(null);
 
-  const setupRecaptcha = () => {
-    if (!auth) return null;
-    if (!recaptchaVerifier.current) {
-        recaptchaVerifier.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            'size': 'invisible',
-            'callback': () => {
-                // reCAPTCHA solved, allow signInWithPhoneNumber.
-            }
-        });
+  const handleForgotPassword = async () => {
+    setIsLoading(true);
+    if (!auth) {
+      toast({ variant: "destructive", title: "Authentication service not ready." });
+      setIsLoading(false);
+      return;
     }
-    return recaptchaVerifier.current;
-  }
+     if (mobileNumber.length !== 10) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Mobile Number",
+        description: "Please enter a valid 10-digit mobile number.",
+      });
+      setIsLoading(false);
+      return;
+    }
 
-  const handleSendOtp = async () => {
-      setIsLoading(true);
-      if (!auth) {
-          toast({ variant: "destructive", title: "Authentication not ready" });
-          setIsLoading(false);
-          return;
+    try {
+      const emailResult = await getEmailForMobile(mobileNumber);
+      if (!emailResult.success || !emailResult.email) {
+        toast({ variant: "destructive", title: "User Not Found", description: emailResult.message });
+        setIsLoading(false);
+        return;
       }
-      try {
-          const verifier = setupRecaptcha();
-          if (!verifier) throw new Error("Recaptcha not initialized");
-          const formattedMobile = `+91${mobileNumber}`;
-          const result = await signInWithPhoneNumber(auth, formattedMobile, verifier);
-          setConfirmationResult(result);
-          setView("forgot_password_otp");
-          toast({ title: "OTP Sent", description: "Please check your mobile for the OTP." });
-      } catch (error: any) {
-          console.error(error);
-          toast({ variant: "destructive", title: "Failed to send OTP", description: error.message });
-      } finally {
-          setIsLoading(false);
-      }
+      
+      await sendPasswordResetEmail(auth, emailResult.email);
+      toast({
+        title: "Password Reset Email Sent",
+        description: `A link to reset your password has been sent to your registered email address.`,
+      });
+      setView("login");
+    } catch (error: any) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the mobile number is correct." });
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const handleVerifyOtp = async () => {
-      setIsLoading(true);
-      if (!confirmationResult) {
-          toast({ variant: "destructive", title: "Verification failed. Please try again." });
-          setIsLoading(false);
-          return;
-      }
-      try {
-          await confirmationResult.confirm(otp);
-          setView("forgot_password_new");
-          toast({ title: "OTP Verified", description: "You can now set a new password." });
-      } catch (error: any) {
-          console.error(error);
-          toast({ variant: "destructive", title: "Invalid OTP", description: "The OTP you entered is incorrect." });
-      } finally {
-          setIsLoading(false);
-      }
-  };
-  
-  const handleResetPassword = async () => {
-      setIsLoading(true);
-      try {
-          const result = await resetPassword(mobileNumber, newPassword);
-          if (result.success) {
-              toast({ title: "Password Reset Successful", description: "Please login with your new password." });
-              setView("login");
-              setMobileNumber("");
-              setPassword("");
-              setNewPassword("");
-              setOtp("");
-          } else {
-              toast({ variant: "destructive", title: "Password Reset Failed", description: result.message });
-          }
-      } catch (error: any) {
-           toast({ variant: "destructive", title: "An Error Occurred", description: error.message });
-      } finally {
-          setIsLoading(false);
-      }
-  }
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     if (!auth || !firestore) {
-      toast({
-        variant: "destructive",
-        title: "Authentication not ready",
-        description: "Please wait a moment and try again.",
-      });
+      toast({ variant: "destructive", title: "Authentication not ready" });
       setIsLoading(false);
       return;
     }
@@ -140,54 +92,48 @@ export default function LoginPage() {
       setIsLoading(false);
       return;
     }
-
-    const email = `+91${mobileNumber}@kalyanwinner.app`;
-
+    
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      const userDocRef = doc(firestore, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists()) {
-        const userRole = userDocSnap.data()?.role;
-
-        if (userRole === 'User') {
-          toast({
-            title: "Login Successful",
-            description: "Welcome back!",
-          });
-          router.push("/dashboard");
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Access Denied",
-            description: "Please use the correct portal for your role.",
-          });
-          await auth.signOut();
+        // Step 1: Get the real email from the mobile number via a Server Action
+        const emailResult = await getEmailForMobile(mobileNumber);
+        if (!emailResult.success || !emailResult.email) {
+             toast({ variant: "destructive", title: "Login Failed", description: emailResult.message });
+             setIsLoading(false);
+             return;
         }
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Profile Not Found",
-          description: "Your user profile does not exist.",
-        });
-        await auth.signOut();
-      }
+
+        const email = emailResult.email;
+        
+        // Step 2: Attempt to sign in with the retrieved email and password
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Step 3: Verify the user's role from Firestore
+        const userDocRef = doc(firestore, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+            const userRole = userDocSnap.data()?.role;
+            if (userRole === 'User') {
+            toast({ title: "Login Successful", description: "Welcome back!" });
+            router.push("/dashboard");
+            } else {
+            toast({ variant: "destructive", title: "Access Denied", description: "Please use the correct portal for your role." });
+            await auth.signOut();
+            }
+        } else {
+            toast({ variant: "destructive", title: "Profile Not Found", description: "Your user profile does not exist." });
+            await auth.signOut();
+        }
 
     } catch (error: any) {
-      let description = "An unexpected error occurred during login.";
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        description = "Invalid mobile number or password.";
-      }
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: description,
-      });
+        let description = "An unexpected error occurred during login.";
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            description = "Invalid mobile number or password.";
+        }
+        toast({ variant: "destructive", title: "Login Failed", description: description });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
 
@@ -198,19 +144,14 @@ export default function LoginPage() {
           <div className="flex flex-col items-center text-center">
              <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain mb-2" />
             <CardTitle className="text-2xl font-bold">
-                {view === 'login' && "User Login"}
-                {view.startsWith('forgot_password') && "Forgot Password"}
+                {view === 'login' ? "User Login" : "Forgot Password"}
             </CardTitle>
             <CardDescription>
-                 {view === 'login' && "Enter your mobile number and password to login."}
-                 {view === 'forgot_password_mobile' && "Enter your mobile number to reset your password."}
-                 {view === 'forgot_password_otp' && `Enter the OTP sent to +91${mobileNumber}.`}
-                 {view === 'forgot_password_new' && "Enter your new password."}
+                 {view === 'login' ? "Enter your mobile number and password to login." : "Enter your registered mobile number to receive a password reset link on your email."}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="pt-2">
-            <div id="recaptcha-container"></div>
             {view === 'login' && (
                 <form onSubmit={handleSubmit} className="grid gap-4">
                     <div className="grid gap-2">
@@ -232,7 +173,7 @@ export default function LoginPage() {
                     <div className="grid gap-2">
                         <div className="flex items-center">
                             <Label htmlFor="password">Password</Label>
-                            <Button variant="link" type="button" onClick={() => setView('forgot_password_mobile')} className="ml-auto px-0 h-auto text-xs">
+                            <Button variant="link" type="button" onClick={() => setView('forgot_password')} className="ml-auto px-0 h-auto text-xs">
                                 Forgot password?
                             </Button>
                         </div>
@@ -251,7 +192,7 @@ export default function LoginPage() {
                 </form>
             )}
 
-            {view === 'forgot_password_mobile' && (
+            {view === 'forgot_password' && (
                 <div className="grid gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="reset-phone">Mobile Number</Label>
@@ -269,53 +210,11 @@ export default function LoginPage() {
                             />
                         </div>
                     </div>
-                    <Button onClick={handleSendOtp} className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Sending OTP...' : 'Send OTP'}
+                    <Button onClick={handleForgotPassword} className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Sending Link...' : 'Send Password Reset Link'}
                     </Button>
                     <Button variant="outline" onClick={() => setView('login')} className="w-full">
                         Back to Login
-                    </Button>
-                </div>
-            )}
-            
-            {view === 'forgot_password_otp' && (
-                 <div className="grid gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="otp">Enter OTP</Label>
-                        <Input
-                            id="otp"
-                            type="text"
-                            placeholder="6-digit code"
-                            required
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            disabled={isLoading}
-                        />
-                    </div>
-                    <Button onClick={handleVerifyOtp} className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Verifying...' : 'Verify OTP'}
-                    </Button>
-                    <Button variant="outline" onClick={() => setView('forgot_password_mobile')} className="w-full">
-                        Change Number
-                    </Button>
-                 </div>
-            )}
-            
-            {view === 'forgot_password_new' && (
-                <div className="grid gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="new-password">New Password</Label>
-                        <Input
-                            id="new-password"
-                            type="password"
-                            required
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            disabled={isLoading}
-                        />
-                    </div>
-                    <Button onClick={handleResetPassword} className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Resetting...' : 'Reset Password'}
                     </Button>
                 </div>
             )}

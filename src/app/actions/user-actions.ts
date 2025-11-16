@@ -28,17 +28,22 @@ export async function createUser(userData: {
     const adminApp = getFirebaseAdminApp();
     const adminAuth = getAuth(adminApp);
     const adminFirestore = getFirestore(adminApp);
+    
+    // Check if a user with the same mobile number already exists in Firestore
+    const mobileQuery = await adminFirestore.collection("users").where("mobile", "==", userData.mobile).get();
+    if (!mobileQuery.empty) {
+        throw new Error("A user with this mobile number already exists.");
+    }
 
-    // Construct a "dummy" email from the mobile number for Firebase Auth
-    const authEmail = userData.email || `+91${userData.mobile}@kalyanwinner.app`;
+    // Use the REAL email provided by the user for Firebase Authentication
+    const authEmail = userData.email;
 
     // Create user in Firebase Authentication
     const userRecord = await adminAuth.createUser({
       email: authEmail,
       password: userData.password,
       displayName: userData.name,
-      // You can also set the mobile number if you wish, but it requires a specific format
-      // phoneNumber: `+91${userData.mobile}`
+      phoneNumber: `+91${userData.mobile}`
     });
 
     // Create user profile in Firestore
@@ -46,7 +51,7 @@ export async function createUser(userData: {
       id: userRecord.uid,
       name: userData.name,
       mobile: userData.mobile,
-      email: authEmail, // Store the dummy or real email
+      email: authEmail, // Store the real email
       state: userData.state,
       district: userData.district,
       balance: 0,
@@ -62,9 +67,11 @@ export async function createUser(userData: {
     console.error("Error creating user:", error);
     let errorMessage = "An unexpected error occurred.";
     if (error.code === 'auth/email-already-exists') {
-        errorMessage = "A user with this mobile number or email already exists.";
+        errorMessage = "A user with this email address already exists.";
     } else if (error.code === 'auth/invalid-password') {
         errorMessage = "Password must be at least 6 characters long.";
+    } else if (error.message) {
+        errorMessage = error.message;
     }
     throw new Error(errorMessage);
   }
