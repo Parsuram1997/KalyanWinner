@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Ticket } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const betTypes = [
     { name: "Open Digit", slug: "open-digit", description: "Bet on a single number from 0-9 for the Open result." },
@@ -54,7 +53,7 @@ export default function ChooseBetTypePage() {
             <CardContent className="flex-grow" />
             <div className="p-6 pt-0">
                <Button asChild className="w-full">
-                <Link href={cn("/play", marketSlug, bet.slug)}>
+                <Link href={`/play/${marketSlug}/${bet.slug}`}>
                   <Ticket className="mr-2 h-4 w-4" />
                   Place Bet
                 </Link>
