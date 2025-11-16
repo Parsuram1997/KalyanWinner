@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -16,6 +15,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -157,7 +157,8 @@ export default function ManageMarketsPage() {
               </Dialog>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -179,6 +180,7 @@ export default function ManageMarketsPage() {
                         <Switch
                           checked={market.status === "Active"}
                           onCheckedChange={() => toggleMarketStatus(market.id)}
+                          aria-label={`Toggle ${market.name} status`}
                         />
                         <Badge variant={market.status === "Active" ? "secondary" : "outline"}>
                           {market.status}
@@ -210,6 +212,61 @@ export default function ManageMarketsPage() {
               </TableBody>
             </Table>
           </div>
+          
+           {/* Mobile Cards */}
+            <div className="grid gap-4 md:hidden">
+              {markets.map((market) => (
+                <Card key={market.id}>
+                  <CardHeader>
+                      <div className="flex justify-between items-start">
+                          <CardTitle>{market.name}</CardTitle>
+                          <Badge variant={market.status === "Active" ? "secondary" : "outline"}>
+                              {market.status}
+                          </Badge>
+                      </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Open Time:</span>
+                          <span className="font-medium">{market.openTime}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Close Time:</span>
+                          <span className="font-medium">{market.closeTime}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Status:</span>
+                          <Switch
+                            checked={market.status === "Active"}
+                            onCheckedChange={() => toggleMarketStatus(market.id)}
+                            aria-label={`Toggle ${market.name} status`}
+                          />
+                      </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2">
+                       <Button variant="outline" size="sm" onClick={() => openEditDialog(market)}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-2"/>Delete</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the '{market.name}' market.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteMarket(market.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                  </CardFooter>
+                </Card>
+              ))}
+          </div>
+
         </CardContent>
       </Card>
       
