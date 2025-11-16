@@ -293,8 +293,8 @@ function BetForm({
                         </div>
                     </div>
                     <Separator />
-                     <div className="w-full p-3 pt-0">
-                        <Table>
+                     <div className="w-full pt-0">
+                        <Table style={{tableLayout: 'fixed', width: '100%'}}>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Digit</TableHead>
