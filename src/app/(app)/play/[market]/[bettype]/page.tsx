@@ -334,8 +334,11 @@ export default function PlaceBetPage() {
   const marketSlug = params.market as string;
   const betTypeSlug = params.bettype as string;
   
+  const betTypeName = betTypeSlug.split('-').map(word => {
+    if (word.toLowerCase() === 'panna') return 'Panna';
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(' ');
   const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  const betTypeName = betTypeSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
   // In a real app, this would come from a user context or API
   const walletBalance = 1245.5;
@@ -349,7 +352,7 @@ export default function PlaceBetPage() {
                     Market: <span className="font-semibold text-primary">{marketName}</span>
                 </p>
             </div>
-            <Card className="hidden sm:block bg-gradient-to-br from-primary/20 to-accent/20">
+            <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
