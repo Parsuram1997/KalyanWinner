@@ -11,7 +11,6 @@ function getFirebaseAdminApp(): App {
   if (getApps().length > 0) {
     return getApp();
   }
-  // Let Firebase find credentials from environment, but specify projectId
   return initializeApp({
     projectId: firebaseConfig.projectId
   });
@@ -35,6 +34,8 @@ export async function createUser(userData: {
       email: userData.email,
       password: userData.password,
       displayName: userData.name,
+      // You can also set the mobile number if you wish, but it requires a specific format
+      // phoneNumber: `+91${userData.mobile}`
     });
 
     // Create user profile in Firestore
@@ -42,12 +43,12 @@ export async function createUser(userData: {
       id: userRecord.uid,
       name: userData.name,
       mobile: userData.mobile,
-      email: userData.email, // Use the provided email
+      email: userData.email,
       state: userData.state,
       district: userData.district,
       balance: 0,
       status: "Active",
-      role: "User", // Set default role to 'User'
+      role: "User", // Default role is 'User'
       createdAt: new Date().toISOString(),
     };
 
@@ -56,7 +57,6 @@ export async function createUser(userData: {
     return { success: true, userId: userRecord.uid };
   } catch (error: any) {
     console.error("Error creating user:", error);
-    // Provide a more specific error message
     let errorMessage = "An unexpected error occurred.";
     if (error.code === 'auth/email-already-exists') {
         errorMessage = "A user with this email address already exists.";

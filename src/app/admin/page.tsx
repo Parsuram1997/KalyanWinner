@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -14,23 +15,65 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { useAuth, useFirestore } from "@/firebase";
+import { signInWithEmailAndPassword, UserCredential } from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const [email, setEmail] = useState("admin@kalyanwinner.app");
   const [password, setPassword] = useState("password");
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleFirstLoginSetup = async (user: UserCredential['user']) => {
+    if (!firestore) return;
+
+    const userDocRef = doc(firestore, "users", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (!userDocSnap.exists()) {
+      // This is the first login, create the user document in Firestore
+      try {
+        await setDoc(userDocRef, {
+          id: user.uid,
+          email: user.email,
+          name: user.displayName || "Admin User",
+          role: "Admin", // Assign Admin role
+          status: "Active",
+          balance: 0,
+          mobile: user.phoneNumber || "N/A",
+          state: "N/A",
+          district: "N/A",
+          createdAt: serverTimestamp(),
+        });
+        toast({
+          title: "Admin Profile Created",
+          description: "Your admin profile has been set up in the database.",
+        });
+      } catch (error) {
+        console.error("Error creating admin profile in Firestore:", error);
+        toast({
+          variant: "destructive",
+          title: "Database Error",
+          description: "Could not create your admin profile in the database.",
+        });
+        // Log out the user if the profile creation fails to avoid inconsistent state
+        auth?.signOut();
+        throw error; // Propagate error to stop execution
+      }
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!auth) {
+    if (!auth || !firestore) {
         toast({
             variant: "destructive",
             title: "Authentication not ready",
@@ -41,7 +84,11 @@ export default function AdminLoginPage() {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      // After successful sign-in, check if it's a first-time login for this user
+      await handleFirstLoginSetup(userCredential.user);
+
       toast({
         title: "Login Successful",
         description: "You have successfully logged in.",
@@ -51,7 +98,9 @@ export default function AdminLoginPage() {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
+        description: error.code === 'auth/invalid-credential' 
+          ? "Invalid email or password. Please try again."
+          : error.message || "An unexpected error occurred during login.",
       });
     } finally {
       setIsLoading(false);
