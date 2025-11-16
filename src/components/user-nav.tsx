@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSidebar } from "./ui/sidebar";
 import { LogOut } from "lucide-react";
-import { ThemeToggle } from "./theme-toggle";
 
 
 export function UserNav() {
@@ -27,7 +26,6 @@ export function UserNav() {
   if (!open) {
     return (
       <div className="flex flex-col items-center gap-2">
-        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -73,7 +71,6 @@ export function UserNav() {
         </p>
       </div>
        <div className="flex items-center justify-center gap-2 w-full">
-          <ThemeToggle />
           <Button variant="ghost" className="flex-1" asChild>
             <Link href="/login"><LogOut className="mr-2"/>Log out</Link>
           </Button>

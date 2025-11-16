@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { useState, useEffect } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
@@ -120,9 +121,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col h-dvh">
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
             <SidebarTrigger className="md:hidden" />
-            <div className="flex-1 flex justify-center">
-              {isClient && <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />}
+            <div className="flex-1">
+               {isClient && <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />}
             </div>
+            <ThemeToggle />
+            <UserNav />
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
         </div>
