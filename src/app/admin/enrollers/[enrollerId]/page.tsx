@@ -17,10 +17,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { User, Wallet, Phone, MapPin, Map } from "lucide-react";
+import { User, Wallet, Phone, MapPin, Map, Mail } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useDoc, useFirestore, useMemoFirebase, useCollection } from "@/firebase";
+import { doc, collection, query, where } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EnrollerDetailsPage() {
   const params = useParams();
@@ -28,17 +29,39 @@ export default function EnrollerDetailsPage() {
   const firestore = useFirestore();
 
   const enrollerRef = useMemoFirebase(() => (firestore && enrollerId ? doc(firestore, "users", enrollerId) : null), [firestore, enrollerId]);
-  const { data: enroller, isLoading } = useDoc<any>(enrollerRef);
+  const { data: enroller, isLoading: isEnrollerLoading } = useDoc<any>(enrollerRef);
+  
+  const enrolledUsersQuery = useMemoFirebase(() => {
+    if (!firestore || !enroller) return null;
+    return query(collection(firestore, "users"), where("enrollerId", "==", enroller.id));
+  }, [firestore, enroller]);
+  
+  const { data: enrolledUsers, isLoading: areUsersLoading } = useCollection<any>(enrolledUsersQuery);
 
-  // This is just mock data for enrolled users. In a real app, you would fetch this from Firestore.
-  const enrolledUsers = [
-    { id: "USR001", name: "Ravi Kumar", status: "Active", totalDeposit: 5000 },
-    { id: "USR002", name: "Sunita Sharma", status: "Active", totalDeposit: 2500 },
-    { id: "USR003", name: "Amit Patel", status: "Suspended", totalDeposit: 1000 },
-  ];
+  const isLoading = isEnrollerLoading || areUsersLoading;
 
-  if (isLoading) {
-    return <div>Loading enroller details...</div>;
+  if (isEnrollerLoading) {
+    return (
+        <div className="flex flex-col gap-6">
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-40" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-32 w-full" />
+                </CardContent>
+            </Card>
+        </div>
+    );
   }
 
   if (!enroller) {
@@ -54,7 +77,7 @@ export default function EnrollerDetailsPage() {
             <User className="h-6 w-6" />
             <span>{enroller.name}</span>
           </CardTitle>
-          <CardDescription>Enroller ID: {enroller.id}</CardDescription>
+          <CardDescription>Enroller ID: {enroller.customId}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <div className="flex items-center gap-3">
@@ -65,7 +88,7 @@ export default function EnrollerDetailsPage() {
             </div>
           </div>
            <div className="flex items-center gap-3">
-            <Phone className="h-5 w-5 text-muted-foreground" />
+            <Mail className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">Email</p>
               <p className="font-medium">{enroller.email}</p>
@@ -103,38 +126,44 @@ export default function EnrollerDetailsPage() {
           <CardDescription>List of users enrolled by {enroller.name}.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Total Deposit</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {enrolledUsers.length > 0 ? enrolledUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.status === "Active" ? "secondary" : "destructive"}>
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">₹{user.totalDeposit.toFixed(2)}</TableCell>
-                </TableRow>
-              )) : (
+          <div className="rounded-md border">
+            <Table>
+                <TableHeader>
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center">No users enrolled by this enroller yet.</TableCell>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                {isLoading ? (
+                    <TableRow>
+                        <TableCell colSpan={4} className="text-center">Loading users...</TableCell>
+                    </TableRow>
+                ) : enrolledUsers && enrolledUsers.length > 0 ? (
+                    enrolledUsers.map((user) => (
+                    <TableRow key={user.id}>
+                        <TableCell>{user.customId}</TableCell>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell>
+                        <Badge variant={user.status === "Active" ? "secondary" : "destructive"}>
+                            {user.status}
+                        </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">₹{(user.balance || 0).toFixed(2)}</TableCell>
+                    </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                    <TableCell colSpan={4} className="text-center">No users enrolled by this enroller yet.</TableCell>
+                    </TableRow>
+                )}
+                </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-    
