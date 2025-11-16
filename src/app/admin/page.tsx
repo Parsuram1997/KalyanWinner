@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from "react";
@@ -15,11 +14,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { handleAdminLoginOrFirstTimeSetup } from "@/app/actions/auth-actions";
+import { useAuth } from "@/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
   const [email, setEmail] = useState("admin@kalyanwinner.app");
   const [password, setPassword] = useState("password");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,32 +30,28 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      // We are passing an email, but the action expects a mobile.
-      // For the first time setup, we can derive a mobile from email, or adjust the action.
-      // For now, let's pretend the email is the mobile for the action's logic to proceed.
-      // A better fix would be to have a dedicated email field in the action.
-      // Let's create a dummy mobile from email for the action to work conceptually.
-      const mobileForAction = email.split('@')[0];
-
-      const result = await handleAdminLoginOrFirstTimeSetup({ mobile: mobileForAction, password, email });
-
-      if (result.success) {
+    if (!auth) {
         toast({
-          title: result.isFirstAdmin ? "Admin Account Created" : "Login Successful",
-          description: result.isFirstAdmin
-            ? "The first admin account has been set up. Welcome!"
-            : "You have successfully logged in.",
+            variant: "destructive",
+            title: "Authentication not ready",
+            description: "Please wait a moment and try again.",
         });
-        router.push("/admin/dashboard");
-      } else {
-        throw new Error(result.error || "An unknown error occurred.");
-      }
+        setIsLoading(false);
+        return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({
+        title: "Login Successful",
+        description: "You have successfully logged in.",
+      });
+      router.push("/admin/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message,
+        description: "Invalid email or password. Please try again.",
       });
     } finally {
       setIsLoading(false);
