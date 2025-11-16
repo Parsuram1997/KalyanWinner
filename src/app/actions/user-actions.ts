@@ -112,10 +112,14 @@ export async function createUser(userData: {
 export async function updateUser(userId: string, userData: {
   name?: string;
   email?: string;
+  state?: string;
+  district?: string;
 }) {
   try {
     const updateData: any = {};
     if (userData.name) updateData.name = userData.name;
+    if (userData.state) updateData.state = userData.state;
+    if (userData.district) updateData.district = userData.district;
     
     // If email is being updated, update it in both Firestore and Auth
     if (userData.email) {

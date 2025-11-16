@@ -904,11 +904,22 @@ export default function ManageUsersPage() {
   // State for the edit form
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editState, setEditState] = useState<string | null>(null);
+  const [editDistrict, setEditDistrict] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (selectedUser) {
       setEditName(selectedUser.name);
       setEditEmail(selectedUser.email);
+      const stateValue = states.find(s => s.label === selectedUser.state)?.value || null;
+      setEditState(stateValue);
+      if (stateValue) {
+        const districtValue = districts[stateValue]?.find(d => d.label === selectedUser.district)?.value || null;
+        setEditDistrict(districtValue);
+      } else {
+        setEditDistrict(null);
+      }
     }
   }, [selectedUser]);
 
@@ -949,16 +960,22 @@ export default function ManageUsersPage() {
   const handleEditUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedUser) return;
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const updatedData = {
+      name: editName,
+      email: editEmail,
+      state: states.find(s => s.value === (formData.get("edit-state") as string))?.label || '',
+      district: districts[formData.get("edit-state") as string]?.find(d => d.value === (formData.get("edit-district") as string))?.label || '',
+    };
 
     try {
-      await updateUser(selectedUser.id, {
-        name: editName,
-        email: editEmail,
-      });
+      await updateUser(selectedUser.id, updatedData);
       setEditDialogOpen(false);
       toast({
         title: "User Updated",
-        description: `${editName}'s details have been updated.`,
+        description: `${updatedData.name}'s details have been updated.`,
       });
     } catch (error: any) {
        toast({
@@ -1313,6 +1330,32 @@ export default function ManageUsersPage() {
                 Email
               </Label>
               <Input id="edit-email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} type="email" className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-state" className="text-right">State</Label>
+              <Select name="edit-state" value={editState || ""} onValueChange={setEditState} required>
+                  <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select a state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {states.map(state => (
+                          <SelectItem key={state.value} value={state.value}>{state.label}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-district" className="text-right">District</Label>
+                <Select name="edit-district" value={editDistrict || ""} onValueChange={setEditDistrict} disabled={!editState} required>
+                    <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a district" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {editState && districts[editState] && districts[editState].map(district => (
+                            <SelectItem key={district.value} value={district.value}>{district.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
             <DialogFooter>
               <DialogClose asChild>
