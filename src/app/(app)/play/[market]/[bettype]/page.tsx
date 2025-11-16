@@ -283,8 +283,8 @@ function BetForm({
             </div>
 
             {bets.length > 0 && (
-                <div className="space-y-3 rounded-lg border p-3">
-                    <div className="flex justify-between items-center">
+                <div className="space-y-3 rounded-lg border">
+                    <div className="flex justify-between items-center p-3">
                         <h4 className="text-sm font-medium">Your Bets</h4>
                         <div className="text-xs font-mono text-muted-foreground text-right">
                         <div>Total: ₹{totalBetAmount}</div>
@@ -292,7 +292,7 @@ function BetForm({
                         </div>
                     </div>
                     <Separator />
-                     <div className="w-full">
+                     <div className="w-full p-3 pt-0">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -406,5 +406,3 @@ export default function PlaceBetPage() {
     </div>
   );
 }
-
-    
