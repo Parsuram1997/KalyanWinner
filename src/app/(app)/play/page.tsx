@@ -44,7 +44,7 @@ export default function MarketSelectionPage() {
         <p className="text-muted-foreground">Select a market you want to play in.</p>
       </div>
 
-      <div className="grid gap-4 grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {markets.map((market) => (
           <Card key={market.slug} className="flex flex-col justify-between">
             <CardHeader className="p-4 pb-2">
