@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Ticket, Clock } from "lucide-react";
 import Link from "next/link";
@@ -29,10 +30,10 @@ const markets = [
   { name: "Supreme Night", slug: "supreme-night", open: "08:45 PM", close: "10:45 PM" },
   { name: "Tara Mumbai Day", slug: "tara-mumbai-day", open: "01:35 PM", close: "02:35 PM" },
   { name: "Tara Mumbai Night", slug: "tara-mumbai-night", open: "10:00 PM", close: "12:00 AM" },
-  { name: "Main Ratan", slug: "main-ratan", open: "09:00 PM", close: "11:00 PM" },
   { name: "Ratan Morning", slug: "ratan-morning", open: "10:00 AM", close: "11:00 AM" },
   { name: "Ratan Day", slug: "ratan-day", open: "03:00 PM", close: "05:00 PM" },
   { name: "Ratan Night", slug: "ratan-night", open: "09:10 PM", close: "11:10 PM" },
+  { name: "Main Ratan", slug: "main-ratan", open: "09:00 PM", close: "11:00 PM" },
 ];
 
 export default function MarketSelectionPage() {
@@ -45,24 +46,22 @@ export default function MarketSelectionPage() {
 
       <div className="grid gap-4 grid-cols-2">
         {markets.map((market) => (
-          <Card key={market.slug} className="flex flex-col">
-            <CardHeader>
-              <CardTitle>{market.name}</CardTitle>
-              <CardDescription className="flex items-center gap-2 text-xs">
+          <Card key={market.slug} className="flex flex-col justify-between">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">{market.name}</CardTitle>
+              <CardDescription className="flex items-center gap-1.5 text-xs">
                 <Clock className="h-3 w-3" />
-                <span>Open: {market.open}</span>
-                <span>Close: {market.close}</span>
+                <span>{market.open} - {market.close}</span>
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow" />
-            <div className="p-6 pt-0">
-               <Button asChild className="w-full">
+            <CardFooter className="p-4 pt-2">
+               <Button asChild className="w-full" size="sm">
                 <Link href={`/play/${market.slug}`}>
                   <Ticket className="mr-2 h-4 w-4" />
                   Play Now
                 </Link>
               </Button>
-            </div>
+            </CardFooter>
           </Card>
         ))}
       </div>
