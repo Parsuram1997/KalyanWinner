@@ -4,10 +4,13 @@
 import Link from "next/link";
 import Image from 'next/image';
 import {
-  Users,
   LayoutDashboard,
   Wallet,
-  TrendingUp,
+  Ticket,
+  ClipboardList,
+  GanttChartSquare,
+  HelpCircle,
+  Coins,
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,33 +28,29 @@ import {
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname } from 'next/navigation';
 
-export default function EnrollerLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  if (pathname === '/enroller') {
-    return <>{children}</>;
-  }
-
+  
   return (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-0 px-2">
           <div className="hidden md:flex items-center justify-center">
-            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />
+            
           </div>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/enroller/dashboard">
+                <Link href="/dashboard">
                   <LayoutDashboard />
                   Dashboard
                 </Link>
@@ -59,25 +58,57 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/enroller/users">
-                  <Users />
-                  Enrolled Users
+                <Link href="/play">
+                  <Ticket />
+                  Play
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/enroller/earnings">
-                  <TrendingUp />
-                  Earnings
+                <Link href="/results">
+                  <ClipboardList />
+                  Results
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/panel-chart">
+                  <GanttChartSquare />
+                  Panel Chart
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/enroller/wallet">
+                <Link href="/wallet">
                   <Wallet />
                   Wallet
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/analysis">
+                  <GanttChartSquare />
+                  Analysis
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/rates">
+                  <Coins />
+                  Rates
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/faq">
+                  <HelpCircle />
+                  FAQ
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -93,7 +124,7 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1 flex md:justify-center">
-               {isClient && <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />}
+              {isClient && <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />}
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
