@@ -33,55 +33,69 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { createUser } from "@/app/actions/user-actions";
 
-
-const initialEnrollers = [
-  { id: "ENR001", name: "Sanjay Verma", email: "sanjay.v@example.com", status: "Active", commissionRate: "5%", totalEarnings: 2275.00 },
-  { id: "ENR002", name: "Deepika Rao", email: "deepika.r@example.com", status: "Active", commissionRate: "5%", totalEarnings: 1550.00 },
-  { id: "ENR003", name: "Vikram Chauhan", email: "vikram.c@example.com", status: "Suspended", commissionRate: "5%", totalEarnings: 800.00 },
-  { id: "ENR004", name: "Anjali Mehta", email: "anjali.m@example.com", status: "Active", commissionRate: "5%", totalEarnings: 5200.00 },
-  { id: "ENR005", name: "Rajesh Sharma", email: "rajesh.s@example.com", status: "Inactive", commissionRate: "5%", totalEarnings: 300.00 },
-];
 
 const ENROLLERS_PER_PAGE = 10;
 
 export default function ManageEnrollersPage() {
   const { toast } = useToast();
-  const [enrollers, setEnrollers] = useState(initialEnrollers);
+  const firestore = useFirestore();
+  const { user: authUser, isUserLoading } = useUser();
+
+  const enrollersQuery = useMemoFirebase(
+    () => (firestore && authUser ? query(collection(firestore, "users"), where("role", "==", "Enroller")) : null),
+    [firestore, authUser]
+  );
+  const { data: enrollers, isLoading: isEnrollersLoading } = useCollection<any>(enrollersQuery);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All");
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  const isLoading = isUserLoading || isEnrollersLoading;
 
-  const handleAddEnroller = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddEnroller = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
+    
     const newEnroller = {
-      id: `ENR${(Math.random() * 1000).toFixed(0).padStart(3, '0')}`,
       name: formData.get("name") as string,
+      mobile: formData.get("mobile") as string,
       email: formData.get("email") as string,
-      status: "Active" as "Active",
-      commissionRate: `${formData.get("commissionRate") as string}%`,
-      totalEarnings: 0,
+      state: 'N/A', // Not required for enroller
+      district: 'N/A', // Not required for enroller
+      password: formData.get("password") as string,
+      role: 'Enroller' as 'Enroller',
+      commissionRate: parseFloat(formData.get("commissionRate") as string)
     };
-    setEnrollers([newEnroller, ...enrollers]);
-    setDialogOpen(false);
-    toast({
-      title: "Enroller Added",
-      description: `${newEnroller.name} has been added to the enroller list.`,
-    });
+
+    try {
+      await createUser(newEnroller);
+      setDialogOpen(false);
+      toast({
+        title: "Enroller Added",
+        description: `${newEnroller.name} has been added to the enroller list.`,
+      });
+      form.reset();
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Failed to Add Enroller",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
   };
 
   const filteredEnrollers = useMemo(() => {
-    let filtered = enrollers;
+    let filtered = enrollers || [];
 
     if (filter !== "All") {
       filtered = filtered.filter(enroller => enroller.status === filter);
-    }
-    
-    if (filter === "Inactive") {
-       filtered = enrollers.filter(enroller => enroller.status === "Inactive");
     }
 
     if (searchTerm) {
@@ -135,6 +149,12 @@ export default function ManageEnrollersPage() {
                         Name
                       </Label>
                       <Input id="name" name="name" className="col-span-3" required />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="mobile" className="text-right">
+                        Mobile
+                      </Label>
+                      <Input id="mobile" name="mobile" type="tel" className="col-span-3" required />
                     </div>
                      <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="email" className="text-right">
@@ -203,7 +223,12 @@ export default function ManageEnrollersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedEnrollers.map((enroller) => (
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">Loading enrollers...</TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && paginatedEnrollers.map((enroller) => (
                   <TableRow key={enroller.id}>
                     <TableCell>
                       <div className="font-medium">{enroller.name}</div>
@@ -212,8 +237,8 @@ export default function ManageEnrollersPage() {
                     <TableCell>
                       <div>{enroller.email}</div>
                     </TableCell>
-                    <TableCell>{enroller.commissionRate}</TableCell>
-                    <TableCell>₹{enroller.totalEarnings.toFixed(2)}</TableCell>
+                    <TableCell>{enroller.commissionRate}%</TableCell>
+                    <TableCell>₹{(enroller.totalEarnings || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
@@ -237,7 +262,8 @@ export default function ManageEnrollersPage() {
 
           {/* Mobile Cards */}
            <div className="grid gap-4 md:hidden">
-            {paginatedEnrollers.map((enroller) => (
+            {isLoading && <p className="text-center text-muted-foreground">Loading enrollers...</p>}
+            {!isLoading && paginatedEnrollers.map((enroller) => (
               <Card key={enroller.id} className="p-4">
                 <div className="flex justify-between items-start">
                     <div>
@@ -257,11 +283,11 @@ export default function ManageEnrollersPage() {
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Commission:</span>
-                        <span>{enroller.commissionRate}</span>
+                        <span>{enroller.commissionRate}%</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Total Earnings:</span>
-                        <span>₹{enroller.totalEarnings.toFixed(2)}</span>
+                        <span>₹{(enroller.totalEarnings || 0).toFixed(2)}</span>
                     </div>
                 </div>
                 <div className="mt-4 flex justify-end gap-2 border-t pt-3">

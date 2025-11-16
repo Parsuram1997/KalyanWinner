@@ -23,6 +23,8 @@ export async function createUser(userData: {
   state: string;
   district: string;
   password: any;
+  role: 'User' | 'Enroller';
+  commissionRate?: number;
 }) {
   try {
     const adminApp = getFirebaseAdminApp();
@@ -31,7 +33,7 @@ export async function createUser(userData: {
     
     // Check if a user with the same mobile number already exists in Firestore
     const mobileQuery = await adminFirestore.collection("users").where("mobile", "==", userData.mobile).get();
-    if (!mobileQuery.empty) {
+    if (!mobileQuery.empty && userData.role === 'User') { // Only check for users, not enrollers with same number if needed
         throw new Error("A user with this mobile number already exists.");
     }
 
@@ -47,7 +49,7 @@ export async function createUser(userData: {
     });
 
     // Create user profile in Firestore
-    const userProfile = {
+    const userProfile: any = {
       id: userRecord.uid,
       name: userData.name,
       mobile: userData.mobile,
@@ -56,9 +58,15 @@ export async function createUser(userData: {
       district: userData.district,
       balance: 0,
       status: "Active",
-      role: "User", // Default role is 'User'
+      role: userData.role, 
       createdAt: new Date().toISOString(),
     };
+    
+    if (userData.role === 'Enroller') {
+        userProfile.commissionRate = userData.commissionRate || 5; // Default commission rate
+        userProfile.totalEarnings = 0;
+    }
+
 
     await adminFirestore.collection("users").doc(userRecord.uid).set(userProfile);
 
