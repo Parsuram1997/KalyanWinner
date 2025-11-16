@@ -316,13 +316,11 @@ export default function PlaceBetPage() {
   return (
     <div className="flex flex-col gap-6">
        <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
-                    <p className="text-muted-foreground">
-                        Market: <span className="font-semibold text-primary">{marketName}</span>
-                    </p>
-                </div>
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
+                <p className="text-muted-foreground">
+                    Market: <span className="font-semibold text-primary">{marketName}</span>
+                </p>
             </div>
             <Card className="hidden sm:block">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
