@@ -35,7 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query } from "firebase/firestore";
 import { createUser, deleteUser } from "@/app/actions/user-actions";
 
@@ -870,12 +870,15 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
 export default function ManageUsersPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { user: authUser, isUserLoading } = useUser();
 
   const usersQuery = useMemoFirebase(
-    () => (firestore ? query(collection(firestore, "users")) : null),
-    [firestore]
+    () => (firestore && authUser ? query(collection(firestore, "users")) : null),
+    [firestore, authUser]
   );
-  const { data: users, isLoading } = useCollection<any>(usersQuery);
+  const { data: users, isLoading: isUsersLoading } = useCollection<any>(usersQuery);
+  
+  const isLoading = isUserLoading || isUsersLoading;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All");
@@ -1191,3 +1194,5 @@ export default function ManageUsersPage() {
     </div>
   );
 }
+
+    
