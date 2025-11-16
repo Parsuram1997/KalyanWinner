@@ -151,23 +151,50 @@ function BetForm({
         }
     }
     
-    const newTotalAmount = totalBetAmount + amountInt;
-    if (newTotalAmount > walletBalance) {
-      toast({
-        variant: "destructive",
-        title: "Insufficient Balance",
-        description: `Your bet of ₹${amountInt} exceeds your wallet balance.`,
-      });
-      return false;
-    }
-
+    // This check will be re-evaluated after we know if it's a new bet or an update
     return true;
   };
 
   const handleAddBet = () => {
     if (!validateBet(currentNumber, currentAmount)) return;
 
-    setBets([...bets, { number: currentNumber, amount: currentAmount }]);
+    const existingBetIndex = bets.findIndex(bet => bet.number === currentNumber);
+    const amountInt = parseInt(currentAmount);
+
+    let newTotalAmount = totalBetAmount;
+    
+    if (existingBetIndex !== -1) {
+        // Bet exists, calculate the difference in amount
+        const oldAmount = parseInt(bets[existingBetIndex].amount);
+        newTotalAmount = totalBetAmount - oldAmount + amountInt;
+    } else {
+        // New bet
+        newTotalAmount = totalBetAmount + amountInt;
+    }
+
+    if (newTotalAmount > walletBalance) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Balance",
+        description: `Your total bet of ₹${newTotalAmount} exceeds your wallet balance.`,
+      });
+      return;
+    }
+
+    if (existingBetIndex !== -1) {
+        // Update existing bet
+        const newBets = [...bets];
+        newBets[existingBetIndex].amount = currentAmount;
+        setBets(newBets);
+        toast({
+            title: `Bet Updated: ${currentNumber}`,
+            description: `Amount changed to ₹${currentAmount}.`,
+        });
+    } else {
+        // Add new bet
+        setBets([...bets, { number: currentNumber, amount: currentAmount }]);
+    }
+    
     setCurrentNumber("");
     setCurrentAmount("");
   };
