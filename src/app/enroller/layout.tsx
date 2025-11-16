@@ -67,7 +67,7 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
+        <SidebarFooter className="mb-2">
           <SidebarSeparator />
           <UserNav />
         </SidebarFooter>

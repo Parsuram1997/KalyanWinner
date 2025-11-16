@@ -114,7 +114,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
+        <SidebarFooter className="mb-2">
           <SidebarSeparator />
           <UserNav />
         </SidebarFooter>
@@ -123,7 +123,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col h-dvh">
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
             <SidebarTrigger className="md:hidden" />
-            <div className="flex-1 flex justify-start">
+            <div className="flex-1">
                {/* This div is a placeholder to balance the flex layout */}
             </div>
              <div className="flex-1 flex justify-center">
