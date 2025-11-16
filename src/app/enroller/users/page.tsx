@@ -877,6 +877,7 @@ export default function EnrolledUsersPage() {
       id: `USR${(Math.random() * 1000).toFixed(0).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
+      email: formData.get("email") as string,
       balance: 0,
       status: "Active" as "Active",
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
@@ -948,6 +949,12 @@ export default function EnrolledUsersPage() {
                             Mobile
                         </Label>
                         <Input id="mobile" name="mobile" className="col-span-3" required />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="email" className="text-right">
+                            Email
+                          </Label>
+                          <Input id="email" name="email" type="email" className="col-span-3" required />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="state" className="text-right">State</Label>

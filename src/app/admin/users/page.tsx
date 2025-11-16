@@ -894,6 +894,7 @@ export default function ManageUsersPage() {
     const newUser = {
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
+      email: formData.get("email") as string,
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
       password: formData.get("password") as string,
@@ -1002,6 +1003,12 @@ export default function ManageUsersPage() {
                         Mobile
                       </Label>
                       <Input id="mobile" name="mobile" className="col-span-3" required />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="email" className="text-right">
+                        Email
+                      </Label>
+                      <Input id="email" name="email" type="email" className="col-span-3" required />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="state" className="text-right">State</Label>
@@ -1194,5 +1201,3 @@ export default function ManageUsersPage() {
     </div>
   );
 }
-
-    

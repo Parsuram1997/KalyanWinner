@@ -20,6 +20,7 @@ function getFirebaseAdminApp(): App {
 export async function createUser(userData: {
   name: string;
   mobile: string;
+  email: string;
   state: string;
   district: string;
   password: any;
@@ -30,11 +31,8 @@ export async function createUser(userData: {
     const adminFirestore = getFirestore(adminApp);
 
     // Create user in Firebase Authentication
-    // We'll use a placeholder email, as mobile number is the primary identifier
-    const email = `${userData.mobile}@kalyanwinner.app`;
-    
     const userRecord = await adminAuth.createUser({
-      email,
+      email: userData.email,
       password: userData.password,
       displayName: userData.name,
     });
@@ -44,7 +42,7 @@ export async function createUser(userData: {
       id: userRecord.uid,
       name: userData.name,
       mobile: userData.mobile,
-      email: email, // Store the generated email
+      email: userData.email, // Use the provided email
       state: userData.state,
       district: userData.district,
       balance: 0,
@@ -61,7 +59,7 @@ export async function createUser(userData: {
     // Provide a more specific error message
     let errorMessage = "An unexpected error occurred.";
     if (error.code === 'auth/email-already-exists') {
-        errorMessage = "A user with this mobile number already exists.";
+        errorMessage = "A user with this email address already exists.";
     } else if (error.code === 'auth/invalid-password') {
         errorMessage = "Password must be at least 6 characters long.";
     }
