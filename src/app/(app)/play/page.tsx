@@ -50,6 +50,14 @@ export default function MarketSelectionPage() {
             <CardHeader className="p-4 pb-2">
               <CardTitle className="text-base">{market.name}</CardTitle>
             </CardHeader>
+            <CardContent className="p-4 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" />
+                    <span>Open: <span className="font-semibold text-primary">{market.open}</span></span>
+                    <span> | </span>
+                    <span>Close: <span className="font-semibold text-destructive">{market.close}</span></span>
+                </div>
+            </CardContent>
             <CardFooter className="p-4 pt-2">
                <Button asChild className="w-full" size="sm">
                 <Link href={`/play/${market.slug}`}>
