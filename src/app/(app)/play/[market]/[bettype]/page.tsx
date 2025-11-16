@@ -345,14 +345,14 @@ export default function PlaceBetPage() {
 
   return (
     <div className="flex flex-col gap-6">
-       <div className="flex justify-between items-center mb-4">
-            <div>
+       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+            <div className="order-2 sm:order-1">
                 <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
                 <p className="text-muted-foreground">
                     Market: <span className="font-semibold text-primary">{marketName}</span>
                 </p>
             </div>
-            <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
+            <Card className="bg-gradient-to-br from-primary/20 to-accent/20 order-1 sm:order-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
