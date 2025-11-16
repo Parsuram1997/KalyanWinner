@@ -345,22 +345,16 @@ export default function PlaceBetPage() {
 
   return (
     <div className="flex flex-col gap-6">
-       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-            <div className="order-2 sm:order-1">
-                <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
-                <p className="text-muted-foreground">
-                    Market: <span className="font-semibold text-primary">{marketName}</span>
-                </p>
-            </div>
-            <Card className="bg-gradient-to-br from-primary/20 to-accent/20 order-1 sm:order-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="grid sm:grid-cols-2 gap-4">
+            <Card className="bg-gradient-to-br from-primary/20 to-accent/20 order-2 sm:order-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
                 <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 <div className="text-xl font-bold">₹{walletBalance.toFixed(2)}</div>
               </CardContent>
-               <CardFooter>
+               <CardFooter className="p-4 pt-0">
                 <Button size="sm" asChild>
                   <Link href="/wallet">
                     <Wallet className="mr-1.5 h-4 w-4" /> Manage Funds
@@ -368,6 +362,12 @@ export default function PlaceBetPage() {
                 </Button>
               </CardFooter>
             </Card>
+            <div className="order-1 sm:order-2 sm:text-right">
+                <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
+                <p className="text-muted-foreground">
+                    Market: <span className="font-semibold text-primary">{marketName}</span>
+                </p>
+            </div>
       </div>
 
       <BetForm gameType={betTypeName} market={marketName} walletBalance={walletBalance} />
