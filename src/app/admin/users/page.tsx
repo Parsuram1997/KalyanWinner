@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, Eye } from "lucide-react";
+import { PlusCircle, Search, Eye, Trash } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -1096,7 +1096,6 @@ export default function ManageUsersPage() {
                       <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4" /></Link>
                       </Button>
-                       <Button variant="outline" size="icon"><Eye className="h-4 w-4" /></Button>
                       <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                     </TableCell>
                   </TableRow>
@@ -1141,7 +1140,6 @@ export default function ManageUsersPage() {
                     <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4" /></Link>
                       </Button>
-                    <Button variant="outline" size="icon"><Eye className="h-4 w-4" /></Button>
                     <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                 </div>
               </Card>
@@ -1173,5 +1171,3 @@ export default function ManageUsersPage() {
     </div>
   );
 }
-
-    
