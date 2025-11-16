@@ -1104,11 +1104,12 @@ export default function ManageUsersPage() {
                       <div className="text-xs text-muted-foreground">{user.customId}</div>
                     </TableCell>
                     <TableCell>
-                      <div>{user.mobile}</div>
+                      <div>{user.email}</div>
+                      <div className="text-sm text-muted-foreground">{user.mobile}</div>
                     </TableCell>
                     <TableCell>
-                      <div>{user.district}</div>
-                      <div className="text-xs text-muted-foreground">{user.state}</div>
+                      <div>{user.state}</div>
+                      <div className="text-sm text-muted-foreground">{user.district}</div>
                     </TableCell>
                     <TableCell>₹{(user.balance || 0).toFixed(2)}</TableCell>
                     <TableCell>
@@ -1152,14 +1153,15 @@ export default function ManageUsersPage() {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Contact:</span>
                         <div className="text-right">
-                            <p>{user.mobile}</p>
+                            <p>{user.email}</p>
+                            <p className="text-muted-foreground">{user.mobile}</p>
                         </div>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Location:</span>
                         <div className="text-right">
-                           <p>{user.district}</p>
-                           <p className="text-xs">{user.state}</p>
+                           <p>{user.state}</p>
+                           <p className="text-xs text-muted-foreground">{user.district}</p>
                         </div>
                     </div>
                     <div className="flex justify-between">
