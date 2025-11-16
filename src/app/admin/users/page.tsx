@@ -35,22 +35,10 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query } from "firebase/firestore";
+import { createUser, deleteUser } from "@/app/actions/user-actions";
 
-
-const initialUsers = [
-  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
-  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
-  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
-  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
-  { id: "USR005", name: "Inactive User", mobile: "9876543214", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur" },
-  { id: "USR006", name: "Rohan Das", mobile: "9876543215", balance: 750.00, status: "Active", state: "West Bengal", district: "Kolkata" },
-  { id: "USR007", name: "Anita Desai", mobile: "9876543216", balance: 15000.00, status: "Active", state: "Karnataka", district: "Bengaluru Urban" },
-  { id: "USR008", name: "Suresh Gupta", mobile: "9876543217", balance: 25.00, status: "Active", state: "Madhya Pradesh", district: "Indore" },
-  { id: "USR009", name: "Meena Iyer", mobile: "9876543218", balance: 0.00, status: "Suspended", state: "Tamil Nadu", district: "Chennai" },
-  { id: "USR010", name: "Vikram Rathore", mobile: "9876543219", balance: 800.25, status: "Active", state: "Rajasthan", district: "Jaipur" },
-  { id: "USR011", name: "Kavita Reddy", mobile: "9876543220", balance: 3200.00, status: "Active", state: "Telangana", district: "Hyderabad" },
-  { id: "USR012", name: "John Doe", mobile: "9876543221", balance: 10.00, status: "Inactive", state: "Goa", district: "North Goa" },
-];
 
 const USERS_PER_PAGE = 10;
 
@@ -881,51 +869,77 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
 
 export default function ManageUsersPage() {
   const { toast } = useToast();
-  const [users, setUsers] = useState(initialUsers);
+  const firestore = useFirestore();
+
+  const usersQuery = useMemoFirebase(
+    () => (firestore ? query(collection(firestore, "users")) : null),
+    [firestore]
+  );
+  const { data: users, isLoading } = useCollection<any>(usersQuery);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All");
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleAddUser = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
+    
     const newUser = {
-      id: `USR${(Math.random() * 1000).toFixed(0).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
-      balance: 0,
-      status: "Active" as "Active",
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
       password: formData.get("password") as string,
     };
-    
-    console.log("Creating user:", newUser);
-    // This is where the Firebase call would go.
-    // For now, we just add to local state.
-    setUsers([newUser, ...users]);
-    setDialogOpen(false);
-    toast({
-      title: "User Added",
-      description: `${newUser.name} has been added to the user list.`,
-    });
+
+    try {
+      await createUser(newUser);
+      setDialogOpen(false);
+      toast({
+        title: "User Added",
+        description: `${newUser.name} has been added to the user list.`,
+      });
+      form.reset();
+      setSelectedState(null);
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Failed to Add User",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      await deleteUser(userId);
+      toast({
+        title: "User Deleted",
+        description: `User has been successfully deleted.`,
+      });
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Failed to Delete User",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
+  };
+
+
   const filteredUsers = useMemo(() => {
-    let filtered = users;
+    let filtered = users || [];
 
     if (filter !== "All") {
       filtered = filtered.filter(user => user.status === filter);
     }
     
-    // In a real app, the 'Inactive' logic would involve checking the last bet date.
     if (filter === "Inactive") {
-      // This is a placeholder. You would need to implement logic to check the last bet date.
-      // For now, it will show the one user with "Inactive" status from mock data.
-       filtered = users.filter(user => user.status === "Inactive");
+       filtered = filtered.filter(user => user.status === "Inactive");
     }
 
     if (searchTerm) {
@@ -1067,7 +1081,12 @@ export default function ManageUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedUsers.map((user) => (
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">Loading users...</TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && paginatedUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium">{user.name}</div>
@@ -1080,7 +1099,7 @@ export default function ManageUsersPage() {
                       <div>{user.district}</div>
                       <div className="text-xs text-muted-foreground">{user.state}</div>
                     </TableCell>
-                    <TableCell>₹{user.balance.toFixed(2)}</TableCell>
+                    <TableCell>₹{(user.balance || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
@@ -1096,7 +1115,7 @@ export default function ManageUsersPage() {
                       <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4" /></Link>
                       </Button>
-                      <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                      <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user.id)}><Trash className="h-4 w-4" /></Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1106,7 +1125,8 @@ export default function ManageUsersPage() {
 
           {/* Mobile Cards */}
            <div className="grid gap-4 md:hidden">
-            {paginatedUsers.map((user) => (
+            {isLoading && <p className="text-center text-muted-foreground">Loading users...</p>}
+            {!isLoading && paginatedUsers.map((user) => (
               <Card key={user.id} className="p-4">
                 <div className="flex justify-between items-start">
                     <div>
@@ -1133,14 +1153,14 @@ export default function ManageUsersPage() {
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Balance:</span>
-                        <span>₹{user.balance.toFixed(2)}</span>
+                        <span>₹{(user.balance || 0).toFixed(2)}</span>
                     </div>
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
                     <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4" /></Link>
                       </Button>
-                    <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                    <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user.id)}><Trash className="h-4 w-4" /></Button>
                 </div>
               </Card>
             ))}

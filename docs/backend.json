@@ -1,279 +1,71 @@
+
 {
   "entities": {
-    "User": {
+    "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
+      "title": "UserProfile",
+      "description": "Represents a user's profile in the application.",
       "type": "object",
-      "description": "Represents a user of the Kalyan Winner application.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user entity."
+          "description": "The unique identifier for the user, matching the Firebase Auth UID."
         },
-        "username": {
+        "name": {
           "type": "string",
-          "description": "The username of the user."
+          "description": "The user's full name."
+        },
+        "mobile": {
+          "type": "string",
+          "description": "The user's mobile phone number."
         },
         "email": {
-          "type": "string",
-          "description": "The email address of the user.",
-          "format": "email"
+            "type": "string",
+            "description": "The user's email address (auto-generated)."
         },
-        "registrationDate": {
+        "state": {
           "type": "string",
-          "description": "The date and time the user registered.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "username",
-        "email",
-        "registrationDate"
-      ]
-    },
-    "Wallet": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Wallet",
-      "type": "object",
-      "description": "Represents a user's wallet within the Kalyan Winner application.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the wallet entity."
+          "description": "The state where the user resides."
         },
-        "userId": {
+        "district": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:1 Wallet)"
+          "description": "The district where the user resides."
         },
         "balance": {
           "type": "number",
-          "description": "The current balance of the wallet."
+          "description": "The user's current wallet balance."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "Suspended", "Inactive"],
+          "description": "The status of the user's account."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the user account was created."
         }
       },
-      "required": [
-        "id",
-        "userId",
-        "balance"
-      ]
-    },
-    "Transaction": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Transaction",
-      "type": "object",
-      "description": "Represents a transaction within the Kalyan Winner application.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the transaction entity."
-        },
-        "walletId": {
-          "type": "string",
-          "description": "Reference to Wallet. (Relationship: Wallet 1:N Transaction)"
-        },
-        "amount": {
-          "type": "number",
-          "description": "The amount of the transaction."
-        },
-        "transactionDate": {
-          "type": "string",
-          "description": "The date and time of the transaction.",
-          "format": "date-time"
-        },
-        "transactionType": {
-          "type": "string",
-          "description": "The type of the transaction (e.g., deposit, withdrawal, bet placement, winnings)."
-        }
-      },
-      "required": [
-        "id",
-        "walletId",
-        "amount",
-        "transactionDate",
-        "transactionType"
-      ]
-    },
-    "KalyanResult": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "KalyanResult",
-      "type": "object",
-      "description": "Represents a Kalyan Matka result.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Kalyan Result entity."
-        },
-        "resultDate": {
-          "type": "string",
-          "description": "The date of the Kalyan Matka result.",
-          "format": "date-time"
-        },
-        "resultValue": {
-          "type": "string",
-          "description": "The actual result value of the Kalyan Matka game."
-        }
-      },
-      "required": [
-        "id",
-        "resultDate",
-        "resultValue"
-      ]
-    },
-    "Bet": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Bet",
-      "type": "object",
-      "description": "Represents a user's bet on a Kalyan Matka game.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the bet entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Bet)"
-        },
-        "kalyanResultId": {
-          "type": "string",
-          "description": "Reference to KalyanResult. (Relationship: KalyanResult 1:N Bet)"
-        },
-        "betAmount": {
-          "type": "number",
-          "description": "The amount the user bet."
-        },
-        "betValue": {
-          "type": "string",
-          "description": "The number the user placed the bet on."
-        },
-        "betDate": {
-          "type": "string",
-          "description": "The date and time the bet was placed.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "kalyanResultId",
-        "betAmount",
-        "betValue",
-        "betDate"
-      ]
+      "required": ["id", "name", "mobile", "email", "state", "district", "balance", "status", "createdAt"]
     }
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
     "structure": [
-      {
+        {
         "path": "/users/{userId}",
         "definition": {
-          "entityName": "User",
+          "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/backend/entities/User"
+            "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profiles. Path-based ownership, where `userId` matches `request.auth.uid`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/wallet",
-        "definition": {
-          "entityName": "Wallet",
-          "schema": {
-            "$ref": "#/backend/entities/Wallet"
-          },
-          "description": "Stores user's wallet information. Path-based ownership; only the user can access their own wallet. The `userId` field in wallet document must match the document ID and `request.auth.uid`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/wallet/transactions/{transactionId}",
-        "definition": {
-          "entityName": "Transaction",
-          "schema": {
-            "$ref": "#/backend/entities/Transaction"
-          },
-          "description": "Stores transactions related to a specific wallet. Path-based ownership, inherited from the wallet. Only the user owning the wallet can access the transactions. `userId` and `walletId` link back to their respective documents.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "transactionId",
-              "description": "The unique identifier of the transaction."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/kalyan_results/{kalyanResultId}",
-        "definition": {
-          "entityName": "KalyanResult",
-          "schema": {
-            "$ref": "#/backend/entities/KalyanResult"
-          },
-          "description": "Stores Kalyan Matka results.  Accessible to all users for read operations. Write access restricted to admins (via a separate `/roles_admin/{uid}` collection check).",
-          "params": [
-            {
-              "name": "kalyanResultId",
-              "description": "The unique identifier of the Kalyan result."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/bets/{betId}",
-        "definition": {
-          "entityName": "Bet",
-          "schema": {
-            "$ref": "#/backend/entities/Bet"
-          },
-          "description": "Stores user's bets on Kalyan Matka games. Path-based ownership; only the user can access their own bets. `userId` in the bet document must match the document ID and `request.auth.uid`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "betId",
-              "description": "The unique identifier of the bet."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "A collection to store the user IDs of administrators. Existence in this collection grants admin privileges. No data is stored within the documents; existence is the only factor.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user that is an admin."
-            }
-          ]
+          "description": "Stores user profiles. Path-based ownership, where `userId` matches `request.auth.uid`."
         }
       }
-    ],
-    "reasoning": "The Firestore data structure is designed to support the Kalyan Winner application, focusing on user management, wallet functionality, game results, and bet placements. The structure emphasizes authorization independence and efficient data retrieval while adhering to the design principles of clarity, security, and scalability.\n\n**Authorization Independence:**\nAuthorization is primarily based on path-based ownership (for user-related data) and membership maps (if collaborative features are added in the future). For instance, User wallets are stored under `/users/{userId}/wallet`, directly linking the wallet to the user, thus requiring no `get()` calls to parent documents for authorization. Bets also follow this pattern.\n\n**QAPs (Rules are not Filters):**\nThe structure supports secure `list` operations by segregating data based on access requirements.  User-specific data (wallets, bets) resides under the `/users/{userId}` path, allowing listing bets and wallets with rules based on `request.auth.uid == userId`.  Kalyan results are stored in a separate collection, enabling listing of all results. There is no need to filter results based on user-specific criteria, as the bets, not results, are linked to users.\n\n**Denormalization:**\nWhile not explicitly denormalizing membership maps in this basic structure, future extensions involving collaborative betting or shared wallets could utilize membership maps denormalized into bet documents to grant access based on team membership, if needed."
+    ]
   }
 }
