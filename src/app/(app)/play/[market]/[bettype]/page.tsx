@@ -304,13 +304,13 @@ function BetForm({
                             <TableBody>
                                 {bets.map((bet, index) => (
                                 <TableRow key={index}>
-                                    <TableCell className="font-medium">
+                                    <TableCell className="font-medium py-1">
                                         <Badge variant="secondary" className="font-mono">
                                             {bet.number}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>₹{bet.amount}</TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="py-1">₹{bet.amount}</TableCell>
+                                    <TableCell className="text-right py-1">
                                     <Button
                                         variant="ghost"
                                         size="icon"
