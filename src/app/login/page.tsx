@@ -28,11 +28,11 @@ export default function LoginPage() {
         <CardContent className="pt-2">
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="mobile">Mobile Number</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
+                id="mobile"
+                type="tel"
+                placeholder="9876543210"
                 required
               />
             </div>

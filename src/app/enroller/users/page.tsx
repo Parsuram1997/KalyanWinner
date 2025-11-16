@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useMemo } from "react";
 import {
@@ -28,11 +29,11 @@ import { useToast } from "@/hooks/use-toast";
 
 
 const enrolledUsersData = [
-  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", email: "ravi.k@example.com", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai", totalDeposit: 5000 },
-  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", email: "sunita.s@example.com", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi", totalDeposit: 2500 },
-  { id: "USR003", name: "Amit Patel", mobile: "9876543212", email: "amit.p@example.com", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad", totalDeposit: 1000 },
-  { id: "USR004", name: "Priya Singh", mobile: "9876543213", email: "priya.s@example.com", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow", totalDeposit: 10000 },
-  { id: "USR005", name: "Inactive User", mobile: "9876543214", email: "inactive.user@example.com", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur", totalDeposit: 500 },
+  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai", totalDeposit: 5000 },
+  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi", totalDeposit: 2500 },
+  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad", totalDeposit: 1000 },
+  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow", totalDeposit: 10000 },
+  { id: "USR005", name: "Inactive User", mobile: "9876543214", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur", totalDeposit: 500 },
 ];
 
 const states = [
@@ -876,7 +877,6 @@ export default function EnrolledUsersPage() {
       id: `USR${(Math.random() * 1000).toFixed(0).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
-      email: formData.get("email") as string,
       balance: 0,
       status: "Active" as "Active",
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
@@ -948,12 +948,6 @@ export default function EnrolledUsersPage() {
                             Mobile
                         </Label>
                         <Input id="mobile" name="mobile" className="col-span-3" required />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="email" className="text-right">
-                            Email
-                        </Label>
-                        <Input id="email" name="email" type="email" className="col-span-3" required />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="state" className="text-right">State</Label>
@@ -1037,7 +1031,6 @@ export default function EnrolledUsersPage() {
                     </TableCell>
                     <TableCell>
                       <div>{user.mobile}</div>
-                      <div className="text-xs text-muted-foreground">{user.email}</div>
                     </TableCell>
                     <TableCell>
                       <div>{user.district}</div>
@@ -1079,7 +1072,6 @@ export default function EnrolledUsersPage() {
                         <span className="text-muted-foreground">Contact:</span>
                         <div className="text-right">
                             <p>{user.mobile}</p>
-                            <p className="text-xs">{user.email}</p>
                         </div>
                     </div>
                     <div className="flex justify-between">
@@ -1103,5 +1095,3 @@ export default function EnrolledUsersPage() {
     </div>
   );
 }
-
-    

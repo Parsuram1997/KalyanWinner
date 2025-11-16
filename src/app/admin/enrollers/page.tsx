@@ -37,11 +37,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const initialEnrollers = [
-  { id: "ENR001", name: "Sanjay Verma", mobile: "9123456780", email: "sanjay.v@example.com", status: "Active", commissionRate: "5%", totalEarnings: 2275.00 },
-  { id: "ENR002", name: "Deepika Rao", mobile: "9123456781", email: "deepika.r@example.com", status: "Active", commissionRate: "5%", totalEarnings: 1550.00 },
-  { id: "ENR003", name: "Vikram Chauhan", mobile: "9123456782", email: "vikram.c@example.com", status: "Suspended", commissionRate: "5%", totalEarnings: 800.00 },
-  { id: "ENR004", name: "Anjali Mehta", mobile: "9123456783", email: "anjali.m@example.com", status: "Active", commissionRate: "5%", totalEarnings: 5200.00 },
-  { id: "ENR005", name: "Rajesh Sharma", mobile: "9123456784", email: "rajesh.s@example.com", status: "Inactive", commissionRate: "5%", totalEarnings: 300.00 },
+  { id: "ENR001", name: "Sanjay Verma", mobile: "9123456780", status: "Active", commissionRate: "5%", totalEarnings: 2275.00 },
+  { id: "ENR002", name: "Deepika Rao", mobile: "9123456781", status: "Active", commissionRate: "5%", totalEarnings: 1550.00 },
+  { id: "ENR003", name: "Vikram Chauhan", mobile: "9123456782", status: "Suspended", commissionRate: "5%", totalEarnings: 800.00 },
+  { id: "ENR004", name: "Anjali Mehta", mobile: "9123456783", status: "Active", commissionRate: "5%", totalEarnings: 5200.00 },
+  { id: "ENR005", name: "Rajesh Sharma", mobile: "9123456784", status: "Inactive", commissionRate: "5%", totalEarnings: 300.00 },
 ];
 
 const ENROLLERS_PER_PAGE = 10;
@@ -62,7 +62,6 @@ export default function ManageEnrollersPage() {
       id: `ENR${(Math.random() * 1000).toFixed(0).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
-      email: formData.get("email") as string,
       status: "Active" as "Active",
       commissionRate: `${formData.get("commissionRate") as string}%`,
       totalEarnings: 0,
@@ -145,12 +144,6 @@ export default function ManageEnrollersPage() {
                       <Input id="mobile" name="mobile" className="col-span-3" required />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="email" className="text-right">
-                        Email
-                      </Label>
-                      <Input id="email" name="email" type="email" className="col-span-3" required />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="commissionRate" className="text-right">
                         Commission Rate (%)
                       </Label>
@@ -219,7 +212,6 @@ export default function ManageEnrollersPage() {
                     </TableCell>
                     <TableCell>
                       <div>{enroller.mobile}</div>
-                      <div className="text-xs text-muted-foreground">{enroller.email}</div>
                     </TableCell>
                     <TableCell>{enroller.commissionRate}</TableCell>
                     <TableCell>₹{enroller.totalEarnings.toFixed(2)}</TableCell>
@@ -262,7 +254,6 @@ export default function ManageEnrollersPage() {
                         <span className="text-muted-foreground">Contact:</span>
                         <div className="text-right">
                             <p>{enroller.mobile}</p>
-                            <p className="text-xs">{enroller.email}</p>
                         </div>
                     </div>
                     <div className="flex justify-between">

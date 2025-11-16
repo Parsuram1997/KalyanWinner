@@ -38,18 +38,18 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const initialUsers = [
-  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", email: "ravi.k@example.com", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
-  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", email: "sunita.s@example.com", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
-  { id: "USR003", name: "Amit Patel", mobile: "9876543212", email: "amit.p@example.com", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
-  { id: "USR004", name: "Priya Singh", mobile: "9876543213", email: "priya.s@example.com", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
-  { id: "USR005", name: "Inactive User", mobile: "9876543214", email: "inactive.user@example.com", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur" },
-  { id: "USR006", name: "Rohan Das", mobile: "9876543215", email: "rohan.d@example.com", balance: 750.00, status: "Active", state: "West Bengal", district: "Kolkata" },
-  { id: "USR007", name: "Anita Desai", mobile: "9876543216", email: "anita.d@example.com", balance: 15000.00, status: "Active", state: "Karnataka", district: "Bengaluru Urban" },
-  { id: "USR008", name: "Suresh Gupta", mobile: "9876543217", email: "suresh.g@example.com", balance: 25.00, status: "Active", state: "Madhya Pradesh", district: "Indore" },
-  { id: "USR009", name: "Meena Iyer", mobile: "9876543218", email: "meena.i@example.com", balance: 0.00, status: "Suspended", state: "Tamil Nadu", district: "Chennai" },
-  { id: "USR010", name: "Vikram Rathore", mobile: "9876543219", email: "vikram.r@example.com", balance: 800.25, status: "Active", state: "Rajasthan", district: "Jaipur" },
-  { id: "USR011", name: "Kavita Reddy", mobile: "9876543220", email: "kavita.r@example.com", balance: 3200.00, status: "Active", state: "Telangana", district: "Hyderabad" },
-  { id: "USR012", name: "John Doe", mobile: "9876543221", email: "john.d@example.com", balance: 10.00, status: "Inactive", state: "Goa", district: "North Goa" },
+  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
+  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
+  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
+  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
+  { id: "USR005", name: "Inactive User", mobile: "9876543214", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur" },
+  { id: "USR006", name: "Rohan Das", mobile: "9876543215", balance: 750.00, status: "Active", state: "West Bengal", district: "Kolkata" },
+  { id: "USR007", name: "Anita Desai", mobile: "9876543216", balance: 15000.00, status: "Active", state: "Karnataka", district: "Bengaluru Urban" },
+  { id: "USR008", name: "Suresh Gupta", mobile: "9876543217", balance: 25.00, status: "Active", state: "Madhya Pradesh", district: "Indore" },
+  { id: "USR009", name: "Meena Iyer", mobile: "9876543218", balance: 0.00, status: "Suspended", state: "Tamil Nadu", district: "Chennai" },
+  { id: "USR010", name: "Vikram Rathore", mobile: "9876543219", balance: 800.25, status: "Active", state: "Rajasthan", district: "Jaipur" },
+  { id: "USR011", name: "Kavita Reddy", mobile: "9876543220", balance: 3200.00, status: "Active", state: "Telangana", district: "Hyderabad" },
+  { id: "USR012", name: "John Doe", mobile: "9876543221", balance: 10.00, status: "Inactive", state: "Goa", district: "North Goa" },
 ];
 
 const USERS_PER_PAGE = 10;
@@ -896,7 +896,6 @@ export default function ManageUsersPage() {
       id: `USR${(Math.random() * 1000).toFixed(0).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
-      email: formData.get("email") as string,
       balance: 0,
       status: "Active" as "Active",
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
@@ -981,12 +980,6 @@ export default function ManageUsersPage() {
                         Mobile
                       </Label>
                       <Input id="mobile" name="mobile" className="col-span-3" required />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="email" className="text-right">
-                        Email
-                      </Label>
-                      <Input id="email" name="email" type="email" className="col-span-3" required />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="state" className="text-right">State</Label>
@@ -1077,7 +1070,6 @@ export default function ManageUsersPage() {
                     </TableCell>
                     <TableCell>
                       <div>{user.mobile}</div>
-                      <div className="text-xs text-muted-foreground">{user.email}</div>
                     </TableCell>
                     <TableCell>
                       <div>{user.district}</div>
@@ -1126,7 +1118,6 @@ export default function ManageUsersPage() {
                         <span className="text-muted-foreground">Contact:</span>
                         <div className="text-right">
                             <p>{user.mobile}</p>
-                            <p className="text-xs">{user.email}</p>
                         </div>
                     </div>
                     <div className="flex justify-between">
@@ -1177,5 +1168,3 @@ export default function ManageUsersPage() {
     </div>
   );
 }
-
-    
