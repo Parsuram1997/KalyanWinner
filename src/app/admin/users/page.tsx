@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, Eye, Trash } from "lucide-react";
+import { PlusCircle, Search, Eye, Trash, Edit } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +29,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -37,7 +49,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
-import { createUser, deleteUser } from "@/app/actions/user-actions";
+import { createUser, deleteUser, updateUser } from "@/app/actions/user-actions";
 
 
 const USERS_PER_PAGE = 10;
@@ -886,6 +898,21 @@ export default function ManageUsersPage() {
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  
+  // State for the edit form
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+
+  useEffect(() => {
+    if (selectedUser) {
+      setEditName(selectedUser.name);
+      setEditEmail(selectedUser.email);
+    }
+  }, [selectedUser]);
+
+
   const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -918,6 +945,30 @@ export default function ManageUsersPage() {
       });
     }
   };
+  
+  const handleEditUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    try {
+      await updateUser(selectedUser.id, {
+        name: editName,
+        email: editEmail,
+      });
+      setEditDialogOpen(false);
+      toast({
+        title: "User Updated",
+        description: `${editName}'s details have been updated.`,
+      });
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Failed to Update User",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
+  };
+
 
   const handleDeleteUser = async (userId: string) => {
     try {
@@ -965,6 +1016,11 @@ export default function ManageUsersPage() {
     const endIndex = startIndex + USERS_PER_PAGE;
     return filteredUsers.slice(startIndex, endIndex);
   }, [filteredUsers, currentPage]);
+
+  const openEditDialog = (user: any) => {
+    setSelectedUser(user);
+    setEditDialogOpen(true);
+  }
 
 
   return (
@@ -1124,10 +1180,27 @@ export default function ManageUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="flex gap-2">
-                      <Button variant="outline" size="icon" asChild>
+                       <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link>
-                      </Button>
-                      <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user.id)}><Trash className="h-4 w-4" /></Button>
+                       </Button>
+                       <Button variant="outline" size="icon" onClick={() => openEditDialog(user)}><Edit className="h-4 w-4" /></Button>
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the user '{user.name}' and all associated data.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1169,11 +1242,28 @@ export default function ManageUsersPage() {
                         <span>₹{(user.balance || 0).toFixed(2)}</span>
                     </div>
                 </div>
-                <div className="mt-4 flex justify-end gap-2">
+                <div className="mt-4 flex justify-end gap-2 border-t pt-3">
                     <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link>
-                      </Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user.id)}><Trash className="h-4 w-4" /></Button>
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => openEditDialog(user)}><Edit className="h-4 w-4" /></Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the user '{user.name}' and all associated data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                 </div>
               </Card>
             ))}
@@ -1201,6 +1291,38 @@ export default function ManageUsersPage() {
           </div>
         </CardFooter>
       </Card>
+      
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update the details for {selectedUser?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditUser} className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">
+                Name
+              </Label>
+              <Input id="edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} className="col-span-3" required />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-email" className="text-right">
+                Email
+              </Label>
+              <Input id="edit-email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} type="email" className="col-span-3" required />
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">Cancel</Button>
+              </DialogClose>
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
