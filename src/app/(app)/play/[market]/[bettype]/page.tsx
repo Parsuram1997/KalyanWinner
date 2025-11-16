@@ -18,6 +18,7 @@ import { PlusCircle, Trash2, Wallet, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
 
 type Bet = {
   number: string;
@@ -280,38 +281,39 @@ function BetForm({
             </div>
 
             {bets.length > 0 && (
-                <div className="space-y-2 rounded-lg border p-3">
-                <div className="flex justify-between items-center">
-                    <h4 className="text-sm font-medium">Your Bets</h4>
-                    <div className="text-xs font-mono text-muted-foreground text-right">
-                    <div>Total: ₹{totalBetAmount}</div>
-                    <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div>
-                    </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                    {bets.map((bet, index) => (
-                    <div
-                        key={index}
-                        className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50 text-sm"
-                    >
-                        <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="font-mono">
-                            {bet.number}
-                        </Badge>
-                        <span>₹{bet.amount}</span>
+                <div className="space-y-3 rounded-lg border p-3">
+                    <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-medium">Your Bets</h4>
+                        <div className="text-xs font-mono text-muted-foreground text-right">
+                        <div>Total: ₹{totalBetAmount}</div>
+                        <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div>
                         </div>
-                        <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleRemoveBet(index)}
-                        >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Remove bet</span>
-                        </Button>
                     </div>
-                    ))}
-                </div>
+                    <Separator />
+                    <div className="flex flex-col gap-2">
+                        {bets.map((bet, index) => (
+                        <div
+                            key={index}
+                            className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50 text-sm"
+                        >
+                            <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="font-mono">
+                                {bet.number}
+                            </Badge>
+                            <span>₹{bet.amount}</span>
+                            </div>
+                            <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleRemoveBet(index)}
+                            >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remove bet</span>
+                            </Button>
+                        </div>
+                        ))}
+                    </div>
                 </div>
             )}
             </CardContent>
