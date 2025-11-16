@@ -49,10 +49,6 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp when the user account was created."
-        },
-        "commissionRate": {
-          "type": "number",
-          "description": "The commission rate for enrollers."
         }
       },
       "required": ["id", "name", "mobile", "email", "state", "district", "balance", "status", "role", "createdAt"]

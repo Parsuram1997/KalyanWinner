@@ -901,13 +901,11 @@ export default function ManageEnrollersPage() {
   // State for the edit form
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
-  const [editCommissionRate, setEditCommissionRate] = useState<number | string>('');
 
   useEffect(() => {
     if (selectedEnroller) {
       setEditName(selectedEnroller.name);
       setEditEmail(selectedEnroller.email);
-      setEditCommissionRate(selectedEnroller.commissionRate);
     }
   }, [selectedEnroller]);
 
@@ -924,8 +922,7 @@ export default function ManageEnrollersPage() {
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
       password: formData.get("password") as string,
-      role: 'Enroller' as 'Enroller',
-      commissionRate: parseFloat(formData.get("commissionRate") as string)
+      role: 'Enroller' as 'Enroller'
     };
 
     try {
@@ -954,7 +951,6 @@ export default function ManageEnrollersPage() {
       await updateUser(selectedEnroller.id, {
         name: editName,
         email: editEmail,
-        commissionRate: Number(editCommissionRate),
       });
       setEditDialogOpen(false);
       toast({
@@ -1089,12 +1085,6 @@ export default function ManageEnrollersPage() {
                         </Select>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="commissionRate" className="text-right">
-                        Commission Rate (%)
-                      </Label>
-                      <Input id="commissionRate" name="commissionRate" type="number" className="col-span-3" defaultValue="5" required />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="password" className="text-right">
                         Password
                       </Label>
@@ -1142,8 +1132,6 @@ export default function ManageEnrollersPage() {
                 <TableRow>
                   <TableHead>Enroller</TableHead>
                   <TableHead>Contact</TableHead>
-                  <TableHead>Commission</TableHead>
-                  <TableHead>Total Earnings</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -1151,7 +1139,7 @@ export default function ManageEnrollersPage() {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">Loading enrollers...</TableCell>
+                    <TableCell colSpan={4} className="text-center">Loading enrollers...</TableCell>
                   </TableRow>
                 )}
                 {!isLoading && paginatedEnrollers.map((enroller) => (
@@ -1163,8 +1151,6 @@ export default function ManageEnrollersPage() {
                     <TableCell>
                       <div>{enroller.email}</div>
                     </TableCell>
-                    <TableCell>{enroller.commissionRate}%</TableCell>
-                    <TableCell>₹{(enroller.totalEarnings || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
@@ -1222,14 +1208,6 @@ export default function ManageEnrollersPage() {
                         <div className="text-right">
                             <p>{enroller.email}</p>
                         </div>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Commission:</span>
-                        <span>{enroller.commissionRate}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Earnings:</span>
-                        <span>₹{(enroller.totalEarnings || 0).toFixed(2)}</span>
                     </div>
                 </div>
                 <div className="mt-4 flex justify-end gap-2 border-t pt-3">
@@ -1301,12 +1279,6 @@ export default function ManageEnrollersPage() {
               </Label>
               <Input id="edit-email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} type="email" className="col-span-3" required />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-commissionRate" className="text-right">
-                Commission Rate (%)
-              </Label>
-              <Input id="edit-commissionRate" value={editCommissionRate} onChange={(e) => setEditCommissionRate(e.target.value)} type="number" className="col-span-3" required />
-            </div>
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="secondary">Cancel</Button>
@@ -1319,5 +1291,3 @@ export default function ManageEnrollersPage() {
     </div>
   );
 }
-
-    

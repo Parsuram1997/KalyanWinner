@@ -29,7 +29,6 @@ export async function createUser(userData: {
   district: string;
   password: any;
   role: 'User' | 'Enroller';
-  commissionRate?: number;
 }) {
   try {
     const adminApp = getFirebaseAdminApp();
@@ -67,12 +66,6 @@ export async function createUser(userData: {
       createdAt: new Date().toISOString(),
     };
     
-    if (userData.role === 'Enroller') {
-        userProfile.commissionRate = userData.commissionRate || 5; // Default commission rate
-        userProfile.totalEarnings = 0;
-    }
-
-
     await adminFirestore.collection("users").doc(userRecord.uid).set(userProfile);
 
     return { success: true, userId: userRecord.uid };
@@ -93,7 +86,6 @@ export async function createUser(userData: {
 export async function updateUser(userId: string, userData: {
   name?: string;
   email?: string;
-  commissionRate?: number;
 }) {
   try {
     const adminApp = getFirebaseAdminApp();
@@ -102,7 +94,6 @@ export async function updateUser(userId: string, userData: {
     
     const updateData: any = {};
     if (userData.name) updateData.name = userData.name;
-    if (userData.commissionRate !== undefined) updateData.commissionRate = userData.commissionRate;
     
     // If email is being updated, update it in both Firestore and Auth
     if (userData.email) {
@@ -149,5 +140,3 @@ export async function deleteUser(userId: string) {
         throw new Error(error.message || "Failed to delete user.");
     }
 }
-
-    
