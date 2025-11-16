@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 
 type Bet = {
   number: string;
@@ -290,29 +292,39 @@ function BetForm({
                         </div>
                     </div>
                     <Separator />
-                    <div className="flex flex-col gap-2">
-                        {bets.map((bet, index) => (
-                        <div
-                            key={index}
-                            className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50 text-sm"
-                        >
-                            <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="font-mono">
-                                {bet.number}
-                            </Badge>
-                            <span>₹{bet.amount}</span>
-                            </div>
-                            <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => handleRemoveBet(index)}
-                            >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Remove bet</span>
-                            </Button>
-                        </div>
-                        ))}
+                     <div className="w-full">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Digit</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {bets.map((bet, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="font-medium">
+                                        <Badge variant="secondary" className="font-mono">
+                                            {bet.number}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>₹{bet.amount}</TableCell>
+                                    <TableCell className="text-right">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                        onClick={() => handleRemoveBet(index)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                        <span className="sr-only">Remove bet</span>
+                                    </Button>
+                                    </TableCell>
+                                </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             )}
@@ -333,11 +345,11 @@ function BetForm({
 
 const WalletCard = ({ balance }: { balance: number }) => (
     <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-0">
             <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent className="p-4 pt-0">
+        <CardContent className="p-4 pt-2">
             <div className="text-xl font-bold">₹{balance.toFixed(2)}</div>
         </CardContent>
         <CardFooter className="p-4 pt-0">
