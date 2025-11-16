@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, Edit, Trash, Eye } from "lucide-react";
+import { PlusCircle, Search, Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -900,7 +900,12 @@ export default function ManageUsersPage() {
       status: "Active" as "Active",
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
+      password: formData.get("password") as string,
     };
+    
+    console.log("Creating user:", newUser);
+    // This is where the Firebase call would go.
+    // For now, we just add to local state.
     setUsers([newUser, ...users]);
     setDialogOpen(false);
     toast({
@@ -1091,7 +1096,7 @@ export default function ManageUsersPage() {
                       <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4" /></Link>
                       </Button>
-                       <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
+                       <Button variant="outline" size="icon"><Eye className="h-4 w-4" /></Button>
                       <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                     </TableCell>
                   </TableRow>
@@ -1136,7 +1141,7 @@ export default function ManageUsersPage() {
                     <Button variant="outline" size="icon" asChild>
                         <Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4" /></Link>
                       </Button>
-                    <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon"><Eye className="h-4 w-4" /></Button>
                     <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                 </div>
               </Card>
@@ -1168,3 +1173,5 @@ export default function ManageUsersPage() {
     </div>
   );
 }
+
+    
