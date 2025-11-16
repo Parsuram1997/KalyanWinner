@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -31,29 +32,26 @@ export default function ChooseBetTypePage() {
 
   return (
     <div className="flex flex-col gap-6">
-       <div className="flex items-center gap-4">
-          <div>
-              <h1 className="text-2xl font-bold tracking-tight">Choose Bet Type</h1>
-              <p className="text-muted-foreground">Market: <span className="font-semibold text-primary">{marketName}</span></p>
-          </div>
+       <div>
+          <h1 className="text-2xl font-bold tracking-tight">Choose Bet Type</h1>
+          <p className="text-muted-foreground">Market: <span className="font-semibold text-primary">{marketName}</span></p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {betTypes.map((bet) => (
-          <Card key={bet.slug} className="flex flex-col">
+          <Card key={bet.slug} className="flex flex-col justify-between">
              <CardHeader>
               <CardTitle>{bet.name}</CardTitle>
               <CardDescription>{bet.description}</CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow" />
-            <div className="p-6 pt-0">
+            <CardFooter>
                <Button asChild className="w-full">
                 <Link href={`/play/${marketSlug}/${bet.slug}`}>
                   <Ticket className="mr-2 h-4 w-4" />
                   Place Bet
                 </Link>
               </Button>
-            </div>
+            </CardFooter>
           </Card>
         ))}
       </div>
