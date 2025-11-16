@@ -875,6 +875,7 @@ export default function SignupPage() {
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
       password: password,
+      role: 'User' as 'User',
     };
 
     try {
@@ -918,7 +919,7 @@ export default function SignupPage() {
              <div className="grid gap-2">
               <Label htmlFor="mobile">Mobile Number</Label>
                <div className="flex items-center">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm h-10">+91</span>
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-sm h-10">+91</span>
                   <Input
                     id="mobile"
                     name="mobile"

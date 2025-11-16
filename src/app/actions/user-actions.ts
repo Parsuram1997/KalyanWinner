@@ -12,7 +12,7 @@ export async function createUser(userData: {
   state: string;
   district: string;
   password: any;
-  role: 'User' | 'Enroller';
+  role?: 'User' | 'Enroller';
   enrollerId?: string;
 }) {
   
@@ -34,6 +34,7 @@ export async function createUser(userData: {
 
   try {
     const counterRef = firestore.collection('counters').doc('user_ids');
+    const role = userData.role || 'User'; // Default to 'User' if not provided
     
     // Run a transaction to get the next sequential ID
     const customId = await firestore.runTransaction(async (transaction) => {
@@ -45,7 +46,7 @@ export async function createUser(userData: {
 
       if (!counterDoc.exists) {
         // Initialize the counter document if it doesn't exist
-        if (userData.role === 'Enroller') {
+        if (role === 'Enroller') {
             nextNumber = 1;
             fieldToUpdate = 'lastEnrollerNumber';
             prefix = 'KWENR';
@@ -57,7 +58,7 @@ export async function createUser(userData: {
             transaction.set(counterRef, { lastUserNumber: 1, lastEnrollerNumber: 0 });
         }
       } else {
-        if (userData.role === 'Enroller') {
+        if (role === 'Enroller') {
             nextNumber = (counterDoc.data()?.lastEnrollerNumber || 0) + 1;
             fieldToUpdate = 'lastEnrollerNumber';
             prefix = 'KWENR';
@@ -83,7 +84,7 @@ export async function createUser(userData: {
       district: userData.district,
       balance: 0,
       status: "Active",
-      role: userData.role, 
+      role: role, 
       createdAt: new Date().toISOString(),
     };
     
