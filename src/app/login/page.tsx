@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { getEmailForMobile } from "@/app/actions/auth-actions";
+import { getEmailForMobile } from "@/app/actions/user-actions";
 
 type View = "login" | "forgot_password";
 
