@@ -1,43 +1,94 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ClipboardList, Wallet, GanttChartSquare, ArrowUpCircle, ArrowDownCircle, Hourglass, TrendingDown, UserCheck, UserX, Ban, UserPlus } from "lucide-react";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const stats = [
-  { name: "Total Users", value: "1,250", icon: Users },
-  { name: "Active Users", value: "1,200", icon: UserCheck },
-  { name: "Inactive Users", value: "45", icon: UserX },
-  { name: "Suspended Users", value: "5", icon: Ban },
-  { name: "Total Enrollers", value: "15", icon: UserPlus },
-  { name: "Total Enroller Commission", value: "₹9,850", icon: Wallet },
-  { name: "Total Bets Placed", value: "8,420", icon: GanttChartSquare },
-  { name: "All User Wallet Balance", value: "₹25,30,000", icon: Wallet },
-  { name: "Total Deposit", value: "₹12,50,000", icon: ArrowUpCircle },
-  { name: "Total Withdrawal", value: "₹7,20,000", icon: ArrowDownCircle },
-  { name: "Total Winnings", value: "₹5,40,500", icon: ClipboardList },
-  { name: "Total Loss", value: "₹2,10,000", icon: TrendingDown },
-  { name: "Pending Deposit", value: "5", icon: Hourglass },
-  { name: "Pending Withdrawals", value: "12", icon: Wallet },
-];
+
+const StatCard = ({ name, value, icon: Icon, isLoading }: { name: string; value: string; icon: React.ElementType; isLoading: boolean }) => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{name}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        {isLoading ? <Skeleton className="h-6 w-24" /> : <div className="text-xl font-bold">{value}</div>}
+      </CardContent>
+    </Card>
+);
 
 export default function AdminDashboardPage() {
+    const firestore = useFirestore();
+
+    const usersQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, "users"), where("role", "==", "User")) : null), [firestore]);
+    const { data: users, isLoading: usersLoading } = useCollection<any>(usersQuery);
+
+    const enrollersQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, "users"), where("role", "==", "Enroller")) : null), [firestore]);
+    const { data: enrollers, isLoading: enrollersLoading } = useCollection<any>(enrollersQuery);
+    
+    // Mocking transactions for now as the collection doesn't exist
+    const transactions: any[] = [];
+    const transactionsLoading = false;
+
+    const stats = useMemo(() => {
+        const allUsers = users || [];
+        const allEnrollers = enrollers || [];
+        const allTransactions = transactions || [];
+
+        const formatCurrency = (amount: number) => {
+             return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+        }
+
+        return {
+            totalUsers: allUsers.length.toString(),
+            activeUsers: allUsers.filter(u => u.status === 'Active').length.toString(),
+            inactiveUsers: allUsers.filter(u => u.status === 'Inactive').length.toString(),
+            suspendedUsers: allUsers.filter(u => u.status === 'Suspended').length.toString(),
+            totalEnrollers: allEnrollers.length.toString(),
+            totalEnrollerCommission: formatCurrency(0), // Needs calculation logic
+            totalBetsPlaced: "N/A", // Needs bets collection
+            allUserWalletBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.balance || 0), 0)),
+            totalDeposit: formatCurrency(allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
+            totalWithdrawal: formatCurrency(allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
+            totalWinnings: "N/A", // Needs calculation logic
+            totalLoss: "N/A", // Needs calculation logic
+            pendingDeposit: allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Pending').length.toString(),
+            pendingWithdrawals: allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Pending').length.toString(),
+        }
+    }, [users, enrollers, transactions]);
+
+    const isLoading = usersLoading || enrollersLoading || transactionsLoading;
+
+    const statsCards = [
+      { name: "Total Users", value: stats.totalUsers, icon: Users },
+      { name: "Active Users", value: stats.activeUsers, icon: UserCheck },
+      { name: "Inactive Users", value: stats.inactiveUsers, icon: UserX },
+      { name: "Suspended Users", value: stats.suspendedUsers, icon: Ban },
+      { name: "Total Enrollers", value: stats.totalEnrollers, icon: UserPlus },
+      { name: "Total Enroller Commission", value: stats.totalEnrollerCommission, icon: Wallet },
+      { name: "Total Bets Placed", value: stats.totalBetsPlaced, icon: GanttChartSquare },
+      { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
+      { name: "Total Deposit", value: stats.totalDeposit, icon: ArrowUpCircle },
+      { name: "Total Withdrawal", value: stats.totalWithdrawal, icon: ArrowDownCircle },
+      { name: "Total Winnings", value: stats.totalWinnings, icon: ClipboardList },
+      { name: "Total Loss", value: stats.totalLoss, icon: TrendingDown },
+      { name: "Pending Deposit", value: stats.pendingDeposit, icon: Hourglass },
+      { name: "Pending Withdrawals", value: stats.pendingWithdrawals, icon: Wallet },
+    ];
+
+
   return (
     <div className="flex flex-col gap-6">
       
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.name}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.name}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
+        {statsCards.map((stat) => (
+          <StatCard key={stat.name} name={stat.name} value={stat.value} icon={stat.icon} isLoading={isLoading} />
         ))}
       </div>
-      {/* Add more sections like recent activity, charts, etc. */}
     </div>
   );
 }
