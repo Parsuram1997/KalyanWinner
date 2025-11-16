@@ -1,19 +1,7 @@
 
 'use server';
 
-import { getApp, initializeApp, getApps, App } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
-
-// Initialize Firebase Admin SDK
-function getFirebaseAdminApp(): App {
-  if (getApps().length > 0) {
-    return getApp();
-  }
-  
-  // In App Hosting, initializeApp() discovers credentials from the environment.
-  return initializeApp();
-}
+import { firestore } from "@/lib/firebase-admin";
 
 
 export async function getEmailForMobile(mobileNumber: string): Promise<{ success: boolean, email?: string, message: string }> {
@@ -22,8 +10,7 @@ export async function getEmailForMobile(mobileNumber: string): Promise<{ success
     }
 
     try {
-        const adminFirestore = getFirestore(getFirebaseAdminApp());
-        const usersRef = adminFirestore.collection('users');
+        const usersRef = firestore.collection('users');
         const snapshot = await usersRef.where('mobile', '==', mobileNumber).limit(1).get();
 
         if (snapshot.empty) {

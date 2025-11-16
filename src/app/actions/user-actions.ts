@@ -1,19 +1,9 @@
 
 'use server';
 
-import { getApp, initializeApp, getApps, App } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { auth, firestore } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
-// Initialize Firebase Admin SDK
-function getFirebaseAdminApp(): App {
-  if (getApps().length > 0) {
-    return getApp();
-  }
-  
-  // In App Hosting, initializeApp() discovers credentials from the environment.
-  return initializeApp();
-}
 
 export async function createUser(userData: {
   name: string;
@@ -25,12 +15,9 @@ export async function createUser(userData: {
   role: 'User' | 'Enroller';
   enrollerId?: string;
 }) {
-  const adminApp = getFirebaseAdminApp();
-  const adminAuth = getAuth(adminApp);
-  const adminFirestore = getFirestore(adminApp);
   
   // Check if a user with the same mobile number already exists in Firestore
-  const mobileQuery = await adminFirestore.collection("users").where("mobile", "==", userData.mobile).get();
+  const mobileQuery = await firestore.collection("users").where("mobile", "==", userData.mobile).get();
   if (!mobileQuery.empty) {
       throw new Error("A user with this mobile number already exists.");
   }
@@ -38,7 +25,7 @@ export async function createUser(userData: {
   // Use the REAL email provided by the user for Firebase Authentication
   const authEmail = userData.email;
   
-  const userRecord = await adminAuth.createUser({
+  const userRecord = await auth.createUser({
     email: authEmail,
     password: userData.password,
     displayName: userData.name,
@@ -46,10 +33,10 @@ export async function createUser(userData: {
   });
 
   try {
-    const counterRef = adminFirestore.collection('counters').doc('user_ids');
+    const counterRef = firestore.collection('counters').doc('user_ids');
     
     // Run a transaction to get the next sequential ID
-    const customId = await adminFirestore.runTransaction(async (transaction) => {
+    const customId = await firestore.runTransaction(async (transaction) => {
       const counterDoc = await transaction.get(counterRef);
       
       let nextNumber;
@@ -104,13 +91,13 @@ export async function createUser(userData: {
         userProfile.enrollerId = userData.enrollerId;
     }
     
-    await adminFirestore.collection("users").doc(userRecord.uid).set(userProfile);
+    await firestore.collection("users").doc(userRecord.uid).set(userProfile);
 
     return { success: true, userId: userRecord.uid };
 
   } catch (error: any) {
     // If we failed to create the user in Firestore, delete the auth user to prevent orphaned accounts.
-    await adminAuth.deleteUser(userRecord.uid);
+    await auth.deleteUser(userRecord.uid);
     console.error("Error creating user profile:", error);
     let errorMessage = "An unexpected error occurred during profile creation.";
     if (error.message) {
@@ -126,24 +113,20 @@ export async function updateUser(userId: string, userData: {
   email?: string;
 }) {
   try {
-    const adminApp = getFirebaseAdminApp();
-    const adminAuth = getAuth(adminApp);
-    const adminFirestore = getFirestore(adminApp);
-    
     const updateData: any = {};
     if (userData.name) updateData.name = userData.name;
     
     // If email is being updated, update it in both Firestore and Auth
     if (userData.email) {
       updateData.email = userData.email;
-      await adminAuth.updateUser(userId, { email: userData.email, displayName: userData.name });
+      await auth.updateUser(userId, { email: userData.email, displayName: userData.name });
     } else if (userData.name) {
       // If only name is updated, update it in Auth as well
-      await adminAuth.updateUser(userId, { displayName: userData.name });
+      await auth.updateUser(userId, { displayName: userData.name });
     }
 
     if (Object.keys(updateData).length > 0) {
-      await adminFirestore.collection("users").doc(userId).update(updateData);
+      await firestore.collection("users").doc(userId).update(updateData);
     }
 
     return { success: true };
@@ -162,15 +145,11 @@ export async function updateUser(userId: string, userData: {
 
 export async function deleteUser(userId: string) {
     try {
-        const adminApp = getFirebaseAdminApp();
-        const adminAuth = getAuth(adminApp);
-        const adminFirestore = getFirestore(adminApp);
-
         // Delete user from Firebase Authentication
-        await adminAuth.deleteUser(userId);
+        await auth.deleteUser(userId);
 
-        // Delete user profile from Firestore
-        await adminFirestore.collection("users").doc(userId).delete();
+        // Delete user profile from Firestore is now handled by a Cloud Function trigger
+        // So we don't need to delete it from here explicitly.
 
         return { success: true };
     } catch (error: any) {
