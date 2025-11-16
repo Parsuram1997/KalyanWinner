@@ -1,24 +1,19 @@
 
 'use server';
 
-import { getApp, initializeApp, getApps, App, AppOptions } from "firebase-admin/app";
+import { getApp, initializeApp, getApps, App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
 // Initialize Firebase Admin SDK
 function getFirebaseAdminApp(): App {
+  // If the default app is already initialized, return it.
   if (getApps().length > 0) {
     return getApp();
   }
-
-  const options: AppOptions = {};
-  if (process.env.GCLOUD_PROJECT) {
-    options.projectId = process.env.GCLOUD_PROJECT;
-  }
   
-  // Initialize with explicit project ID if available, otherwise fall back to default.
-  // This is a more robust way to handle credentials in different environments.
-  return initializeApp(options);
+  // In App Hosting, initializeApp() discovers credentials from the environment.
+  return initializeApp();
 }
 
 

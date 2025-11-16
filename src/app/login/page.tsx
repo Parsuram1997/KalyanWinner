@@ -142,7 +142,7 @@ export default function LoginPage() {
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="pb-4">
           <div className="flex flex-col items-center text-center">
-             <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain mb-2" />
+             <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={100} height={100} className="object-contain mb-2" />
             <CardTitle className="text-2xl font-bold">
                 {view === 'login' ? "User Login" : "Forgot Password"}
             </CardTitle>
