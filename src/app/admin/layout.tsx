@@ -27,7 +27,6 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
@@ -140,9 +139,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1 flex justify-center">
                {isClient && <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={120} height={120} className="object-contain" />}
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
