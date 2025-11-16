@@ -85,6 +85,47 @@ export async function createUser(userData: {
   }
 }
 
+export async function updateUser(userId: string, userData: {
+  name?: string;
+  email?: string;
+  commissionRate?: number;
+}) {
+  try {
+    const adminApp = getFirebaseAdminApp();
+    const adminAuth = getAuth(adminApp);
+    const adminFirestore = getFirestore(adminApp);
+    
+    const updateData: any = {};
+    if (userData.name) updateData.name = userData.name;
+    if (userData.commissionRate !== undefined) updateData.commissionRate = userData.commissionRate;
+    
+    // If email is being updated, update it in both Firestore and Auth
+    if (userData.email) {
+      updateData.email = userData.email;
+      await adminAuth.updateUser(userId, { email: userData.email, displayName: userData.name });
+    } else if (userData.name) {
+      // If only name is updated, update it in Auth as well
+      await adminAuth.updateUser(userId, { displayName: userData.name });
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      await adminFirestore.collection("users").doc(userId).update(updateData);
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating user:", error);
+    let errorMessage = "An unexpected error occurred while updating the user.";
+     if (error.code === 'auth/email-already-exists') {
+        errorMessage = "A user with this email address already exists.";
+    } else if (error.message) {
+        errorMessage = error.message;
+    }
+    throw new Error(errorMessage);
+  }
+}
+
+
 export async function deleteUser(userId: string) {
     try {
         const adminApp = getFirebaseAdminApp();

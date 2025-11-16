@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -29,13 +29,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
-import { createUser } from "@/app/actions/user-actions";
+import { createUser, deleteUser, updateUser } from "@/app/actions/user-actions";
 
 
 const ENROLLERS_PER_PAGE = 10;
@@ -53,10 +65,27 @@ export default function ManageEnrollersPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All");
-  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedEnroller, setSelectedEnroller] = useState<any | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   
   const isLoading = isUserLoading || isEnrollersLoading;
+  
+  // State for the edit form
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editCommissionRate, setEditCommissionRate] = useState<number | string>('');
+
+  useEffect(() => {
+    if (selectedEnroller) {
+      setEditName(selectedEnroller.name);
+      setEditEmail(selectedEnroller.email);
+      setEditCommissionRate(selectedEnroller.commissionRate);
+    }
+  }, [selectedEnroller]);
+
 
   const handleAddEnroller = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,7 +105,7 @@ export default function ManageEnrollersPage() {
 
     try {
       await createUser(newEnroller);
-      setDialogOpen(false);
+      setAddDialogOpen(false);
       toast({
         title: "Enroller Added",
         description: `${newEnroller.name} has been added to the enroller list.`,
@@ -90,6 +119,47 @@ export default function ManageEnrollersPage() {
       });
     }
   };
+  
+  const handleEditEnroller = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedEnroller) return;
+
+    try {
+      await updateUser(selectedEnroller.id, {
+        name: editName,
+        email: editEmail,
+        commissionRate: Number(editCommissionRate),
+      });
+      setEditDialogOpen(false);
+      toast({
+        title: "Enroller Updated",
+        description: `${editName}'s details have been updated.`,
+      });
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Failed to Update Enroller",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
+  };
+
+  const handleDeleteEnroller = async (enrollerId: string) => {
+    try {
+      await deleteUser(enrollerId);
+      toast({
+        title: "Enroller Deleted",
+        description: "The enroller has been successfully deleted.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to Delete Enroller",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
+  };
+
 
   const filteredEnrollers = useMemo(() => {
     let filtered = enrollers || [];
@@ -117,6 +187,10 @@ export default function ManageEnrollersPage() {
     return filteredEnrollers.slice(startIndex, endIndex);
   }, [filteredEnrollers, currentPage]);
 
+  const openEditDialog = (enroller: any) => {
+    setSelectedEnroller(enroller);
+    setEditDialogOpen(true);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -129,7 +203,7 @@ export default function ManageEnrollersPage() {
                     Add, edit, or suspend enrollers in the application.
                 </CardDescription>
             </div>
-             <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+             <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="shrink-0">
                     <PlusCircle className="h-4 w-4 mr-2" />
@@ -251,8 +325,24 @@ export default function ManageEnrollersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="flex gap-2">
-                       <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
-                      <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                       <Button variant="outline" size="icon" onClick={() => openEditDialog(enroller)}><Edit className="h-4 w-4" /></Button>
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the enroller '{enroller.name}' and all associated data.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteEnroller(enroller.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -291,8 +381,24 @@ export default function ManageEnrollersPage() {
                     </div>
                 </div>
                 <div className="mt-4 flex justify-end gap-2 border-t pt-3">
-                    <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
-                    <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" onClick={() => openEditDialog(enroller)}><Edit className="h-4 w-4" /></Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the enroller '{enroller.name}' and all associated data.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteEnroller(enroller.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                 </div>
               </Card>
             ))}
@@ -320,6 +426,44 @@ export default function ManageEnrollersPage() {
           </div>
         </CardFooter>
       </Card>
+      
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Enroller</DialogTitle>
+            <DialogDescription>
+              Update the details for {selectedEnroller?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditEnroller} className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">
+                Name
+              </Label>
+              <Input id="edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} className="col-span-3" required />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-email" className="text-right">
+                Email
+              </Label>
+              <Input id="edit-email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} type="email" className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-commissionRate" className="text-right">
+                Commission Rate (%)
+              </Label>
+              <Input id="edit-commissionRate" value={editCommissionRate} onChange={(e) => setEditCommissionRate(e.target.value)} type="number" className="col-span-3" required />
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">Cancel</Button>
+              </DialogClose>
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
