@@ -7,7 +7,6 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 // Initialize Firebase Admin SDK
 function getFirebaseAdminApp(): App {
-  // If the default app is already initialized, return it.
   if (getApps().length > 0) {
     return getApp();
   }
