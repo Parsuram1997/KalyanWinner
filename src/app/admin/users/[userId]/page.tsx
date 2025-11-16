@@ -18,15 +18,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { User, Wallet, Phone, MapPin, Map } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
 
-// Mock data - in a real app, you would fetch this based on the userId
-const initialUsers = [
-  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai" },
-  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi" },
-  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad" },
-  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow" },
-];
-
+// This is just mock data for recent activity. In a real app, you would fetch this from Firestore.
 const recentActivity = [
   { id: 1, userId: "USR001", description: "Bet on Jodi 45", market: "Kalyan Night", status: "Pending", date: "2024-07-20", amount: "-₹100.00", type: "debit" },
   { id: 2, userId: "USR001", description: "Wallet Deposit", market: "via UPI", status: "Completed", date: "2024-07-19", amount: "+₹500.00", type: "credit" },
@@ -39,8 +34,19 @@ const recentActivity = [
 export default function UserDetailsPage() {
   const params = useParams();
   const userId = params.userId as string;
-  const user = initialUsers.find((u) => u.id === userId);
+  const firestore = useFirestore();
+
+  const userQuery = useMemoFirebase(() => (firestore && userId ? query(collection(firestore, 'users'), where('customId', '==', userId)) : null), [firestore, userId]);
+  const { data: users, isLoading } = useCollection<any>(userQuery);
+
+  const user = users?.[0];
+
+  // This is just mock data. In a real app, you'd query bets for this user.
   const userBets = recentActivity.filter(activity => activity.userId === userId && activity.description.toLowerCase().includes('bet'));
+
+  if (isLoading) {
+    return <div>Loading user details...</div>;
+  }
 
   if (!user) {
     return <div>User not found</div>;
@@ -55,9 +61,9 @@ export default function UserDetailsPage() {
             <User className="h-6 w-6" />
             <span>{user.name}</span>
           </CardTitle>
-          <CardDescription>User ID: {user.id}</CardDescription>
+          <CardDescription>User ID: {user.customId}</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <div className="flex items-center gap-3">
             <Phone className="h-5 w-5 text-muted-foreground" />
             <div>
@@ -83,7 +89,7 @@ export default function UserDetailsPage() {
             <Wallet className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">Balance</p>
-              <p className="font-medium">₹{user.balance.toFixed(2)}</p>
+              <p className="font-medium">₹{(user.balance || 0).toFixed(2)}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

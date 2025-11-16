@@ -36,7 +36,7 @@ import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { createUser, deleteUser } from "@/app/actions/user-actions";
 
 
@@ -873,7 +873,7 @@ export default function ManageUsersPage() {
   const { user: authUser, isUserLoading } = useUser();
 
   const usersQuery = useMemoFirebase(
-    () => (firestore && authUser ? query(collection(firestore, "users")) : null),
+    () => (firestore && authUser ? query(collection(firestore, "users"), where("role", "==", "User")) : null),
     [firestore, authUser]
   );
   const { data: users, isLoading: isUsersLoading } = useCollection<any>(usersQuery);
@@ -1124,7 +1124,7 @@ export default function ManageUsersPage() {
                     </TableCell>
                     <TableCell className="flex gap-2">
                       <Button variant="outline" size="icon" asChild>
-                        <Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4" /></Link>
+                        <Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link>
                       </Button>
                       <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user.id)}><Trash className="h-4 w-4" /></Button>
                     </TableCell>
@@ -1169,7 +1169,7 @@ export default function ManageUsersPage() {
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
                     <Button variant="outline" size="icon" asChild>
-                        <Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4" /></Link>
+                        <Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link>
                       </Button>
                     <Button variant="destructive" size="icon" onClick={() => handleDeleteUser(user.id)}><Trash className="h-4 w-4" /></Button>
                 </div>
