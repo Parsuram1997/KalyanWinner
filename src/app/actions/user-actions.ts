@@ -1,14 +1,14 @@
 
 'use server';
 
-import { getApp, initializeApp } from "firebase-admin/app";
+import { getApp, initializeApp, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { firebaseConfig } from "@/firebase/config";
 
 // Initialize Firebase Admin SDK
 function getFirebaseAdminApp() {
-  if (getApp.length > 0) {
+  if (getApps().length > 0) {
     return getApp();
   }
   return initializeApp({

@@ -13,7 +13,10 @@ function getFirebaseAdminApp(): App {
   }
   // This part is tricky in a serverless environment.
   // We assume some form of credential setup (e.g., Application Default Credentials)
-  return initializeApp({ projectId: firebaseConfig.projectId });
+  return initializeApp({ 
+    credential: undefined,
+    projectId: firebaseConfig.projectId 
+  });
 }
 
 export async function handleAdminLoginOrFirstTimeSetup(credentials: {
