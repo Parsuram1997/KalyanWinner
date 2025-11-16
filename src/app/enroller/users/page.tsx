@@ -15,26 +15,23 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, PlusCircle } from "lucide-react";
-import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { createUser } from "@/app/actions/user-actions";
 
 
-const enrolledUsersData = [
-  { id: "USR001", name: "Ravi Kumar", mobile: "9876543210", balance: 1250.50, status: "Active", state: "Maharashtra", district: "Mumbai", totalDeposit: 5000 },
-  { id: "USR002", name: "Sunita Sharma", mobile: "9876543211", balance: 500.00, status: "Active", state: "Delhi", district: "New Delhi", totalDeposit: 2500 },
-  { id: "USR003", name: "Amit Patel", mobile: "9876543212", balance: 0.00, status: "Suspended", state: "Gujarat", district: "Ahmedabad", totalDeposit: 1000 },
-  { id: "USR004", name: "Priya Singh", mobile: "9876543213", balance: 2500.00, status: "Active", state: "Uttar Pradesh", district: "Lucknow", totalDeposit: 10000 },
-  { id: "USR005", name: "Inactive User", mobile: "9876543214", balance: 100.00, status: "Inactive", state: "Rajasthan", district: "Jaipur", totalDeposit: 500 },
-];
+const USERS_PER_PAGE = 10;
 
 const states = [
   { "value": "AN", "label": "Andaman and Nicobar Islands" },
@@ -863,39 +860,62 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
 
 export default function EnrolledUsersPage() {
   const { toast } = useToast();
-  const [enrolledUsers, setEnrolledUsers] = useState(enrolledUsersData);
+  const firestore = useFirestore();
+  const { user: authUser, isUserLoading } = useUser();
+
+  const enrolledUsersQuery = useMemoFirebase(() => {
+    if (!firestore || !authUser) return null;
+    return query(collection(firestore, "users"), where("enrollerId", "==", authUser.uid), where("role", "==", "User"));
+  }, [firestore, authUser]);
+
+  const { data: enrolledUsers, isLoading: areUsersLoading } = useCollection<any>(enrolledUsersQuery);
+  const isLoading = isUserLoading || areUsersLoading;
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All");
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const handleAddUser = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!authUser) {
+        toast({ variant: "destructive", title: "Authentication Error", description: "Enroller not logged in." });
+        return;
+    }
     const form = e.currentTarget;
     const formData = new FormData(form);
     const newUser = {
-      id: `USR${(Math.random() * 1000).toFixed(0).padStart(3, '0')}`,
       name: formData.get("name") as string,
       mobile: formData.get("mobile") as string,
       email: formData.get("email") as string,
-      balance: 0,
-      status: "Active" as "Active",
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
-      totalDeposit: 0,
+      password: formData.get("password") as string,
+      role: 'User' as 'User',
+      enrollerId: authUser.uid, // Add enroller's ID
     };
-    setEnrolledUsers([newUser, ...enrolledUsers]);
-    setDialogOpen(false);
-    toast({
-      title: "User Added",
-      description: `${newUser.name} has been added to the user list.`,
-    });
-    form.reset();
-    setSelectedState(null);
+
+    try {
+        await createUser(newUser);
+        setDialogOpen(false);
+        toast({
+            title: "User Added",
+            description: `${newUser.name} has been added to your enrolled users list.`,
+        });
+        form.reset();
+        setSelectedState(null);
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Failed to Add User",
+            description: error.message || "An unexpected error occurred.",
+        });
+    }
   };
 
   const filteredUsers = useMemo(() => {
-    let filtered = enrolledUsers;
+    let filtered = enrolledUsers || [];
 
     if (filter !== "All") {
       filtered = filtered.filter(user => user.status === filter);
@@ -911,6 +931,14 @@ export default function EnrolledUsersPage() {
 
     return filtered;
   }, [enrolledUsers, searchTerm, filter]);
+
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+    const endIndex = startIndex + USERS_PER_PAGE;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -1025,12 +1053,16 @@ export default function EnrolledUsersPage() {
                   <TableHead>User</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Location</TableHead>
-                  <TableHead>Total Deposit</TableHead>
+                  <TableHead>Balance</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
+                {isLoading ? (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center">Loading users...</TableCell>
+                    </TableRow>
+                ) : paginatedUsers.length > 0 ? paginatedUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium">{user.name}</div>
@@ -1043,7 +1075,7 @@ export default function EnrolledUsersPage() {
                       <div>{user.district}</div>
                       <div className="text-xs text-muted-foreground">{user.state}</div>
                     </TableCell>
-                    <TableCell>₹{user.totalDeposit.toFixed(2)}</TableCell>
+                    <TableCell>₹{(user.balance || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
@@ -1056,14 +1088,19 @@ export default function EnrolledUsersPage() {
                       </Badge>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                     <TableRow>
+                        <TableCell colSpan={5} className="text-center">You haven't enrolled any users yet.</TableCell>
+                    </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
 
           {/* Mobile Cards */}
            <div className="grid gap-4 md:hidden">
-            {filteredUsers.map((user) => (
+            {isLoading ? <p className="text-center text-muted-foreground">Loading users...</p> : 
+            paginatedUsers.length > 0 ? paginatedUsers.map((user) => (
               <Card key={user.id} className="p-4">
                 <div className="flex justify-between items-start">
                     <div>
@@ -1088,17 +1125,41 @@ export default function EnrolledUsersPage() {
                            <p className="text-xs">{user.state}</p>
                         </div>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Deposit:</span>
-                        <span>₹{user.totalDeposit.toFixed(2)}</span>
+                     <div className="flex justify-between">
+                        <span className="text-muted-foreground">Balance:</span>
+                        <span>₹{(user.balance || 0).toFixed(2)}</span>
                     </div>
                 </div>
               </Card>
-            ))}
+            )) : <p className="text-center text-muted-foreground pt-4">You haven't enrolled any users yet.</p>}
            </div>
-
         </CardContent>
+        {filteredUsers.length > USERS_PER_PAGE && (
+            <CardFooter>
+                <div className="flex items-center justify-between w-full">
+                    <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    >
+                    Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    >
+                    Next
+                    </Button>
+                </div>
+            </CardFooter>
+        )}
       </Card>
     </div>
   );
 }
+
+    

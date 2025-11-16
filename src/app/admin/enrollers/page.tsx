@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, Edit, Trash } from "lucide-react";
+import { PlusCircle, Search, Edit, Trash, Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +49,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebas
 import { collection, query, where } from "firebase/firestore";
 import { createUser, deleteUser, updateUser } from "@/app/actions/user-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Link from "next/link";
 
 
 const ENROLLERS_PER_PAGE = 10;
@@ -1169,6 +1170,9 @@ export default function ManageEnrollersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="flex gap-2">
+                       <Button variant="outline" size="icon" asChild>
+                        <Link href={`/admin/enrollers/${enroller.id}`}><Eye className="h-4 w-4" /></Link>
+                       </Button>
                        <Button variant="outline" size="icon" onClick={() => openEditDialog(enroller)}><Edit className="h-4 w-4" /></Button>
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -1225,6 +1229,9 @@ export default function ManageEnrollersPage() {
                     </div>
                 </div>
                 <div className="mt-4 flex justify-end gap-2 border-t pt-3">
+                    <Button variant="outline" size="icon" asChild>
+                      <Link href={`/admin/enrollers/${enroller.id}`}><Eye className="h-4 w-4" /></Link>
+                    </Button>
                     <Button variant="outline" size="icon" onClick={() => openEditDialog(enroller)}><Edit className="h-4 w-4" /></Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
