@@ -1148,6 +1148,7 @@ export default function ManageEnrollersPage() {
                   <TableRow key={enroller.id}>
                     <TableCell>
                       <div className="font-medium">{enroller.name}</div>
+                      <div className="text-xs text-muted-foreground">{enroller.customId}</div>
                     </TableCell>
                     <TableCell>
                       <div>{enroller.email}</div>
@@ -1205,6 +1206,7 @@ export default function ManageEnrollersPage() {
                 <div className="flex justify-between items-start">
                     <div>
                         <p className="font-semibold">{enroller.name}</p>
+                         <p className="text-xs text-muted-foreground">{enroller.customId}</p>
                     </div>
                     <Badge variant={enroller.status === "Active" ? "secondary" : "destructive"}>
                         {enroller.status}

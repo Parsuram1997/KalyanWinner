@@ -3,7 +3,7 @@
 
 import { getApp, initializeApp, getApps, App, AppOptions } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 // Initialize Firebase Admin SDK
 function getFirebaseAdminApp(): App {
@@ -29,32 +29,72 @@ export async function createUser(userData: {
   district: string;
   password: any;
   role: 'User' | 'Enroller';
+  enrollerId?: string;
 }) {
+  const adminApp = getFirebaseAdminApp();
+  const adminAuth = getAuth(adminApp);
+  const adminFirestore = getFirestore(adminApp);
+  
+  // Check if a user with the same mobile number already exists in Firestore
+  const mobileQuery = await adminFirestore.collection("users").where("mobile", "==", userData.mobile).get();
+  if (!mobileQuery.empty) {
+      throw new Error("A user with this mobile number already exists.");
+  }
+
+  // Use the REAL email provided by the user for Firebase Authentication
+  const authEmail = userData.email;
+  
+  const userRecord = await adminAuth.createUser({
+    email: authEmail,
+    password: userData.password,
+    displayName: userData.name,
+    phoneNumber: `+91${userData.mobile}`
+  });
+
   try {
-    const adminApp = getFirebaseAdminApp();
-    const adminAuth = getAuth(adminApp);
-    const adminFirestore = getFirestore(adminApp);
+    const counterRef = adminFirestore.collection('counters').doc('user_ids');
     
-    // Check if a user with the same mobile number already exists in Firestore
-    const mobileQuery = await adminFirestore.collection("users").where("mobile", "==", userData.mobile).get();
-    if (!mobileQuery.empty) {
-        throw new Error("A user with this mobile number already exists.");
-    }
+    // Run a transaction to get the next sequential ID
+    const customId = await adminFirestore.runTransaction(async (transaction) => {
+      const counterDoc = await transaction.get(counterRef);
+      
+      let nextNumber;
+      let fieldToUpdate;
+      let prefix;
 
-    // Use the REAL email provided by the user for Firebase Authentication
-    const authEmail = userData.email;
-
-    // Create user in Firebase Authentication
-    const userRecord = await adminAuth.createUser({
-      email: authEmail,
-      password: userData.password,
-      displayName: userData.name,
-      phoneNumber: `+91${userData.mobile}`
+      if (!counterDoc.exists) {
+        // Initialize the counter document if it doesn't exist
+        if (userData.role === 'Enroller') {
+            nextNumber = 1;
+            fieldToUpdate = 'lastEnrollerNumber';
+            prefix = 'KWENR';
+            transaction.set(counterRef, { lastEnrollerNumber: 1, lastUserNumber: 0 });
+        } else {
+            nextNumber = 1;
+            fieldToUpdate = 'lastUserNumber';
+            prefix = 'KWUSR';
+            transaction.set(counterRef, { lastUserNumber: 1, lastEnrollerNumber: 0 });
+        }
+      } else {
+        if (userData.role === 'Enroller') {
+            nextNumber = (counterDoc.data()?.lastEnrollerNumber || 0) + 1;
+            fieldToUpdate = 'lastEnrollerNumber';
+            prefix = 'KWENR';
+        } else {
+            nextNumber = (counterDoc.data()?.lastUserNumber || 0) + 1;
+            fieldToUpdate = 'lastUserNumber';
+            prefix = 'KWUSR';
+        }
+        transaction.update(counterRef, { [fieldToUpdate]: nextNumber });
+      }
+      
+      return `${prefix}${String(nextNumber).padStart(4, '0')}`;
     });
 
     // Create user profile in Firestore
     const userProfile: any = {
       id: userRecord.uid,
+      customId: customId,
       name: userData.name,
       mobile: userData.mobile,
       email: authEmail, // Store the real email
@@ -66,22 +106,26 @@ export async function createUser(userData: {
       createdAt: new Date().toISOString(),
     };
     
+    if (userData.enrollerId) {
+        userProfile.enrollerId = userData.enrollerId;
+    }
+    
     await adminFirestore.collection("users").doc(userRecord.uid).set(userProfile);
 
     return { success: true, userId: userRecord.uid };
+
   } catch (error: any) {
-    console.error("Error creating user:", error);
-    let errorMessage = "An unexpected error occurred.";
-    if (error.code === 'auth/email-already-exists') {
-        errorMessage = "A user with this email address already exists.";
-    } else if (error.code === 'auth/invalid-password') {
-        errorMessage = "Password must be at least 6 characters long.";
-    } else if (error.message) {
+    // If we failed to create the user in Firestore, delete the auth user to prevent orphaned accounts.
+    await adminAuth.deleteUser(userRecord.uid);
+    console.error("Error creating user profile:", error);
+    let errorMessage = "An unexpected error occurred during profile creation.";
+    if (error.message) {
         errorMessage = error.message;
     }
     throw new Error(errorMessage);
   }
 }
+
 
 export async function updateUser(userId: string, userData: {
   name?: string;

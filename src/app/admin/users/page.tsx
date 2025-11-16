@@ -898,6 +898,7 @@ export default function ManageUsersPage() {
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
       password: formData.get("password") as string,
+      role: 'User' as 'User',
     };
 
     try {
@@ -1100,7 +1101,7 @@ export default function ManageUsersPage() {
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="font-medium">{user.name}</div>
-                      <div className="text-xs text-muted-foreground">{user.id}</div>
+                      <div className="text-xs text-muted-foreground">{user.customId}</div>
                     </TableCell>
                     <TableCell>
                       <div>{user.mobile}</div>
@@ -1141,7 +1142,7 @@ export default function ManageUsersPage() {
                 <div className="flex justify-between items-start">
                     <div>
                         <p className="font-semibold">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">{user.id}</p>
+                        <p className="text-xs text-muted-foreground">{user.customId}</p>
                     </div>
                     <Badge variant={user.status === "Active" ? "secondary" : "destructive"}>
                         {user.status}

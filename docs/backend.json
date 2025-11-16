@@ -11,6 +11,10 @@
           "type": "string",
           "description": "The unique identifier for the user, matching the Firebase Auth UID."
         },
+        "customId": {
+          "type": "string",
+          "description": "A custom, human-readable, and sequential ID for the user (e.g., KWUSR0001, KWENR0001)."
+        },
         "name": {
           "type": "string",
           "description": "The user's full name."
@@ -51,7 +55,7 @@
           "description": "The timestamp when the user account was created."
         }
       },
-      "required": ["id", "name", "mobile", "email", "state", "district", "balance", "status", "role", "createdAt"]
+      "required": ["id", "customId", "name", "mobile", "email", "state", "district", "balance", "status", "role", "createdAt"]
     }
   },
   "auth": {
