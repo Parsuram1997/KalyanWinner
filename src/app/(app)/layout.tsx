@@ -41,7 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-0 px-2">
-          <div className="hidden md:flex items-center justify-center p-4">
+          <div className="flex items-center justify-center p-4">
              <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                 <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="object-contain" />
             </Link>
@@ -132,12 +132,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col h-dvh">
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
             <SidebarTrigger className="md:hidden" />
-            <div className="flex-1">
-               {/* This div is a placeholder to balance the flex layout */}
-            </div>
-             <div className="flex-1 flex justify-center">
-              {isClient && <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />}
-            </div>
             <div className="flex flex-1 items-center justify-end gap-2">
               <ThemeToggle />
             </div>
