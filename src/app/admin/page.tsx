@@ -36,13 +36,12 @@ export default function AdminLoginPage() {
     const userDocSnap = await getDoc(userDocRef);
 
     if (!userDocSnap.exists()) {
-      // This is the first login, create the user document in Firestore
       try {
         await setDoc(userDocRef, {
           id: user.uid,
           email: user.email,
           name: user.displayName || "Admin User",
-          role: "Admin", // Assign Admin role
+          role: "Admin", // Assign Admin role by default on first setup
           status: "Active",
           balance: 0,
           mobile: user.phoneNumber || "N/A",
@@ -54,6 +53,7 @@ export default function AdminLoginPage() {
           title: "Admin Profile Created",
           description: "Your admin profile has been set up in the database.",
         });
+        return "Admin"; // Return role after creation
       } catch (error) {
         console.error("Error creating admin profile in Firestore:", error);
         toast({
@@ -61,11 +61,11 @@ export default function AdminLoginPage() {
           title: "Database Error",
           description: "Could not create your admin profile in the database.",
         });
-        // Log out the user if the profile creation fails to avoid inconsistent state
         auth?.signOut();
-        throw error; // Propagate error to stop execution
+        throw error;
       }
     }
+    return userDocSnap.data()?.role;
   };
 
 
@@ -85,15 +85,65 @@ export default function AdminLoginPage() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      // After successful sign-in, check if it's a first-time login for this user
-      await handleFirstLoginSetup(userCredential.user);
+      // After successful sign-in, check user's role from Firestore.
+      const userDocRef = doc(firestore, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-      toast({
-        title: "Login Successful",
-        description: "You have successfully logged in.",
-      });
-      router.push("/admin/dashboard");
+      let userRole;
+      if (userDocSnap.exists()) {
+        userRole = userDocSnap.data()?.role;
+      } else {
+        // If doc doesn't exist, this might be the very first admin login.
+        // Let's create the profile and assign the role.
+         try {
+            await setDoc(userDocRef, {
+              id: user.uid,
+              email: user.email,
+              name: user.displayName || "Admin User",
+              role: "Admin", // Assign Admin role
+              status: "Active",
+              balance: 0,
+              mobile: user.phoneNumber || "N/A",
+              state: "N/A",
+              district: "N/A",
+              createdAt: serverTimestamp(),
+            });
+            userRole = "Admin";
+            toast({
+              title: "Admin Profile Created",
+              description: "Your admin profile has been set up automatically.",
+            });
+          } catch (error) {
+            console.error("Error creating admin profile in Firestore:", error);
+            toast({
+              variant: "destructive",
+              title: "Database Error",
+              description: "Could not create your admin profile in the database.",
+            });
+            auth.signOut();
+            setIsLoading(false);
+            return;
+          }
+      }
+
+      if (userRole === 'Admin') {
+        toast({
+          title: "Login Successful",
+          description: "Welcome, Admin!",
+        });
+        router.push("/admin/dashboard");
+      } else {
+        // If the user is not an admin, show an error and log them out.
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You do not have permission to access the admin panel.",
+        });
+        await auth.signOut();
+      }
+
     } catch (error: any) {
       toast({
         variant: "destructive",
