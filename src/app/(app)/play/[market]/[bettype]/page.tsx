@@ -249,8 +249,7 @@ function BetForm({
             </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-            <div className="flex gap-2 items-end">
-                <div className="flex-1 space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor={`${market}-${gameType}-digit`}>
                     {getLabel()}
                 </Label>
@@ -260,27 +259,29 @@ function BetForm({
                     value={currentNumber}
                     onChange={(e) => setCurrentNumber(e.target.value)}
                 />
-                </div>
-                <div className="w-28 space-y-2">
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor={`${market}-${gameType}-amount`}>Amount</Label>
-                <Input
-                    id={`${market}-${gameType}-amount`}
-                    type="number"
-                    placeholder="e.g., 10"
-                    value={currentAmount}
-                    onChange={(e) => setCurrentAmount(e.target.value)}
-                />
+                 <div className="flex gap-2">
+                    <Input
+                        id={`${market}-${gameType}-amount`}
+                        type="number"
+                        placeholder="e.g., 10"
+                        value={currentAmount}
+                        onChange={(e) => setCurrentAmount(e.target.value)}
+                    />
+                     <Button
+                      type="button"
+                      size="icon"
+                      onClick={handleAddBet}
+                      className="shrink-0"
+                    >
+                      <PlusCircle className="h-5 w-5" />
+                      <span className="sr-only">Add Bet</span>
+                    </Button>
                 </div>
-                <Button
-                type="button"
-                size="icon"
-                onClick={handleAddBet}
-                className="shrink-0"
-                >
-                <PlusCircle className="h-5 w-5" />
-                <span className="sr-only">Add Bet</span>
-                </Button>
-            </div>
+              </div>
 
             {bets.length > 0 && (
                 <div className="space-y-3 rounded-lg border">
