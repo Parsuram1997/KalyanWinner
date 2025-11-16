@@ -1,7 +1,7 @@
 
 'use server';
 
-import { getApp, initializeApp, getApps, App } from "firebase-admin/app";
+import { getApp, initializeApp, getApps, App, AppOptions } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
@@ -10,42 +10,17 @@ function getFirebaseAdminApp(): App {
   if (getApps().length > 0) {
     return getApp();
   }
-  // Initialize without arguments to use Application Default Credentials
-  return initializeApp();
+
+  const options: AppOptions = {};
+  if (process.env.GCLOUD_PROJECT) {
+    options.projectId = process.env.GCLOUD_PROJECT;
+  }
+  
+  // Initialize with explicit project ID if available, otherwise fall back to default.
+  // This is a more robust way to handle credentials in different environments.
+  return initializeApp(options);
 }
 
-// This function is no longer needed as password reset will be handled via email.
-// We can remove it to keep the code clean.
-/*
-export async function resetPassword(mobileNumber: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    try {
-        const adminApp = getFirebaseAdminApp();
-        const adminAuth = getAuth(adminApp);
-
-        // This logic is flawed because we need the user's real email, not a dummy one.
-        // The client-side will now handle password resets directly via Firebase SDK.
-
-        // const email = `+91${mobileNumber}@kalyanwinner.app`;
-        // const user = await adminAuth.getUserByEmail(email);
-        // await adminAuth.updateUser(user.uid, {
-        //     password: newPassword,
-        // });
-
-        // return { success: true, message: "Password updated successfully." };
-
-        return { success: false, message: "This function is deprecated." };
-
-
-    } catch (error: any) {
-        console.error("Error resetting password:", error);
-        let message = "Failed to reset password.";
-        if (error.code === 'auth/user-not-found') {
-            message = "No user found with this mobile number.";
-        }
-        return { success: false, message };
-    }
-}
-*/
 
 export async function getEmailForMobile(mobileNumber: string): Promise<{ success: boolean, email?: string, message: string }> {
     if (!mobileNumber || mobileNumber.length !== 10) {
