@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { PlusCircle, Trash2, Wallet } from "lucide-react";
@@ -21,16 +20,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-const gameTypesRow1 = ["Open", "Jodi", "Close"];
-const gameTypesRow2 = ["Single Panna", "Double Panna", "Triple Panna"];
-const gameTypesRow3 = ["Half Sangam", "Full Sangam"];
-const allGameTypes = [...gameTypesRow1, ...gameTypesRow2, ...gameTypesRow3];
-
-const gameTypeShortNames: { [key: string]: string } = {
-  "Single Panna": "SP",
-  "Double Panna": "DP",
-  "Triple Panna": "TP",
-};
+const allGameTypes = ["Open", "Jodi", "Close", "Single Panna", "Double Panna", "Triple Panna", "Half Sangam", "Full Sangam"];
 
 type Bet = {
   number: string;
@@ -223,96 +213,95 @@ function BetForm({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{gameType} Bet</CardTitle>
-          <CardDescription>
-            Add multiple bets and place them all at once for the {market}{" "}
-            market.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1 space-y-2">
-              <Label htmlFor={`${market}-${gameType}-digit`}>
-                {getLabel()}
-              </Label>
-              <Input
-                id={`${market}-${gameType}-digit`}
-                placeholder={getPlaceholder()}
-                value={currentNumber}
-                onChange={(e) => setCurrentNumber(e.target.value)}
-              />
-            </div>
-            <div className="w-28 space-y-2">
-              <Label htmlFor={`${market}-${gameType}-amount`}>Amount</Label>
-              <Input
-                id={`${market}-${gameType}-amount`}
-                type="number"
-                placeholder="e.g., 10"
-                value={currentAmount}
-                onChange={(e) => setCurrentAmount(e.target.value)}
-              />
-            </div>
-            <Button
-              type="button"
-              size="icon"
-              onClick={handleAddBet}
-              className="shrink-0"
-            >
-              <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">Add Bet</span>
-            </Button>
-          </div>
-
-          {bets.length > 0 && (
-            <div className="space-y-2 rounded-lg border p-3">
-              <div className="flex justify-between items-center">
-                <h4 className="text-sm font-medium">Your Bets</h4>
-                <div className="text-xs font-mono text-muted-foreground text-right">
-                  <div>Total: ₹{totalBetAmount}</div>
-                  <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div>
+    <Card className="w-full">
+        <form onSubmit={handleSubmit}>
+            <CardHeader>
+            <CardTitle>{gameType} Bet</CardTitle>
+            <CardDescription>
+                Add bets and place them for the {market} market.
+            </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+            <div className="flex gap-2 items-end">
+                <div className="flex-1 space-y-2">
+                <Label htmlFor={`${market}-${gameType}-digit`}>
+                    {getLabel()}
+                </Label>
+                <Input
+                    id={`${market}-${gameType}-digit`}
+                    placeholder={getPlaceholder()}
+                    value={currentNumber}
+                    onChange={(e) => setCurrentNumber(e.target.value)}
+                />
                 </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                {bets.map((bet, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50 text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="font-mono">
-                        {bet.number}
-                      </Badge>
-                      <span>₹{bet.amount}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleRemoveBet(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Remove bet</span>
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                <div className="w-28 space-y-2">
+                <Label htmlFor={`${market}-${gameType}-amount`}>Amount</Label>
+                <Input
+                    id={`${market}-${gameType}-amount`}
+                    type="number"
+                    placeholder="e.g., 10"
+                    value={currentAmount}
+                    onChange={(e) => setCurrentAmount(e.target.value)}
+                />
+                </div>
+                <Button
+                type="button"
+                size="icon"
+                onClick={handleAddBet}
+                className="shrink-0"
+                >
+                <PlusCircle className="h-5 w-5" />
+                <span className="sr-only">Add Bet</span>
+                </Button>
             </div>
-          )}
-        </CardContent>
-        <CardFooter>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={bets.length === 0}
-          >
-            Place All Bets (Total: ₹{totalBetAmount})
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+
+            {bets.length > 0 && (
+                <div className="space-y-2 rounded-lg border p-3">
+                <div className="flex justify-between items-center">
+                    <h4 className="text-sm font-medium">Your Bets</h4>
+                    <div className="text-xs font-mono text-muted-foreground text-right">
+                    <div>Total: ₹{totalBetAmount}</div>
+                    <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div>
+                    </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    {bets.map((bet, index) => (
+                    <div
+                        key={index}
+                        className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50 text-sm"
+                    >
+                        <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="font-mono">
+                            {bet.number}
+                        </Badge>
+                        <span>₹{bet.amount}</span>
+                        </div>
+                        <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRemoveBet(index)}
+                        >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Remove bet</span>
+                        </Button>
+                    </div>
+                    ))}
+                </div>
+                </div>
+            )}
+            </CardContent>
+            <CardFooter>
+            <Button
+                type="submit"
+                className="w-full"
+                disabled={bets.length === 0}
+            >
+                Place Bets for {gameType} (Total: ₹{totalBetAmount})
+            </Button>
+            </CardFooter>
+        </form>
+    </Card>
   );
 }
 
@@ -326,76 +315,34 @@ export default function PlayPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Place Your Bet</h1>
-           <p className="text-muted-foreground">Market: <span className="font-semibold text-primary">{marketName}</span></p>
-        </div>
-        <Card className="w-fit">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Wallet</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold">₹{walletBalance.toFixed(2)}</div>
-          </CardContent>
-          <CardFooter className="pt-0">
-             <Button variant="outline" size="xs" asChild>
-              <Link href="/wallet">Manage Funds</Link>
-             </Button>
-          </CardFooter>
-        </Card>
+       <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" asChild>
+                    <Link href="/play">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                </Button>
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight">Choose a Bet</h1>
+                    <p className="text-muted-foreground">Market: <span className="font-semibold text-primary">{marketName}</span></p>
+                </div>
+            </div>
+            <Card className="hidden sm:block">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Wallet</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-xl font-bold">₹{walletBalance.toFixed(2)}</div>
+            </CardContent>
+            </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-4">
-             <Button variant="outline" size="icon" asChild>
-                <Link href="/play">
-                    <ArrowLeft className="h-4 w-4" />
-                </Link>
-             </Button>
-            <div>
-                <CardTitle>Select Game Type</CardTitle>
-                <CardDescription>
-                Choose a game type for the {marketName} market.
-                </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-           <Tabs defaultValue={allGameTypes[0]} className="w-full">
-                <div className="flex flex-col gap-1 items-center">
-                <TabsList className="grid w-full grid-cols-3">
-                    {gameTypesRow1.map((type) => (
-                    <TabsTrigger key={type} value={type}>
-                        {type}
-                    </TabsTrigger>
-                    ))}
-                </TabsList>
-                <TabsList className="grid w-full grid-cols-3">
-                    {gameTypesRow2.map((type) => (
-                    <TabsTrigger key={type} value={type}>
-                        {gameTypeShortNames[type] || type}
-                    </TabsTrigger>
-                    ))}
-                </TabsList>
-                <TabsList className="grid w-full grid-cols-2">
-                    {gameTypesRow3.map((type) => (
-                    <TabsTrigger key={type} value={type}>
-                        {type}
-                    </TabsTrigger>
-                    ))}
-                </TabsList>
-                </div>
-                {allGameTypes.map((type) => (
-                <TabsContent key={type} value={type}>
-                    <BetForm gameType={type} market={marketName} walletBalance={walletBalance} />
-                </TabsContent>
-                ))}
-            </Tabs>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {allGameTypes.map((type) => (
+          <BetForm key={type} gameType={type} market={marketName} walletBalance={walletBalance} />
+        ))}
+      </div>
     </div>
   );
 }
