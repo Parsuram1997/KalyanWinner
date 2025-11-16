@@ -289,15 +289,15 @@ function BetForm({
               </div>
 
             {bets.length > 0 && (
-                <div className="space-y-3 rounded-lg border">
-                    <div className="flex justify-between items-center p-3">
+                <div className="rounded-lg border">
+                    <div className="flex justify-between items-center p-3 pb-0">
                         <h4 className="text-sm font-medium">Your Bets</h4>
                         <div className="text-xs font-mono text-muted-foreground text-right">
                         <div>Total: ₹{totalBetAmount}</div>
                         <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div>
                         </div>
                     </div>
-                    <Separator />
+                    <Separator className="mt-3" />
                      <div className="w-full pt-0">
                         <Table style={{tableLayout: 'fixed', width: '100%'}}>
                             <TableHeader>
@@ -412,3 +412,5 @@ export default function PlaceBetPage() {
     </div>
   );
 }
+
+    
