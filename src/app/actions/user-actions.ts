@@ -1,18 +1,18 @@
 
 'use server';
 
-import { getApp, initializeApp, getApps } from "firebase-admin/app";
+import { getApp, initializeApp, getApps, App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { firebaseConfig } from "@/firebase/config";
 
 // Initialize Firebase Admin SDK
-function getFirebaseAdminApp() {
+function getFirebaseAdminApp(): App {
   if (getApps().length > 0) {
     return getApp();
   }
+  // Let Firebase find credentials from environment, but specify projectId
   return initializeApp({
-    credential: undefined, // Let Firebase find credentials from environment
     projectId: firebaseConfig.projectId
   });
 }
@@ -37,8 +37,6 @@ export async function createUser(userData: {
       email,
       password: userData.password,
       displayName: userData.name,
-      // Firebase Admin SDK does not support phone number directly on creation
-      // We will store it in Firestore
     });
 
     // Create user profile in Firestore
@@ -51,6 +49,7 @@ export async function createUser(userData: {
       district: userData.district,
       balance: 0,
       status: "Active",
+      role: "User", // Set default role to 'User'
       createdAt: new Date().toISOString(),
     };
 

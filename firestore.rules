@@ -1,51 +1,13 @@
-/**
- * @fileoverview Firestore Security Rules for the Kalyan Winner application.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user-specific data (profiles, wallets, bets) and provides public read access to Kalyan results.
- * Administrative access is granted based on membership in a separate `/roles_admin/{userId}` collection.
- *
- * Data Structure:
- * - /users/{userId}: Stores user profiles, secured by owner-only access.
- * - /users/{userId}/wallet: Stores a user's wallet, secured by owner-only access.
- * - /users/{userId}/wallet/transactions/{transactionId}: Stores transactions for a wallet, secured by owner-only access.
- * - /kalyan_results/{kalyanResultId}: Stores Kalyan Matka results, publicly readable and admin-writeable.
- * - /users/{userId}/bets/{betId}: Stores user bets, secured by owner-only access.
- * - /roles_admin/{userId}: A collection to mark admin users, used to grant write access to Kalyan results. The document itself is empty; existence of the document grants admin privileges.
- *
- * Key Security Decisions:
- * - Users can only access their own data (profiles, wallets, bets).
- * - Kalyan results are publicly readable but only writable by admins.
- * - User listing is implicitly denied.
- * - Data validation is minimized in this prototyping phase, focusing on relational integrity and ownership.
- *
- * Denormalization for Authorization:
- * - User-specific data is nested under `/users/{userId}` to enable path-based authorization and avoid `get()` calls.
- * - Admin status is determined by the existence of a document in `/roles_admin/{userId}`, again avoiding data reads for authorization.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      // Admin status is determined by the 'role' field in the user's own profile.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
-    /**
-     * @description Manages user profiles. Only the user can read and write their own profile.
-     * @path /users/{userId}
-     * @allow (create) User with ID 'user123' creates their profile.
-     *   - request.auth.uid: 'user123'
-     *   - request.resource.data.id: 'user123'
-     * @allow (get, update, delete) User with ID 'user123' reads/updates/deletes their profile.
-     *   - request.auth.uid: 'user123'
-     * @deny (create) User with ID 'user123' tries to create a profile for 'user456'.
-     *   - request.auth.uid: 'user123'
-     *   - request.resource.data.id: 'user456'
-     * @deny (get, update, delete) User with ID 'user123' tries to read/update/delete profile 'user456'.
-     *   - request.auth.uid: 'user123'
-     * @principle Enforces document ownership for all operations.
-     */
     match /users/{userId} {
       function isOwner(userId) {
         return request.auth.uid == userId;
@@ -55,135 +17,28 @@ service cloud.firestore {
           return isOwner(userId) && resource != null;
       }
 
+      // Admins can get any user profile, users can only get their own.
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin(); // Allow admins to list all users.
+      // Only admins can list all users.
+      allow list: if isAdmin(); 
+      // A user can create their own profile document, ensuring the ID matches.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) || isAdmin();
-      allow delete: if isExistingOwner(userId) || isAdmin();
+      // Admins can update any user, users can only update their own.
+      allow update: if isOwner(userId) || isAdmin();
+      // Admins can delete any user, users can only delete their own.
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
-    /**
-     * @description Manages user wallets. Only the user can read and write their own wallet.
-     * @path /users/{userId}/wallet
-     * @allow (create) User with ID 'user123' creates their wallet.
-     *   - request.auth.uid: 'user123'
-     *   - request.resource.data.userId: 'user123'
-     * @allow (get, update, delete) User with ID 'user123' reads/updates/deletes their wallet.
-     *   - request.auth.uid: 'user123'
-     * @deny (create) User with ID 'user123' tries to create a wallet for 'user456'.
-     *   - request.auth.uid: 'user123'
-     *   - request.resource.data.userId: 'user456'
-     * @deny (get, update, delete) User with ID 'user123' tries to read/update/delete wallet 'user456'.
-     *   - request.auth.uid: 'user123'
-     * @principle Enforces document ownership for all operations. Validates userId on create.
-     */
-    match /users/{userId}/wallet {
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Manages transactions for a user's wallet. Only the user can read and write transactions for their wallet.
-     * @path /users/{userId}/wallet/transactions/{transactionId}
-     * @allow (create) User with ID 'user123' creates a transaction for their wallet.
-     *   - request.auth.uid: 'user123'
-     * @allow (get, update, delete) User with ID 'user123' reads/updates/deletes a transaction for their wallet.
-     *   - request.auth.uid: 'user123'
-     * @deny (create) User with ID 'user123' tries to create a transaction for wallet 'user456'.
-     *   - request.auth.uid: 'user123'
-     * @deny (get, update, delete) User with ID 'user123' tries to read/update/delete a transaction for wallet 'user456'.
-     *   - request.auth.uid: 'user123'
-     * @principle Enforces document ownership, inherited from the parent wallet.
-     */
-    match /users/{userId}/wallet/transactions/{transactionId} {
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Manages Kalyan Matka results. Publicly readable, only admins can write.
-     * @path /kalyan_results/{kalyanResultId}
-     * @allow (get, list) Any user can read Kalyan results.
-     * @allow (create, update, delete) Only admins can create, update, and delete Kalyan results.
-     *   - Admin user is determined by membership in `/roles_admin/{userId}`.
-     * @deny (create, update, delete) Non-admin user tries to create, update, or delete Kalyan results.
-     *   - request.auth.uid: 'user123' (not in /roles_admin)
-     * @principle Provides public read access and restricts write access to administrators.
-     */
     match /kalyan_results/{kalyanResultId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin() && resource != null;
-      allow delete: if isAdmin() && resource != null;
+      allow create, update, delete: if isAdmin();
     }
 
-    /**
-     * @description Manages user bets. Only the user can read and write their own bets.
-     * @path /users/{userId}/bets/{betId}
-     * @allow (create) User with ID 'user123' creates their bet.
-     *   - request.auth.uid: 'user123'
-     *   - request.resource.data.userId: 'user123'
-     * @allow (get, update, delete) User with ID 'user123' reads/updates/deletes their bet.
-     *   - request.auth.uid: 'user123'
-     * @deny (create) User with ID 'user123' tries to create a bet for 'user456'.
-     *   - request.auth.uid: 'user123'
-     *   - request.resource.data.userId: 'user456'
-     * @deny (get, update, delete) User with ID 'user123' tries to read/update/delete bet 'user456'.
-     *   - request.auth.uid: 'user123'
-     * @principle Enforces document ownership for all operations. Validates userId on create.
-     */
-    match /users/{userId}/bets/{betId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Marks users as administrators. Existence of a document grants admin privileges; content is irrelevant.
-     * @path /roles_admin/{userId}
-     * @allow (create) Allowed to allow Firebase Admin SDK to write
-     * @principle Membership in this collection grants admin rights elsewhere in the rules.
-     */
+    // This collection is no longer used for admin checks but might be used for other roles.
+    // For now, locking it down completely.
      match /roles_admin/{userId} {
-        allow get: if isAdmin();
-        allow list: if isAdmin();
-        allow create: if false;
-        allow update: if false;
-        allow delete: if false;
+        allow read, write: if false;
     }
   }
 }

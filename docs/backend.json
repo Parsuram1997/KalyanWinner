@@ -40,13 +40,18 @@
           "enum": ["Active", "Suspended", "Inactive"],
           "description": "The status of the user's account."
         },
+        "role": {
+          "type": "string",
+          "enum": ["Admin", "Enroller", "User"],
+          "description": "The role of the user in the application."
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time",
           "description": "The timestamp when the user account was created."
         }
       },
-      "required": ["id", "name", "mobile", "email", "state", "district", "balance", "status", "createdAt"]
+      "required": ["id", "name", "mobile", "email", "state", "district", "balance", "status", "role", "createdAt"]
     }
   },
   "auth": {
