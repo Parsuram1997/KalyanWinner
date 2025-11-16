@@ -39,12 +39,12 @@ export default function ChooseBetTypePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {betTypes.map((bet) => (
           <Card key={bet.slug} className="flex flex-col justify-between">
-             <CardHeader className="p-4 pb-0">
-              <CardTitle>{bet.name}</CardTitle>
-              <CardDescription>{bet.description}</CardDescription>
+             <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">{bet.name}</CardTitle>
+              <CardDescription className="text-xs">{bet.description}</CardDescription>
             </CardHeader>
-            <CardFooter className="p-4 pt-4">
-               <Button asChild className="w-full">
+            <CardFooter className="p-4 pt-2">
+               <Button asChild className="w-full" size="sm">
                 <Link href={`/play/${marketSlug}/${bet.slug}`}>
                   <Ticket className="mr-2 h-4 w-4" />
                   Place Bet
