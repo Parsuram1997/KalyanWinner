@@ -12,7 +12,7 @@ export async function createUser(userData: {
   state: string;
   district: string;
   password: any;
-  role?: 'User' | 'Enroller';
+  role?: 'User' | 'Enroller' | 'Admin';
   enrollerId?: string;
 }) {
   
@@ -46,24 +46,34 @@ export async function createUser(userData: {
 
       if (!counterDoc.exists) {
         // Initialize the counter document if it doesn't exist
-        if (role === 'Enroller') {
+         if (role === 'Enroller') {
             nextNumber = 1;
             fieldToUpdate = 'lastEnrollerNumber';
             prefix = 'KWENR';
-            transaction.set(counterRef, { lastEnrollerNumber: 1, lastUserNumber: 0 });
-        } else {
+            transaction.set(counterRef, { lastEnrollerNumber: 1, lastUserNumber: 0, lastAdminNumber: 0 });
+        } else if (role === 'Admin') {
+            nextNumber = 1;
+            fieldToUpdate = 'lastAdminNumber';
+            prefix = 'KWADM';
+            transaction.set(counterRef, { lastEnrollerNumber: 0, lastUserNumber: 0, lastAdminNumber: 1 });
+        } else { // 'User'
             nextNumber = 1;
             fieldToUpdate = 'lastUserNumber';
             prefix = 'KWUSR';
-            transaction.set(counterRef, { lastUserNumber: 1, lastEnrollerNumber: 0 });
+            transaction.set(counterRef, { lastEnrollerNumber: 0, lastUserNumber: 1, lastAdminNumber: 0 });
         }
       } else {
+        const data = counterDoc.data() || {};
         if (role === 'Enroller') {
-            nextNumber = (counterDoc.data()?.lastEnrollerNumber || 0) + 1;
+            nextNumber = (data.lastEnrollerNumber || 0) + 1;
             fieldToUpdate = 'lastEnrollerNumber';
             prefix = 'KWENR';
-        } else {
-            nextNumber = (counterDoc.data()?.lastUserNumber || 0) + 1;
+        } else if (role === 'Admin') {
+            nextNumber = (data.lastAdminNumber || 0) + 1;
+            fieldToUpdate = 'lastAdminNumber';
+            prefix = 'KWADM';
+        } else { // 'User'
+            nextNumber = (data.lastUserNumber || 0) + 1;
             fieldToUpdate = 'lastUserNumber';
             prefix = 'KWUSR';
         }
