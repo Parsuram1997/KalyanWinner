@@ -33,7 +33,7 @@ export async function createUser(userData: {
     
     // Check if a user with the same mobile number already exists in Firestore
     const mobileQuery = await adminFirestore.collection("users").where("mobile", "==", userData.mobile).get();
-    if (!mobileQuery.empty && userData.role === 'User') { // Only check for users, not enrollers with same number if needed
+    if (!mobileQuery.empty) {
         throw new Error("A user with this mobile number already exists.");
     }
 
