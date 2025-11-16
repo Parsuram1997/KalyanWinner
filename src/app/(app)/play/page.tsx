@@ -49,9 +49,15 @@ export default function MarketSelectionPage() {
           <Card key={market.slug} className="flex flex-col justify-between">
             <CardHeader className="p-4 pb-2">
               <CardTitle className="text-base">{market.name}</CardTitle>
-              <CardDescription className="flex items-center gap-1.5 text-xs">
-                <Clock className="h-3 w-3" />
-                <span>{market.open} - {market.close}</span>
+              <CardDescription className="flex flex-col text-xs">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Open:</span>
+                    <span>{market.open}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Close:</span>
+                    <span>{market.close}</span>
+                </div>
               </CardDescription>
             </CardHeader>
             <CardFooter className="p-4 pt-2">
