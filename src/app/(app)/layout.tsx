@@ -129,7 +129,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex flex-1 items-center justify-end gap-2">
               <ThemeToggle />
-              <UserNav />
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
