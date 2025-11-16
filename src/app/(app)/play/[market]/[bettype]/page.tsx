@@ -238,6 +238,8 @@ function BetForm({
     });
     setBets([]);
   };
+  
+  const isNumericOnly = !gameType.toLowerCase().includes('sangam');
 
   return (
     <Card className="w-full max-w-lg mx-auto">
@@ -258,6 +260,9 @@ function BetForm({
                     placeholder={getPlaceholder()}
                     value={currentNumber}
                     onChange={(e) => setCurrentNumber(e.target.value)}
+                    type={isNumericOnly ? "text" : "text"}
+                    inputMode={isNumericOnly ? "numeric" : "text"}
+                    pattern={isNumericOnly ? "[0-9]*" : undefined}
                 />
               </div>
 
