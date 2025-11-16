@@ -33,7 +33,7 @@ const bidData = {
   "jodi": [
       { number: "13", totalAmount: 100, totalBids: 5 },
       { number: "57", totalAmount: 300, totalBids: 12 },
-      { number"83", totalAmount: 50, totalBids: 2 },
+      { number: "83", totalAmount: 50, totalBids: 2 },
   ],
   "single-panna": [
       { number: "128", totalAmount: 50, totalBids: 1 },
