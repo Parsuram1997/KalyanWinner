@@ -40,8 +40,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-0 px-2">
-          <div className="hidden md:flex items-center justify-center">
-            
+          <div className="hidden md:flex items-center justify-center p-4">
+             <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+                <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="object-contain" />
+            </Link>
           </div>
         </SidebarHeader>
         <SidebarContent>
