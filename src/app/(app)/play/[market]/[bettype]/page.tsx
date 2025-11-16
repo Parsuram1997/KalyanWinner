@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
-import { PlusCircle, Trash2, Wallet, ArrowLeft } from "lucide-react";
+import { PlusCircle, Trash2, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -317,11 +317,6 @@ export default function PlaceBetPage() {
     <div className="flex flex-col gap-6">
        <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" asChild>
-                    <Link href={`/play/${marketSlug}`}>
-                        <ArrowLeft className="h-4 w-4" />
-                    </Link>
-                </Button>
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
                     <p className="text-muted-foreground">
