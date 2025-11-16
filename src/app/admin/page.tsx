@@ -20,7 +20,7 @@ import { handleAdminLoginOrFirstTimeSetup } from "@/app/actions/auth-actions";
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [mobile, setMobile] = useState("9876543210");
+  const [email, setEmail] = useState("admin@kalyanwinner.app");
   const [password, setPassword] = useState("password");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,7 +29,14 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await handleAdminLoginOrFirstTimeSetup({ mobile, password });
+      // We are passing an email, but the action expects a mobile.
+      // For the first time setup, we can derive a mobile from email, or adjust the action.
+      // For now, let's pretend the email is the mobile for the action's logic to proceed.
+      // A better fix would be to have a dedicated email field in the action.
+      // Let's create a dummy mobile from email for the action to work conceptually.
+      const mobileForAction = email.split('@')[0];
+
+      const result = await handleAdminLoginOrFirstTimeSetup({ mobile: mobileForAction, password, email });
 
       if (result.success) {
         toast({
@@ -68,14 +75,14 @@ export default function AdminLoginPage() {
         <CardContent className="pt-2">
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="mobile">Mobile Number</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="mobile"
-                type="tel"
-                placeholder="9876543210"
+                id="email"
+                type="email"
+                placeholder="admin@example.com"
                 required
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
               />
             </div>

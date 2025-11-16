@@ -28,13 +28,13 @@ export default function EnrollerLoginPage() {
         <CardContent className="pt-2">
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="mobile">Mobile Number</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="mobile"
-                type="tel"
-                placeholder="9876543210"
+                id="email"
+                type="email"
+                placeholder="enroller@example.com"
                 required
-                defaultValue="9876543210"
+                defaultValue="enroller@kalyanwinner.app"
               />
             </div>
             <div className="grid gap-2">
