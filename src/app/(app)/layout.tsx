@@ -123,13 +123,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col h-dvh">
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
             <SidebarTrigger className="md:hidden" />
-            <div className="md:hidden">
-              {/* This div is a placeholder to balance the flex layout when the sidebar trigger is visible */}
+            <div className="flex-1 flex justify-start">
+               {/* This div is a placeholder to balance the flex layout */}
             </div>
-             <div className="absolute left-1/2 -translate-x-1/2">
+             <div className="flex-1 flex justify-center">
               {isClient && <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain" />}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-1 items-center justify-end gap-2">
               <ThemeToggle />
             </div>
           </header>
