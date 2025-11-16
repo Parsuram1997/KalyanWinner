@@ -1,361 +1,289 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Ticket } from "lucide-react";
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Ticket, PlusCircle, Edit, Trash } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 
-// --- Mock Data Generation ---
+const initialBetTypes = [
+  { id: "1", name: "Open Digit", description: "Bet on a single number from 0-9 for the Open result.", status: "Active" },
+  { id: "2", name: "Close Digit", description: "Bet on a single number from 0-9 for the Close result.", status: "Active" },
+  { id: "3", name: "Jodi", description: "Bet on a two-digit number from 00-99.", status: "Active" },
+  { id: "4", name: "Single Panna", description: "Bet on a three-digit number with unique digits.", status: "Active" },
+  { id: "5", name: "Double Panna", description: "Bet on a three-digit number with two identical digits.", status: "Active" },
+  { id: "6", name: "Triple Panna", description: "Bet on a three-digit number with all identical digits.", status: "Active" },
+  { id: "7", name: "Half Sangam", description: "Bet on a combination of one Panna and one digit.", status: "Inactive" },
+  { id: "8", name: "Full Sangam", description: "Bet on the combination of both Open and Close Pannas.", status: "Inactive" },
+];
 
-// For Open/Close Single Digit
-const generateSingleDigitBets = () => {
-    const bets = [];
-    for (let i = 0; i < 10; i++) {
-        bets.push({
-            digit: i.toString(),
-            amount: Math.floor(Math.random() * 5000) + 100,
-        });
-    }
-    return bets;
-};
+type BetType = typeof initialBetTypes[0];
 
-// For Jodi
-const generateJodiBets = () => {
-    const bets = [];
-    for (let i = 0; i < 100; i++) {
-        bets.push({
-            jodi: i.toString().padStart(2, '0'),
-            amount: Math.floor(Math.random() * 1000) + 5,
-        });
-    }
-    return bets;
-};
+export default function ManageBetTypesPage() {
+  const { toast } = useToast();
+  const [betTypes, setBetTypes] = useState(initialBetTypes);
+  const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedBetType, setSelectedBetType] = useState<BetType | null>(null);
 
-// For Panna (Single, Double, Triple)
-const generatePannaBets = (type: "single" | "double" | "triple") => {
-    const bets = [];
-    const generatedPannas = new Set<string>();
-
-    const isValidPanna = (panna: string) => {
-        const digits = panna.split('');
-        if (type === "single") {
-            return digits[0] !== digits[1] && digits[1] !== digits[2] && digits[0] !== digits[2];
-        }
-        if (type === "double") {
-            const d = digits.map(Number).sort();
-            return (d[0] === d[1] && d[1] !== d[2]) || (d[1] === d[2] && d[0] !== d[1]);
-        }
-        if (type === "triple") {
-            return digits[0] === digits[1] && digits[1] === digits[2];
-        }
-        return false;
+  const handleAddBetType = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const newBetType = {
+      id: (betTypes.length + 1).toString(),
+      name: formData.get("name") as string,
+      description: formData.get("description") as string,
+      status: "Active",
     };
-    
-    let attempts = 0;
-    while (bets.length < 15 && attempts < 1000) {
-        let panna;
-        if (type === "triple") {
-            const digit = Math.floor(Math.random() * 10);
-            panna = `${digit}${digit}${digit}`;
-        } else {
-             panna = (Math.floor(Math.random() * 900) + 100).toString();
-             // Ensure panna is 3 digits, handling cases like "012"
-             while (panna.length < 3) {
-                panna = `0${panna}`;
-             }
-        }
+    setBetTypes([...betTypes, newBetType]);
+    setAddDialogOpen(false);
+    toast({ title: "Bet Type Added", description: `${newBetType.name} has been added.` });
+  };
+  
+  const handleEditBetType = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedBetType) return;
 
-        if (isValidPanna(panna) && !generatedPannas.has(panna)) {
-            generatedPannas.add(panna);
-            bets.push({
-                panna: panna,
-                amount: Math.floor(Math.random() * 500) + 10,
-            });
-        }
-        attempts++;
-    }
-    return bets.sort((a,b) => parseInt(a.panna) - parseInt(b.panna));
-};
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const updatedBetType = {
+      ...selectedBetType,
+      name: formData.get("name") as string,
+      description: formData.get("description") as string,
+    };
+    setBetTypes(betTypes.map(bt => bt.id === updatedBetType.id ? updatedBetType : bt));
+    setEditDialogOpen(false);
+    toast({ title: "Bet Type Updated", description: `${updatedBetType.name} has been updated.` });
+  };
+  
+  const handleDeleteBetType = (betTypeId: string) => {
+    setBetTypes(betTypes.filter(bt => bt.id !== betTypeId));
+    toast({ variant: "destructive", title: "Bet Type Deleted", description: "The bet type has been removed." });
+  };
+  
+  const toggleBetTypeStatus = (betTypeId: string) => {
+    setBetTypes(betTypes.map(bt => bt.id === betTypeId ? { ...bt, status: bt.status === "Active" ? "Inactive" : "Active" } : bt));
+  }
 
+  const openEditDialog = (betType: BetType) => {
+    setSelectedBetType(betType);
+    setEditDialogOpen(true);
+  }
 
-// For Sangam (Half/Full)
-const generateSangamBets = (isFullSangam = false) => {
-     const bets = [];
-     for (let i = 0; i < 15; i++) {
-        let openPanna = (Math.floor(Math.random() * 900) + 100).toString();
-        let closeDigitOrPanna = isFullSangam 
-            ? (Math.floor(Math.random() * 900) + 100).toString() 
-            : (Math.floor(Math.random() * 10)).toString();
-        
-        bets.push({
-            sangam: `${openPanna} x ${closeDigitOrPanna}`,
-            amount: Math.floor(Math.random() * 2000) + 50,
-        });
-     }
-     return bets;
-}
-
-
-// --- Components for each Tab ---
-
-const SingleDigitTable = ({ data, type }: { data: { digit: string; amount: number; }[], type: string }) => (
-    <Card className="mt-4">
-        <CardHeader>
-            <CardTitle>{type} Digit Bet Amounts</CardTitle>
-            <CardDescription>Total amount placed on each digit for {type}.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-1/2">Digit</TableHead>
-                        <TableHead className="w-1/2 text-right">Total Amount</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {data.map((bet) => (
-                        <TableRow key={bet.digit}>
-                            <TableCell className="font-mono font-bold text-lg py-1">{bet.digit}</TableCell>
-                            <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
-
-const JodiTable = ({ data }: { data: { jodi: string; amount: number }[] }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
-  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
-
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return data.slice(startIndex, endIndex);
-  }, [data, currentPage]);
-
-  return (
-    <Card className="mt-4">
-      <CardHeader>
-        <CardTitle>Jodi Bet Amounts</CardTitle>
-        <CardDescription>Total amount placed on each Jodi number (00-99).</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Jodi</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedData.map((bet) => (
-              <TableRow key={bet.jodi}>
-                <TableCell className="font-mono font-bold py-1">{bet.jodi}</TableCell>
-                <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-       <CardFooter className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
-          </CardFooter>
-    </Card>
-  );
-};
-
-const PannaTable = ({ data, type }: { data: { panna: string; amount: number; }[], type: string }) => (
-     <Card className="mt-4">
-        <CardHeader>
-            <CardTitle>{type} Bet Amounts</CardTitle>
-            <CardDescription>Total amount placed on each {type} number.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-1/2">Panna</TableHead>
-                        <TableHead className="w-1/2 text-right">Total Amount</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {data.map((bet, index) => (
-                        <TableRow key={index}>
-                            <TableCell className="font-mono font-bold py-1">{bet.panna}</TableCell>
-                            <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-)
-
-const SangamTable = ({ data, type }: { data: { sangam: string; amount: number; }[], type: string }) => (
-    <Card className="mt-4">
-        <CardHeader>
-            <CardTitle>{type} Bet Amounts</CardTitle>
-            <CardDescription>Total amount placed on each {type}.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-1/2">{type === 'Half Sangam' ? 'Open Panna x Close Digit' : 'Open Panna x Close Panna'}</TableHead>
-                        <TableHead className="w-1/2 text-right">Total Amount</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {data.map((bet, index) => (
-                        <TableRow key={index}>
-                            <TableCell className="font-mono font-bold py-1">{bet.sangam}</TableCell>
-                            <TableCell className="text-right py-1">₹{bet.amount.toLocaleString()}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
-
-const MarketBetSummary = ({ marketName, dateFilter }: { marketName: string, dateFilter: string }) => {
-    const [openBets, setOpenBets] = useState<ReturnType<typeof generateSingleDigitBets>>([]);
-    const [closeBets, setCloseBets] = useState<ReturnType<typeof generateSingleDigitBets>>([]);
-    const [jodiBets, setJodiBets] = useState<ReturnType<typeof generateJodiBets>>([]);
-    const [singlePannaBets, setSinglePannaBets] = useState<ReturnType<typeof generatePannaBets>>([]);
-    const [doublePannaBets, setDoublePannaBets] = useState<ReturnType<typeof generatePannaBets>>([]);
-    const [triplePannaBets, setTriplePannaBets] = useState<ReturnType<typeof generatePannaBets>>([]);
-    const [halfSangamBets, setHalfSangamBets] = useState<ReturnType<typeof generateSangamBets>>([]);
-    const [fullSangamBets, setFullSangamBets] = useState<ReturnType<typeof generateSangamBets>>([]);
-
-    useEffect(() => {
-        // In a real app, you would fetch data based on marketName AND dateFilter
-        console.log(`Fetching data for ${marketName} on ${dateFilter}`);
-        setOpenBets(generateSingleDigitBets());
-        setCloseBets(generateSingleDigitBets());
-        setJodiBets(generateJodiBets());
-        setSinglePannaBets(generatePannaBets("single"));
-        setDoublePannaBets(generatePannaBets("double"));
-        setTriplePannaBets(generatePannaBets("triple"));
-        setHalfSangamBets(generateSangamBets(false));
-        setFullSangamBets(generateSangamBets(true));
-    }, [marketName, dateFilter]);
-
-    return (
-        <Tabs defaultValue="open" className="mt-4">
-            <div className="flex flex-col gap-1 items-center">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="open">Open</TabsTrigger>
-                    <TabsTrigger value="close">Close</TabsTrigger>
-                    <TabsTrigger value="jodi">Jodi</TabsTrigger>
-                </TabsList>
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="single-panna">SP</TabsTrigger>
-                    <TabsTrigger value="double-panna">DP</TabsTrigger>
-                    <TabsTrigger value="triple-panna">TP</TabsTrigger>
-                </TabsList>
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="half-sangam">Half Sangam</TabsTrigger>
-                    <TabsTrigger value="full-sangam">Full Sangam</TabsTrigger>
-                </TabsList>
-            </div>
-            
-            <TabsContent value="open">
-                <SingleDigitTable data={openBets} type="Open" />
-            </TabsContent>
-            
-            <TabsContent value="close">
-                 <SingleDigitTable data={closeBets} type="Close" />
-            </TabsContent>
-
-            <TabsContent value="jodi">
-                <JodiTable data={jodiBets} />
-            </TabsContent>
-
-            <TabsContent value="single-panna">
-                <PannaTable data={singlePannaBets} type="Single Panna" />
-            </TabsContent>
-            
-            <TabsContent value="double-panna">
-                <PannaTable data={doublePannaBets} type="Double Panna" />
-            </TabsContent>
-
-            <TabsContent value="triple-panna">
-                <PannaTable data={triplePannaBets} type="Triple Panna" />
-            </TabsContent>
-
-            <TabsContent value="half-sangam">
-                <SangamTable data={halfSangamBets} type="Half Sangam" />
-            </TabsContent>
-
-            <TabsContent value="full-sangam">
-                 <SangamTable data={fullSangamBets} type="Full Sangam" />
-            </TabsContent>
-        </Tabs>
-    );
-};
-
-
-export default function ManageBetsPage() {
-  const [dateFilter, setDateFilter] = useState("today");
   return (
     <div className="flex flex-col gap-6">
-       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Ticket className="h-6 w-6" />
-            <span>Betting Summary</span>
-          </CardTitle>
-          <CardDescription>
-            An overview of total bets placed across different game types and numbers for each market.
-          </CardDescription>
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Ticket className="h-6 w-6" />
+              <span>Manage Bet Types</span>
+            </CardTitle>
+            <CardDescription>
+              Add, edit, or disable game types for users.
+            </CardDescription>
+          </div>
+           <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add Bet Type
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Bet Type</DialogTitle>
+                    <DialogDescription>
+                      Fill in the details for the new bet type.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddBetType} className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="name" className="text-right">Name</Label>
+                      <Input id="name" name="name" className="col-span-3" required />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="description" className="text-right">Description</Label>
+                      <Textarea id="description" name="description" className="col-span-3" required />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit">Add Bet Type</Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
         </CardHeader>
         <CardContent>
-             <Tabs defaultValue="today" onValueChange={setDateFilter} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                    <TabsTrigger value="today">Today</TabsTrigger>
-                    <TabsTrigger value="yesterday">Yesterday</TabsTrigger>
-                </TabsList>
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Bet Type</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {betTypes.map((betType) => (
+                  <TableRow key={betType.id}>
+                    <TableCell className="font-medium">{betType.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{betType.description}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={betType.status === "Active"}
+                          onCheckedChange={() => toggleBetTypeStatus(betType.id)}
+                          aria-label={`Toggle ${betType.name} status`}
+                        />
+                        <Badge variant={betType.status === "Active" ? "secondary" : "outline"}>
+                          {betType.status}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="flex gap-2 justify-end">
+                       <Button variant="outline" size="icon" onClick={() => openEditDialog(betType)}><Edit className="h-4 w-4" /></Button>
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the '{betType.name}' bet type.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteBetType(betType.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          
+           {/* Mobile Cards */}
+            <div className="grid gap-4 md:hidden">
+              {betTypes.map((betType) => (
+                <Card key={betType.id}>
+                  <CardHeader>
+                      <div className="flex justify-between items-start">
+                          <CardTitle>{betType.name}</CardTitle>
+                          <Badge variant={betType.status === "Active" ? "secondary" : "outline"}>
+                              {betType.status}
+                          </Badge>
+                      </div>
+                      <CardDescription>{betType.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Status:</span>
+                          <Switch
+                            checked={betType.status === "Active"}
+                            onCheckedChange={() => toggleBetTypeStatus(betType.id)}
+                            aria-label={`Toggle ${betType.name} status`}
+                          />
+                      </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2">
+                       <Button variant="outline" size="sm" onClick={() => openEditDialog(betType)}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-2"/>Delete</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the '{betType.name}' bet type.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteBetType(betType.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                  </CardFooter>
+                </Card>
+              ))}
+          </div>
 
-                <Tabs defaultValue="kalyan-day">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
-                        <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="kalyan-day">
-                        <MarketBetSummary marketName="Kalyan Day" dateFilter={dateFilter} />
-                    </TabsContent>
-                    <TabsContent value="kalyan-night">
-                        <MarketBetSummary marketName="Kalyan Night" dateFilter={dateFilter} />
-                    </TabsContent>
-                </Tabs>
-            </Tabs>
         </CardContent>
       </Card>
+      
+       {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Bet Type</DialogTitle>
+            <DialogDescription>
+              Update the details for {selectedBetType?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditBetType} className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">Name</Label>
+              <Input id="edit-name" name="name" defaultValue={selectedBetType?.name} className="col-span-3" required />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-description" className="text-right">Description</Label>
+              <Textarea id="edit-description" name="description" defaultValue={selectedBetType?.description} className="col-span-3" required />
+            </div>
+            <DialogFooter>
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-    
