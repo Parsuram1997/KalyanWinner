@@ -1150,6 +1150,7 @@ export default function ManageEnrollersPage() {
                     </TableCell>
                     <TableCell>
                       <div>{enroller.email}</div>
+                      <div className="text-sm text-muted-foreground">{enroller.mobile}</div>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -1207,6 +1208,7 @@ export default function ManageEnrollersPage() {
                         <span className="text-muted-foreground">Contact:</span>
                         <div className="text-right">
                             <p>{enroller.email}</p>
+                            <p className="text-muted-foreground">{enroller.mobile}</p>
                         </div>
                     </div>
                 </div>
