@@ -114,12 +114,16 @@
           "type": "string",
           "description": "The name of the game type (e.g., Single Digit)."
         },
-        "rate": {
-          "type": "string",
-          "description": "The payout rate description (e.g., 10 ka 100)."
+        "betAmount": {
+          "type": "number",
+          "description": "The standard amount for the bet (e.g., 10)."
+        },
+        "payoutAmount": {
+          "type": "number",
+          "description": "The amount paid out for a winning bet of the standard amount (e.g., 950)."
         }
       },
-      "required": ["name", "rate"]
+      "required": ["name", "betAmount", "payoutAmount"]
     },
     "KalyanResult": {
       "title": "Kalyan Result",
@@ -128,7 +132,7 @@
       "properties": {
         "marketName": {
           "type": "string",
-          "description": "The name of the market the result is for (e.g., Kalyan Day)."
+          "description": "The name of the market the result is for (eg., Kalyan Day)."
         },
         "date": {
           "type": "string",

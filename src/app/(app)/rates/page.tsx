@@ -17,19 +17,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Coins } from "lucide-react";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection } from 'firebase/firestore';
 
-const rates = [
-    { game: "Single Digit (Ank)", rate: "₹95" },
-    { game: "Jodi", rate: "₹950" },
-    { game: "Single Panna (SP)", rate: "₹1,400" },
-    { game: "Double Panna (DP)", rate: "₹2,800" },
-    { game: "Triple Panna (TP)", rate: "₹7,000" },
-    { game: "Half Sangam", rate: "₹10,000" },
-    { game: "Full Sangam", rate: "₹1,00,000" },
-];
-
+type GameRate = {
+  id: string;
+  name: string;
+  betAmount: number;
+  payoutAmount: number;
+};
 
 export default function RatesPage() {
+  const firestore = useFirestore();
+  const ratesQuery = useMemoFirebase(() => firestore ? collection(firestore, "game_rates") : null, [firestore]);
+  const { data: rates, isLoading } = useCollection<GameRate>(ratesQuery);
+
   return (
     <div className="flex justify-center items-start p-4">
       <Card className="w-full max-w-2xl">
@@ -39,7 +41,7 @@ export default function RatesPage() {
             <span>Kalyan Matka Payout Rates</span>
           </CardTitle>
           <CardDescription>
-            The rates below show the payout for a winning bet of ₹10.
+            The rates below show the payout for a winning bet.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -52,11 +54,15 @@ export default function RatesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rates.map((item) => (
-                  <TableRow key={item.game}>
-                    <TableCell className="font-medium text-base">{item.game}</TableCell>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center">Loading rates...</TableCell>
+                  </TableRow>
+                ) : rates?.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium text-base">{item.name}</TableCell>
                     <TableCell className="text-right font-semibold text-primary text-base">
-                      {item.rate}
+                      ₹{item.betAmount} ka ₹{item.payoutAmount}
                     </TableCell>
                   </TableRow>
                 ))}

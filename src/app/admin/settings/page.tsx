@@ -18,8 +18,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 type GameRate = {
   id: string;
   name: string;
-  rate: string;
+  betAmount: number;
+  payoutAmount: number;
 };
+
+type RateValues = {
+    [key: string]: {
+        betAmount: number;
+        payoutAmount: number;
+    }
+}
 
 export default function SettingsPage() {
     const { toast } = useToast();
@@ -27,21 +35,28 @@ export default function SettingsPage() {
     const ratesQuery = useMemoFirebase(() => firestore ? collection(firestore, "game_rates") : null, [firestore]);
     const { data: rates, isLoading } = useCollection<GameRate>(ratesQuery);
 
-    const [rateValues, setRateValues] = useState<{[key: string]: string}>({});
+    const [rateValues, setRateValues] = useState<RateValues>({});
     const [isAddDialogOpen, setAddDialogOpen] = useState(false);
 
     useEffect(() => {
         if (rates) {
             const initialValues = rates.reduce((acc, rate) => {
-                acc[rate.id] = rate.rate;
+                acc[rate.id] = { betAmount: rate.betAmount, payoutAmount: rate.payoutAmount };
                 return acc;
-            }, {} as {[key: string]: string});
+            }, {} as RateValues);
             setRateValues(initialValues);
         }
     }, [rates]);
 
-    const handleInputChange = (id: string, value: string) => {
-        setRateValues(prev => ({...prev, [id]: value}));
+    const handleInputChange = (id: string, field: 'betAmount' | 'payoutAmount', value: string) => {
+        const numValue = parseInt(value, 10) || 0;
+        setRateValues(prev => ({
+            ...prev,
+            [id]: {
+                ...prev[id],
+                [field]: numValue
+            }
+        }));
     }
 
     const handleAddRate = async (e: FormEvent) => {
@@ -49,15 +64,16 @@ export default function SettingsPage() {
         const form = e.currentTarget as HTMLFormElement;
         const formData = new FormData(form);
         const name = formData.get('new-name') as string;
-        const rate = formData.get('new-rate') as string;
+        const betAmount = parseInt(formData.get('new-betAmount') as string, 10);
+        const payoutAmount = parseInt(formData.get('new-payoutAmount') as string, 10);
 
-        if (!name || !rate) {
-            toast({ variant: "destructive", title: "Missing fields", description: "Please provide both name and rate." });
+        if (!name || isNaN(betAmount) || isNaN(payoutAmount)) {
+            toast({ variant: "destructive", title: "Missing fields", description: "Please provide name and valid amounts." });
             return;
         }
 
         try {
-            await createGameRate({ name, rate });
+            await createGameRate({ name, betAmount, payoutAmount });
             toast({ title: "Rate Added", description: "The new game rate has been added." });
             setAddDialogOpen(false);
         } catch (error: any) {
@@ -84,8 +100,10 @@ export default function SettingsPage() {
         if (!rates) return;
 
         const updatePromises = rates.map(rate => {
-            if (rate.rate !== rateValues[rate.id]) {
-                return updateGameRate(rate.id, { rate: rateValues[rate.id] });
+            const currentDbRate = { betAmount: rate.betAmount, payoutAmount: rate.payoutAmount };
+            const currentUiRate = rateValues[rate.id];
+            if (currentDbRate.betAmount !== currentUiRate.betAmount || currentDbRate.payoutAmount !== currentUiRate.payoutAmount) {
+                return updateGameRate(rate.id, currentUiRate);
             }
             return Promise.resolve();
         });
@@ -133,8 +151,12 @@ export default function SettingsPage() {
                             <Input id="new-name" name="new-name" placeholder="e.g., Single Digit" className="col-span-3" required />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="new-rate" className="text-right">Rate</Label>
-                            <Input id="new-rate" name="new-rate" placeholder="e.g., ₹95" className="col-span-3" required />
+                            <Label htmlFor="new-betAmount" className="text-right">Bet Amount</Label>
+                            <Input id="new-betAmount" name="new-betAmount" type="number" placeholder="e.g., 10" className="col-span-3" required />
+                        </div>
+                         <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="new-payoutAmount" className="text-right">Payout Amount</Label>
+                            <Input id="new-payoutAmount" name="new-payoutAmount" type="number" placeholder="e.g., 950" className="col-span-3" required />
                         </div>
                         <DialogFooter>
                             <Button type="submit">Add Rate</Button>
@@ -146,18 +168,26 @@ export default function SettingsPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
             {isLoading && Array.from({ length: 7 }).map((_, index) => (
-                 <div key={index} className="grid grid-cols-3 items-center gap-4">
+                 <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] items-center gap-4">
                     <Skeleton className="h-6 w-32 col-span-1" />
                     <Skeleton className="h-10 w-full col-span-2" />
                 </div>
             ))}
             {rates?.map((rate) => (
-              <div key={rate.id} className="grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] items-center gap-4">
+              <div key={rate.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] items-center gap-4">
                 <Label htmlFor={`rate-${rate.id}`} className="text-base text-left md:text-right">{rate.name}</Label>
                 <Input 
-                    id={`rate-${rate.id}`} 
-                    value={rateValues[rate.id] || ''}
-                    onChange={(e) => handleInputChange(rate.id, e.target.value)}
+                    id={`betAmount-${rate.id}`} 
+                    type="number"
+                    value={rateValues[rate.id]?.betAmount || 0}
+                    onChange={(e) => handleInputChange(rate.id, 'betAmount', e.target.value)}
+                    className="text-base" 
+                />
+                 <Input 
+                    id={`payoutAmount-${rate.id}`} 
+                    type="number"
+                    value={rateValues[rate.id]?.payoutAmount || 0}
+                    onChange={(e) => handleInputChange(rate.id, 'payoutAmount', e.target.value)}
                     className="text-base" 
                 />
                 <AlertDialog>

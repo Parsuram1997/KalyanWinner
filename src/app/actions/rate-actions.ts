@@ -4,7 +4,7 @@
 import { firestore } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 
-export async function createGameRate(rateData: { name: string; rate: string }) {
+export async function createGameRate(rateData: { name: string; betAmount: number; payoutAmount: number }) {
   try {
     await firestore.collection("game_rates").add(rateData);
     revalidatePath("/admin/settings");
@@ -16,8 +16,8 @@ export async function createGameRate(rateData: { name: string; rate: string }) {
 }
 
 export async function updateGameRate(rateId: string, rateData: {
-  name?: string;
-  rate?: string;
+  betAmount?: number;
+  payoutAmount?: number;
 }) {
   try {
     await firestore.collection("game_rates").doc(rateId).update(rateData);
