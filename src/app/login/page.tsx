@@ -30,7 +30,7 @@ export default function LoginPage() {
   const firestore = useFirestore();
 
   const [view, setView] = useState<View>("login");
-  const [mobileNumber, setMobileNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,33 +41,26 @@ export default function LoginPage() {
       setIsLoading(false);
       return;
     }
-     if (mobileNumber.length !== 10) {
+     if (!email) {
       toast({
         variant: "destructive",
-        title: "Invalid Mobile Number",
-        description: "Please enter a valid 10-digit mobile number.",
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
       });
       setIsLoading(false);
       return;
     }
 
     try {
-      const emailResult = await getEmailForMobile(mobileNumber);
-      if (!emailResult.success || !emailResult.email) {
-        toast({ variant: "destructive", title: "User Not Found", description: emailResult.message });
-        setIsLoading(false);
-        return;
-      }
-      
-      await sendPasswordResetEmail(auth, emailResult.email);
+      await sendPasswordResetEmail(auth, email);
       toast({
         title: "Password Reset Email Sent",
-        description: `A link to reset your password has been sent to your registered email address.`,
+        description: `A link to reset your password has been sent to ${email}.`,
       });
       setView("login");
     } catch (error: any) {
       console.error(error);
-      toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the mobile number is correct." });
+      toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the email is correct." });
     } finally {
       setIsLoading(false);
     }
@@ -82,33 +75,11 @@ export default function LoginPage() {
       setIsLoading(false);
       return;
     }
-
-    if (mobileNumber.length !== 10) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Mobile Number",
-        description: "Please enter a valid 10-digit mobile number.",
-      });
-      setIsLoading(false);
-      return;
-    }
     
     try {
-        // Step 1: Get the real email from the mobile number via a Server Action
-        const emailResult = await getEmailForMobile(mobileNumber);
-        if (!emailResult.success || !emailResult.email) {
-             toast({ variant: "destructive", title: "Login Failed", description: emailResult.message });
-             setIsLoading(false);
-             return;
-        }
-
-        const email = emailResult.email;
-        
-        // Step 2: Attempt to sign in with the retrieved email and password
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Step 3: Verify the user's role from Firestore
         const userDocRef = doc(firestore, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
 
@@ -129,7 +100,7 @@ export default function LoginPage() {
     } catch (error: any) {
         let description = "An unexpected error occurred during login.";
         if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-            description = "Invalid mobile number or password.";
+            description = "Invalid email or password.";
         }
         toast({ variant: "destructive", title: "Login Failed", description: description });
     } finally {
@@ -147,7 +118,7 @@ export default function LoginPage() {
                 {view === 'login' ? "User Login" : "Forgot Password"}
             </CardTitle>
             <CardDescription>
-                 {view === 'login' ? "Enter your mobile number and password to login." : "Enter your registered mobile number to receive a password reset link on your email."}
+                 {view === 'login' ? "Enter your email and password to login." : "Enter your registered email to receive a password reset link."}
             </CardDescription>
           </div>
         </CardHeader>
@@ -155,20 +126,16 @@ export default function LoginPage() {
             {view === 'login' && (
                 <form onSubmit={handleSubmit} className="grid gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="phone">Mobile Number</Label>
-                        <div className="flex items-center">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm h-10">+91</span>
-                            <Input
-                                id="phone"
-                                type="tel"
-                                placeholder="9876543210"
-                                required
-                                value={mobileNumber}
-                                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0,10))}
-                                disabled={isLoading}
-                                className="rounded-l-none"
-                            />
-                        </div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={isLoading}
+                        />
                     </div>
                     <div className="grid gap-2">
                         <div className="flex items-center">
@@ -195,20 +162,16 @@ export default function LoginPage() {
             {view === 'forgot_password' && (
                 <div className="grid gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="reset-phone">Mobile Number</Label>
-                        <div className="flex items-center">
-                            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm h-10">+91</span>
-                            <Input
-                                id="reset-phone"
-                                type="tel"
-                                placeholder="9876543210"
-                                required
-                                value={mobileNumber}
-                                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0,10))}
-                                disabled={isLoading}
-                                className="rounded-l-none"
-                            />
-                        </div>
+                        <Label htmlFor="reset-email">Email</Label>
+                        <Input
+                            id="reset-email"
+                            type="email"
+                            placeholder="m@example.com"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={isLoading}
+                        />
                     </div>
                     <Button onClick={handleForgotPassword} className="w-full" disabled={isLoading}>
                     {isLoading ? 'Sending Link...' : 'Send Password Reset Link'}
