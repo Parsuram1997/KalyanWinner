@@ -58,6 +58,14 @@
             "type": "string",
             "enum": ["Admin", "Enroller", "Self"],
             "description": "Indicates who created the user account."
+        },
+        "enrollerId": {
+          "type": "string",
+          "description": "If created by an enroller, this holds the enroller's UID."
+        },
+        "commissionPaid": {
+          "type": "boolean",
+          "description": "Indicates if the commission for this user's first qualifying deposit has been paid to the enroller."
         }
       },
       "required": ["id", "customId", "name", "mobile", "email", "state", "district", "balance", "status", "role", "createdAt"]
@@ -206,7 +214,7 @@
         },
         "type": {
           "type": "string",
-          "enum": ["Deposit", "Withdrawal", "Bet", "Win"],
+          "enum": ["Deposit", "Withdrawal", "Bet", "Win", "Commission"],
           "description": "The type of transaction."
         },
         "amount": {

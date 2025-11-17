@@ -24,6 +24,7 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
         if (!userDoc.exists) {
             throw new Error("User not found.");
         }
+        const userData = userDoc.data()!;
 
         const transactionDoc = await transaction.get(transactionRef);
         if (!transactionDoc.exists || transactionDoc.data()?.status !== 'Pending') {
@@ -37,8 +38,30 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
             finalStatus = 'Completed';
             if (txnData?.type === 'Deposit') {
                  transaction.update(userRef, { balance: FieldValue.increment(amount) });
+
+                 // Check for enroller commission logic
+                 if (userData.enrollerId && !userData.commissionPaid && amount >= 500) {
+                    const enrollerRef = firestore.collection('users').doc(userData.enrollerId);
+                    const commissionAmount = 100;
+
+                    // Credit enroller and create a commission transaction for them
+                    transaction.update(enrollerRef, { balance: FieldValue.increment(commissionAmount) });
+                    const commissionTxnRef = firestore.collection('transactions').doc(); // New transaction for enroller
+                    transaction.set(commissionTxnRef, {
+                        userId: userData.enrollerId,
+                        amount: commissionAmount,
+                        type: 'Commission',
+                        status: 'Completed',
+                        date: new Date().toISOString(),
+                        description: `Commission for enrolling user ${userData.name} (${userData.customId})`,
+                    });
+                    
+                    // Mark commission as paid for the user
+                    transaction.update(userRef, { commissionPaid: true });
+                 }
             } else if (txnData?.type === 'Withdrawal') {
-                 transaction.update(userRef, { balance: FieldValue.increment(-amount) });
+                 // The balance for withdrawal is already decremented when the request is made by enroller
+                 // So we don't need to do anything here.
             }
         } else { // Rejected
              if (txnData?.type === 'Withdrawal') {

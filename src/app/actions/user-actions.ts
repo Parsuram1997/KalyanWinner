@@ -126,10 +126,7 @@ export async function createUser(userData: {
       if (userData.enrollerId) {
           userProfile.enrollerId = userData.enrollerId;
           userProfile.createdBy = 'Enroller';
-
-          // Credit 100 to the enroller's balance - MOVED INSIDE THE TRANSACTION
-          const enrollerRef = firestore.collection("users").doc(userData.enrollerId);
-          transaction.update(enrollerRef, { balance: FieldValue.increment(100) });
+          userProfile.commissionPaid = false; // Initialize commission status
       }
       
       transaction.set(firestore.collection("users").doc(userRecord.uid), userProfile);
