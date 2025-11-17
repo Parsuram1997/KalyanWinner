@@ -44,9 +44,8 @@ service cloud.firestore {
     }
 
     match /kalyan_results/{kalyanResultId} {
-      allow get: if true;
-      allow list: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // This collection is no longer used for admin checks but might be used for other roles.
@@ -56,3 +55,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

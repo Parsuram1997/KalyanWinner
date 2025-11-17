@@ -104,6 +104,35 @@
         }
       },
       "required": ["name", "description", "status"]
+    },
+    "KalyanResult": {
+      "title": "Kalyan Result",
+      "description": "Represents a declared result for a specific market and date.",
+      "type": "object",
+      "properties": {
+        "marketName": {
+          "type": "string",
+          "description": "The name of the market the result is for (e.g., Kalyan Day)."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The date for which the result is declared."
+        },
+        "openPanna": {
+          "type": "string",
+          "description": "The 3-digit opening panna."
+        },
+        "closePanna": {
+          "type": "string",
+          "description": "The 3-digit closing panna."
+        },
+        "jodi": {
+          "type": "string",
+          "description": "The 2-digit jodi, derived from the pannas."
+        }
+      },
+      "required": ["marketName", "date", "openPanna", "closePanna", "jodi"]
     }
   },
   "auth": {
@@ -142,7 +171,19 @@
           },
           "description": "Stores the different types of bets available. Publicly readable, admin writable."
         }
+      },
+      {
+        "path": "/kalyan_results/{kalyanResultId}",
+        "definition": {
+          "entityName": "KalyanResult",
+          "schema": {
+            "$ref": "#/backend/entities/KalyanResult"
+          },
+          "description": "Stores declared game results. Publicly readable, admin writable."
+        }
       }
     ]
   }
 }
+
+    
