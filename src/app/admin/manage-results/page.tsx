@@ -4,29 +4,35 @@
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
 import { ClipboardList } from "lucide-react";
 import Link from "next/link";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const markets = [
-  { name: "Kalyan Day", slug: "kalyan-day" },
-  { name: "Kalyan Night", slug: "kalyan-night" },
-  { name: "Time Bazar", slug: "time-bazar" },
-  { name: "Madhur Day", slug: "madhur-day" },
-  { name: "Madhur Night", slug: "madhur-night" },
-  { name: "Milan Day", slug: "milan-day" },
-  { name: "Milan Night", slug: "milan-night" },
-  { name: "Rajdhani Day", slug: "rajdhani-day" },
-  { name: "Rajdhani Night", slug: "rajdhani-night" },
-  { name: "Main Bazar", slug: "main-bazar" },
-];
+type Market = {
+  id: string;
+  name: string;
+  slug: string;
+};
 
 export default function SelectMarketForResultsPage() {
+  const firestore = useFirestore();
+  const activeMarketsQuery = useMemoFirebase(
+    () =>
+      firestore
+        ? query(collection(firestore, "markets"), where("status", "==", "Active"))
+        : null,
+    [firestore]
+  );
+  const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery);
+
+  const generateSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+
   return (
     <div className="flex flex-col gap-6">
       <div className="space-y-1">
@@ -35,22 +41,38 @@ export default function SelectMarketForResultsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {markets.map((market) => (
-          <Card key={market.slug}>
-            <CardHeader>
-              <CardTitle>{market.name}</CardTitle>
-            </CardHeader>
-            <CardFooter>
-               <Button asChild className="w-full">
-                <Link href={`/admin/manage-results/${market.slug}`}>
-                  <ClipboardList className="mr-2 h-4 w-4" />
-                  Manage Results
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4" />
+                </CardHeader>
+                <CardFooter>
+                  <Skeleton className="h-10 w-full" />
+                </CardFooter>
+              </Card>
+            ))
+          : markets?.map((market) => (
+              <Card key={market.id}>
+                <CardHeader>
+                  <CardTitle>{market.name}</CardTitle>
+                </CardHeader>
+                <CardFooter>
+                  <Button asChild className="w-full">
+                    <Link href={`/admin/manage-results/${generateSlug(market.name)}`}>
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                      Manage Results
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
       </div>
+       {!isLoading && markets?.length === 0 && (
+          <p className="text-center text-muted-foreground col-span-full">
+              No active markets found.
+          </p>
+      )}
     </div>
   );
 }
