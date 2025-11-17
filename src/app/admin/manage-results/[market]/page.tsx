@@ -85,7 +85,7 @@ export default function EnterResultsPage() {
                 openPanna,
                 closePanna,
                 jodi: jodiNumber
-            });
+            }, marketName.trim());
             toast({
                 title: "Result Added",
                 description: `The new result for ${marketName} has been added successfully.`,
