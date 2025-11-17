@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -128,13 +129,13 @@ export default function TransactionsPage() {
           <CardDescription>Approve or reject user deposits and withdrawals.</CardDescription>
         </CardHeader>
         <CardContent>
-            <Tabs defaultValue="pending-deposits" orientation="vertical" className="flex flex-col sm:flex-row gap-6">
-                <TabsList className="grid grid-cols-1 sm:w-64 h-auto">
+            <Tabs defaultValue="pending-deposits">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
                     <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
                     <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
                 </TabsList>
-                <div className="flex-1">
+                <div className="mt-4">
                     <TabsContent value="pending-deposits" className="mt-0">
                         <TransactionTable items={pendingDeposits} />
                     </TabsContent>
