@@ -64,10 +64,6 @@ export function UserNav() {
   return (
     <div className="flex w-full flex-col gap-2 rounded-md border p-2">
         <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-            <AvatarImage src={authUser?.photoURL || "https://picsum.photos/seed/1/40/40"} alt="User avatar" data-ai-hint="profile picture" />
-            <AvatarFallback>{userData?.name?.[0] || authUser?.email?.[0] || 'U'}</AvatarFallback>
-            </Avatar>
             <div className="text-xs">
                 <p className="font-semibold text-foreground truncate">{userData?.name || 'User'}</p>
                 <p className="text-muted-foreground">{userData?.customId}</p>
