@@ -4,31 +4,27 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // Temporarily allowing as we debug the get() issue.
       // In a production environment, this should be based on custom claims.
       // For example: return request.auth.token.admin == true;
-      return true;
+      // For now, we check a role in the user's document.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
     }
 
     match /users/{userId} {
-      function isOwner(userId) {
+      function isOwner() {
         return request.auth.uid == userId;
       }
 
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
       // Admins can get any user profile, users can only get their own.
-      allow get: if isOwner(userId) || isAdmin();
+      allow get: if isOwner() || isAdmin();
       // Only admins can list all users.
       allow list: if isAdmin(); 
       // A user can create their own profile document, ensuring the ID matches.
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow create: if isOwner() && request.resource.data.id == userId;
       // Admins can update any user, users can only update their own.
-      allow update: if isOwner(userId) || isAdmin();
+      allow update: if isOwner() || isAdmin();
       // Admins can delete any user, users can only delete their own.
-      allow delete: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner() || isAdmin();
     }
     
     match /markets/{marketId} {
