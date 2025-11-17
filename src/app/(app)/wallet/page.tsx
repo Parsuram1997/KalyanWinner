@@ -31,9 +31,11 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { MinusCircle, PlusCircle, QrCode } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const initialTransactions = [
@@ -161,6 +163,16 @@ const initialTransactions = [
 
 const TRANSACTIONS_PER_PAGE = 10;
 
+type PaymentSettings = {
+    upiId?: string;
+    bankAccountHolder?: string;
+    bankAccountNumber?: string;
+    bankIfscCode?: string;
+    bankName?: string;
+    bankAccountType?: 'Current' | 'Savings';
+}
+
+
 export default function WalletPage() {
   const { toast } = useToast();
   const [balance, setBalance] = useState(1245.50);
@@ -173,6 +185,25 @@ export default function WalletPage() {
   const [withdrawMethod, setWithdrawMethod] = useState("bank");
   const [utr, setUtr] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
+  useEffect(() => {
+    async function fetchSettings() {
+        setIsLoadingSettings(true);
+        try {
+            const currentSettings = await getPaymentSettings();
+            setPaymentSettings(currentSettings);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Could not load payment details." });
+        } finally {
+            setIsLoadingSettings(false);
+        }
+    }
+    if (isAddFundsOpen) {
+        fetchSettings();
+    }
+  }, [isAddFundsOpen, toast]);
 
   const totalPages = Math.ceil(transactions.length / TRANSACTIONS_PER_PAGE);
 
@@ -341,7 +372,9 @@ export default function WalletPage() {
                     </div>
                   </RadioGroup>
 
-                  {addMethod === 'upi' && (
+                  {isLoadingSettings && <div className="flex justify-center"><Skeleton className="h-32 w-32" /></div>}
+                  
+                  {!isLoadingSettings && addMethod === 'upi' && (
                     <div className="flex flex-col items-center gap-4 text-center">
                       <div className="bg-white p-2 rounded-md border">
                         <QrCode className="h-32 w-32" />
@@ -349,30 +382,34 @@ export default function WalletPage() {
                       <p className="text-sm text-muted-foreground">Scan the QR or use the UPI ID below.</p>
                       <Input
                         readOnly
-                        value="your-upi-id@okhdfcbank"
+                        value={paymentSettings?.upiId || 'Not available'}
                         className="text-center font-mono"
                       />
-                       <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText("your-upi-id@okhdfcbank")}>Copy UPI ID</Button>
+                       <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(paymentSettings?.upiId || '')}>Copy UPI ID</Button>
                     </div>
                   )}
 
-                  {addMethod === "bank" && (
+                  {!isLoadingSettings && addMethod === "bank" && (
                      <div className="space-y-4 rounded-md border p-4 text-sm">
                       <div className="flex justify-between">
                           <span className="text-muted-foreground">Name:</span>
-                          <span className="font-medium">Kalyan Winner Pvt Ltd</span>
+                          <span className="font-medium">{paymentSettings?.bankAccountHolder || 'Not available'}</span>
                       </div>
                        <div className="flex justify-between">
                           <span className="text-muted-foreground">Account:</span>
-                          <span className="font-medium">123456789012</span>
+                          <span className="font-medium">{paymentSettings?.bankAccountNumber || 'Not available'}</span>
                       </div>
                        <div className="flex justify-between">
                           <span className="text-muted-foreground">IFSC:</span>
-                           <span className="font-medium">HDFC0001234</span>
+                           <span className="font-medium">{paymentSettings?.bankIfscCode || 'Not available'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">Bank:</span>
+                           <span className="font-medium">{paymentSettings?.bankName || 'Not available'}</span>
                       </div>
                        <div className="flex justify-between">
                           <span className="text-muted-foreground">Type:</span>
-                          <span className="font-medium">Current Account</span>
+                          <span className="font-medium">{paymentSettings?.bankAccountType || 'Not available'}</span>
                       </div>
                     </div>
                   )}
@@ -645,5 +682,3 @@ export default function WalletPage() {
     </div>
   );
 }
-
-    

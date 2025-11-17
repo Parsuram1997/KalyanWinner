@@ -153,6 +153,38 @@
         }
       },
       "required": ["marketName", "date", "openPanna", "closePanna", "jodi"]
+    },
+    "PaymentSettings": {
+      "title": "Payment Settings",
+      "description": "Stores the payment details for the application.",
+      "type": "object",
+      "properties": {
+        "upiId": {
+          "type": "string",
+          "description": "The UPI ID for receiving payments."
+        },
+        "bankAccountHolder": {
+          "type": "string",
+          "description": "The name of the bank account holder."
+        },
+        "bankAccountNumber": {
+          "type": "string",
+          "description": "The bank account number."
+        },
+        "bankIfscCode": {
+          "type": "string",
+          "description": "The IFSC code of the bank."
+        },
+        "bankName": {
+          "type": "string",
+          "description": "The name of the bank."
+        },
+        "bankAccountType": {
+          "type": "string",
+          "enum": ["Current", "Savings"],
+          "description": "The type of the bank account."
+        }
+      }
     }
   },
   "auth": {
@@ -211,9 +243,17 @@
           },
           "description": "Stores game payout rates. Publicly readable, admin writable."
         }
+      },
+      {
+        "path": "/payment_settings/{settingsId}",
+        "definition": {
+          "entityName": "PaymentSettings",
+          "schema": {
+            "$ref": "#/backend/entities/PaymentSettings"
+          },
+          "description": "Stores payment settings for the app. Only one document should exist with a fixed ID like 'main'. Publicly readable, admin writable."
+        }
       }
     ]
   }
 }
-
-    
