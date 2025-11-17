@@ -11,6 +11,7 @@ import {
   Wallet,
   TrendingUp,
   Store,
+  HelpCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -107,6 +108,14 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
                 <Link href="/enroller/game-timings">
                   <Clock />
                   Game Timings
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/enroller/faq">
+                  <HelpCircle />
+                  FAQ
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
