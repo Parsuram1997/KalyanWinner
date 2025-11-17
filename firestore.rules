@@ -18,7 +18,7 @@ service cloud.firestore {
       // Admins can do anything. Users can get their own transactions.
       allow get: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
       // Users can list transactions only if they are querying by their own userId.
-      allow list: if isAdmin() || (request.auth != null && request.query.where[0][0] == 'userId' && request.query.where[0][1] == '==' && request.query.where[0][2] == request.auth.uid);
+      allow list: if isAdmin() || (request.auth != null && request.query.where[0][2] == request.auth.uid);
       
       // All writes are through server-side logic (Cloud Functions or trusted server).
       allow write: if false; 
