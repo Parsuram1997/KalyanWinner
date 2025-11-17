@@ -21,6 +21,7 @@ import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
+// Mock data, in a real app this would come from your database
 const earningsData = [
   { id: "USR001", name: "Ravi Kumar", totalDeposit: 5000, commissionEarned: 250 },
   { id: "USR002", name: "Sunita Sharma", totalDeposit: 2500, commissionEarned: 125 },
@@ -54,7 +55,7 @@ export default function EnrollerEarningsPage() {
             <span>User Earnings</span>
           </CardTitle>
           <CardDescription>
-            Commission earned from each of your enrolled users.
+            Commission earned from each of your enrolled users. (Note: This is demo data)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,7 +76,7 @@ export default function EnrollerEarningsPage() {
                 <TableRow>
                   <TableHead>User</TableHead>
                   <TableHead>Total Deposit</TableHead>
-                  <TableHead>Commission Earned (5%)</TableHead>
+                  <TableHead>Commission Earned</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
