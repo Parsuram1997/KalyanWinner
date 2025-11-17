@@ -36,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { doc, collection, query, where, addDoc, serverTimestamp } from "firebase/firestore";
 
 
@@ -66,7 +66,7 @@ export default function WalletPage() {
   const firestore = useFirestore();
 
   const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
-  const { data: userData } = useCollection<any>(userDocRef as any);
+  const { data: userData } = useDoc<any>(userDocRef);
   const balance = userData?.balance || 0;
 
   const transactionsQuery = useMemoFirebase(() => (firestore && authUser ? query(collection(firestore, "transactions"), where("userId", "==", authUser.uid)) : null), [firestore, authUser]);
