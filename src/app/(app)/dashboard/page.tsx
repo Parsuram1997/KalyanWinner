@@ -61,7 +61,7 @@ export default function DashboardPage() {
   
   // Fetch transactions only when the query is ready
   const { data: recentActivity, isLoading: isActivityLoading } = useCollection<any>(
-    authUser ? transactionsQuery : null
+    transactionsQuery
   );
 
 
@@ -217,7 +217,7 @@ export default function DashboardPage() {
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? <Skeleton className="h-40 w-full" /> : sortedRecentActivity && sortedRecentActivity.length > 0 ? (
+          {isActivityLoading ? <Skeleton className="h-40 w-full" /> : sortedRecentActivity && sortedRecentActivity.length > 0 ? (
             <>
               <div className="hidden md:block">
                 <Table>
@@ -309,4 +309,6 @@ export default function DashboardPage() {
 }
 
     
+    
+
     
