@@ -36,130 +36,9 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { doc, collection, query, where, addDoc, serverTimestamp } from "firebase/firestore";
 
-
-const initialTransactions = [
-    {
-    id: "txn15",
-    date: "2024-07-25",
-    description: "Win on Jodi 23 (Kalyan Night)",
-    type: "Credit",
-    amount: 4750.0,
-    status: "Won",
-  },
-  {
-    id: "txn14",
-    date: "2024-07-25",
-    description: "Bet on Jodi 23 (Kalyan Night)",
-    type: "Debit",
-    amount: -50.0,
-    status: "Placed",
-  },
-  {
-    id: "txn13",
-    date: "2024-07-24",
-    description: "Wallet Deposit via Card",
-    type: "Credit",
-    amount: 2000.0,
-    status: "Completed",
-  },
-  {
-    id: "txn12",
-    date: "2024-07-23",
-    description: "Bet on Open Panna 112 (Kalyan Day)",
-    type: "Debit",
-    amount: -100.0,
-    status: "Lost",
-  },
-  {
-    id: "txn11",
-    date: "2024-07-23",
-    description: "Bet on Close Single 8 (Kalyan Night)",
-    type: "Debit",
-    amount: -200.0,
-    status: "Lost",
-  },
-  {
-    id: "txn10",
-    date: "2024-07-22",
-    description: "Win on Close Panna 789 (Kalyan Day)",
-    type: "Credit",
-    amount: 1400.0,
-    status: "Won",
-  },
-  {
-    id: "txn9",
-    date: "2024-07-22",
-    description: "Bet on Close Panna 789 (Kalyan Day)",
-    type: "Debit",
-    amount: -10.0,
-    status: "Placed",
-  },
-  {
-    id: "txn8",
-    date: "2024-07-21",
-    description: "Withdrawal to Bank Account",
-    type: "Debit",
-    amount: -2000.0,
-    status: "Pending",
-  },
-  {
-    id: "txn7",
-    date: "2024-07-21",
-    description: "Bet on Jodi 99 (Kalyan Night)",
-    type: "Debit",
-    amount: -25.0,
-    status: "Lost",
-  },
-  {
-    id: "txn6",
-    date: "2024-07-20",
-    description: "Wallet Deposit via Netbanking",
-    type: "Credit",
-    amount: 300.0,
-    status: "Completed",
-  },
-  {
-    id: "txn1",
-    date: "2024-07-20",
-    description: "Bet on Jodi 45 (Kalyan Night)",
-    type: "Debit",
-    amount: -100.0,
-    status: "Lost",
-  },
-  {
-    id: "txn2",
-    date: "2024-07-19",
-    description: "Wallet Deposit via UPI",
-    type: "Credit",
-    amount: 500.0,
-    status: "Completed",
-  },
-  {
-    id: "txn3",
-    date: "2024-07-18",
-    description: "Win on Single 8 (Kalyan Day)",
-    type: "Credit",
-    amount: 950.0,
-    status: "Won",
-  },
-  {
-    id: "txn4",
-    date: "2024-07-18",
-    description: "Bet on Panel 128 (Kalyan Day)",
-    type: "Debit",
-    amount: -50.0,
-    status: "Placed",
-  },
-  {
-    id: "txn5",
-    date: "2024-07-17",
-    description: "Withdrawal to Bank Account",
-    type: "Debit",
-    amount: -1000.0,
-    status: "Completed",
-  },
-];
 
 const TRANSACTIONS_PER_PAGE = 10;
 
@@ -172,11 +51,27 @@ type PaymentSettings = {
     bankAccountType?: 'Current' | 'Savings';
 }
 
+type Transaction = {
+    id: string;
+    date: string;
+    description: string;
+    type: "Credit" | "Debit";
+    amount: number;
+    status: string;
+}
 
 export default function WalletPage() {
   const { toast } = useToast();
-  const [balance, setBalance] = useState(1245.50);
-  const [transactions, setTransactions] = useState(initialTransactions);
+  const { user: authUser, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
+  const { data: userData } = useCollection<any>(userDocRef as any);
+  const balance = userData?.balance || 0;
+
+  const transactionsQuery = useMemoFirebase(() => (firestore && authUser ? query(collection(firestore, "transactions"), where("userId", "==", authUser.uid)) : null), [firestore, authUser]);
+  const { data: transactions, isLoading: areTxnsLoading } = useCollection<Transaction>(transactionsQuery);
+
   const [addAmount, setAddAmount] = useState("1000");
   const [withdrawAmount, setWithdrawAmount] = useState("2000");
   const [isAddFundsOpen, setAddFundsOpen] = useState(false);
@@ -205,16 +100,22 @@ export default function WalletPage() {
     }
   }, [isAddFundsOpen, toast]);
 
-  const totalPages = Math.ceil(transactions.length / TRANSACTIONS_PER_PAGE);
+  const sortedTransactions = useMemo(() => {
+    return transactions ? [...transactions].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
+  }, [transactions]);
+  
+  const totalPages = Math.ceil(sortedTransactions.length / TRANSACTIONS_PER_PAGE);
 
   const paginatedTransactions = useMemo(() => {
     const startIndex = (currentPage - 1) * TRANSACTIONS_PER_PAGE;
     const endIndex = startIndex + TRANSACTIONS_PER_PAGE;
-    return transactions.slice(startIndex, endIndex);
-  }, [transactions, currentPage]);
+    return sortedTransactions.slice(startIndex, endIndex);
+  }, [sortedTransactions, currentPage]);
 
 
-  const handleAddFunds = () => {
+  const handleAddFunds = async () => {
+    if (!firestore || !authUser || !userData) return;
+    
     const amount = parseInt(addAmount, 10);
     if (isNaN(amount) || amount < 500) {
       toast({
@@ -233,25 +134,34 @@ export default function WalletPage() {
       return;
     }
     
-    toast({
-      title: "Deposit Request Submitted",
-      description: `Your request to add ₹${amount} with UTR ${utr} has been received and is being verified.`,
-    });
+    try {
+        const transactionsCollection = collection(firestore, "transactions");
+        await addDoc(transactionsCollection, {
+            userId: authUser.uid,
+            userName: userData.name,
+            type: "Deposit",
+            amount: amount,
+            status: "Pending",
+            date: new Date().toISOString(),
+            description: `Wallet Deposit via ${addMethod.toUpperCase()}`,
+            method: addMethod,
+            utr: utr,
+        });
 
-    const newTransaction = {
-      id: `txn${transactions.length + 1}`,
-      date: new Date().toISOString().split('T')[0],
-      description: `Wallet Deposit via ${addMethod.toUpperCase()}`,
-      type: "Credit" as "Credit",
-      amount: amount,
-      status: "Pending"
-    };
-
-    setBalance(balance + amount);
-    setTransactions([newTransaction, ...transactions]);
-
-    setUtr("");
-    setAddFundsOpen(false);
+        toast({
+          title: "Deposit Request Submitted",
+          description: `Your request to add ₹${amount} with UTR ${utr} has been received and is being verified.`,
+        });
+        
+        setUtr("");
+        setAddFundsOpen(false);
+    } catch(error: any) {
+         toast({
+            variant: "destructive",
+            title: "Request Failed",
+            description: "Could not submit your deposit request. Please try again.",
+        });
+    }
   };
 
   const handleWithdraw = () => {
@@ -283,6 +193,7 @@ export default function WalletPage() {
       return;
     }
     
+    // In a real app, this would create a 'Withdrawal' transaction with 'Pending' status
     toast({
       title: "Withdrawal Requested",
       description: `Your request to withdraw ₹${amount} is being processed. Funds will be transferred within 24 hours.`,
@@ -308,12 +219,14 @@ export default function WalletPage() {
             <CardTitle className="text-lg">Current Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl sm:text-4xl font-bold tracking-tight">
-              {balance.toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
-              })}
-            </div>
+            {isUserLoading ? <Skeleton className="h-9 w-40" /> : (
+                <div className="text-3xl sm:text-4xl font-bold tracking-tight">
+                {balance.toLocaleString("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                })}
+                </div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
               Your available funds to play.
             </p>
@@ -566,7 +479,9 @@ export default function WalletPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedTransactions.map((txn) => (
+                {areTxnsLoading ? (
+                  <TableRow><TableCell colSpan={5} className="text-center">Loading transactions...</TableCell></TableRow>
+                ) : paginatedTransactions.length > 0 ? (paginatedTransactions.map((txn) => (
                   <TableRow key={txn.id}>
                     <TableCell className="font-medium">{new Date(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
                     <TableCell>{txn.description}</TableCell>
@@ -605,13 +520,16 @@ export default function WalletPage() {
                       })}
                     </TableCell>
                   </TableRow>
-                ))}
+                ))) : (
+                   <TableRow><TableCell colSpan={5} className="text-center">No transactions yet.</TableCell></TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
           {/* Mobile List */}
           <div className="grid gap-4 md:hidden">
-            {paginatedTransactions.map((txn) => (
+            {areTxnsLoading ? <p>Loading...</p> : paginatedTransactions.length > 0 ? (
+            paginatedTransactions.map((txn) => (
               <div
                 key={txn.id}
                 className="flex items-start justify-between gap-4 p-3 -m-3 rounded-lg hover:bg-muted/50"
@@ -656,7 +574,8 @@ export default function WalletPage() {
                   </Badge>
                 </div>
               </div>
-            ))}
+            ))
+            ) : <p>No transactions yet.</p>}
           </div>
           <div className="flex items-center justify-between mt-4">
             <Button

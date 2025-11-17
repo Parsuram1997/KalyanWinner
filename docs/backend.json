@@ -185,6 +185,53 @@
           "description": "The type of the bank account."
         }
       }
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Represents a financial transaction in a user's wallet.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who performed the transaction."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The name of the user (for display purposes)."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["Deposit", "Withdrawal", "Bet", "Win"],
+          "description": "The type of transaction."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The transaction amount. Positive for credits, negative for debits."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Completed", "Approved", "Rejected", "Won", "Lost", "Placed"],
+          "description": "The current status of the transaction."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the transaction."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the transaction."
+        },
+        "method": {
+          "type": "string",
+          "description": "The method used for the transaction (e.g., UPI, Bank Transfer)."
+        },
+        "utr": {
+          "type": "string",
+          "description": "The Unique Transaction Reference for deposits."
+        }
+      },
+      "required": ["userId", "userName", "type", "amount", "status", "date"]
     }
   },
   "auth": {
@@ -252,6 +299,16 @@
             "$ref": "#/backend/entities/PaymentSettings"
           },
           "description": "Stores payment settings for the app. Only one document should exist with a fixed ID like 'main'. Publicly readable, admin writable."
+        }
+      },
+      {
+        "path": "/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Stores all financial transactions for all users. Readable by admins, writable by server actions."
         }
       }
     ]
