@@ -6,7 +6,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 // It is safe to store service account credentials in the code because this file is only
 // ever executed in a secure, server-side environment.
 const serviceAccount: ServiceAccount = {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    projectId: "studio-7786701397-58781",
     privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
 }
@@ -21,4 +21,3 @@ const auth = getAuth(app);
 const firestore = getFirestore(app);
 
 export { app, auth, firestore };
-
