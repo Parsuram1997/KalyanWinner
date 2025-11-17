@@ -9,7 +9,8 @@ import {
   Coins,
   Clock,
   Wallet,
-  TrendingUp
+  TrendingUp,
+  Store,
 } from "lucide-react";
 import {
   Sidebar,
@@ -82,6 +83,14 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
                 <Link href="/enroller/earnings">
                   <TrendingUp />
                   Earnings
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/enroller/active-markets">
+                  <Store />
+                  Active Markets
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
