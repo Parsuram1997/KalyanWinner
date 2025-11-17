@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -82,7 +81,7 @@ export default function EnterResultsPage() {
         try {
             await createKalyanResult({
                 date,
-                marketName,
+                marketName: marketName.trim(),
                 openPanna,
                 closePanna,
                 jodi: jodiNumber
