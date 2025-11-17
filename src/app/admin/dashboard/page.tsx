@@ -57,6 +57,9 @@ export default function AdminDashboardPage() {
         return {
             totalAdmins: allAdmins.length.toString(),
             totalUsers: allUsers.length.toString(),
+            usersByAdmin: allUsers.filter(u => u.createdBy === 'Admin').length.toString(),
+            usersByEnroller: allUsers.filter(u => u.createdBy === 'Enroller').length.toString(),
+            usersBySelf: allUsers.filter(u => u.createdBy === 'Self' || !u.createdBy).length.toString(),
             activeUsers: allUsers.filter(u => u.status === 'Active').length.toString(),
             inactiveUsers: allUsers.filter(u => u.status === 'Inactive').length.toString(),
             suspendedUsers: allUsers.filter(u => u.status === 'Suspended').length.toString(),
@@ -84,6 +87,9 @@ export default function AdminDashboardPage() {
     const statsCards = [
       { name: "Total Admins", value: stats.totalAdmins, icon: Shield },
       { name: "Total Users", value: stats.totalUsers, icon: Users },
+      { name: "Users by Admin", value: stats.usersByAdmin, icon: UserPlus },
+      { name: "Users by Enroller", value: stats.usersByEnroller, icon: UserPlus },
+      { name: "Self-Registered Users", value: stats.usersBySelf, icon: UserPlus },
       { name: "Active Users", value: stats.activeUsers, icon: UserCheck },
       { name: "Total Markets", value: stats.totalMarkets, icon: Store },
       { name: "Active Markets", value: stats.activeMarkets, icon: CheckCircle },

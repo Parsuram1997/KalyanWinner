@@ -937,6 +937,7 @@ export default function ManageUsersPage() {
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
       password: formData.get("password") as string,
       role: 'User' as 'User',
+      createdBy: 'Admin' as 'Admin',
     };
 
     try {

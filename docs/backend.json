@@ -53,6 +53,11 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp when the user account was created."
+        },
+        "createdBy": {
+            "type": "string",
+            "enum": ["Admin", "Enroller", "Self"],
+            "description": "Indicates who created the user account."
         }
       },
       "required": ["id", "customId", "name", "mobile", "email", "state", "district", "balance", "status", "role", "createdAt"]

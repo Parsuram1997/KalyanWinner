@@ -876,6 +876,7 @@ export default function SignupPage() {
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
       password: password,
       role: 'User' as 'User',
+      createdBy: 'Self' as 'Self',
     };
 
     try {

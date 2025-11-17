@@ -894,6 +894,7 @@ export default function EnrolledUsersPage() {
       password: formData.get("password") as string,
       role: 'User' as 'User',
       enrollerId: authUser.uid, // Add enroller's ID
+      createdBy: 'Enroller' as 'Enroller',
     };
 
     try {
@@ -1161,5 +1162,3 @@ export default function EnrolledUsersPage() {
     </div>
   );
 }
-
-    

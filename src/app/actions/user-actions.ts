@@ -41,6 +41,7 @@ export async function createUser(userData: {
   password: any;
   role?: 'User' | 'Enroller' | 'Admin';
   enrollerId?: string;
+  createdBy?: 'Admin' | 'Enroller' | 'Self';
 }) {
   
   // Check if a user with the same mobile number already exists in Firestore
@@ -123,10 +124,12 @@ export async function createUser(userData: {
       status: "Active",
       role: role, 
       createdAt: new Date().toISOString(),
+      createdBy: userData.createdBy || 'Self',
     };
     
     if (userData.enrollerId) {
         userProfile.enrollerId = userData.enrollerId;
+        userProfile.createdBy = 'Enroller';
     }
     
     await firestore.collection("users").doc(userRecord.uid).set(userProfile);
