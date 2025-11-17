@@ -1,21 +1,14 @@
 
-import { initializeApp, getApps, getApp, App, cert, ServiceAccount } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
-// It is safe to store service account credentials in the code because this file is only
-// ever executed in a secure, server-side environment.
-const serviceAccount: ServiceAccount = {
-    projectId: "studio-7786701397-58781",
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-}
-
+// When running in a secure server-side environment like Firebase App Hosting,
+// initializeApp() can be called without arguments. It will automatically
+// discover the service account credentials.
 const app = getApps().length
   ? getApp()
-  : initializeApp({
-    credential: cert(serviceAccount)
-  });
+  : initializeApp();
 
 const auth = getAuth(app);
 const firestore = getFirestore(app);
