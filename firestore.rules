@@ -5,6 +5,8 @@ service cloud.firestore {
 
     function isAdmin() {
       // Check for an 'admin' custom claim on the user's auth token.
+      // IMPORTANT: To set a user as admin, you must use a backend process (like a Cloud Function)
+      // to set a custom claim. For example: `auth.setCustomUserClaims(uid, { admin: true });`
       return request.auth.token.admin == true;
     }
 
@@ -27,14 +29,14 @@ service cloud.firestore {
     
     match /markets/{marketId} {
       // All users (including unauthenticated) can read market timings.
-      allow read: if true;
+      allow get, list: if true;
       // Only admins can create, update, or delete markets.
       allow write: if isAdmin();
     }
 
     match /bet_types/{betTypeId} {
       // All users can read the available bet types.
-      allow read: if true;
+      allow get, list: if true;
       // Only admins can create, update, or delete bet types.
       allow write: if isAdmin();
     }
