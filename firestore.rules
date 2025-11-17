@@ -33,7 +33,7 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
-    match /kalyan_results/{resultId} {
+    match /kalyan_results/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
