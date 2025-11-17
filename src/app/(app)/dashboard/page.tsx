@@ -29,69 +29,82 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, doc, query, where, orderBy, limit } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const recentActivity = [
-  { id: 1, description: "Bet on Jodi 45", market: "Kalyan Night", status: "Pending", date: "2024-07-20", amount: "-₹100.00", type: "debit" },
-  { id: 2, description: "Wallet Deposit", market: "via UPI", status: "Completed", date: "2024-07-19", amount: "+₹500.00", type: "credit" },
-  { id: 3, description: "Win on Single 8", market: "Kalyan Day", status: "Won", date: "2024-07-18", amount: "+₹950.00", type: "credit" },
-  { id: 4, description: "Bet on Open Panna 123", market: "Kalyan Day", status: "Lost", date: "2024-07-18", amount: "-₹50.00", type: "debit" },
-  { id: 5, description: "Withdrawal", market: "to Bank Account", status: "Completed", date: "2024-07-17", amount: "-₹1000.00", type: "debit" },
-  { id: 6, description: "Bet on Jodi 78", market: "Kalyan Night", status: "Pending", date: "2024-07-17", amount: "-₹200.00", type: "debit" },
-  { id: 7, description: "Win on Close Panna 456", market: "Kalyan Day", status: "Won", date: "2024-07-16", amount: "+₹1400.00", type: "credit" },
-  { id: 8, description: "Wallet Deposit", market: "via Card", status: "Completed", date: "2024-07-16", amount: "+₹2000.00", type: "credit" },
-  { id: 9, description: "Bet on Single 2", market: "Kalyan Night", status: "Lost", date: "2024-07-15", amount: "-₹150.00", type: "debit" },
-  { id: 10, description: "Win on Jodi 99", market: "Kalyan Day", status: "Won", date: "2024-07-15", amount: "+₹4750.00", type: "credit" },
-  { id: 11, description: "Bet on Jodi 99", market: "Kalyan Day", status: "Placed", date: "2024-07-15", amount: "-₹50.00", type: "debit" },
-  { id: 12, description: "Wallet Deposit", market: "via Netbanking", status: "Completed", date: "2024-07-14", amount: "+₹300.00", type: "credit" },
-  { id: 13, description: "Bet on Close Panna 789", market: "Kalyan Night", status: "Pending", date: "2024-07-14", amount: "-₹10.00", type: "debit" },
-  { id: 14, description: "Win on Open Single 1", market: "Kalyan Day", status: "Won", date: "2024-07-13", amount: "+₹95.00", type: "credit" },
-  { id: 15, description: "Bet on Jodi 13", market: "Kalyan Day", status: "Placed", date: "2024-07-13", amount: "-₹10.00", type: "debit" },
-];
 
 const ACTIVITY_PER_PAGE = 5;
-
-const latestResults = [
-  {
-    market: "Kalyan Day",
-    date: "20/07/2024",
-    time: "04:30 PM",
-    openPanna: "128",
-    jodi: "13",
-    closePanna: "490",
-  },
-  {
-    market: "Kalyan Night",
-    date: "19/07/2024",
-    time: "10:30 PM",
-    openPanna: "345",
-    jodi: "21",
-    closePanna: "678",
-  },
-];
-
 
 export default function DashboardPage() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const totalPages = Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE);
+  const { user: authUser, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(
+    () => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null),
+    [firestore, authUser]
+  );
+  const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
+  const walletBalance = userData?.balance ?? 0;
+
+  const transactionsQuery = useMemoFirebase(
+    () => authUser && firestore ? query(
+        collection(firestore, "transactions"), 
+        where("userId", "==", authUser.uid), 
+        orderBy("date", "desc")
+    ) : null,
+    [authUser, firestore]
+  );
+  const { data: recentActivity, isLoading: isActivityLoading } = useCollection<any>(transactionsQuery);
+
+  const kalyanDayResultQuery = useMemoFirebase(
+    () => firestore ? query(
+      collection(firestore, "kalyan_results"),
+      where("marketName", "==", "Kalyan Day"),
+      orderBy("date", "desc"),
+      limit(1)
+    ) : null,
+    [firestore]
+  );
+  const { data: kalyanDayResult, isLoading: isDayResultLoading } = useCollection<any>(kalyanDayResultQuery);
+
+  const kalyanNightResultQuery = useMemoFirebase(
+    () => firestore ? query(
+      collection(firestore, "kalyan_results"),
+      where("marketName", "==", "Kalyan Night"),
+      orderBy("date", "desc"),
+      limit(1)
+    ) : null,
+    [firestore]
+  );
+  const { data: kalyanNightResult, isLoading: isNightResultLoading } = useCollection<any>(kalyanNightResultQuery);
+
+  const latestResults = useMemo(() => {
+    const results = [];
+    if (kalyanDayResult?.[0]) results.push(kalyanDayResult[0]);
+    if (kalyanNightResult?.[0]) results.push(kalyanNightResult[0]);
+    return results;
+  }, [kalyanDayResult, kalyanNightResult]);
+
+  const isLoading = isUserLoading || isUserDataLoading || isActivityLoading || isDayResultLoading || isNightResultLoading;
+
+  const totalPages = Math.ceil((recentActivity?.length || 0) / ACTIVITY_PER_PAGE);
 
   const paginatedActivity = useMemo(() => {
+    if (!recentActivity) return [];
     const startIndex = (currentPage - 1) * ACTIVITY_PER_PAGE;
     const endIndex = startIndex + ACTIVITY_PER_PAGE;
     return recentActivity.slice(startIndex, endIndex);
-  }, [currentPage]);
+  }, [recentActivity, currentPage]);
 
   useEffect(() => {
-    if (!api) {
-      return;
-    }
-
+    if (!api) return;
     setCurrent(api.selectedScrollSnap());
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap());
-    });
+    api.on("select", () => setCurrent(api.selectedScrollSnap()));
   }, [api]);
 
   return (
@@ -103,9 +116,13 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹1,245.50</div>
+            {isLoading ? <Skeleton className="h-8 w-32" /> : (
+              <div className="text-2xl font-bold">
+                {walletBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
-              +20.1% from last month
+              Your available funds.
             </p>
           </CardContent>
           <CardFooter>
@@ -121,47 +138,57 @@ export default function DashboardPage() {
             <CardTitle className="text-base">Latest Result</CardTitle>
             <CardDescription>Swipe to see Day and Night results.</CardDescription>
           </CardHeader>
-          <Carousel setApi={setApi} className="w-full h-full flex flex-col justify-center">
-            <CarouselContent>
-              {latestResults.map((result, index) => (
-                <CarouselItem key={index} className="h-full">
-                  <CardContent className="p-6 pt-0 flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-2 w-full">
-                       <div className="text-center">
-                        <p className="text-[10px] text-muted-foreground">{result.date} - {result.time}</p>
-                      </div>
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-muted-foreground">Open</span>
-                          <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
+          {isLoading ? (
+            <CardContent className="p-6 pt-0 flex-1 flex items-center justify-center">
+                <Skeleton className="h-24 w-full" />
+            </CardContent>
+          ) : latestResults.length > 0 ? (
+            <Carousel setApi={setApi} className="w-full h-full flex flex-col justify-center">
+                <CarouselContent>
+                {latestResults.map((result, index) => (
+                    <CarouselItem key={index} className="h-full">
+                    <CardContent className="p-6 pt-0 flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-2 w-full">
+                        <div className="text-center">
+                            <p className="text-[10px] text-muted-foreground">{new Date(result.date).toLocaleDateString('en-GB')}</p>
                         </div>
-                        <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-                          <span className="text-3xl font-bold tracking-wider">{result.jodi}</span>
-                          <span className="text-[10px] font-medium">{result.market}</span>
+                        <div className="flex items-center justify-center gap-2">
+                            <div className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground">Open</span>
+                            <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
+                            </div>
+                            <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                            <span className="text-3xl font-bold tracking-wider">{result.jodi}</span>
+                            <span className="text-[10px] font-medium">{result.marketName}</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                            <span className="text-xs text-muted-foreground">Close</span>
+                            <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col items-center">
-                          <span className="text-xs text-muted-foreground">Close</span>
-                          <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
                         </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <div className="flex justify-center gap-2 mt-2">
-              {latestResults.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => api?.scrollTo(index)}
-                  className={cn(
-                    "h-2 w-2 rounded-full transition-colors",
-                    current === index ? "bg-primary" : "bg-muted"
-                  )}
-                />
-              ))}
-            </div>
-          </Carousel>
+                    </CardContent>
+                    </CarouselItem>
+                ))}
+                </CarouselContent>
+                <div className="flex justify-center gap-2 mt-2">
+                {latestResults.map((_, index) => (
+                    <button
+                    key={index}
+                    onClick={() => api?.scrollTo(index)}
+                    className={cn(
+                        "h-2 w-2 rounded-full transition-colors",
+                        current === index ? "bg-primary" : "bg-muted"
+                    )}
+                    />
+                ))}
+                </div>
+            </Carousel>
+          ) : (
+             <CardContent className="p-6 pt-0 flex-1 flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">No results found.</p>
+             </CardContent>
+          )}
           <CardFooter className="mt-auto pt-4">
             <Button variant="outline" size="sm" className="w-full" asChild>
               <Link href="/results">View All Results</Link>
@@ -170,97 +197,98 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      
-      
       <Card className="bg-gradient-to-tr from-accent/10 to-background hover:shadow-lg transition-shadow">
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+          {isLoading ? <Skeleton className="h-40 w-full" /> : recentActivity && recentActivity.length > 0 ? (
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedActivity.map((activity) => (
+                      <TableRow key={activity.id}>
+                        <TableCell>
+                          <div className="font-medium">{activity.description}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              activity.status === "Won" || activity.status === "Completed" ? "secondary" :
+                              activity.status === "Pending" ? "default" :
+                              "outline"
+                            }
+                          >
+                            {activity.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(activity.date).toLocaleDateString()}</TableCell>
+                        <TableCell className={`text-right font-semibold ${activity.amount > 0 ? 'text-green-600' : ''}`}>
+                          {activity.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="grid gap-4 md:hidden">
                 {paginatedActivity.map((activity) => (
-                  <TableRow key={activity.id}>
-                    <TableCell>
+                  <div key={activity.id} className="flex items-center justify-between">
+                    <div>
                       <div className="font-medium">{activity.description}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {activity.market}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                       <Badge 
+                      <div className="text-sm text-muted-foreground">{new Date(activity.date).toLocaleDateString()}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-semibold ${activity.amount > 0 ? 'text-green-600' : ''}`}>{activity.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</div>
+                      <Badge 
                         variant={
-                          activity.status === "Won" ? "default" :
-                          activity.status === "Completed" ? "secondary" :
-                          "outline"
+                            activity.status === "Won" || activity.status === "Completed" ? "secondary" :
+                            activity.status === "Pending" ? "default" :
+                            "outline"
                         }
                       >
                         {activity.status}
                       </Badge>
-                    </TableCell>
-                    <TableCell>{activity.date}</TableCell>
-                    <TableCell className={`text-right ${activity.type === 'credit' ? 'text-green-600' : ''}`}>
-                      {activity.amount}
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="grid gap-4 md:hidden">
-            {paginatedActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">{activity.description}</div>
-                  <div className="text-sm text-muted-foreground">{activity.market} - {activity.date}</div>
-                </div>
-                <div className="text-right">
-                  <div className={`font-semibold ${activity.type === 'credit' ? 'text-green-600' : ''}`}>{activity.amount}</div>
-                   <Badge 
-                    variant={
-                      activity.status === "Won" ? "default" :
-                      activity.status === "Completed" ? "secondary" :
-                      "outline"
-                    }
-                  >
-                    {activity.status}
-                  </Badge>
-                </div>
               </div>
-            ))}
-          </div>
-           <div className="flex items-center justify-between mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
-          </div>
+              <div className="flex items-center justify-between mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No recent activity found.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
 }
-
-    
