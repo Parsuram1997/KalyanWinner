@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, doc, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
@@ -40,6 +40,8 @@ export default function DashboardPage() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [isActivityLoading, setActivityLoading] = useState(true);
 
   const { user: authUser, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -51,20 +53,22 @@ export default function DashboardPage() {
   const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
   const walletBalance = userData?.balance ?? 0;
 
-  const transactionsQuery = useMemoFirebase(
-    () => authUser && firestore ? query(
-        collection(firestore, "transactions"), 
-        where("userId", "==", authUser.uid)
-    ) : null,
-    [authUser, firestore]
-  );
-  
-  // Fetch transactions only when the query is ready
-  const { data: recentActivity, isLoading: isActivityLoading } = useCollection<any>(
-    transactionsQuery,
-    { skip: !transactionsQuery }
-  );
-
+  useEffect(() => {
+    if (authUser && firestore) {
+      setActivityLoading(true);
+      const fetchTransactions = async () => {
+        const q = query(
+          collection(firestore, "transactions"),
+          where("userId", "==", authUser.uid)
+        );
+        const querySnapshot = await getDocs(q);
+        const transactions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setRecentActivity(transactions);
+        setActivityLoading(false);
+      };
+      fetchTransactions();
+    }
+  }, [authUser, firestore]);
 
   const sortedRecentActivity = useMemo(() => {
     if (!recentActivity) return [];
@@ -308,3 +312,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
