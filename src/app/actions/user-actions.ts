@@ -61,11 +61,10 @@ export async function createUser(userData: {
   });
 
   try {
-    const counterRef = firestore.collection('counters').doc('user_ids');
-    const role = userData.role || 'User'; // Default to 'User' if not provided
-    
-    // Run a transaction to get the next sequential ID
-    const customId = await firestore.runTransaction(async (transaction) => {
+    await firestore.runTransaction(async (transaction) => {
+      const counterRef = firestore.collection('counters').doc('user_ids');
+      const role = userData.role || 'User';
+      
       const counterDoc = await transaction.get(counterRef);
       
       let nextNumber;
@@ -73,8 +72,7 @@ export async function createUser(userData: {
       let prefix;
 
       if (!counterDoc.exists) {
-        // Initialize the counter document if it doesn't exist
-         if (role === 'Enroller') {
+        if (role === 'Enroller') {
             nextNumber = 1;
             fieldToUpdate = 'lastEnrollerNumber';
             prefix = 'KWENR';
@@ -108,36 +106,38 @@ export async function createUser(userData: {
         transaction.update(counterRef, { [fieldToUpdate]: FieldValue.increment(1) });
       }
       
-      return `${prefix}${String(nextNumber).padStart(4, '0')}`;
-    });
+      const customId = `${prefix}${String(nextNumber).padStart(4, '0')}`;
 
-    // Create user profile in Firestore
-    const userProfile: any = {
-      id: userRecord.uid,
-      customId: customId,
-      name: userData.name,
-      mobile: userData.mobile,
-      email: authEmail, // Store the real email
-      state: userData.state,
-      district: userData.district,
-      balance: 0,
-      status: "Active",
-      role: role, 
-      createdAt: new Date().toISOString(),
-      createdBy: userData.createdBy || 'Self',
-    };
-    
-    if (userData.enrollerId) {
-        userProfile.enrollerId = userData.enrollerId;
-        userProfile.createdBy = 'Enroller';
-    }
-    
-    await firestore.collection("users").doc(userRecord.uid).set(userProfile);
+      const userProfile: any = {
+        id: userRecord.uid,
+        customId: customId,
+        name: userData.name,
+        mobile: userData.mobile,
+        email: authEmail,
+        state: userData.state,
+        district: userData.district,
+        balance: 0,
+        status: "Active",
+        role: role, 
+        createdAt: new Date().toISOString(),
+        createdBy: userData.createdBy || 'Self',
+      };
+      
+      if (userData.enrollerId) {
+          userProfile.enrollerId = userData.enrollerId;
+          userProfile.createdBy = 'Enroller';
+
+          // Credit 100 to the enroller's balance
+          const enrollerRef = firestore.collection("users").doc(userData.enrollerId);
+          transaction.update(enrollerRef, { balance: FieldValue.increment(100) });
+      }
+      
+      transaction.set(firestore.collection("users").doc(userRecord.uid), userProfile);
+    });
 
     return { success: true, userId: userRecord.uid };
 
   } catch (error: any) {
-    // If we failed to create the user in Firestore, delete the auth user to prevent orphaned accounts.
     await auth.deleteUser(userRecord.uid);
     console.error("Error creating user profile:", error);
     let errorMessage = "An unexpected error occurred during profile creation.";
