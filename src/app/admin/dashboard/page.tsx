@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ClipboardList, Wallet, GanttChartSquare, ArrowUpCircle, ArrowDownCircle, Hourglass, TrendingDown, UserCheck, UserX, Ban, UserPlus } from "lucide-react";
+import { Users, ClipboardList, Wallet, GanttChartSquare, ArrowUpCircle, ArrowDownCircle, Hourglass, TrendingDown, UserCheck, UserX, Ban, UserPlus, Store, CheckCircle, XCircle } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -30,6 +30,9 @@ export default function AdminDashboardPage() {
     const enrollersQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, "users"), where("role", "==", "Enroller")) : null), [firestore]);
     const { data: enrollers, isLoading: enrollersLoading } = useCollection<any>(enrollersQuery);
     
+    const marketsQuery = useMemoFirebase(() => (firestore ? collection(firestore, "markets") : null), [firestore]);
+    const { data: markets, isLoading: marketsLoading } = useCollection<any>(marketsQuery);
+    
     // Mocking transactions for now as the collection doesn't exist
     const transactions: any[] = [];
     const transactionsLoading = false;
@@ -38,6 +41,7 @@ export default function AdminDashboardPage() {
         const allUsers = users || [];
         const allEnrollers = enrollers || [];
         const allTransactions = transactions || [];
+        const allMarkets = markets || [];
 
         const formatCurrency = (amount: number) => {
              return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
@@ -58,14 +62,20 @@ export default function AdminDashboardPage() {
             totalLoss: "N/A", // Needs calculation logic
             pendingDeposit: allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Pending').length.toString(),
             pendingWithdrawals: allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Pending').length.toString(),
+            totalMarkets: allMarkets.length.toString(),
+            activeMarkets: allMarkets.filter(m => m.status === 'Active').length.toString(),
+            inactiveMarkets: allMarkets.filter(m => m.status === 'Inactive').length.toString(),
         }
-    }, [users, enrollers, transactions]);
+    }, [users, enrollers, transactions, markets]);
 
-    const isLoading = usersLoading || enrollersLoading || transactionsLoading;
+    const isLoading = usersLoading || enrollersLoading || transactionsLoading || marketsLoading;
 
     const statsCards = [
       { name: "Total Users", value: stats.totalUsers, icon: Users },
       { name: "Active Users", value: stats.activeUsers, icon: UserCheck },
+      { name: "Total Markets", value: stats.totalMarkets, icon: Store },
+      { name: "Active Markets", value: stats.activeMarkets, icon: CheckCircle },
+      { name: "Inactive Markets", value: stats.inactiveMarkets, icon: XCircle },
       { name: "Inactive Users", value: stats.inactiveUsers, icon: UserX },
       { name: "Suspended Users", value: stats.suspendedUsers, icon: Ban },
       { name: "Total Enrollers", value: stats.totalEnrollers, icon: UserPlus },
