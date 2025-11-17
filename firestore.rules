@@ -4,9 +4,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // Check for an 'admin' custom claim on the user's auth token.
-      // IMPORTANT: To set a user as admin, you must use a backend process (like a Cloud Function)
-      // to set a custom claim. For example: `auth.setCustomUserClaims(uid, { admin: true });`
       return request.auth.token.admin == true;
     }
 
@@ -15,42 +12,29 @@ service cloud.firestore {
         return request.auth.uid == userId;
       }
 
-      // Admins can get any user profile, users can only get their own.
       allow get: if isOwner() || isAdmin();
-      // Any authenticated user can list all users.
       allow list: if request.auth != null; 
-      // A user can create their own profile document, ensuring the ID matches.
       allow create: if isOwner() && request.resource.data.id == userId;
-      // Admins can update any user, users can only update their own.
       allow update: if isOwner() || isAdmin();
-      // Admins can delete any user, users can only delete their own.
       allow delete: if isOwner() || isAdmin();
     }
     
     match /markets/{marketId} {
-      // All users (including unauthenticated) can read market timings.
       allow get, list: if true;
-      // Only admins can create, update, or delete markets.
       allow write: if isAdmin();
     }
 
     match /bet_types/{betTypeId} {
-      // All users can read the available bet types.
       allow get, list: if true;
-      // Only admins can create, update, or delete bet types.
       allow write: if isAdmin();
     }
 
     match /kalyan_results/{kalyanResultId} {
-      // Allow everyone to get and list results.
       allow get, list: if true;
-      // Only admins can write (create, update, delete) results.
       allow write: if isAdmin();
     }
 
-    // This collection is no longer used for admin checks but might be used for other roles.
-    // For now, locking it down completely.
-     match /roles_admin/{userId} {
+    match /roles_admin/{userId} {
         allow read, write: if false;
     }
   }
