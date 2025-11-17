@@ -1,7 +1,8 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ArrowUpCircle } from "lucide-react";
+import { Users, ArrowUpCircle, Store, CheckCircle } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -29,6 +30,12 @@ export default function EnrollerDashboardPage() {
     }, [firestore, authUser]);
 
     const { data: enrolledUsers, isLoading: areUsersLoading } = useCollection<any>(enrolledUsersQuery);
+    
+    const activeMarketsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "markets"), where("status", "==", "Active")) : null, [firestore]);
+    const { data: activeMarkets, isLoading: areMarketsLoading } = useCollection<any>(activeMarketsQuery);
+
+    const activeBetTypesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "bet_types"), where("status", "==", "Active")) : null, [firestore]);
+    const { data: activeBetTypes, isLoading: areBetTypesLoading } = useCollection<any>(activeBetTypesQuery);
 
     const enrolledUserIds = useMemo(() => {
         return enrolledUsers ? enrolledUsers.map(u => u.id) : [];
@@ -36,9 +43,6 @@ export default function EnrollerDashboardPage() {
 
     const transactionsQuery = useMemoFirebase(() => {
         if (!firestore || enrolledUserIds.length === 0) return null;
-        // Firestore 'in' query is limited to 30 elements. 
-        // For more than 30 users, this approach needs revision (e.g., using multiple queries or a backend function).
-        // For now, we assume an enroller will have a manageable number of users for client-side calculation.
         if (enrolledUserIds.length > 30) {
             console.warn("More than 30 enrolled users, deposit calculation might be incomplete.");
         }
@@ -59,10 +63,12 @@ export default function EnrollerDashboardPage() {
         return {
             totalEnrolledUsers: enrolledUsers?.length.toString() || '0',
             totalDeposits: formatCurrency(totalDeposits),
+            totalActiveMarkets: activeMarkets?.length.toString() || '0',
+            totalActiveBetTypes: activeBetTypes?.length.toString() || '0',
         }
-    }, [enrolledUsers, transactions]);
+    }, [enrolledUsers, transactions, activeMarkets, activeBetTypes]);
 
-    const isLoading = isUserLoading || areUsersLoading || areTxnsLoading;
+    const isLoading = isUserLoading || areUsersLoading || areTxnsLoading || areMarketsLoading || areBetTypesLoading;
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,9 +78,11 @@ export default function EnrollerDashboardPage() {
           An overview of your enrolled users and their activity.
         </p>
       </div>
-      <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard name="Total Enrolled Users" value={stats.totalEnrolledUsers} icon={Users} isLoading={isLoading} />
         <StatCard name="Total Deposits from Your Users" value={stats.totalDeposits} icon={ArrowUpCircle} isLoading={isLoading} />
+        <StatCard name="Total Active Markets" value={stats.totalActiveMarkets} icon={Store} isLoading={isLoading} />
+        <StatCard name="Total Active Bet Types" value={stats.totalActiveBetTypes} icon={CheckCircle} isLoading={isLoading} />
       </div>
     </div>
   );
