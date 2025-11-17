@@ -61,7 +61,8 @@ export default function DashboardPage() {
   
   // Fetch transactions only when the query is ready
   const { data: recentActivity, isLoading: isActivityLoading } = useCollection<any>(
-    transactionsQuery
+    transactionsQuery,
+    { skip: !transactionsQuery }
   );
 
 
@@ -307,8 +308,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
-    
-
-    
