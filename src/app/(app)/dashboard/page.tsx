@@ -62,7 +62,12 @@ export default function DashboardPage() {
 
   const sortedRecentActivity = useMemo(() => {
     if (!recentActivity) return [];
-    return [...recentActivity].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by date in descending order (most recent first)
+    return [...recentActivity].sort((a, b) => {
+        const dateA = a.date ? new Date(a.date).getTime() : 0;
+        const dateB = b.date ? new Date(b.date).getTime() : 0;
+        return dateB - dateA;
+    });
   }, [recentActivity]);
 
 
@@ -297,3 +302,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

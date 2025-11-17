@@ -18,7 +18,7 @@ service cloud.firestore {
       // Users can read their own transactions.
       allow get: if request.auth != null && resource.data.userId == request.auth.uid;
       // Users can list their own transactions, but not all transactions.
-      allow list: if request.auth != null && request.query.where.size() > 0 && request.query.where[0].field == 'userId' && request.query.where[0].value == request.auth.uid;
+      allow list: if request.auth != null && request.query.get("userId") == request.auth.uid;
       // All writes are through server-side logic (Cloud Functions or trusted server).
       allow write: if false; 
     }
