@@ -105,6 +105,22 @@
       },
       "required": ["name", "description", "status"]
     },
+    "GameRate": {
+      "title": "Game Rate",
+      "description": "Defines the payout rate for a specific game type.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the game type (e.g., Single Digit)."
+        },
+        "rate": {
+          "type": "string",
+          "description": "The payout rate description (e.g., 10 ka 100)."
+        }
+      },
+      "required": ["name", "rate"]
+    },
     "KalyanResult": {
       "title": "Kalyan Result",
       "description": "Represents a declared result for a specific market and date.",
@@ -180,6 +196,16 @@
             "$ref": "#/backend/entities/KalyanResult"
           },
           "description": "Stores declared game results. Publicly readable, admin writable."
+        }
+      },
+       {
+        "path": "/game_rates/{rateId}",
+        "definition": {
+          "entityName": "GameRate",
+          "schema": {
+            "$ref": "#/backend/entities/GameRate"
+          },
+          "description": "Stores game payout rates. Publicly readable, admin writable."
         }
       }
     ]
