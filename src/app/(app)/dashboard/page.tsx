@@ -58,7 +58,12 @@ export default function DashboardPage() {
     ) : null,
     [authUser, firestore]
   );
-  const { data: recentActivity, isLoading: isActivityLoading } = useCollection<any>(transactionsQuery);
+  
+  // Fetch transactions only when the query is ready
+  const { data: recentActivity, isLoading: isActivityLoading } = useCollection<any>(
+    authUser ? transactionsQuery : null
+  );
+
 
   const sortedRecentActivity = useMemo(() => {
     if (!recentActivity) return [];
@@ -303,4 +308,5 @@ export default function DashboardPage() {
   );
 }
 
+    
     
