@@ -27,16 +27,9 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
-import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-  
   return (
     <SidebarProvider>
       <Sidebar>
