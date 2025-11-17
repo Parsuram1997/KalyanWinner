@@ -12,14 +12,34 @@ export async function createKalyanResult(resultData: {
   jodi: string;
 }) {
   try {
-    await firestore.collection("kalyan_results").add(resultData);
+    const resultsRef = firestore.collection("kalyan_results");
+
+    // Use a transaction to ensure atomicity
+    await firestore.runTransaction(async (transaction) => {
+      const query = resultsRef
+        .where("marketName", "==", resultData.marketName)
+        .where("date", "==", resultData.date);
+
+      const snapshot = await transaction.get(query);
+
+      if (!snapshot.empty) {
+        throw new Error(`A result for ${resultData.marketName} on ${resultData.date} already exists.`);
+      }
+
+      // If no documents are found, create the new result
+      const newResultRef = resultsRef.doc();
+      transaction.set(newResultRef, resultData);
+    });
+
     revalidatePath(`/admin/manage-results/${resultData.marketName.toLowerCase().replace(/\s+/g, '-')}`);
     return { success: true };
   } catch (error: any) {
     console.error("Error creating kalyan result:", error);
+    // Re-throw the specific error message to be caught by the client
     throw new Error(error.message || "Failed to create kalyan result.");
   }
 }
+
 
 export async function updateKalyanResult(resultId: string, resultData: {
   date?: string;
