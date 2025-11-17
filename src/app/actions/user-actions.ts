@@ -121,12 +121,12 @@ export async function createUser(userData: {
         role: role, 
         createdAt: new Date().toISOString(),
         createdBy: userData.createdBy || 'Self',
+        commissionPaid: false, // Always initialize commission status
       };
       
       if (userData.enrollerId) {
           userProfile.enrollerId = userData.enrollerId;
           userProfile.createdBy = 'Enroller';
-          userProfile.commissionPaid = false; // Initialize commission status
       }
       
       transaction.set(firestore.collection("users").doc(userRecord.uid), userProfile);
