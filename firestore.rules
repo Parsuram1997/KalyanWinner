@@ -14,29 +14,32 @@ service cloud.firestore {
 
     match /transactions/{transactionId} {
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow write: if false;
+      allow write: if false; // All writes are through server actions/functions
     }
     
     match /markets/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
+
     match /bet_types/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
+
     match /game_rates/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
+
     match /kalyan_results/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
     
     match /payment_settings/{document=**} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin();
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     match /counters/{counterId} {
