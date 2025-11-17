@@ -54,8 +54,9 @@ export default function EnterResultsPage() {
 
     const sortedResults = useMemo(() => {
         if (!results) return [];
+        // Sort by date in descending order (most recent first)
         return [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }, [results]);
+    }, [results]); // useMemo will re-run when the 'results' array reference from useCollection changes
 
     const [openPanna, setOpenPanna] = useState('');
     const [closePanna, setClosePanna] = useState('');
