@@ -1,5 +1,5 @@
 
-import { initializeApp, getApps, getApp } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, cert, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
@@ -8,7 +8,9 @@ import { getFirestore } from 'firebase-admin/firestore';
 // discover the service account credentials.
 const app = getApps().length
   ? getApp()
-  : initializeApp();
+  : initializeApp({
+    credential: applicationDefault(),
+  });
 
 const auth = getAuth(app);
 const firestore = getFirestore(app);
