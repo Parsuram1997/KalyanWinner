@@ -4,10 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // In a production environment, this should be based on custom claims.
-      // For example: return request.auth.token.admin == true;
-      // For now, we check a role in the user's document.
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+      // Check for an 'admin' custom claim on the user's auth token.
+      return request.auth.token.admin == true;
     }
 
     match /users/{userId} {
@@ -17,8 +15,8 @@ service cloud.firestore {
 
       // Admins can get any user profile, users can only get their own.
       allow get: if isOwner() || isAdmin();
-      // Only admins can list all users.
-      allow list: if isAdmin(); 
+      // Any authenticated user can list all users.
+      allow list: if request.auth != null; 
       // A user can create their own profile document, ensuring the ID matches.
       allow create: if isOwner() && request.resource.data.id == userId;
       // Admins can update any user, users can only update their own.
@@ -42,8 +40,8 @@ service cloud.firestore {
     }
 
     match /kalyan_results/{kalyanResultId} {
-      // Allow anyone to read results. This is public data.
-      allow read: if true;
+      // Allow authenticated users to get and list results.
+      allow get, list: if request.auth != null;
       // Only admins can write (create, update, delete) results.
       allow write: if isAdmin();
     }
