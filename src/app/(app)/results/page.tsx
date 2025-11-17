@@ -1,3 +1,6 @@
+
+"use client";
+
 import {
   Card,
   CardContent,
@@ -15,41 +18,35 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where, orderBy } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const results = [
-    // Today
-  { id: 1, date: "2024-07-26", market: "Kalyan Day", openPanna: "128", openDigit: "1", closePanna: "490", closeDigit: "3", jodi: "13" },
-  { id: 2, date: "2024-07-26", market: "Kalyan Night", openPanna: "345", openDigit: "2", closePanna: "678", closeDigit: "1", jodi: "21" },
-  // Yesterday
-  { id: 3, date: "2024-07-25", market: "Kalyan Day", openPanna: "579", openDigit: "1", closePanna: "224", closeDigit: "8", jodi: "18" },
-  { id: 4, date: "2024-07-25", market: "Kalyan Night", openPanna: "112", openDigit: "4", closePanna: "380", closeDigit: "1", jodi: "41" },
-  // Day before
-  { id: 5, date: "2024-07-24", market: "Kalyan Day", openPanna: "690", openDigit: "5", closePanna: "137", closeDigit: "1", jodi: "51" },
-  { id: 6, date: "2024-07-24", market: "Kalyan Night", openPanna: "456", openDigit: "5", closePanna: "789", closeDigit: "4", jodi: "54" },
-  { id: 7, date: "2024-07-23", market: "Kalyan Day", openPanna: "248", openDigit: "4", closePanna: "159", closeDigit: "5", jodi: "45" },
-  { id: 8, date: "2024-07-23", market: "Kalyan Night", openPanna: "780", openDigit: "5", closePanna: "123", closeDigit: "6", jodi: "56" },
-  { id: 9, date: "2024-07-22", market: "Kalyan Day", openPanna: "357", openDigit: "5", closePanna: "889", closeDigit: "5", jodi: "55" },
-  { id: 10, date: "2024-07-22", market: "Kalyan Night", openPanna: "168", openDigit: "5", closePanna: "237", closeDigit: "2", jodi: "52" },
-  { id: 11, date: "2024-07-21", market: "Kalyan Day", openPanna: "120", openDigit: "3", closePanna: "470", closeDigit: "1", jodi: "31" },
-  { id: 12, date: "2024-07-21", market: "Kalyan Night", openPanna: "589", openDigit: "2", closePanna: "349", closeDigit: "6", jodi: "26" },
-];
-
-type Result = (typeof results)[0];
+type Result = { 
+  id: string;
+  date: string;
+  market: string;
+  openPanna: string;
+  jodi: string;
+  closePanna: string;
+};
 
 // Helper to format date string
 const getFormattedDate = (dateString: string) => {
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  today.setHours(0, 0, 0, 0);
   
-  if (dateString === todayStr) {
+  const resultDate = new Date(dateString);
+  resultDate.setHours(0, 0, 0, 0);
+
+  if (resultDate.getTime() === today.getTime()) {
     return 'Today';
   }
   
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-  if (dateString === yesterdayStr) {
+  if (resultDate.getTime() === yesterday.getTime()) {
       return 'Yesterday'
   }
   
@@ -57,11 +54,20 @@ const getFormattedDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
+const ResultsList = ({ resultsToShow, isLoading }: { resultsToShow: Result[], isLoading: boolean }) => {
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+      </div>
+    )
+  }
 
-const kalyanDayResults = results.filter((r) => r.market.includes("Day")).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-const kalyanNightResults = results.filter((r) => r.market.includes("Night")).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  if (resultsToShow.length === 0) {
+      return <p className="text-center text-muted-foreground py-8">No results found for this market.</p>
+  }
 
-const ResultsList = ({ resultsToShow }: { resultsToShow: Result[] }) => (
+  return (
   <>
     {/* Desktop Table */}
     <div className="hidden md:block">
@@ -146,8 +152,20 @@ const ResultsList = ({ resultsToShow }: { resultsToShow: Result[] }) => (
     </div>
   </>
 );
+}
 
 export default function ResultsPage() {
+  const firestore = useFirestore();
+
+  const kalyanDayQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "kalyan_results"), where("marketName", "==", "Kalyan Day"), orderBy("date", "desc")) : null, [firestore]);
+  const { data: kalyanDayResults, isLoading: isDayLoading } = useCollection<any>(kalyanDayQuery);
+
+  const kalyanNightQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "kalyan_results"), where("marketName", "==", "Kalyan Night"), orderBy("date", "desc")) : null, [firestore]);
+  const { data: kalyanNightResults, isLoading: isNightLoading } = useCollection<any>(kalyanNightQuery);
+
+  const dayResults = kalyanDayResults?.map(r => ({ ...r, market: r.marketName })) || [];
+  const nightResults = kalyanNightResults?.map(r => ({ ...r, market: r.marketName })) || [];
+
   return (
     <div className="flex flex-col gap-6">
       <div className="space-y-1">
@@ -168,7 +186,7 @@ export default function ResultsPage() {
               <CardTitle>Kalyan Day Results</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResultsList resultsToShow={kalyanDayResults} />
+              <ResultsList resultsToShow={dayResults} isLoading={isDayLoading} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -178,7 +196,7 @@ export default function ResultsPage() {
               <CardTitle>Kalyan Night Results</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResultsList resultsToShow={kalyanNightResults} />
+              <ResultsList resultsToShow={nightResults} isLoading={isNightLoading} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -186,3 +204,4 @@ export default function ResultsPage() {
     </div>
   );
 }
+
