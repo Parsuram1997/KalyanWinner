@@ -6,6 +6,8 @@ import Image from 'next/image';
 import {
   Users,
   LayoutDashboard,
+  Coins,
+  Clock,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,6 +64,22 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
                 <Link href="/enroller/users">
                   <Users />
                   Enrolled Users
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/enroller/game-rates">
+                  <Coins />
+                  Game Rates
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/enroller/game-timings">
+                  <Clock />
+                  Game Timings
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
