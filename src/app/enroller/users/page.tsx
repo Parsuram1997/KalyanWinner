@@ -1070,7 +1070,8 @@ export default function EnrolledUsersPage() {
                       <div className="text-xs text-muted-foreground">{user.customId}</div>
                     </TableCell>
                     <TableCell>
-                      <div>{user.mobile}</div>
+                      <div>{user.email}</div>
+                      <div className="text-xs text-muted-foreground">{user.mobile}</div>
                     </TableCell>
                     <TableCell>
                       <div>{user.district}</div>
@@ -1116,7 +1117,8 @@ export default function EnrolledUsersPage() {
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Contact:</span>
                         <div className="text-right">
-                            <p>{user.mobile}</p>
+                            <p>{user.email}</p>
+                            <p className="text-muted-foreground">{user.mobile}</p>
                         </div>
                     </div>
                     <div className="flex justify-between">
@@ -1162,5 +1164,3 @@ export default function EnrolledUsersPage() {
     </div>
   );
 }
-
-    
