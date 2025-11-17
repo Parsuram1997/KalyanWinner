@@ -83,6 +83,27 @@
         }
       },
       "required": ["name", "openTime", "closeTime", "status"]
+    },
+    "BetType": {
+      "title": "Bet Type",
+      "description": "Defines a type of bet that can be placed in a market.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the bet type (e.g., Jodi, Single Panna)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief explanation of the bet type."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "Inactive"],
+          "description": "Whether this bet type is currently available for users."
+        }
+      },
+      "required": ["name", "description", "status"]
     }
   },
   "auth": {
@@ -110,6 +131,16 @@
             "$ref": "#/backend/entities/Market"
           },
           "description": "Stores game market information. Publicly readable, but only writable by admins."
+        }
+      },
+      {
+        "path": "/bet_types/{betTypeId}",
+        "definition": {
+          "entityName": "BetType",
+          "schema": {
+            "$ref": "#/backend/entities/BetType"
+          },
+          "description": "Stores the different types of bets available. Publicly readable, admin writable."
         }
       }
     ]

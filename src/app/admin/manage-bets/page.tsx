@@ -16,7 +16,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,65 +45,82 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { createBetType, deleteBetType, updateBetType } from "@/app/actions/bet-type-actions";
 
-const initialBetTypes = [
-  { id: "1", name: "Open Digit", description: "Bet on a single number from 0-9 for the Open result.", status: "Active" },
-  { id: "2", name: "Close Digit", description: "Bet on a single number from 0-9 for the Close result.", status: "Active" },
-  { id: "3", name: "Jodi", description: "Bet on a two-digit number from 00-99.", status: "Active" },
-  { id: "4", name: "Single Panna", description: "Bet on a three-digit number with unique digits.", status: "Active" },
-  { id: "5", name: "Double Panna", description: "Bet on a three-digit number with two identical digits.", status: "Active" },
-  { id: "6", name: "Triple Panna", description: "Bet on a three-digit number with all identical digits.", status: "Active" },
-  { id: "7", name: "Half Sangam", description: "Bet on a combination of one Panna and one digit.", status: "Inactive" },
-  { id: "8", name: "Full Sangam", description: "Bet on the combination of both Open and Close Pannas.", status: "Inactive" },
-];
-
-type BetType = typeof initialBetTypes[0];
+type BetType = { 
+  id: string;
+  name: string;
+  description: string;
+  status: "Active" | "Inactive";
+};
 
 export default function ManageBetTypesPage() {
   const { toast } = useToast();
-  const [betTypes, setBetTypes] = useState(initialBetTypes);
+  const firestore = useFirestore();
+
+  const betTypesQuery = useMemoFirebase(() => firestore ? collection(firestore, "bet_types") : null, [firestore]);
+  const { data: betTypes, isLoading } = useCollection<BetType>(betTypesQuery);
+  
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedBetType, setSelectedBetType] = useState<BetType | null>(null);
 
-  const handleAddBetType = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddBetType = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
     const newBetType = {
-      id: (betTypes.length + 1).toString(),
       name: formData.get("name") as string,
       description: formData.get("description") as string,
-      status: "Active",
     };
-    setBetTypes([...betTypes, newBetType]);
-    setAddDialogOpen(false);
-    toast({ title: "Bet Type Added", description: `${newBetType.name} has been added.` });
+    try {
+        await createBetType(newBetType);
+        setAddDialogOpen(false);
+        toast({ title: "Bet Type Added", description: `${newBetType.name} has been added.` });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Add Bet Type", description: error.message });
+    }
   };
   
-  const handleEditBetType = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEditBetType = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedBetType) return;
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const updatedBetType = {
-      ...selectedBetType,
+    const updatedData = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
     };
-    setBetTypes(betTypes.map(bt => bt.id === updatedBetType.id ? updatedBetType : bt));
-    setEditDialogOpen(false);
-    toast({ title: "Bet Type Updated", description: `${updatedBetType.name} has been updated.` });
+    
+    try {
+        await updateBetType(selectedBetType.id, updatedData);
+        setEditDialogOpen(false);
+        toast({ title: "Bet Type Updated", description: `${updatedData.name} has been updated.` });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Update Bet Type", description: error.message });
+    }
   };
   
-  const handleDeleteBetType = (betTypeId: string) => {
-    setBetTypes(betTypes.filter(bt => bt.id !== betTypeId));
-    toast({ variant: "destructive", title: "Bet Type Deleted", description: "The bet type has been removed." });
+  const handleDeleteBetType = async (betTypeId: string) => {
+    try {
+        await deleteBetType(betTypeId);
+        toast({ title: "Bet Type Deleted", description: "The bet type has been removed." });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Delete Bet Type", description: error.message });
+    }
   };
   
-  const toggleBetTypeStatus = (betTypeId: string) => {
-    setBetTypes(betTypes.map(bt => bt.id === betTypeId ? { ...bt, status: bt.status === "Active" ? "Inactive" : "Active" } : bt));
+  const toggleBetTypeStatus = async (betType: BetType) => {
+    const newStatus = betType.status === "Active" ? "Inactive" : "Active";
+    try {
+        await updateBetType(betType.id, { status: newStatus });
+        toast({ title: "Status Updated", description: `${betType.name} is now ${newStatus}.` });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Update Status", description: error.message });
+    }
   }
 
   const openEditDialog = (betType: BetType) => {
@@ -168,7 +184,11 @@ export default function ManageBetTypesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {betTypes.map((betType) => (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">Loading bet types...</TableCell>
+                  </TableRow>
+                ) : betTypes?.map((betType) => (
                   <TableRow key={betType.id}>
                     <TableCell className="font-medium">{betType.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{betType.description}</TableCell>
@@ -176,7 +196,7 @@ export default function ManageBetTypesPage() {
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={betType.status === "Active"}
-                          onCheckedChange={() => toggleBetTypeStatus(betType.id)}
+                          onCheckedChange={() => toggleBetTypeStatus(betType)}
                           aria-label={`Toggle ${betType.name} status`}
                         />
                         <Badge variant={betType.status === "Active" ? "secondary" : "outline"}>
@@ -212,7 +232,7 @@ export default function ManageBetTypesPage() {
           
            {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
-              {betTypes.map((betType) => (
+              {isLoading ? <p className="text-center">Loading...</p> : betTypes?.map((betType) => (
                 <Card key={betType.id}>
                   <CardHeader>
                       <div className="flex justify-between items-start">
@@ -228,7 +248,7 @@ export default function ManageBetTypesPage() {
                           <span className="text-sm text-muted-foreground">Status:</span>
                           <Switch
                             checked={betType.status === "Active"}
-                            onCheckedChange={() => toggleBetTypeStatus(betType.id)}
+                            onCheckedChange={() => toggleBetTypeStatus(betType)}
                             aria-label={`Toggle ${betType.name} status`}
                           />
                       </div>

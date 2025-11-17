@@ -36,6 +36,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /bet_types/{betTypeId} {
+      // All users can read the available bet types.
+      allow read: if true;
+      // Only admins can create, update, or delete bet types.
+      allow write: if isAdmin();
+    }
+
     match /kalyan_results/{kalyanResultId} {
       allow get: if true;
       allow list: if true;
