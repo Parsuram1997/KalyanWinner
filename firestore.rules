@@ -17,15 +17,15 @@ service cloud.firestore {
       allow write: if false;
     }
     
-    match /markets/{marketId} {
+    match /markets/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
-    match /bet_types/{betTypeId} {
+    match /bet_types/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
-    match /game_rates/{rateId} {
+    match /game_rates/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
@@ -34,7 +34,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    match /payment_settings/{settingsId} {
+    match /payment_settings/{document=**} {
         allow read: if request.auth != null;
         allow write: if isAdmin();
     }
