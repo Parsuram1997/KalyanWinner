@@ -13,7 +13,7 @@ export async function createKalyanResult(resultData: {
 }) {
   try {
     await firestore.collection("kalyan_results").add(resultData);
-    revalidatePath(`/admin/manage-results/${resultData.marketName.toLowerCase().replace(' ', '-')}`);
+    revalidatePath(`/admin/manage-results/${resultData.marketName.toLowerCase().replace(/\s+/g, '-')}`);
     return { success: true };
   } catch (error: any) {
     console.error("Error creating kalyan result:", error);
@@ -29,7 +29,7 @@ export async function updateKalyanResult(resultId: string, resultData: {
 }, marketName: string) {
   try {
     await firestore.collection("kalyan_results").doc(resultId).update(resultData);
-    revalidatePath(`/admin/manage-results/${marketName.toLowerCase().replace(' ', '-')}`);
+    revalidatePath(`/admin/manage-results/${marketName.toLowerCase().replace(/\s+/g, '-')}`);
     return { success: true };
   } catch (error: any) {
     console.error("Error updating kalyan result:", error);
