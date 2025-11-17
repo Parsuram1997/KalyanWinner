@@ -40,8 +40,8 @@ service cloud.firestore {
     }
 
     match /kalyan_results/{kalyanResultId} {
-      // Allow authenticated users to get and list results.
-      allow get, list: if request.auth != null;
+      // Allow everyone to get and list results.
+      allow get, list: if true;
       // Only admins can write (create, update, delete) results.
       allow write: if isAdmin();
     }
