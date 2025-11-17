@@ -54,12 +54,17 @@ export default function DashboardPage() {
   const transactionsQuery = useMemoFirebase(
     () => authUser && firestore ? query(
         collection(firestore, "transactions"), 
-        where("userId", "==", authUser.uid), 
-        orderBy("date", "desc")
+        where("userId", "==", authUser.uid)
     ) : null,
     [authUser, firestore]
   );
   const { data: recentActivity, isLoading: isActivityLoading } = useCollection<any>(transactionsQuery);
+
+  const sortedRecentActivity = useMemo(() => {
+    if (!recentActivity) return [];
+    return [...recentActivity].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [recentActivity]);
+
 
   const kalyanDayResultQuery = useMemoFirebase(
     () => firestore ? query(
@@ -92,14 +97,14 @@ export default function DashboardPage() {
 
   const isLoading = isUserLoading || isUserDataLoading || isActivityLoading || isDayResultLoading || isNightResultLoading;
 
-  const totalPages = Math.ceil((recentActivity?.length || 0) / ACTIVITY_PER_PAGE);
+  const totalPages = Math.ceil((sortedRecentActivity?.length || 0) / ACTIVITY_PER_PAGE);
 
   const paginatedActivity = useMemo(() => {
-    if (!recentActivity) return [];
+    if (!sortedRecentActivity) return [];
     const startIndex = (currentPage - 1) * ACTIVITY_PER_PAGE;
     const endIndex = startIndex + ACTIVITY_PER_PAGE;
-    return recentActivity.slice(startIndex, endIndex);
-  }, [recentActivity, currentPage]);
+    return sortedRecentActivity.slice(startIndex, endIndex);
+  }, [sortedRecentActivity, currentPage]);
 
   useEffect(() => {
     if (!api) return;
@@ -202,7 +207,7 @@ export default function DashboardPage() {
           <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? <Skeleton className="h-40 w-full" /> : recentActivity && recentActivity.length > 0 ? (
+          {isLoading ? <Skeleton className="h-40 w-full" /> : sortedRecentActivity && sortedRecentActivity.length > 0 ? (
             <>
               <div className="hidden md:block">
                 <Table>
