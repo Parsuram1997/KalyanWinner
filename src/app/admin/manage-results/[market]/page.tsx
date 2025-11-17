@@ -11,7 +11,7 @@ import { Edit, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { createKalyanResult, deleteKalyanResult } from "@/app/actions/result-actions";
 import {
   AlertDialog,
@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 type KalyanResult = {
   id: string;
@@ -46,13 +46,17 @@ export default function EnterResultsPage() {
         () => firestore 
                 ? query(
                     collection(firestore, 'kalyan_results'), 
-                    where('marketName', '==', marketName),
-                    orderBy('date', 'desc')
+                    where('marketName', '==', marketName)
                   ) 
                 : null,
         [firestore, marketName]
     );
     const { data: results, isLoading } = useCollection<KalyanResult>(resultsQuery);
+
+    const sortedResults = useMemo(() => {
+        if (!results) return [];
+        return [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [results]);
 
     const [openPanna, setOpenPanna] = useState('');
     const [closePanna, setClosePanna] = useState('');
@@ -169,7 +173,7 @@ export default function EnterResultsPage() {
                          <TableRow>
                             <TableCell colSpan={5} className="text-center">Loading results...</TableCell>
                          </TableRow>
-                    ) : results?.length ? results.map((result) => (
+                    ) : sortedResults.length ? sortedResults.map((result) => (
                     <TableRow key={result.id}>
                         <TableCell>{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell className="font-mono">{result.openPanna}</TableCell>
@@ -208,7 +212,7 @@ export default function EnterResultsPage() {
             {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
                 {isLoading ? <p className="text-center">Loading results...</p> :
-                 results?.length ? results.map((result) => (
+                 sortedResults.length ? sortedResults.map((result) => (
                     <div key={result.id} className="rounded-lg border bg-card text-card-foreground p-4 space-y-4">
                         <div className="flex justify-between items-start">
                             <div>
@@ -260,5 +264,3 @@ export default function EnterResultsPage() {
     </div>
   );
 }
-
-    
