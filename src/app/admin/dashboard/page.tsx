@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ClipboardList, Wallet, GanttChartSquare, ArrowUpCircle, ArrowDownCircle, Hourglass, TrendingDown, UserCheck, UserX, Ban, UserPlus, Store, CheckCircle, XCircle, Settings } from "lucide-react";
+import { Users, ClipboardList, Wallet, GanttChartSquare, ArrowUpCircle, ArrowDownCircle, Hourglass, TrendingDown, UserCheck, UserX, Ban, UserPlus, Store, CheckCircle, XCircle, Settings, Shield } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -29,6 +29,9 @@ export default function AdminDashboardPage() {
 
     const enrollersQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, "users"), where("role", "==", "Enroller")) : null), [firestore]);
     const { data: enrollers, isLoading: enrollersLoading } = useCollection<any>(enrollersQuery);
+
+    const adminsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, "users"), where("role", "==", "Admin")) : null), [firestore]);
+    const { data: admins, isLoading: adminsLoading } = useCollection<any>(adminsQuery);
     
     const marketsQuery = useMemoFirebase(() => (firestore ? collection(firestore, "markets") : null), [firestore]);
     const { data: markets, isLoading: marketsLoading } = useCollection<any>(marketsQuery);
@@ -36,13 +39,13 @@ export default function AdminDashboardPage() {
     const betTypesQuery = useMemoFirebase(() => (firestore ? collection(firestore, "bet_types") : null), [firestore]);
     const { data: betTypes, isLoading: betTypesLoading } = useCollection<any>(betTypesQuery);
     
-    // Mocking transactions for now as the collection doesn't exist
-    const transactions: any[] = [];
-    const transactionsLoading = false;
+    const transactionsQuery = useMemoFirebase(() => firestore ? collection(firestore, "transactions") : null, [firestore]);
+    const { data: transactions, isLoading: transactionsLoading } = useCollection<any>(transactionsQuery);
 
     const stats = useMemo(() => {
         const allUsers = users || [];
         const allEnrollers = enrollers || [];
+        const allAdmins = admins || [];
         const allTransactions = transactions || [];
         const allMarkets = markets || [];
         const allBetTypes = betTypes || [];
@@ -52,6 +55,7 @@ export default function AdminDashboardPage() {
         }
 
         return {
+            totalAdmins: allAdmins.length.toString(),
             totalUsers: allUsers.length.toString(),
             activeUsers: allUsers.filter(u => u.status === 'Active').length.toString(),
             inactiveUsers: allUsers.filter(u => u.status === 'Inactive').length.toString(),
@@ -73,11 +77,12 @@ export default function AdminDashboardPage() {
             activeBetTypes: allBetTypes.filter(bt => bt.status === 'Active').length.toString(),
             inactiveBetTypes: allBetTypes.filter(bt => bt.status === 'Inactive').length.toString(),
         }
-    }, [users, enrollers, transactions, markets, betTypes]);
+    }, [users, enrollers, admins, transactions, markets, betTypes]);
 
-    const isLoading = usersLoading || enrollersLoading || transactionsLoading || marketsLoading || betTypesLoading;
+    const isLoading = usersLoading || enrollersLoading || adminsLoading || transactionsLoading || marketsLoading || betTypesLoading;
 
     const statsCards = [
+      { name: "Total Admins", value: stats.totalAdmins, icon: Shield },
       { name: "Total Users", value: stats.totalUsers, icon: Users },
       { name: "Active Users", value: stats.activeUsers, icon: UserCheck },
       { name: "Total Markets", value: stats.totalMarkets, icon: Store },
