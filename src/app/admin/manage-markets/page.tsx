@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -44,64 +45,85 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { createMarket, deleteMarket, updateMarket } from "@/app/actions/market-actions";
 
-const initialMarkets = [
-  { id: "1", name: "Kalyan Day", openTime: "04:30 PM", closeTime: "06:30 PM", status: "Active" },
-  { id: "2", name: "Kalyan Night", openTime: "09:30 PM", closeTime: "11:30 PM", status: "Active" },
-  { id: "3", name: "Time Bazar", openTime: "01:00 PM", closeTime: "02:00 PM", status: "Inactive" },
-  { id: "4", name: "Madhur Day", openTime: "01:30 PM", closeTime: "02:30 PM", status: "Active" },
-  { id: "5", name: "Milan Night", openTime: "09:15 PM", closeTime: "11:15 PM", status: "Active" },
-];
-
-type Market = typeof initialMarkets[0];
+type Market = {
+    id: string;
+    name: string;
+    openTime: string;
+    closeTime: string;
+    status: "Active" | "Inactive";
+};
 
 export default function ManageMarketsPage() {
   const { toast } = useToast();
-  const [markets, setMarkets] = useState(initialMarkets);
+  const firestore = useFirestore();
+
+  const marketsQuery = useMemoFirebase(() => firestore ? collection(firestore, "markets") : null, [firestore]);
+  const { data: markets, isLoading } = useCollection<Market>(marketsQuery);
+  
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
 
-  const handleAddMarket = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddMarket = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const newMarket = {
-      id: (markets.length + 1).toString(),
+    const newMarketData = {
       name: formData.get("name") as string,
       openTime: formData.get("openTime") as string,
       closeTime: formData.get("closeTime") as string,
-      status: "Active",
     };
-    setMarkets([...markets, newMarket]);
-    setAddDialogOpen(false);
-    toast({ title: "Market Added", description: `${newMarket.name} has been added.` });
+    try {
+        await createMarket(newMarketData);
+        setAddDialogOpen(false);
+        toast({ title: "Market Added", description: `${newMarketData.name} has been added.` });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Add Market", description: error.message });
+    }
   };
   
-  const handleEditMarket = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEditMarket = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedMarket) return;
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const updatedMarket = {
-      ...selectedMarket,
+    const updatedData = {
       name: formData.get("name") as string,
       openTime: formData.get("openTime") as string,
       closeTime: formData.get("closeTime") as string,
     };
-    setMarkets(markets.map(m => m.id === updatedMarket.id ? updatedMarket : m));
-    setEditDialogOpen(false);
-    toast({ title: "Market Updated", description: `${updatedMarket.name} has been updated.` });
+    
+    try {
+        await updateMarket(selectedMarket.id, updatedData);
+        setEditDialogOpen(false);
+        toast({ title: "Market Updated", description: `${updatedData.name} has been updated.` });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Update Market", description: error.message });
+    }
   };
   
-  const handleDeleteMarket = (marketId: string) => {
-    setMarkets(markets.filter(m => m.id !== marketId));
-    toast({ variant: "destructive", title: "Market Deleted", description: "The market has been removed." });
+  const handleDeleteMarket = async (marketId: string) => {
+    try {
+        await deleteMarket(marketId);
+        toast({ title: "Market Deleted", description: "The market has been removed." });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Delete Market", description: error.message });
+    }
   };
   
-  const toggleMarketStatus = (marketId: string) => {
-    setMarkets(markets.map(m => m.id === marketId ? { ...m, status: m.status === "Active" ? "Inactive" : "Active" } : m));
+  const toggleMarketStatus = async (market: Market) => {
+    const newStatus = market.status === "Active" ? "Inactive" : "Active";
+    try {
+        await updateMarket(market.id, { status: newStatus });
+        toast({ title: "Status Updated", description: `${market.name} is now ${newStatus}.` });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Failed to Update Status", description: error.message });
+    }
   }
 
   const openEditDialog = (market: Market) => {
@@ -170,7 +192,11 @@ export default function ManageMarketsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {markets.map((market) => (
+                {isLoading ? (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center">Loading markets...</TableCell>
+                    </TableRow>
+                ) : markets?.map((market) => (
                   <TableRow key={market.id}>
                     <TableCell className="font-medium">{market.name}</TableCell>
                     <TableCell>{market.openTime}</TableCell>
@@ -179,7 +205,7 @@ export default function ManageMarketsPage() {
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={market.status === "Active"}
-                          onCheckedChange={() => toggleMarketStatus(market.id)}
+                          onCheckedChange={() => toggleMarketStatus(market)}
                           aria-label={`Toggle ${market.name} status`}
                         />
                         <Badge variant={market.status === "Active" ? "secondary" : "outline"}>
@@ -215,7 +241,8 @@ export default function ManageMarketsPage() {
           
            {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
-              {markets.map((market) => (
+            {isLoading ? <p className="text-center text-muted-foreground">Loading markets...</p> : 
+              markets?.map((market) => (
                 <Card key={market.id}>
                   <CardHeader>
                       <div className="flex justify-between items-start">
@@ -238,7 +265,7 @@ export default function ManageMarketsPage() {
                           <span className="text-sm text-muted-foreground">Status:</span>
                           <Switch
                             checked={market.status === "Active"}
-                            onCheckedChange={() => toggleMarketStatus(market.id)}
+                            onCheckedChange={() => toggleMarketStatus(market)}
                             aria-label={`Toggle ${market.name} status`}
                           />
                       </div>

@@ -56,6 +56,33 @@
         }
       },
       "required": ["id", "customId", "name", "mobile", "email", "state", "district", "balance", "status", "role", "createdAt"]
+    },
+     "Market": {
+      "title": "Market",
+      "description": "Represents a game market with its timings and status.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the market (e.g., Kalyan Day)."
+        },
+        "openTime": {
+          "type": "string",
+          "format": "time",
+          "description": "The opening time of the market."
+        },
+        "closeTime": {
+          "type": "string",
+          "format": "time",
+          "description": "The closing time of the market."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "Inactive"],
+          "description": "The current status of the market."
+        }
+      },
+      "required": ["name", "openTime", "closeTime", "status"]
     }
   },
   "auth": {
@@ -73,6 +100,16 @@
             "$ref": "#/backend/entities/UserProfile"
           },
           "description": "Stores user profiles. Path-based ownership, where `userId` matches `request.auth.uid`."
+        }
+      },
+      {
+        "path": "/markets/{marketId}",
+        "definition": {
+          "entityName": "Market",
+          "schema": {
+            "$ref": "#/backend/entities/Market"
+          },
+          "description": "Stores game market information. Publicly readable, but only writable by admins."
         }
       }
     ]

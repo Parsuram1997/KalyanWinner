@@ -28,6 +28,13 @@ service cloud.firestore {
       // Admins can delete any user, users can only delete their own.
       allow delete: if isOwner(userId) || isAdmin();
     }
+    
+    match /markets/{marketId} {
+      // All users (including unauthenticated) can read market timings.
+      allow read: if true;
+      // Only admins can create, update, or delete markets.
+      allow write: if isAdmin();
+    }
 
     match /kalyan_results/{kalyanResultId} {
       allow get: if true;
