@@ -1018,8 +1018,7 @@ export default function ManageEnrollersPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
+        <CardHeader className="flex flex-row justify-between items-start">
             <div>
                 <CardTitle>Manage Enrollers</CardTitle>
                 <CardDescription>
@@ -1097,7 +1096,6 @@ export default function ManageEnrollersPage() {
                   </form>
                 </DialogContent>
               </Dialog>
-          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row justify-start items-center gap-4 mb-4">
@@ -1312,5 +1310,3 @@ export default function ManageEnrollersPage() {
     </div>
   );
 }
-
-    
