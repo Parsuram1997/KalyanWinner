@@ -3,9 +3,7 @@ import * as functions from "firebase-functions";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-initializeApp({
-  serviceAccountId: "firebase-adminsdk-g2y8r@studio-7786701397-58781.iam.gserviceaccount.com"
-});
+initializeApp();
 
 exports.cleanupUser = functions.auth.user().onDelete(async (user) => {
   const firestore = getFirestore();
