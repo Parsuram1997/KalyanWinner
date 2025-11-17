@@ -20,6 +20,9 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 type Bet = {
@@ -31,15 +34,20 @@ function BetForm({
   gameType,
   market,
   walletBalance,
+  isLoadingBalance
 }: {
   gameType: string;
   market: string;
   walletBalance: number;
+  isLoadingBalance: boolean;
 }) {
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user: authUser } = useUser();
   const [bets, setBets] = useState<Bet[]>([]);
   const [currentNumber, setCurrentNumber] = useState("");
   const [currentAmount, setCurrentAmount] = useState("");
+  const [isPlacingBet, setIsPlacingBet] = useState(false);
 
   const totalBetAmount = useMemo(() => {
     return bets.reduce((sum, bet) => sum + parseInt(bet.amount || "0"), 0);
@@ -207,8 +215,9 @@ function BetForm({
     setBets(newBets);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsPlacingBet(true);
 
     if (bets.length === 0) {
       toast({
@@ -216,6 +225,7 @@ function BetForm({
         title: "No Bets Added",
         description: "Please add at least one bet before placing.",
       });
+      setIsPlacingBet(false);
       return;
     }
 
@@ -225,18 +235,63 @@ function BetForm({
         title: "Insufficient Balance",
         description: "Total bet amount exceeds your wallet balance.",
       });
+      setIsPlacingBet(false);
       return;
     }
 
-    const betDescriptions = bets
-      .map((b) => `${b.number} (₹${b.amount})`)
-      .join(", ");
+    if (!firestore || !authUser) {
+         toast({
+            variant: "destructive",
+            title: "Database Error",
+            description: "Could not connect to the database. Please try again.",
+        });
+        setIsPlacingBet(false);
+        return;
+    }
 
-    toast({
-      title: "Bets Placed!",
-      description: `Your bets for ${gameType} (${market}) totaling ₹${totalBetAmount} have been placed.`,
-    });
-    setBets([]);
+    try {
+        const batch = writeBatch(firestore);
+        const userRef = doc(firestore, "users", authUser.uid);
+        
+        // 1. Decrement user balance
+        batch.update(userRef, {
+            balance: walletBalance - totalBetAmount
+        });
+
+        // 2. Create transaction for each bet
+        for (const bet of bets) {
+            const transactionRef = doc(firestore, "transactions", doc(firestore, "transactions").id);
+            batch.set(transactionRef, {
+                userId: authUser.uid,
+                userName: authUser.displayName || 'Unknown User',
+                type: 'Bet',
+                amount: -parseInt(bet.amount, 10),
+                status: 'Placed',
+                date: new Date().toISOString(),
+                description: `Bet on ${gameType} (${bet.number}) in ${market}`,
+                market: market,
+                gameType: gameType,
+                betNumber: bet.number
+            });
+        }
+        
+        await batch.commit();
+
+        toast({
+          title: "Bets Placed!",
+          description: `Your bets for ${gameType} (${market}) totaling ₹${totalBetAmount} have been placed.`,
+        });
+        setBets([]);
+    } catch(error: any) {
+        console.error("Bet placement failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Bet Failed",
+            description: error.message || "Could not place your bets. Please try again.",
+        });
+    } finally {
+        setIsPlacingBet(false);
+    }
   };
   
   const isNumericOnly = !gameType.toLowerCase().includes('sangam');
@@ -294,7 +349,7 @@ function BetForm({
                         <h4 className="text-sm font-medium">Your Bets</h4>
                         <div className="text-xs font-mono text-muted-foreground text-right">
                         <div>Total: ₹{totalBetAmount}</div>
-                        <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div>
+                        {isLoadingBalance ? <Skeleton className="h-4 w-20 mt-1" /> : <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div> }
                         </div>
                     </div>
                     <Separator className="mt-3" />
@@ -339,9 +394,9 @@ function BetForm({
             <Button
                 type="submit"
                 className="w-full"
-                disabled={bets.length === 0}
+                disabled={bets.length === 0 || isPlacingBet || isLoadingBalance}
             >
-                Place Bets for {gameType} (Total: ₹{totalBetAmount})
+                {isPlacingBet ? "Placing Bets..." : `Place Bets for ${gameType} (Total: ₹${totalBetAmount})`}
             </Button>
             </CardFooter>
         </form>
@@ -349,14 +404,14 @@ function BetForm({
   );
 }
 
-const WalletCard = ({ balance }: { balance: number }) => (
+const WalletCard = ({ balance, isLoading }: { balance: number, isLoading: boolean }) => (
     <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-0">
             <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-4 pt-2">
-            <div className="text-xl font-bold">₹{balance.toFixed(2)}</div>
+            {isLoading ? <Skeleton className="h-7 w-28" /> : <div className="text-xl font-bold">₹{balance.toFixed(2)}</div>}
         </CardContent>
         <CardFooter className="p-4 pt-0">
             <Button size="sm" asChild>
@@ -370,6 +425,8 @@ const WalletCard = ({ balance }: { balance: number }) => (
 
 export default function PlaceBetPage() {
   const params = useParams();
+  const firestore = useFirestore();
+  const { user: authUser, isUserLoading } = useUser();
   const marketSlug = params.market as string;
   const betTypeSlug = params.bettype as string;
   
@@ -379,14 +436,17 @@ export default function PlaceBetPage() {
   }).join(' ');
   const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-  // In a real app, this would come from a user context or API
-  const walletBalance = 1245.5;
+  const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
+  const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
+
+  const walletBalance = userData?.balance || 0;
+  const isLoading = isUserLoading || isUserDataLoading;
 
   return (
     <div className="flex flex-col gap-6">
       {/* Mobile Layout */}
       <div className="flex flex-col gap-4 sm:hidden">
-        <WalletCard balance={walletBalance} />
+        <WalletCard balance={walletBalance} isLoading={isLoading} />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
           <p className="text-muted-foreground">
@@ -404,11 +464,11 @@ export default function PlaceBetPage() {
           </p>
         </div>
         <div className="sm:justify-self-end">
-            <WalletCard balance={walletBalance} />
+            <WalletCard balance={walletBalance} isLoading={isLoading} />
         </div>
       </div>
 
-      <BetForm gameType={betTypeName} market={marketName} walletBalance={walletBalance} />
+      <BetForm gameType={betTypeName} market={marketName} walletBalance={walletBalance} isLoadingBalance={isLoading} />
     </div>
   );
 }
