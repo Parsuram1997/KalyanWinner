@@ -44,7 +44,10 @@ service cloud.firestore {
     }
 
     match /kalyan_results/{kalyanResultId} {
-      allow read: if true;
+      // Allow anyone to get a single document, but only logged-in users to list the collection.
+      allow get: if true;
+      allow list: if request.auth != null;
+      // Only admins can write (create, update, delete) results.
       allow write: if isAdmin();
     }
 
@@ -55,5 +58,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
