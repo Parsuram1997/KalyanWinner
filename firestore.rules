@@ -24,6 +24,7 @@ service cloud.firestore {
       allow write: if false; 
     }
     
+    // Publicly readable collections
     match /markets/{document=**} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
