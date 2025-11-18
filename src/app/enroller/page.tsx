@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -95,7 +96,7 @@ export default function EnrollerLoginPage() {
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="pb-2">
           <div className="flex flex-col items-center text-center">
-            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={40} height={40} className="object-contain mb-2" />
+            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={60} height={60} className="object-contain mb-2" />
             <CardTitle className="text-2xl font-bold">Enroller Panel</CardTitle>
             <CardDescription>
               Enter your credentials to access the enroller dashboard.
@@ -132,6 +133,9 @@ export default function EnrollerLoginPage() {
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="text-sm text-center flex justify-center">
+          <Link href="/" className="underline">Go to Home</Link>
+        </CardFooter>
       </Card>
     </div>
   );

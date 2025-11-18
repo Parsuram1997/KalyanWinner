@@ -160,15 +160,28 @@ export async function updateUser(userId: string, userData: {
 
 export async function deleteUser(userId: string) {
     try {
-        // Delete user from Firebase Authentication
-        await auth.deleteUser(userId);
+        // Start a batch write to delete from Auth and Firestore
+        const deletePromise = auth.deleteUser(userId);
+        const firestorePromise = firestore.collection("users").doc(userId).delete();
 
-        // Delete user profile from Firestore is now handled by a Cloud Function trigger
-        // So we don't need to delete it from here explicitly.
+        await Promise.all([deletePromise, firestorePromise]);
 
         return { success: true };
     } catch (error: any) {
         console.error("Error deleting user:", error);
+        // If the user does not exist in Auth, it might have been already deleted.
+        // We can choose to ignore this specific error if needed.
+        if (error.code === 'auth/user-not-found') {
+            // Optionally, try to delete from Firestore anyway
+            try {
+                await firestore.collection("users").doc(userId).delete();
+                return { success: true, message: "User already deleted from Auth, cleaned up Firestore." };
+            } catch (firestoreError: any) {
+                console.error("Error deleting user from Firestore after Auth-not-found error:", firestoreError);
+                throw new Error(firestoreError.message || "Failed to delete user from Firestore.");
+            }
+        }
         throw new Error(error.message || "Failed to delete user.");
     }
 }
+
