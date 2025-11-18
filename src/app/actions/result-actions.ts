@@ -12,6 +12,18 @@ export async function createKalyanResult(resultData: {
   jodi?: string;
 }, marketSlug: string) {
   try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of the day for comparison
+    const resultDate = new Date(resultData.date);
+
+    // Adjust for timezone differences by getting the date parts in UTC
+    const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+    const resultDateUTC = new Date(Date.UTC(resultDate.getUTCFullYear(), resultDate.getUTCMonth(), resultDate.getUTCDate()));
+
+    if (resultDateUTC > todayUTC) {
+      throw new Error("Cannot create results for a future date.");
+    }
+    
     const resultsRef = firestore.collection("kalyan_results");
 
     await firestore.runTransaction(async (transaction) => {
