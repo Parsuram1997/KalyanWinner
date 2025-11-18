@@ -10,7 +10,7 @@ export async function createKalyanResult(resultData: {
   openPanna: string;
   closePanna: string;
   jodi: string;
-}, marketName: string) {
+}, marketSlug: string) {
   try {
     const resultsRef = firestore.collection("kalyan_results");
 
@@ -31,7 +31,7 @@ export async function createKalyanResult(resultData: {
       transaction.set(newResultRef, resultData);
     });
 
-    revalidatePath(`/admin/manage-results/${marketName.toLowerCase().replace(/\s+/g, '-')}`);
+    revalidatePath(`/admin/manage-results/${marketSlug}`);
     return { success: true };
   } catch (error: any) {
     console.error("Error creating kalyan result:", error);

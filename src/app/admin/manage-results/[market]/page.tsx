@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ export default function EnterResultsPage() {
     const params = useParams();
     const marketSlug = params.market as string;
     const marketName = marketSlug.split('-').map(word => {
-        if (word.toLowerCase() === 'bazzar') return 'Bazar';
+        if (word.toLowerCase() === 'bazar') return 'Bazar';
         return word.charAt(0).toUpperCase() + word.slice(1);
     }).join(' ');
 
@@ -89,7 +90,7 @@ export default function EnterResultsPage() {
                 openPanna,
                 closePanna,
                 jodi: jodiNumber
-            }, marketName.trim());
+            }, marketSlug);
             toast({
                 title: "Result Added",
                 description: `The new result for ${marketName} has been added successfully.`,
