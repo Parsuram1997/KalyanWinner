@@ -38,7 +38,10 @@ export default function EnterResultsPage() {
     const {toast} = useToast();
     const params = useParams();
     const marketSlug = params.market as string;
-    const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const marketName = marketSlug.split('-').map(word => {
+        if (word.toLowerCase() === 'bazzar') return 'Bazar';
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
 
     const firestore = useFirestore();
     const resultsQuery = useMemoFirebase(
