@@ -29,7 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { collection, doc, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -61,10 +61,21 @@ export default function DashboardPage() {
           collection(firestore, "transactions"),
           where("userId", "==", authUser.uid)
         );
-        const querySnapshot = await getDocs(q);
-        const transactions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setRecentActivity(transactions);
-        setActivityLoading(false);
+        try {
+          const querySnapshot = await getDocs(q);
+          const transactions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setRecentActivity(transactions);
+        } catch (serverError: any) {
+          if (serverError.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+              path: (q as any)._query.path.canonicalString(),
+              operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+          }
+        } finally {
+            setActivityLoading(false);
+        }
       };
       fetchTransactions();
     }
@@ -312,5 +323,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
