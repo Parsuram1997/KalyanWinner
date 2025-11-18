@@ -41,26 +41,27 @@ export default function SelectChartPage() {
         <p className="text-muted-foreground">Select a market to view its yearly panel chart.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {isLoading
-          ? Array.from({ length: 6 }).map((_, i) => (
+          ? Array.from({ length: 8 }).map((_, i) => (
               <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4" />
+                <CardHeader className="p-4 pb-2">
+                  <Skeleton className="h-5 w-3/4" />
+                   <Skeleton className="h-3 w-full mt-1" />
                 </CardHeader>
-                <CardFooter>
-                  <Skeleton className="h-10 w-full" />
+                <CardFooter className="p-4 pt-2">
+                  <Skeleton className="h-8 w-full" />
                 </CardFooter>
               </Card>
             ))
           : markets?.map((market) => (
           <Card key={market.id} className="flex flex-col justify-between">
-            <CardHeader>
-              <CardTitle>{market.name}</CardTitle>
-              <CardDescription>View the yearly panel chart for {market.name}.</CardDescription>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">{market.name}</CardTitle>
+              <CardDescription className="text-xs">View the yearly panel chart.</CardDescription>
             </CardHeader>
-            <CardFooter>
-               <Button asChild className="w-full">
+            <CardFooter className="p-4 pt-2">
+               <Button asChild className="w-full" size="sm">
                 <Link href={`/panel-chart/${generateSlug(market.name)}`}>
                   <GanttChartSquare className="mr-2 h-4 w-4" />
                   View Chart
