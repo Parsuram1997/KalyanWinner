@@ -11,7 +11,7 @@ import { Edit, Trash, CalendarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { collection, query, where, orderBy, limit } from "firebase/firestore";
 import { createKalyanResult, deleteKalyanResult, updateKalyanResult } from "@/app/actions/result-actions";
 import {
   AlertDialog,
@@ -60,15 +60,21 @@ export default function EnterResultsPage() {
     }).join(' ');
 
     const firestore = useFirestore();
-    const resultsQuery = useMemoFirebase(
-        () => firestore 
-                ? query(
-                    collection(firestore, 'kalyan_results'), 
-                    where('marketName', '==', marketName)
-                  ) 
-                : null,
-        [firestore, marketName]
-    );
+    const resultsQuery = useMemoFirebase(() => {
+      if (!firestore) return null;
+
+      const baseQuery = query(
+        collection(firestore, 'kalyan_results'),
+        where('marketName', '==', marketName),
+        orderBy('date', 'desc')
+      );
+
+      if (marketName === 'Rajdhani Day') {
+        return query(baseQuery, limit(10));
+      }
+
+      return baseQuery;
+    }, [firestore, marketName]);
     const { data: results, isLoading } = useCollection<KalyanResult>(resultsQuery);
 
     const sortedResults = useMemo(() => {
