@@ -14,39 +14,34 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      // Allow creation only if the requesting user is authenticated and the userId matches their UID
       allow create: if request.auth != null && request.auth.uid == userId;
-      // Allow list for admins, or for enrollers if they query by their own enrollerId
-      allow list: if isAdmin() || (isEnroller() && request.auth.uid != null && request.query.get('enrollerId') == request.auth.uid);
+      allow list: if isAdmin() || (isEnroller() && request.query.where.enrollerId == request.auth.uid);
     }
 
     match /transactions/{transactionId} {
       allow get: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
-      allow list: if isAdmin() || (request.auth != null && request.query.userId == request.auth.uid);
-      // Allow create if authenticated and the new transaction's userId matches the requesting user's UID
+      allow list: if isAdmin() || (request.auth != null && request.query.where.userId == request.auth.uid);
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      // Deny updates and deletes by normal users for transactions (only admins can modify existing transactions if needed)
       allow update, delete: if false; 
     }
     
-    // Publicly readable collections for any authenticated user
     match /markets/{marketId} {
-      allow get, list: if request.auth != null;
+      allow read: if request.auth != null;
       allow write: if isAdmin();
     }
 
     match /bet_types/{betTypeId} {
-      allow get, list: if request.auth != null;
+      allow read: if request.auth != null;
       allow write: if isAdmin();
     }
     
     match /game_rates/{rateId} {
-      allow get, list: if request.auth != null;
+      allow read: if request.auth != null;
       allow write: if isAdmin();
     }
     
     match /payment_settings/{paymentId} {
-      allow get, list: if request.auth != null;
+      allow read: if request.auth != null;
       allow write: if isAdmin();
     }
 
