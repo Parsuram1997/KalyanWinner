@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
-import { createKalyanResult, deleteKalyanResult } from "@/app/actions/result-actions";
+import { createKalyanResult, deleteKalyanResult, updateKalyanResult } from "@/app/actions/result-actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +24,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useState, useMemo } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState, useMemo, useEffect } from "react";
 
 type KalyanResult = {
   id: string;
@@ -34,6 +43,12 @@ type KalyanResult = {
   jodi: string;
   closePanna: string;
 };
+
+const getPannaSum = (panna: string) => {
+    if (panna.length !== 3 || !/^\d+$/.test(panna)) return '';
+    return panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10;
+};
+
 
 export default function EnterResultsPage() {
     const {toast} = useToast();
@@ -58,27 +73,22 @@ export default function EnterResultsPage() {
 
     const sortedResults = useMemo(() => {
         if (!results) return [];
-        // Sort by date in descending order (most recent first)
         return [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }, [results]); // useMemo will re-run when the 'results' array reference from useCollection changes
+    }, [results]);
 
     const [openPanna, setOpenPanna] = useState('');
-    const [closePanna, setClosePanna] = useState('');
+    const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);
+    const [isUpdateResultDialogOpen, setUpdateResultDialogOpen] = useState(false);
+    const [selectedResult, setSelectedResult] = useState<KalyanResult | null>(null);
+    const [updateClosePanna, setUpdateClosePanna] = useState("");
 
-    const getPannaSum = (panna: string) => {
-        if (panna.length !== 3 || !/^\d+$/.test(panna)) return '';
-        return panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10;
-    };
-    
-    const jodiNumber = `${getPannaSum(openPanna)}${getPannaSum(closePanna)}`;
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmitOpenResult = async (e: React.FormEvent) => {
         e.preventDefault();
         const form = e.currentTarget as HTMLFormElement;
         const formData = new FormData(form);
         const date = formData.get("date") as string;
         
-        if (!date || !openPanna || !closePanna) {
+        if (!date || !openPanna) {
             toast({ variant: "destructive", title: "Missing Fields", description: "Please fill in all result fields." });
             return;
         }
@@ -88,16 +98,14 @@ export default function EnterResultsPage() {
                 date,
                 marketName: marketName.trim(),
                 openPanna,
-                closePanna,
-                jodi: jodiNumber
             }, marketSlug);
             toast({
-                title: "Result Added",
-                description: `The new result for ${marketName} has been added successfully.`,
+                title: "Open Result Added",
+                description: `The open panna for ${marketName} has been added.`,
             });
             form.reset();
             setOpenPanna('');
-            setClosePanna('');
+            setAddOpenResultDialogOpen(false);
         } catch (error: any) {
              toast({
                 variant: "destructive",
@@ -107,6 +115,26 @@ export default function EnterResultsPage() {
         }
     }
     
+    const handleUpdateResult = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!selectedResult || !updateClosePanna) {
+        toast({ variant: "destructive", title: "Missing Fields", description: "Please enter the close panna." });
+        return;
+      }
+      
+      const newJodi = `${getPannaSum(selectedResult.openPanna)}${getPannaSum(updateClosePanna)}`;
+
+      try {
+        await updateKalyanResult(selectedResult.id, { closePanna: updateClosePanna, jodi: newJodi }, marketSlug);
+        toast({ title: "Result Updated", description: "Close panna and jodi have been added." });
+        setUpdateResultDialogOpen(false);
+        setSelectedResult(null);
+        setUpdateClosePanna("");
+      } catch (error: any) {
+         toast({ variant: "destructive", title: "Update Failed", description: error.message });
+      }
+    }
+
     const handleDelete = async (resultId: string) => {
       try {
         await deleteKalyanResult(resultId);
@@ -127,37 +155,35 @@ export default function EnterResultsPage() {
     <div className="flex flex-col gap-6">
       
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-            <CardHeader>
-                <CardTitle>Add Result for {marketName}</CardTitle>
-                <CardDescription>Enter the details for the game result.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                    <div>
-                        <Label htmlFor="date">Date</Label>
-                        <Input name="date" id="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
-                    </div>
-                    <div>
-                        <Label htmlFor="open-panna">Open Panna</Label>
-                        <Input name="openPanna" id="open-panna" placeholder="e.g., 123" value={openPanna} onChange={(e) => setOpenPanna(e.target.value)} />
-                    </div>
-                    <div>
-                        <Label htmlFor="close-panna">Close Panna</Label>
-                        <Input name="closePanna" id="close-panna" placeholder="e.g., 456" value={closePanna} onChange={(e) => setClosePanna(e.target.value)} />
-                    </div>
-                     <div>
-                        <Label htmlFor="jodi">Jodi (Auto-calculated)</Label>
-                        <Input id="jodi" value={jodiNumber} readOnly disabled />
-                    </div>
-                    <Button type="submit" className="w-full">Add Result</Button>
-                </form>
-            </CardContent>
-        </Card>
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Recent Results for {marketName}</CardTitle>
-            <CardDescription>View and manage recent game results.</CardDescription>
+          <CardHeader className="flex flex-row justify-between items-start">
+            <div>
+                <CardTitle>Results for {marketName}</CardTitle>
+                <CardDescription>View and manage game results.</CardDescription>
+            </div>
+            <Dialog open={isAddOpenResultDialogOpen} onOpenChange={setAddOpenResultDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Add Open Result</Button>
+              </DialogTrigger>
+               <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Open Result for {marketName}</DialogTitle>
+                  </DialogHeader>
+                   <form className="space-y-4" onSubmit={handleSubmitOpenResult}>
+                      <div>
+                          <Label htmlFor="date">Date</Label>
+                          <Input name="date" id="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
+                      </div>
+                      <div>
+                          <Label htmlFor="open-panna">Open Panna</Label>
+                          <Input name="openPanna" id="open-panna" placeholder="e.g., 123" value={openPanna} onChange={(e) => setOpenPanna(e.target.value)} />
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" className="w-full">Add Open Result</Button>
+                      </DialogFooter>
+                  </form>
+                </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent>
             {/* Desktop Table */}
@@ -181,10 +207,17 @@ export default function EnterResultsPage() {
                     <TableRow key={result.id}>
                         <TableCell>{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell className="font-mono">{result.openPanna}</TableCell>
-                        <TableCell className="font-bold text-primary font-mono">{result.jodi}</TableCell>
-                        <TableCell className="font-mono">{result.closePanna}</TableCell>
+                        <TableCell className="font-bold text-primary font-mono">{result.jodi || '--'}</TableCell>
+                        <TableCell className="font-mono">{result.closePanna || '--'}</TableCell>
                         <TableCell className="flex gap-2">
-                        <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
+                          {!result.closePanna ? (
+                            <Button variant="outline" size="sm" onClick={() => {
+                                setSelectedResult(result);
+                                setUpdateResultDialogOpen(true);
+                            }}>Add Close</Button>
+                          ) : (
+                            <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
+                          )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
@@ -231,16 +264,23 @@ export default function EnterResultsPage() {
                                 <span className="text-lg font-bold">{result.openPanna}</span>
                             </div>
                              <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-                                <span className="text-2xl font-bold tracking-wider">{result.jodi}</span>
+                                <span className="text-2xl font-bold tracking-wider">{result.jodi || '--'}</span>
                                 <span className="text-[10px] font-medium">Jodi</span>
                             </div>
                             <div className="flex flex-col items-center">
                                 <span className="text-xs text-muted-foreground">Close</span>
-                                <span className="text-lg font-bold">{result.closePanna}</span>
+                                <span className="text-lg font-bold">{result.closePanna || '--'}</span>
                             </div>
                         </div>
                         <div className="flex justify-end gap-2 pt-2 border-t">
-                            <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
+                            {!result.closePanna ? (
+                                <Button variant="outline" size="sm" onClick={() => {
+                                setSelectedResult(result);
+                                setUpdateResultDialogOpen(true);
+                                }}>Add Close</Button>
+                            ) : (
+                                <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
+                            )}
                              <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
@@ -265,6 +305,36 @@ export default function EnterResultsPage() {
           </CardContent>
         </Card>
       </div>
+
+       <Dialog open={isUpdateResultDialogOpen} onOpenChange={setUpdateResultDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Add Close Panna for {selectedResult?.marketName}</DialogTitle>
+                <DialogDescription>Date: {selectedResult ? new Date(selectedResult.date).toLocaleDateString('en-GB') : ''}</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdateResult}>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="update-open-panna" className="text-right">Open Panna</Label>
+                      <Input id="update-open-panna" value={selectedResult?.openPanna || ''} disabled className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="update-close-panna" className="text-right">Close Panna</Label>
+                      <Input id="update-close-panna" value={updateClosePanna} onChange={(e) => setUpdateClosePanna(e.target.value)} className="col-span-3" placeholder="e.g. 456" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="update-jodi" className="text-right">Jodi</Label>
+                      <Input id="update-jodi" value={selectedResult ? `${getPannaSum(selectedResult.openPanna)}${getPannaSum(updateClosePanna)}` : ''} disabled className="col-span-3" />
+                    </div>
+                </div>
+                 <DialogFooter>
+                    <Button type="submit">Update Result</Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+    

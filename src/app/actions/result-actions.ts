@@ -8,13 +8,12 @@ export async function createKalyanResult(resultData: {
   date: string;
   marketName: string;
   openPanna: string;
-  closePanna: string;
-  jodi: string;
+  closePanna?: string;
+  jodi?: string;
 }, marketSlug: string) {
   try {
     const resultsRef = firestore.collection("kalyan_results");
 
-    // Use a transaction to ensure atomicity
     await firestore.runTransaction(async (transaction) => {
       const query = resultsRef
         .where("marketName", "==", resultData.marketName)
@@ -25,8 +24,7 @@ export async function createKalyanResult(resultData: {
       if (!snapshot.empty) {
         throw new Error(`A result for ${resultData.marketName} on ${resultData.date} already exists.`);
       }
-
-      // If no documents are found, create the new result
+      
       const newResultRef = resultsRef.doc();
       transaction.set(newResultRef, resultData);
     });
@@ -35,7 +33,6 @@ export async function createKalyanResult(resultData: {
     return { success: true };
   } catch (error: any) {
     console.error("Error creating kalyan result:", error);
-    // Re-throw the specific error message to be caught by the client
     throw new Error(error.message || "Failed to create kalyan result.");
   }
 }
@@ -46,10 +43,9 @@ export async function updateKalyanResult(resultId: string, resultData: {
   openPanna?: string;
   closePanna?: string;
   jodi?: string;
-}, marketSlug: string) { // Changed marketName to marketSlug for clarity
+}, marketSlug: string) {
   try {
     await firestore.collection("kalyan_results").doc(resultId).update(resultData);
-    // Use the passed slug directly for revalidation
     revalidatePath(`/admin/manage-results/${marketSlug}`);
     return { success: true };
   } catch (error: any) {
@@ -61,9 +57,6 @@ export async function updateKalyanResult(resultId: string, resultData: {
 export async function deleteKalyanResult(resultId: string) {
     try {
         await firestore.collection("kalyan_results").doc(resultId).delete();
-        // Since we don't know the market from just the ID, we might need a broader revalidation
-        // or handle it on the client-side optimistically.
-        // For now, let's revalidate the main results page.
         revalidatePath("/admin/manage-results");
         return { success: true };
     } catch (error: any) {

@@ -158,14 +158,14 @@
         },
         "closePanna": {
           "type": "string",
-          "description": "The 3-digit closing panna."
+          "description": "The 3-digit closing panna. Can be added later."
         },
         "jodi": {
           "type": "string",
-          "description": "The 2-digit jodi, derived from the pannas."
+          "description": "The 2-digit jodi, derived from the pannas. Calculated after closePanna is added."
         }
       },
-      "required": ["marketName", "date", "openPanna", "closePanna", "jodi"]
+      "required": ["marketName", "date", "openPanna"]
     },
     "PaymentSettings": {
       "title": "Payment Settings",
@@ -327,3 +327,5 @@
     ]
   }
 }
+
+    
