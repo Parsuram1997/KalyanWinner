@@ -82,7 +82,7 @@ export default function DashboardPage() {
     ) : null,
     [firestore]
   );
-  const { data: kalyanDayResult, isLoading: isDayResultLoading } = useCollection<any>(kalyanDayResultQuery);
+  const { data: kalyanDayResult, isLoading: isDayResultLoading } = useCollection<any>(kalyanDayResultQuery, { skip: !firestore });
 
   const kalyanNightResultQuery = useMemoFirebase(
     () => firestore ? query(
@@ -93,7 +93,7 @@ export default function DashboardPage() {
     ) : null,
     [firestore]
   );
-  const { data: kalyanNightResult, isLoading: isNightResultLoading } = useCollection<any>(kalyanNightResultQuery);
+  const { data: kalyanNightResult, isLoading: isNightResultLoading } = useCollection<any>(kalyanNightResultQuery, { skip: !firestore });
 
   const latestResults = useMemo(() => {
     const results = [];
