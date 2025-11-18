@@ -14,6 +14,12 @@ import { useParams } from "next/navigation";
 
 const PanelChart = ({ title }: { title: string }) => {
   const weeklyData = getPanelChartData();
+  
+  const isRedJodi = (jodi: string) => {
+    if (!jodi || jodi.length !== 2) return false;
+    return jodi[0] === jodi[1];
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -44,7 +50,7 @@ const PanelChart = ({ title }: { title: string }) => {
                       ) : day ? (
                         <div>
                           <div className="text-[10px] text-muted-foreground">{day.openPanna}</div>
-                          <div className={`font-bold text-xs my-0.5 ${day.isRed ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
+                          <div className={`font-bold text-xs my-0.5 ${isRedJodi(day.jodi) ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
                           <div className="text-[10px] text-muted-foreground">{day.closePanna}</div>
                         </div>
                       ) : (
