@@ -46,10 +46,11 @@ export async function updateKalyanResult(resultId: string, resultData: {
   openPanna?: string;
   closePanna?: string;
   jodi?: string;
-}, marketName: string) {
+}, marketSlug: string) { // Changed marketName to marketSlug for clarity
   try {
     await firestore.collection("kalyan_results").doc(resultId).update(resultData);
-    revalidatePath(`/admin/manage-results/${marketName.toLowerCase().replace(/\s+/g, '-')}`);
+    // Use the passed slug directly for revalidation
+    revalidatePath(`/admin/manage-results/${marketSlug}`);
     return { success: true };
   } catch (error: any) {
     console.error("Error updating kalyan result:", error);
