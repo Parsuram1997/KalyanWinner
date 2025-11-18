@@ -69,18 +69,18 @@ export default function EnterResultsPage() {
         orderBy('date', 'desc')
       );
 
-      if (marketName === 'Rajdhani Day') {
-        return query(baseQuery, limit(10));
-      }
-
       return baseQuery;
     }, [firestore, marketName]);
     const { data: results, isLoading } = useCollection<KalyanResult>(resultsQuery);
 
     const sortedResults = useMemo(() => {
         if (!results) return [];
-        return [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }, [results]);
+        const allResults = [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        if (marketName === 'Rajdhani Day') {
+            return allResults.slice(0, 10);
+        }
+        return allResults;
+    }, [results, marketName]);
 
     const [openPanna, setOpenPanna] = useState('');
     const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);
