@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Trash, CalendarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -45,7 +45,7 @@ type KalyanResult = {
 };
 
 const getPannaSum = (panna: string) => {
-    if (panna.length !== 3 || !/^\d+$/.test(panna)) return '';
+    if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '';
     return panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10;
 };
 
@@ -79,6 +79,7 @@ export default function EnterResultsPage() {
     const [openPanna, setOpenPanna] = useState('');
     const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);
     const [isUpdateResultDialogOpen, setUpdateResultDialogOpen] = useState(false);
+    const [isHolidayDialogOpen, setHolidayDialogOpen] = useState(false);
     const [selectedResult, setSelectedResult] = useState<KalyanResult | null>(null);
     const [updateClosePanna, setUpdateClosePanna] = useState("");
 
@@ -135,6 +136,40 @@ export default function EnterResultsPage() {
       }
     }
 
+     const handleMarkAsHoliday = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const form = e.currentTarget as HTMLFormElement;
+        const formData = new FormData(form);
+        const date = formData.get("holiday-date") as string;
+        
+        if (!date) {
+            toast({ variant: "destructive", title: "Missing Date", description: "Please select a date." });
+            return;
+        }
+
+        try {
+            await createKalyanResult({
+                date,
+                marketName: marketName.trim(),
+                openPanna: "H",
+                closePanna: "O",
+                jodi: "L"
+            }, marketSlug);
+            toast({
+                title: "Holiday Marked",
+                description: `${new Date(date).toLocaleDateString('en-GB')} has been marked as a holiday for ${marketName}.`,
+            });
+            form.reset();
+            setHolidayDialogOpen(false);
+        } catch (error: any) {
+             toast({
+                variant: "destructive",
+                title: "Failed to Mark Holiday",
+                description: error.message || "An unexpected error occurred.",
+            });
+        }
+    }
+
     const handleDelete = async (resultId: string) => {
       try {
         await deleteKalyanResult(resultId);
@@ -154,36 +189,55 @@ export default function EnterResultsPage() {
   return (
     <div className="flex flex-col gap-6">
       
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid gap-6">
+        <Card>
           <CardHeader className="flex flex-row justify-between items-start">
             <div>
                 <CardTitle>Results for {marketName}</CardTitle>
                 <CardDescription>View and manage game results.</CardDescription>
             </div>
-            <Dialog open={isAddOpenResultDialogOpen} onOpenChange={setAddOpenResultDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>Add Open Result</Button>
-              </DialogTrigger>
-               <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Open Result for {marketName}</DialogTitle>
-                  </DialogHeader>
-                   <form className="space-y-4" onSubmit={handleSubmitOpenResult}>
-                      <div>
-                          <Label htmlFor="date">Date</Label>
-                          <Input name="date" id="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
-                      </div>
-                      <div>
-                          <Label htmlFor="open-panna">Open Panna</Label>
-                          <Input name="openPanna" id="open-panna" placeholder="e.g., 123" value={openPanna} onChange={(e) => setOpenPanna(e.target.value)} />
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit" className="w-full">Add Open Result</Button>
-                      </DialogFooter>
-                  </form>
-                </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+                <Dialog open={isHolidayDialogOpen} onOpenChange={setHolidayDialogOpen}>
+                    <DialogTrigger asChild><Button variant="outline"><CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday</Button></DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Mark Holiday for {marketName}</DialogTitle>
+                        </DialogHeader>
+                        <form className="space-y-4" onSubmit={handleMarkAsHoliday}>
+                            <div>
+                                <Label htmlFor="holiday-date">Date</Label>
+                                <Input name="holiday-date" id="holiday-date" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit" className="w-full">Mark as Holiday</Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={isAddOpenResultDialogOpen} onOpenChange={setAddOpenResultDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button>Add Open Result</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add Open Result for {marketName}</DialogTitle>
+                    </DialogHeader>
+                    <form className="space-y-4" onSubmit={handleSubmitOpenResult}>
+                        <div>
+                            <Label htmlFor="date">Date</Label>
+                            <Input name="date" id="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
+                        </div>
+                        <div>
+                            <Label htmlFor="open-panna">Open Panna</Label>
+                            <Input name="openPanna" id="open-panna" placeholder="e.g., 123" value={openPanna} onChange={(e) => setOpenPanna(e.target.value)} />
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit" className="w-full">Add Open Result</Button>
+                        </DialogFooter>
+                    </form>
+                    </DialogContent>
+                </Dialog>
+            </div>
           </CardHeader>
           <CardContent>
             {/* Desktop Table */}
@@ -207,10 +261,10 @@ export default function EnterResultsPage() {
                     <TableRow key={result.id}>
                         <TableCell>{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell className="font-mono">{result.openPanna}</TableCell>
-                        <TableCell className="font-bold text-primary font-mono">{result.jodi || '--'}</TableCell>
-                        <TableCell className="font-mono">{result.closePanna || '--'}</TableCell>
+                        <TableCell className="font-bold text-primary font-mono">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
+                        <TableCell className="font-mono">{result.closePanna}</TableCell>
                         <TableCell className="flex gap-2">
-                          {!result.closePanna ? (
+                          {!result.closePanna && result.jodi !== 'L' ? (
                             <Button variant="outline" size="sm" onClick={() => {
                                 setSelectedResult(result);
                                 setUpdateResultDialogOpen(true);
@@ -258,22 +312,30 @@ export default function EnterResultsPage() {
                             </div>
                             <Badge variant={result.marketName.includes("Night") ? "secondary" : "default"}>{result.marketName.split(" ")[1]}</Badge>
                         </div>
-                        <div className="flex items-center justify-around text-center font-mono">
-                            <div className="flex flex-col items-center">
-                                <span className="text-xs text-muted-foreground">Open</span>
-                                <span className="text-lg font-bold">{result.openPanna}</span>
+
+                         {result.jodi === 'L' ? (
+                             <div className="flex items-center justify-center p-4">
+                                <Badge variant="destructive" className="text-lg">HOLIDAY</Badge>
+                             </div>
+                         ) : (
+                            <div className="flex items-center justify-around text-center font-mono">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs text-muted-foreground">Open</span>
+                                    <span className="text-lg font-bold">{result.openPanna}</span>
+                                </div>
+                                <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                                    <span className="text-2xl font-bold tracking-wider">{result.jodi || '--'}</span>
+                                    <span className="text-[10px] font-medium">Jodi</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs text-muted-foreground">Close</span>
+                                    <span className="text-lg font-bold">{result.closePanna || '--'}</span>
+                                </div>
                             </div>
-                             <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-                                <span className="text-2xl font-bold tracking-wider">{result.jodi || '--'}</span>
-                                <span className="text-[10px] font-medium">Jodi</span>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <span className="text-xs text-muted-foreground">Close</span>
-                                <span className="text-lg font-bold">{result.closePanna || '--'}</span>
-                            </div>
-                        </div>
+                        )}
+
                         <div className="flex justify-end gap-2 pt-2 border-t">
-                            {!result.closePanna ? (
+                            {!result.closePanna && result.jodi !== 'L' ? (
                                 <Button variant="outline" size="sm" onClick={() => {
                                 setSelectedResult(result);
                                 setUpdateResultDialogOpen(true);
@@ -336,5 +398,3 @@ export default function EnterResultsPage() {
     </div>
   );
 }
-
-    

@@ -96,9 +96,11 @@ const ResultsList = ({ resultsToShow, isLoading }: { resultsToShow: Result[], is
               </TableCell>
               <TableCell>{result.openPanna}</TableCell>
               <TableCell>
-                <div className="font-bold text-lg text-primary">
-                  {result.jodi}
-                </div>
+                {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : (
+                  <div className="font-bold text-lg text-primary">
+                    {result.jodi}
+                  </div>
+                )}
               </TableCell>
               <TableCell>{result.closePanna}</TableCell>
             </TableRow>
@@ -127,26 +129,32 @@ const ResultsList = ({ resultsToShow, isLoading }: { resultsToShow: Result[], is
               {result.market.split(" ")[1]}
             </Badge>
           </div>
-          <div className="flex items-center justify-around text-center">
-            <div className="flex flex-col items-center">
-              <span className="text-xs text-muted-foreground">Open</span>
-              <span className="text-lg font-bold tracking-widest">
-                {result.openPanna}
-              </span>
+          {result.jodi === 'L' ? (
+              <div className="flex items-center justify-center p-4">
+                  <Badge variant="destructive" className="text-lg">HOLIDAY</Badge>
+              </div>
+          ) : (
+            <div className="flex items-center justify-around text-center">
+                <div className="flex flex-col items-center">
+                <span className="text-xs text-muted-foreground">Open</span>
+                <span className="text-lg font-bold tracking-widest">
+                    {result.openPanna}
+                </span>
+                </div>
+                <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                <span className="text-2xl font-bold tracking-wider">
+                    {result.jodi}
+                </span>
+                <span className="text-[10px] font-medium">Jodi</span>
+                </div>
+                <div className="flex flex-col items-center">
+                <span className="text-xs text-muted-foreground">Close</span>
+                <span className="text-lg font-bold tracking-widest">
+                    {result.closePanna}
+                </span>
+                </div>
             </div>
-            <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-              <span className="text-2xl font-bold tracking-wider">
-                {result.jodi}
-              </span>
-              <span className="text-[10px] font-medium">Jodi</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-xs text-muted-foreground">Close</span>
-              <span className="text-lg font-bold tracking-widest">
-                {result.closePanna}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
       ))}
     </div>
