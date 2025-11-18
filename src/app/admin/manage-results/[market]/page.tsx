@@ -11,7 +11,7 @@ import { Edit, Trash, CalendarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, orderBy } from "firebase/firestore";
 import { createKalyanResult, deleteKalyanResult, updateKalyanResult } from "@/app/actions/result-actions";
 import {
   AlertDialog,
@@ -33,7 +33,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 
 type KalyanResult = {
   id: string;
@@ -403,4 +403,5 @@ export default function EnterResultsPage() {
       </Dialog>
     </div>
   );
-}
+
+    
