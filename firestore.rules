@@ -19,7 +19,7 @@ service cloud.firestore {
 
     match /transactions/{transactionId} {
       allow get: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
-      allow list: if isAdmin() || (request.auth != null && request.query.userId == request.auth.uid);
+      allow list: if isAdmin() || (request.auth != null && request.query.where[0][2] == request.auth.uid);
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if false; 
     }
