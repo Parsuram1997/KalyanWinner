@@ -152,7 +152,7 @@ export default function EnrollerLoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                            className="bg-gray-800 border-gray-700 h-12 text-base"
+                            className="bg-gray-800 border-gray-700 h-12 text-base text-white"
                         />
                     </div>
                     <div className="grid gap-2">
@@ -169,7 +169,7 @@ export default function EnrollerLoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isLoading}
-                            className="bg-gray-800 border-gray-700 h-12 text-base"
+                            className="bg-gray-800 border-gray-700 h-12 text-base text-white"
                         />
                     </div>
                     <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
@@ -188,7 +188,7 @@ export default function EnrollerLoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                             className="bg-gray-800 border-gray-700 h-12 text-base"
+                             className="bg-gray-800 border-gray-700 h-12 text-base text-white"
                         />
                     </div>
                     <Button onClick={handleForgotPassword} className="w-full h-12 text-base" disabled={isLoading}>
