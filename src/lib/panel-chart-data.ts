@@ -1,11 +1,31 @@
-// This is mock data for demonstration purposes.
-// In a real application, this would come from an API.
+"use client";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useParams } from "next/navigation";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where, orderBy } from "firebase/firestore";
+import { useMemo } from "react";
+import { getYear, getWeek, startOfWeek, endOfWeek, format, eachDayOfInterval, getDay } from 'date-fns';
+import { Skeleton } from "@/components/ui/skeleton";
+
+type Result = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  openPanna: string;
+  jodi: string;
+  closePanna: string;
+};
 
 type DayResult = {
   openPanna: string;
   jodi: string;
   closePanna: string;
-  isRed: boolean;
 };
 
 type WeekData = {
@@ -13,85 +33,158 @@ type WeekData = {
   results: (DayResult | null)[];
 };
 
-function generateRandomNumber(digits: number) {
-    return Math.floor(Math.random() * Math.pow(10, digits)).toString().padStart(digits, '0');
-}
+const PanelChart = ({ title, marketName }: { title: string, marketName: string }) => {
+  const firestore = useFirestore();
 
-function generatePanna() {
-    let panna = '';
-    while (true) {
-        const digits = [
-            Math.floor(Math.random() * 10),
-            Math.floor(Math.random() * 10),
-            Math.floor(Math.random() * 10)
-        ].sort((a, b) => a - b);
+  const resultsQuery = useMemoFirebase(() => {
+    if (!firestore || !marketName) return null;
+    return query(
+      collection(firestore, "kalyan_results"),
+      where("marketName", "==", marketName),
+      orderBy("date", "asc")
+    );
+  }, [firestore, marketName]);
+
+  const { data: results, isLoading } = useCollection<Result>(resultsQuery);
+
+  const weeklyData = useMemo(() => {
+    if (!results) return [];
+
+    const currentYear = new Date().getFullYear();
+    const yearResults = results.filter(r => new Date(r.date).getFullYear() === currentYear);
+
+    const groupedByWeek: { [weekNumber: number]: { [dayOfWeek: number]: DayResult } } = {};
+
+    yearResults.forEach(result => {
+        const resultDate = new Date(result.date);
+        const weekNumber = getWeek(resultDate, { weekStartsOn: 1 });
+        // getDay: Sunday is 0, Monday is 1, etc. We want Monday to be 0.
+        const dayOfWeek = (getDay(resultDate) + 6) % 7; 
         
-        if (digits[0] !== digits[1] || digits[1] !== digits[2]) {
-             panna = digits.join('');
-             if(panna !== '000') break;
+        if (!groupedByWeek[weekNumber]) {
+            groupedByWeek[weekNumber] = {};
         }
-    }
-    return panna;
-}
 
-
-function getPannaSum(panna: string) {
-    return panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10;
-}
-
-function generateDayResult(): DayResult {
-    const openPanna = generatePanna();
-    const closePanna = generatePanna();
-    
-    const openDigit = getPannaSum(openPanna);
-    const closeDigit = getPannaSum(closePanna);
-    
-    const jodi = `${openDigit}${closeDigit}`;
-    const isRed = openDigit === closeDigit;
-
-    return {
-        openPanna,
-        jodi,
-        closePanna,
-        isRed
-    };
-}
-
-
-export function getPanelChartData(): WeekData[] {
-  const data: WeekData[] = [];
-  const startDate = new Date("2023-01-02"); // First Monday of 2023
-
-  // Header row
-  data.push({
-    dateRange: "Date",
-    results: [null, null, null, null, null, null],
-  })
-
-  for (let i = 0; i < 52; i++) {
-    const weekStartDate = new Date(startDate);
-    weekStartDate.setDate(startDate.getDate() + i * 7);
-
-    const weekEndDate = new Date(weekStartDate);
-    weekEndDate.setDate(weekStartDate.getDate() + 5);
-
-    const dateRange = `${weekStartDate.getDate().toString().padStart(2, "0")}/${(weekStartDate.getMonth() + 1).toString().padStart(2, "0")}/${weekStartDate.getFullYear().toString().slice(-2)} to ${weekEndDate.getDate().toString().padStart(2, "0")}/${(weekEndDate.getMonth() + 1).toString().padStart(2, "0")}/${weekEndDate.getFullYear().toString().slice(-2)}`;
-    
-    const results: (DayResult | null)[] = [];
-    for (let j = 0; j < 6; j++) {
-         // Simulate some days being off
-        if (Math.random() > 0.05) {
-            results.push(generateDayResult());
-        } else {
-            results.push(null);
-        }
-    }
-
-    data.push({
-      dateRange,
-      results
+        groupedByWeek[weekNumber][dayOfWeek] = {
+            openPanna: result.openPanna,
+            jodi: result.jodi,
+            closePanna: result.closePanna,
+        };
     });
-  }
 
-  return data;
+    const panelData: WeekData[] = [];
+    const firstDayOfYear = new Date(currentYear, 0, 1);
+    const lastDayOfYear = new Date(currentYear, 11, 31);
+    const firstWeek = getWeek(firstDayOfYear, { weekStartsOn: 1 });
+    const lastWeek = getWeek(lastDayOfYear, { weekStartsOn: 1 });
+    
+    // Handle case where last week of previous year is first week of current year
+    const weeksInYear = (lastWeek < firstWeek) ? 52 + lastWeek : lastWeek;
+
+
+    for (let weekNum = firstWeek; weekNum <= weeksInYear; weekNum++) {
+      const weekIndex = weekNum > 52 ? weekNum - 52 : weekNum;
+      
+      const firstDayOfWeek = startOfWeek(new Date(currentYear, 0, (weekIndex - 1) * 7 + 1), { weekStartsOn: 1 });
+      const lastDayOfWeek = endOfWeek(firstDayOfWeek, { weekStartsOn: 1 });
+      
+      const weekResults: (DayResult | null)[] = [];
+      const weekDays = eachDayOfInterval({start: firstDayOfWeek, end: lastDayOfWeek}).slice(0,6);
+
+      for(const day of weekDays) {
+         const dayOfWeek = (getDay(day) + 6) % 7;
+         const weekNumberForDay = getWeek(day, { weekStartsOn: 1 });
+         
+         if (groupedByWeek[weekNumberForDay] && groupedByWeek[weekNumberForDay][dayOfWeek]) {
+             weekResults.push(groupedByWeek[weekNumberForDay][dayOfWeek]);
+         } else {
+             weekResults.push(null);
+         }
+      }
+
+      if (weekResults.some(r => r !== null)) { // Only add weeks with data
+          panelData.push({
+            dateRange: `${format(firstDayOfWeek, 'dd/MM/yy')} to ${format(endOfWeek(firstDayOfWeek, {weekStartsOn: 1}), 'dd/MM/yy')}`,
+            results: weekResults,
+          });
+      }
+    }
+
+    return panelData.reverse();
+  }, [results]);
+
+  const isRedJodi = (jodi: string) => {
+    if (!jodi || jodi.length !== 2) return false;
+    return jodi[0] === jodi[1];
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">{title}</CardTitle>
+        <CardDescription>A yearly record of game results.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? <Skeleton className="w-full h-96" /> : weeklyData.length === 0 ? <p className="text-center text-muted-foreground p-8">No results found for this market in the current year.</p> : (
+            <div className="rounded-lg border">
+            <div className="w-full overflow-x-auto">
+                <div className="divide-y divide-border">
+                <div className="grid grid-cols-[auto_repeat(6,1fr)] bg-muted font-semibold">
+                    <div className="p-1 text-center flex items-center justify-center text-xs shrink-0 w-[80px]">Date</div>
+                    <div className="border-l p-1 text-center text-xs">MON</div>
+                    <div className="border-l p-1 text-center text-xs">TUE</div>
+                    <div className="border-l p-1 text-center text-xs">WED</div>
+                    <div className="border-l p-1 text-center text-xs">THU</div>
+                    <div className="border-l p-1 text-center text-xs">FRI</div>
+                    <div className="border-l p-1 text-center text-xs">SAT</div>
+                </div>
+                {weeklyData.map((week, weekIndex) => (
+                    <div key={weekIndex} className="grid grid-cols-[auto_repeat(6,1fr)]">
+                    <div className="p-1 text-center flex flex-col items-center justify-center text-xs shrink-0 w-[80px]">
+                        <span className="text-[10px]">{week.dateRange.split(" to ")[0]}</span>
+                        <span className="text-muted-foreground text-[10px]">to</span>
+                        <span className="text-[10px]">{week.dateRange.split(" to ")[1]}</span>
+                    </div>
+                    {week.results.map((day, dayIndex) => (
+                        <div key={dayIndex} className="border-l p-1 text-center">
+                        {day ? (
+                            <div>
+                            <div className="text-[10px] text-muted-foreground">{day.openPanna}</div>
+                            <div className={`font-bold text-xs my-0.5 ${isRedJodi(day.jodi) ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
+                            <div className="text-[10px] text-muted-foreground">{day.closePanna}</div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
+                            *
+                            </div>
+                        )}
+                        </div>
+                    ))}
+                    </div>
+                ))}
+                </div>
+            </div>
+            </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function PanelChartPage() {
+  const params = useParams();
+  const marketSlug = params.market as string;
+  const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+  return (
+    <div className="flex flex-col gap-6">
+       <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">{marketName} Panel Chart {new Date().getFullYear()}</h1>
+        <p className="text-muted-foreground">
+          Yearly results for the {marketName} Matka game.
+        </p>
+      </div>
+      <PanelChart title={`${marketName} Chart`} marketName={marketName} />
+    </div>
+  );
 }

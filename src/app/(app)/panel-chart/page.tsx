@@ -11,13 +11,29 @@ import {
 } from "@/components/ui/card";
 import { GanttChartSquare } from "lucide-react";
 import Link from "next/link";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const markets = [
-  { name: "Kalyan Day", slug: "kalyan-day", description: "View the yearly panel chart for Kalyan Day." },
-  { name: "Kalyan Night", slug: "kalyan-night", description: "View the yearly panel chart for Kalyan Night." },
-];
+type Market = {
+  id: string;
+  name: string;
+};
 
 export default function SelectChartPage() {
+  const firestore = useFirestore();
+  const activeMarketsQuery = useMemoFirebase(
+    () =>
+      firestore
+        ? query(collection(firestore, "markets"), where("status", "==", "Active"))
+        : null,
+    [firestore]
+  );
+  const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery);
+  
+  const generateSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+
+
   return (
     <div className="flex flex-col gap-6">
       <div className="space-y-1">
@@ -25,16 +41,27 @@ export default function SelectChartPage() {
         <p className="text-muted-foreground">Select a market to view its yearly panel chart.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {markets.map((market) => (
-          <Card key={market.slug} className="flex flex-col justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4" />
+                </CardHeader>
+                <CardFooter>
+                  <Skeleton className="h-10 w-full" />
+                </CardFooter>
+              </Card>
+            ))
+          : markets?.map((market) => (
+          <Card key={market.id} className="flex flex-col justify-between">
             <CardHeader>
               <CardTitle>{market.name}</CardTitle>
-              <CardDescription>{market.description}</CardDescription>
+              <CardDescription>View the yearly panel chart for {market.name}.</CardDescription>
             </CardHeader>
             <CardFooter>
                <Button asChild className="w-full">
-                <Link href={`/panel-chart/${market.slug}`}>
+                <Link href={`/panel-chart/${generateSlug(market.name)}`}>
                   <GanttChartSquare className="mr-2 h-4 w-4" />
                   View Chart
                 </Link>
@@ -43,6 +70,13 @@ export default function SelectChartPage() {
           </Card>
         ))}
       </div>
+      {!isLoading && markets?.length === 0 && (
+        <Card className="col-span-full">
+            <CardContent className="p-8 text-center text-muted-foreground">
+                No active markets found.
+            </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
