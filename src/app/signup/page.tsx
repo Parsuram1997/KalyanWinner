@@ -649,12 +649,14 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
     ],
     TN: [
         {"value": "ariyalur", "label": "Ariyalur"},
+        {"value": "chengalpattu", "label": "Chengalpattu"},
         {"value": "chennai", "label": "Chennai"},
         {"value": "coimbatore", "label": "Coimbatore"},
         {"value": "cuddalore", "label": "Cuddalore"},
         {"value": "dharmapuri", "label": "Dharmapuri"},
         {"value": "dindigul", "label": "Dindigul"},
         {"value": "erode", "label": "Erode"},
+        {"value": "kallakurichi", "label": "Kallakurichi"},
         {"value": "kanchipuram", "label": "Kanchipuram"},
         {"value": "kanyakumari", "label": "Kanyakumari"},
         {"value": "karur", "label": "Karur"},
@@ -666,13 +668,16 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "perambalur", "label": "Perambalur"},
         {"value": "pudukkottai", "label": "Pudukkottai"},
         {"value": "ramanathapuram", "label": "Ramanathapuram"},
+        {"value": "ranipet", "label": "Ranipet"},
         {"value": "salem", "label": "Salem"},
         {"value": "sivaganga", "label": "Sivaganga"},
+        {"value": "tenkasi", "label": "Tenkasi"},
         {"value": "thanjavur", "label": "Thanjavur"},
         {"value": "theni", "label": "Theni"},
-        {"value": "thoothukudi", "label": "Thoothukudi"},
+        {"value": "thoothukudi (tuticorin)", "label": "Thoothukudi (Tuticorin)"},
         {"value": "tiruchirappalli", "label": "Tiruchirappalli"},
         {"value": "tirunelveli", "label": "Tirunelveli"},
+        {"value": "tirupathur", "label": "Tirupathur"},
         {"value": "tiruppur", "label": "Tiruppur"},
         {"value": "tiruvallur", "label": "Tiruvallur"},
         {"value": "tiruvannamalai", "label": "Tiruvannamalai"},
@@ -685,14 +690,14 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "adilabad", "label": "Adilabad"},
         {"value": "bhadradri kothagudem", "label": "Bhadradri Kothagudem"},
         {"value": "hyderabad", "label": "Hyderabad"},
-        {"value": "jagitial", "label": "Jagitial"},
+        {"value": "jagtial", "label": "Jagtial"},
         {"value": "jangaon", "label": "Jangaon"},
-        {"value": "jayashankar bhoopalpally", "label": "Jayashankar Bhoopalpally"},
+        {"value": "jayashankar bhupalpally", "label": "Jayashankar Bhupalpally"},
         {"value": "jogulamba gadwal", "label": "Jogulamba Gadwal"},
         {"value": "kamareddy", "label": "Kamareddy"},
         {"value": "karimnagar", "label": "Karimnagar"},
         {"value": "khammam", "label": "Khammam"},
-        {"value": "komaram bheem", "label": "Komaram Bheem"},
+        {"value": "komaram bheem asifabad", "label": "Komaram Bheem Asifabad"},
         {"value": "mahabubabad", "label": "Mahabubabad"},
         {"value": "mahabubnagar", "label": "Mahabubnagar"},
         {"value": "mancherial", "label": "Mancherial"},
@@ -704,14 +709,14 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "nizamabad", "label": "Nizamabad"},
         {"value": "peddapalli", "label": "Peddapalli"},
         {"value": "rajanna sircilla", "label": "Rajanna Sircilla"},
-        {"value": "ranga reddy", "label": "Ranga Reddy"},
+        {"value": "rangareddy", "label": "Rangareddy"},
         {"value": "sangareddy", "label": "Sangareddy"},
         {"value": "siddipet", "label": "Siddipet"},
         {"value": "suryapet", "label": "Suryapet"},
         {"value": "vikarabad", "label": "Vikarabad"},
         {"value": "wanaparthy", "label": "Wanaparthy"},
-        {"value": "warangal rural", "label": "Warangal Rural"},
-        {"value": "warangal urban", "label": "Warangal Urban"},
+        {"value": "warangal (rural)", "label": "Warangal (Rural)"},
+        {"value": "warangal (urban)", "label": "Warangal (Urban)"},
         {"value": "yadadri bhuvanagiri", "label": "Yadadri Bhuvanagiri"}
     ],
     TR: [
@@ -724,28 +729,13 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "unakoti", "label": "Unakoti"},
         {"value": "west tripura", "label": "West Tripura"}
     ],
-    UK: [
-        {"value": "almora", "label": "Almora"},
-        {"value": "bageshwar", "label": "Bageshwar"},
-        {"value": "chamoli", "label": "Chamoli"},
-        {"value": "champawat", "label": "Champawat"},
-        {"value": "dehradun", "label": "Dehradun"},
-        {"value": "haridwar", "label": "Haridwar"},
-        {"value": "nainital", "label": "Nainital"},
-        {"value": "pauri garhwal", "label": "Pauri Garhwal"},
-        {"value": "pithoragarh", "label": "Pithoragarh"},
-        {"value": "rudraprayag", "label": "Rudraprayag"},
-        {"value": "tehri garhwal", "label": "Tehri Garhwal"},
-        {"value": "udham singh nagar", "label": "Udham Singh Nagar"},
-        {"value": "uttarkashi", "label": "Uttarkashi"}
-    ],
     UP: [
         {"value": "agra", "label": "Agra"},
         {"value": "aligarh", "label": "Aligarh"},
         {"value": "allahabad", "label": "Allahabad"},
         {"value": "ambedkar nagar", "label": "Ambedkar Nagar"},
-        {"value": "amethi", "label": "Amethi"},
-        {"value": "amroha", "label": "Amroha"},
+        {"value": "amethi (chatrapati sahuji mahraj nagar)", "label": "Amethi (Chatrapati Sahuji Mahraj Nagar)"},
+        {"value": "amroha (j.p. nagar)", "label": "Amroha (J.P. Nagar)"},
         {"value": "auraiya", "label": "Auraiya"},
         {"value": "azamgarh", "label": "Azamgarh"},
         {"value": "baghpat", "label": "Baghpat"},
@@ -775,7 +765,7 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "gonda", "label": "Gonda"},
         {"value": "gorakhpur", "label": "Gorakhpur"},
         {"value": "hamirpur", "label": "Hamirpur"},
-        {"value": "hapur", "label": "Hapur"},
+        {"value": "hapur (panchsheel nagar)", "label": "Hapur (Panchsheel Nagar)"},
         {"value": "hardoi", "label": "Hardoi"},
         {"value": "hathras", "label": "Hathras"},
         {"value": "jalaun", "label": "Jalaun"},
@@ -784,10 +774,10 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "kannauj", "label": "Kannauj"},
         {"value": "kanpur dehat", "label": "Kanpur Dehat"},
         {"value": "kanpur nagar", "label": "Kanpur Nagar"},
-        {"value": "kasganj", "label": "Kasganj"},
+        {"value": "kanshiram nagar (kasganj)", "label": "Kanshiram Nagar (Kasganj)"},
         {"value": "kaushambi", "label": "Kaushambi"},
-        {"value": "kheri", "label": "Kheri"},
-        {"value": "kushinagar", "label": "Kushinagar"},
+        {"value": "kushinagar (padrauna)", "label": "Kushinagar (Padrauna)"},
+        {"value": "lakhimpur - kheri", "label": "Lakhimpur - Kheri"},
         {"value": "lalitpur", "label": "Lalitpur"},
         {"value": "lucknow", "label": "Lucknow"},
         {"value": "maharajganj", "label": "Maharajganj"},
@@ -801,27 +791,42 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "muzaffarnagar", "label": "Muzaffarnagar"},
         {"value": "pilibhit", "label": "Pilibhit"},
         {"value": "pratapgarh", "label": "Pratapgarh"},
-        {"value": "rae bareli", "label": "Rae Bareli"},
+        {"value": "raebareli", "label": "RaeBareli"},
         {"value": "rampur", "label": "Rampur"},
         {"value": "saharanpur", "label": "Saharanpur"},
-        {"value": "sambhal", "label": "Sambhal"},
+        {"value": "sambhal (bhim nagar)", "label": "Sambhal (Bhim Nagar)"},
         {"value": "sant kabir nagar", "label": "Sant Kabir Nagar"},
         {"value": "shahjahanpur", "label": "Shahjahanpur"},
-        {"value": "shamli", "label": "Shamli"},
+        {"value": "shamali (prabuddh nagar)", "label": "Shamali (Prabuddh Nagar)"},
         {"value": "shravasti", "label": "Shravasti"},
-        {"value": "siddharthnagar", "label": "Siddharthnagar"},
+        {"value": "siddharth nagar", "label": "Siddharth Nagar"},
         {"value": "sitapur", "label": "Sitapur"},
         {"value": "sonbhadra", "label": "Sonbhadra"},
         {"value": "sultanpur", "label": "Sultanpur"},
         {"value": "unnao", "label": "Unnao"},
         {"value": "varanasi", "label": "Varanasi"}
     ],
+    UK: [
+        {"value": "almora", "label": "Almora"},
+        {"value": "bageshwar", "label": "Bageshwar"},
+        {"value": "chamoli", "label": "Chamoli"},
+        {"value": "champawat", "label": "Champawat"},
+        {"value": "dehradun", "label": "Dehradun"},
+        {"value": "haridwar", "label": "Haridwar"},
+        {"value": "nainital", "label": "Nainital"},
+        {"value": "pauri garhwal", "label": "Pauri Garhwal"},
+        {"value": "pithoragarh", "label": "Pithoragarh"},
+        {"value": "rudraprayag", "label": "Rudraprayag"},
+        {"value": "tehri garhwal", "label": "Tehri Garhwal"},
+        {"value": "udham singh nagar", "label": "Udham Singh Nagar"},
+        {"value": "uttarkashi", "label": "Uttarkashi"}
+    ],
     WB: [
         {"value": "alipurduar", "label": "Alipurduar"},
         {"value": "bankura", "label": "Bankura"},
         {"value": "birbhum", "label": "Birbhum"},
         {"value": "cooch behar", "label": "Cooch Behar"},
-        {"value": "dakshin dinajpur", "label": "Dakshin Dinajpur"},
+        {"value": "dakshin dinajpur (south dinajpur)", "label": "Dakshin Dinajpur (South Dinajpur)"},
         {"value": "darjeeling", "label": "Darjeeling"},
         {"value": "hooghly", "label": "Hooghly"},
         {"value": "howrah", "label": "Howrah"},
@@ -833,13 +838,13 @@ const districts: { [key: string]: { value: string, label: string }[] } = {
         {"value": "murshidabad", "label": "Murshidabad"},
         {"value": "nadia", "label": "Nadia"},
         {"value": "north 24 parganas", "label": "North 24 Parganas"},
-        {"value": "paschim medinipur", "label": "Paschim Medinipur"},
-        {"value": "paschim burdwan", "label": "Paschim Burdwan"},
-        {"value": "purba burdwan", "label": "Purba Burdwan"},
-        {"value": "purba medinipur", "label": "Purba Medinipur"},
+        {"value": "paschim medinipur (west medinipur)", "label": "Paschim Medinipur (West Medinipur)"},
+        {"value": "paschim (west) burdwan", "label": "Paschim (West) Burdwan"},
+        {"value": "purba burdwan (bardhaman)", "label": "Purba Burdwan (Bardhaman)"},
+        {"value": "purba medinipur (east medinipur)", "label": "Purba Medinipur (East Medinipur)"},
         {"value": "purulia", "label": "Purulia"},
         {"value": "south 24 parganas", "label": "South 24 Parganas"},
-        {"value": "uttar dinajpur", "label": "Uttar Dinajpur"}
+        {"value": "uttar dinajpur (north dinajpur)", "label": "Uttar Dinajpur (North Dinajpur)"}
     ]
 }
 
@@ -901,6 +906,19 @@ export default function SignupPage() {
 
   return (
      <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
+      <div className="relative hidden lg:block">
+        <Image
+          src="/placeholder.svg"
+          alt="Image"
+          layout="fill"
+          objectFit="cover"
+          className="dark:brightness-[0.2] dark:grayscale"
+        />
+         <div className="relative z-10 flex h-full flex-col justify-end bg-black/50 p-10 text-white">
+            <h2 className="text-4xl font-bold tracking-tight">Join the Game</h2>
+            <p className="mt-4 text-lg">Experience the thrill of Kalyan Matka. Sign up now to start playing, check live results, and win big!</p>
+        </div>
+      </div>
        <div className="flex min-h-screen items-center justify-center bg-background p-4 py-12">
         <div className="mx-auto w-full max-w-md space-y-6">
           <div className="text-center">
@@ -982,19 +1000,6 @@ export default function SignupPage() {
               Login
             </Link>
           </div>
-        </div>
-      </div>
-      <div className="relative hidden lg:block">
-        <Image
-          src="/placeholder.svg"
-          alt="Image"
-          layout="fill"
-          objectFit="cover"
-          className="dark:brightness-[0.2] dark:grayscale"
-        />
-         <div className="relative z-10 flex h-full flex-col justify-end bg-black/50 p-10 text-white">
-            <h2 className="text-4xl font-bold tracking-tight">Join the Game</h2>
-            <p className="mt-4 text-lg">Experience the thrill of Kalyan Matka. Sign up now to start playing, check live results, and win big!</p>
         </div>
       </div>
     </div>
