@@ -115,7 +115,7 @@ export default function LoginPage() {
             <p className="mt-4 text-lg">Your one-stop platform for gaming and rewards. Log in to continue your journey.</p>
         </div>
       </div>
-      <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white p-4 lg:bg-background lg:text-foreground">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground p-4">
         <div className="w-full max-w-md space-y-6">
             <div className="text-center">
                 <div className="flex justify-center mb-4">
@@ -141,7 +141,7 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                            className="bg-gray-800 border-gray-700 h-12 text-base"
+                            className="bg-gray-800 border-gray-700 h-12 text-base dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                         />
                     </div>
                     <div className="grid gap-2">
@@ -158,7 +158,7 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isLoading}
-                            className="bg-gray-800 border-gray-700 h-12 text-base"
+                            className="bg-gray-800 border-gray-700 h-12 text-base dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                         />
                     </div>
                     <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
@@ -177,9 +177,9 @@ export default function LoginPage() {
                             placeholder="m@example.com"
                             required
                             value={email}
-                            onChange={(e) => setEmail(e.gert.value)}
+                            onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                             className="bg-gray-800 border-gray-700 h-12 text-base"
+                             className="bg-gray-800 border-gray-700 h-12 text-base dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                         />
                     </div>
                     <Button onClick={handleForgotPassword} className="w-full h-12 text-base" disabled={isLoading}>
