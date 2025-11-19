@@ -48,6 +48,7 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
                     const commissionTxnRef = firestore.collection('transactions').doc(); // New transaction for enroller
                     transaction.set(commissionTxnRef, {
                         userId: userData.enrollerId,
+                        userName: (await transaction.get(enrollerRef)).data()?.name || 'Enroller',
                         amount: commissionAmount,
                         type: 'Commission',
                         status: 'Completed',
@@ -59,8 +60,8 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
                     transaction.update(userRef, { commissionPaid: true });
                  }
             } else if (txnData?.type === 'Withdrawal') {
-                 // The balance for withdrawal is already decremented when the request is made by enroller/user
-                 // So we don't need to do anything here for balance.
+                 // The balance for withdrawal is already decremented when the request is made by enroller/user in a transaction
+                 // So we don't need to do anything here for balance. The admin simply approves the payout.
             }
         } else { // Rejected
              if (txnData?.type === 'Withdrawal') {
@@ -77,4 +78,5 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
     // Revalidate the path to refresh the data on the client
     revalidatePath('/admin/transactions');
 }
+
 
