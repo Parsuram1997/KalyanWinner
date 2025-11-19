@@ -32,14 +32,14 @@ export default function SelectMarketForBiddingPage() {
         <p className="text-muted-foreground">Select a market to view all bids.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {markets.map((market) => (
           <Card key={market.slug}>
-            <CardHeader>
-              <CardTitle>{market.name}</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="text-base">{market.name}</CardTitle>
             </CardHeader>
-            <CardFooter>
-               <Button asChild className="w-full">
+            <CardFooter className="p-4 pt-0">
+               <Button asChild className="w-full" size="sm">
                 <Link href={`/admin/manage-bidding/${market.slug}`}>
                   <Ticket className="mr-2 h-4 w-4" />
                   View Bids
