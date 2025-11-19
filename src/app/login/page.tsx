@@ -141,7 +141,7 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                            className="bg-gray-800 border-gray-700 h-12 text-base dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            className="h-12 text-base"
                         />
                     </div>
                     <div className="grid gap-2">
@@ -158,7 +158,7 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isLoading}
-                            className="bg-gray-800 border-gray-700 h-12 text-base dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            className="h-12 text-base"
                         />
                     </div>
                     <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
@@ -179,13 +179,13 @@ export default function LoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                             className="bg-gray-800 border-gray-700 h-12 text-base dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                             className="h-12 text-base"
                         />
                     </div>
                     <Button onClick={handleForgotPassword} className="w-full h-12 text-base" disabled={isLoading}>
                     {isLoading ? 'Sending Link...' : 'Send Password Reset Link'}
                     </Button>
-                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12 border-gray-700 hover:bg-gray-800">
+                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12">
                         Back to Login
                     </Button>
                 </div>
