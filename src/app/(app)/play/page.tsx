@@ -52,7 +52,7 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
         [firestore, marketName]
     );
 
-    const { data: results, isLoading } = useCollection<Result>(resultQuery);
+    const { data: results, isLoading } = useCollection<Result>(resultQuery, { skip: !firestore });
     const result = results?.[0];
 
     if (isLoading) {
@@ -165,4 +165,3 @@ export default function MarketSelectionPage() {
     </div>
   );
 }
-
