@@ -53,7 +53,11 @@ export default function EnterResultsPage() {
     const {toast} = useToast();
     const params = useParams();
     const marketSlug = params.market as string;
-    const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    
+    const marketName = marketSlug.split('-').map(word => {
+        if (word.toLowerCase() === 'bazzar') return 'Bazzar';
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
 
     const firestore = useFirestore();
     const [results, setResults] = useState<KalyanResult[]>([]);
@@ -412,3 +416,4 @@ export default function EnterResultsPage() {
     </div>
   );
 }
+    
