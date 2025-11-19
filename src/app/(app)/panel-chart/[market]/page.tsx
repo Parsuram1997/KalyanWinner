@@ -11,8 +11,8 @@ import {
 import { useParams } from "next/navigation";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
-import { useMemo, useState } from "react";
-import { getYear, getWeek, startOfWeek, endOfWeek, format, eachDayOfInterval, getDay } from 'date-fns';
+import { useMemo } from "react";
+import { getWeek, startOfWeek, endOfWeek, format, eachDayOfInterval, getDay, subDays } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Result = {
@@ -37,90 +37,94 @@ type WeekData = {
 
 const PanelChart = ({ title, marketName }: { title: string, marketName: string }) => {
   const firestore = useFirestore();
-  const [displayYear, setDisplayYear] = useState(new Date().getFullYear());
 
   const resultsQuery = useMemoFirebase(() => {
     if (!firestore || !marketName) return null;
+    const startDate = subDays(new Date(), 365);
+    const formattedStartDate = format(startDate, 'yyyy-MM-dd');
+
     return query(
       collection(firestore, "kalyan_results"),
       where("marketName", "==", marketName),
-      orderBy("date", "asc")
+      where("date", ">=", formattedStartDate),
+      orderBy("date", "desc")
     );
   }, [firestore, marketName]);
 
   const { data: results, isLoading } = useCollection<Result>(resultsQuery);
 
   const weeklyData = useMemo(() => {
-    if (!results) return [];
+    if (!results || results.length === 0) return [];
 
-    const currentYear = new Date().getFullYear();
-    let yearToDisplay = currentYear;
-    let yearResults = results.filter(r => new Date(r.date).getFullYear() === yearToDisplay);
-
-    // If no results for the current year, try to show the previous year
-    if (yearResults.length === 0) {
-      yearToDisplay = currentYear - 1;
-      yearResults = results.filter(r => new Date(r.date).getFullYear() === yearToDisplay);
-    }
+    const groupedByWeek: { [weekAndYear: string]: { [dayOfWeek: number]: DayResult } } = {};
     
-    setDisplayYear(yearToDisplay);
-
-    const groupedByWeek: { [weekNumber: number]: { [dayOfWeek: number]: DayResult } } = {};
-
-    yearResults.forEach(result => {
+    // Group results by a unique week-year key
+    results.forEach(result => {
         const resultDate = new Date(result.date);
         const weekNumber = getWeek(resultDate, { weekStartsOn: 1 });
-        // getDay: Sunday is 0, Monday is 1, etc. We want Monday to be 0.
+        const year = resultDate.getFullYear();
+        const weekKey = `${year}-${weekNumber}`;
         const dayOfWeek = (getDay(resultDate) + 6) % 7; 
         
-        if (!groupedByWeek[weekNumber]) {
-            groupedByWeek[weekNumber] = {};
+        if (!groupedByWeek[weekKey]) {
+            groupedByWeek[weekKey] = {};
         }
 
-        groupedByWeek[weekNumber][dayOfWeek] = {
+        groupedByWeek[weekKey][dayOfWeek] = {
             openPanna: result.openPanna,
             jodi: result.jodi,
             closePanna: result.closePanna,
         };
     });
 
+    const sortedWeekKeys = Object.keys(groupedByWeek).sort((a, b) => {
+        const [yearA, weekA] = a.split('-').map(Number);
+        const [yearB, weekB] = b.split('-').map(Number);
+        if (yearA !== yearB) {
+            return yearB - yearA;
+        }
+        return weekB - weekA;
+    });
+
     const panelData: WeekData[] = [];
-    const firstDayOfYear = new Date(yearToDisplay, 0, 1);
-    const lastDayOfYear = new Date(yearToDisplay, 11, 31);
-    const firstWeek = getWeek(firstDayOfYear, { weekStartsOn: 1 });
-    const lastWeek = getWeek(lastDayOfYear, { weekStartsOn: 1 });
     
-    const weeksInYear = (lastWeek === 1 && firstDayOfYear.getMonth() === 11) ? 53 : lastWeek;
+    for (const weekKey of sortedWeekKeys) {
+        const [year, weekNum] = weekKey.split('-').map(Number);
+        const firstDayOfYear = new Date(year, 0, 1);
+        const firstDayOfWeekInYear = startOfWeek(firstDayOfYear, { weekStartsOn: 1 });
+        
+        // Find the correct date for the start of the week
+        let firstDayCurrentWeek = new Date(firstDayOfWeekInYear);
+        firstDayCurrentWeek.setDate(firstDayCurrentWeek.getDate() + (weekNum - 1) * 7);
 
+        // Adjust if the first day of the year is in the last week of the previous year
+        if (getWeek(firstDayOfYear, {weekStartsOn: 1}) > 1 && weekNum === 1) {
+             firstDayCurrentWeek.setDate(firstDayCurrentWeek.getDate() - 7);
+        }
 
-    for (let weekNum = firstWeek; weekNum <= weeksInYear; weekNum++) {
-      const weekIndex = weekNum > 52 ? weekNum - 52 : weekNum;
-      
-      const firstDayOfWeek = startOfWeek(new Date(yearToDisplay, 0, (weekIndex - 1) * 7 + 1), { weekStartsOn: 1 });
-      
-      const weekResults: (DayResult | null)[] = [];
-      const weekDays = eachDayOfInterval({start: firstDayOfWeek, end: endOfWeek(firstDayOfWeek, {weekStartsOn: 1})}).slice(0,6);
-
-      for(const day of weekDays) {
-         const dayOfWeek = (getDay(day) + 6) % 7;
-         const weekNumberForDay = getWeek(day, { weekStartsOn: 1 });
-         
-         if (groupedByWeek[weekNumberForDay] && groupedByWeek[weekNumberForDay][dayOfWeek]) {
-             weekResults.push(groupedByWeek[weekNumberForDay][dayOfWeek]);
-         } else {
-             weekResults.push(null);
-         }
-      }
-
-      if (weekResults.some(r => r !== null)) {
-          panelData.push({
-            dateRange: `${format(firstDayOfWeek, 'dd/MM/yy')} to ${format(endOfWeek(firstDayOfWeek, {weekStartsOn: 1}), 'dd/MM/yy')}`,
+        const weekResults: (DayResult | null)[] = [];
+        const weekDays = eachDayOfInterval({start: firstDayCurrentWeek, end: endOfWeek(firstDayCurrentWeek, {weekStartsOn: 1})}).slice(0,6);
+        
+        for(const day of weekDays) {
+           const dayOfWeek = (getDay(day) + 6) % 7;
+           const currentWeekNum = getWeek(day, { weekStartsOn: 1 });
+           const currentYear = day.getFullYear();
+           const currentWeekKey = `${currentYear}-${currentWeekNum}`;
+           
+           if (groupedByWeek[currentWeekKey] && groupedByWeek[currentWeekKey][dayOfWeek]) {
+               weekResults.push(groupedByWeek[currentWeekKey][dayOfWeek]);
+           } else {
+               weekResults.push(null);
+           }
+        }
+        
+        panelData.push({
+            dateRange: `${format(firstDayCurrentWeek, 'dd/MM/yy')} to ${format(endOfWeek(firstDayCurrentWeek, {weekStartsOn: 1}), 'dd/MM/yy')}`,
             results: weekResults,
           });
-      }
     }
 
-    return panelData.reverse();
+    return panelData;
   }, [results]);
 
   const isRedJodi = (jodi: string) => {
@@ -131,18 +135,18 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
   return (
     <>
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">{marketName} Panel Chart {displayYear}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{marketName} Panel Chart</h1>
         <p className="text-muted-foreground">
-          Yearly results for the {marketName} Matka game.
+          Showing results from the last 365 days for the {marketName} Matka game.
         </p>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">{title} {displayYear}</CardTitle>
-          <CardDescription>A yearly record of game results.</CardDescription>
+          <CardTitle className="text-xl">{title}</CardTitle>
+          <CardDescription>A rolling yearly record of game results.</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? <Skeleton className="w-full h-96" /> : weeklyData.length === 0 ? <p className="text-center text-muted-foreground p-8">No results found for this market in {displayYear}.</p> : (
+          {isLoading ? <Skeleton className="w-full h-96" /> : weeklyData.length === 0 ? <p className="text-center text-muted-foreground p-8">No results found for this market in the last 365 days.</p> : (
               <div className="rounded-lg border">
               <div className="w-full overflow-x-auto">
                   <div className="divide-y divide-border">
@@ -200,3 +204,4 @@ export default function PanelChartPage() {
     </div>
   );
 }
+
