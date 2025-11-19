@@ -47,7 +47,7 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
                 title: "Transaction Updated",
                 description: `Transaction has been ${newStatus.toLowerCase()}.`,
             });
-            onAction(); // This will trigger a re-fetch in the parent if needed, although Firestore listener should handle it.
+            onAction(); 
         } catch (error: any) {
             toast({
                 variant: "destructive",
@@ -194,11 +194,13 @@ export default function TransactionsPage() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="pending-deposits">
-                <TabsList className="mb-4 grid w-full grid-cols-1 sm:grid-cols-3 h-auto p-2 border rounded-lg bg-background">
-                    <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
-                    <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
-                    <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
-                </TabsList>
+                <div className="border rounded-lg p-2 mb-4">
+                  <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto p-0 border-0 bg-transparent">
+                      <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
+                      <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
+                      <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
+                  </TabsList>
+                </div>
                 <TabsContent value="pending-deposits">
                     <TransactionTable items={pendingDeposits} isLoading={isLoading} onAction={() => {}} />
                 </TabsContent>
