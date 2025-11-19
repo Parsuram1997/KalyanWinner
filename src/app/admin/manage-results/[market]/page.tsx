@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Edit, Trash, CalendarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { createKalyanResult, deleteKalyanResult, updateKalyanResult } from "@/app/actions/result-actions";
 import {
   AlertDialog,
@@ -33,7 +32,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 type KalyanResult = {
   id: string;
@@ -60,23 +59,33 @@ export default function EnterResultsPage() {
     }).join(' ');
 
     const firestore = useFirestore();
-    const resultsQuery = useMemoFirebase(() => {
-      if (!firestore) return null;
+    const [results, setResults] = useState<KalyanResult[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-      const baseQuery = query(
-        collection(firestore, 'kalyan_results'),
-        where('marketName', '==', marketName),
-        orderBy('date', 'desc')
-      );
+    useEffect(() => {
+        if (!firestore) return;
+        setIsLoading(true);
+        const q = query(
+            collection(firestore, 'kalyan_results'),
+            where('marketName', '==', marketName),
+            orderBy('date', 'desc')
+        );
 
-      return baseQuery;
-    }, [firestore, marketName]);
-    const { data: results, isLoading } = useCollection<KalyanResult>(resultsQuery);
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const resultsData: KalyanResult[] = [];
+            querySnapshot.forEach((doc) => {
+                resultsData.push({ id: doc.id, ...doc.data() } as KalyanResult);
+            });
+            setResults(resultsData);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching results: ", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not fetch market results." });
+            setIsLoading(false);
+        });
 
-    const sortedResults = useMemo(() => {
-        if (!results) return [];
-        return [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }, [results]);
+        return () => unsubscribe();
+    }, [firestore, marketName, toast]);
 
     const [openPanna, setOpenPanna] = useState('');
     const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);
@@ -259,7 +268,7 @@ export default function EnterResultsPage() {
                          <TableRow>
                             <TableCell colSpan={5} className="text-center">Loading results...</TableCell>
                          </TableRow>
-                    ) : sortedResults.length ? sortedResults.map((result) => (
+                    ) : results.length > 0 ? results.map((result) => (
                     <TableRow key={result.id}>
                         <TableCell>{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell className="font-mono">{result.openPanna}</TableCell>
@@ -305,7 +314,7 @@ export default function EnterResultsPage() {
             {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
                 {isLoading ? <p className="text-center">Loading results...</p> :
-                 sortedResults.length ? sortedResults.map((result) => (
+                 results.length > 0 ? results.map((result) => (
                     <div key={result.id} className="rounded-lg border bg-card text-card-foreground p-4 space-y-4">
                         <div className="flex justify-between items-start">
                             <div>
@@ -399,5 +408,4 @@ export default function EnterResultsPage() {
       </Dialog>
     </div>
   );
-
-    
+}
