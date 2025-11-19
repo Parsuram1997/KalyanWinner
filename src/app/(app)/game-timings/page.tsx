@@ -37,7 +37,7 @@ export default function GameTimingsPage() {
         : null,
     [firestore]
   );
-  const { data: markets, isLoading } = useCollection<Market>(marketsQuery);
+  const { data: markets, isLoading } = useCollection<Market>(marketsQuery, { skip: !firestore });
 
   return (
     <div className="flex flex-col gap-6">
