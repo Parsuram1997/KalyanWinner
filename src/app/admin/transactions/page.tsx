@@ -177,7 +177,7 @@ export default function TransactionsPage() {
             : null,
     [firestore]
   );
-  const { data: transactions, isLoading: isTxnsLoading, error } = useCollection<Transaction>(transactionsQuery);
+  const { data: transactions, isLoading: isTxnsLoading, error } = useCollection<Transaction>(transactionsQuery, { skip: !firestore });
 
   useEffect(() => {
     const fetchCustomIds = async () => {
@@ -261,3 +261,5 @@ export default function TransactionsPage() {
     </div>
   );
 }
+
+    

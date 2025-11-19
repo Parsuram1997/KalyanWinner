@@ -887,7 +887,7 @@ export default function ManageAdminsPage() {
     () => (firestore && authUser ? query(collection(firestore, "users"), where("role", "==", "Admin")) : null),
     [firestore, authUser]
   );
-  const { data: admins, isLoading: isAdminsLoading } = useCollection<any>(adminsQuery);
+  const { data: admins, isLoading: isAdminsLoading } = useCollection<any>(adminsQuery, { skip: !firestore });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All");
@@ -1305,4 +1305,5 @@ export default function ManageAdminsPage() {
   );
 }
 
+    
     

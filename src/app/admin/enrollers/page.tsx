@@ -887,7 +887,7 @@ export default function ManageEnrollersPage() {
     () => (firestore && authUser ? query(collection(firestore, "users"), where("role", "==", "Enroller")) : null),
     [firestore, authUser]
   );
-  const { data: enrollers, isLoading: isEnrollersLoading } = useCollection<any>(enrollersQuery);
+  const { data: enrollers, isLoading: isEnrollersLoading } = useCollection<any>(enrollersQuery, { skip: !firestore });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All");
@@ -1310,3 +1310,5 @@ export default function ManageEnrollersPage() {
     </div>
   );
 }
+
+    

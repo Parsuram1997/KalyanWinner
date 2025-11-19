@@ -45,7 +45,7 @@ export default function EnrollerEarningsPage() {
     );
   }, [firestore, authUser]);
 
-  const { data: earnings, isLoading: areEarningsLoading } = useCollection<CommissionTransaction>(commissionQuery);
+  const { data: earnings, isLoading: areEarningsLoading } = useCollection<CommissionTransaction>(commissionQuery, { skip: !firestore || !authUser });
 
   const filteredEarnings = useMemo(() => {
     if (!earnings) return [];
@@ -171,3 +171,5 @@ export default function EnrollerEarningsPage() {
     </div>
   );
 }
+
+    

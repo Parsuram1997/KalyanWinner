@@ -30,7 +30,7 @@ type GameRate = {
 export default function GameRatesPage() {
   const firestore = useFirestore();
   const ratesQuery = useMemoFirebase(() => firestore ? collection(firestore, "game_rates") : null, [firestore]);
-  const { data: rates, isLoading } = useCollection<GameRate>(ratesQuery);
+  const { data: rates, isLoading } = useCollection<GameRate>(ratesQuery, { skip: !firestore });
 
   return (
     <div className="flex justify-center items-start p-4">
@@ -77,3 +77,5 @@ export default function GameRatesPage() {
     </div>
   );
 }
+
+    
