@@ -33,7 +33,7 @@ export default function SettingsPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
     const ratesQuery = useMemoFirebase(() => firestore ? collection(firestore, "game_rates") : null, [firestore]);
-    const { data: rates, isLoading } = useCollection<GameRate>(ratesQuery);
+    const { data: rates, isLoading } = useCollection<GameRate>(ratesQuery, { skip: !firestore });
 
     const [rateValues, setRateValues] = useState<RateValues>({});
     const [isAddDialogOpen, setAddDialogOpen] = useState(false);

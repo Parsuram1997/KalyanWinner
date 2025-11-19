@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
+  CardContent,
 } from "@/components/ui/card";
 import { GanttChartSquare } from "lucide-react";
 import Link from "next/link";
@@ -29,7 +30,7 @@ export default function SelectChartPage() {
         : null,
     [firestore]
   );
-  const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery);
+  const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery, { skip: !firestore });
   
   const generateSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
 

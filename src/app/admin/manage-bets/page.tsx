@@ -62,7 +62,7 @@ export default function ManageBetTypesPage() {
   const firestore = useFirestore();
 
   const betTypesQuery = useMemoFirebase(() => firestore ? collection(firestore, "bet_types") : null, [firestore]);
-  const { data: betTypes, isLoading } = useCollection<BetType>(betTypesQuery);
+  const { data: betTypes, isLoading } = useCollection<BetType>(betTypesQuery, { skip: !firestore });
   
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
@@ -308,5 +308,3 @@ export default function ManageBetTypesPage() {
     </div>
   );
 }
-
-    

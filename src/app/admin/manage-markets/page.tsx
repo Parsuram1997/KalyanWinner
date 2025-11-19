@@ -62,7 +62,7 @@ export default function ManageMarketsPage() {
   const firestore = useFirestore();
 
   const marketsQuery = useMemoFirebase(() => firestore ? collection(firestore, "markets") : null, [firestore]);
-  const { data: markets, isLoading } = useCollection<Market>(marketsQuery);
+  const { data: markets, isLoading } = useCollection<Market>(marketsQuery, { skip: !firestore });
   
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);

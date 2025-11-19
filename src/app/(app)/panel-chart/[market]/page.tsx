@@ -35,6 +35,10 @@ type WeekData = {
   results: (DayResult | null)[];
 };
 
+const isDataAvailable = (day: DayResult | null) => {
+    return day && day.openPanna && day.closePanna && day.jodi && day.jodi !== '--';
+}
+
 const PanelChart = ({ title, marketName }: { title: string, marketName: string }) => {
   const firestore = useFirestore();
 
@@ -51,7 +55,7 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
     );
   }, [firestore, marketName]);
 
-  const { data: results, isLoading } = useCollection<Result>(resultsQuery);
+  const { data: results, isLoading } = useCollection<Result>(resultsQuery, { skip: !firestore });
 
   const weeklyData = useMemo(() => {
     if (!results || results.length === 0) return [];
@@ -132,10 +136,6 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
     return jodi[0] === jodi[1];
   };
 
-  const isDataAvailable = (day: DayResult | null) => {
-    return day && day.openPanna && day.closePanna && day.jodi && day.jodi !== '--';
-  }
-
   return (
     <>
       <div className="space-y-1">
@@ -212,5 +212,6 @@ export default function PanelChartPage() {
     </div>
   );
 }
+
 
 
