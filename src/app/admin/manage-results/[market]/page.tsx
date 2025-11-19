@@ -10,7 +10,7 @@ import { Edit, Trash, CalendarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useFirestore } from "@/firebase";
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { createKalyanResult, deleteKalyanResult, updateKalyanResult } from "@/app/actions/result-actions";
 import {
   AlertDialog,
@@ -54,7 +54,7 @@ export default function EnterResultsPage() {
     const params = useParams();
     const marketSlug = params.market as string;
     const marketName = marketSlug.split('-').map(word => {
-        if (word.toLowerCase() === 'bazar') return 'Bazar';
+        if (word.toLowerCase() === 'bazzar') return 'Bazzar';
         return word.charAt(0).toUpperCase() + word.slice(1);
     }).join(' ');
 
@@ -65,26 +65,29 @@ export default function EnterResultsPage() {
     useEffect(() => {
         if (!firestore) return;
         setIsLoading(true);
-        const q = query(
-            collection(firestore, 'kalyan_results'),
-            where('marketName', '==', marketName),
-            orderBy('date', 'desc')
-        );
 
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const resultsData: KalyanResult[] = [];
-            querySnapshot.forEach((doc) => {
-                resultsData.push({ id: doc.id, ...doc.data() } as KalyanResult);
-            });
-            setResults(resultsData);
-            setIsLoading(false);
-        }, (error) => {
-            console.error("Error fetching results: ", error);
-            toast({ variant: "destructive", title: "Error", description: "Could not fetch market results." });
-            setIsLoading(false);
-        });
+        const fetchResults = async () => {
+            try {
+                const q = query(
+                    collection(firestore, 'kalyan_results'),
+                    where('marketName', '==', marketName),
+                    orderBy('date', 'desc')
+                );
+                const querySnapshot = await getDocs(q);
+                const resultsData: KalyanResult[] = [];
+                querySnapshot.forEach((doc) => {
+                    resultsData.push({ id: doc.id, ...doc.data() } as KalyanResult);
+                });
+                setResults(resultsData);
+            } catch (error) {
+                console.error("Error fetching results: ", error);
+                toast({ variant: "destructive", title: "Error", description: "Could not fetch market results." });
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
+        fetchResults();
     }, [firestore, marketName, toast]);
 
     const [openPanna, setOpenPanna] = useState('');
