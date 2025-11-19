@@ -68,7 +68,7 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
         const weekNumber = getWeek(resultDate, { weekStartsOn: 1 });
         const year = resultDate.getFullYear();
         const weekKey = `${year}-${weekNumber}`;
-        const dayOfWeek = (getDay(resultDate) + 6) % 7; 
+        const dayOfWeek = (getDay(resultDate) + 6) % 7; // Monday = 0, Sunday = 6
         
         if (!groupedByWeek[weekKey]) {
             groupedByWeek[weekKey] = {};
@@ -107,10 +107,10 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
         }
 
         const weekResults: (DayResult | null)[] = [];
-        const weekDays = eachDayOfInterval({start: firstDayCurrentWeek, end: endOfWeek(firstDayCurrentWeek, {weekStartsOn: 1})}).slice(0,6);
+        const weekDays = eachDayOfInterval({start: firstDayCurrentWeek, end: endOfWeek(firstDayCurrentWeek, {weekStartsOn: 1})});
         
         for(const day of weekDays) {
-           const dayOfWeek = (getDay(day) + 6) % 7;
+           const dayOfWeek = (getDay(day) + 6) % 7; // Monday = 0, Sunday = 6
            const currentWeekNum = getWeek(day, { weekStartsOn: 1 });
            const currentYear = day.getFullYear();
            const currentWeekKey = `${currentYear}-${currentWeekNum}`;
@@ -154,7 +154,7 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
               <div className="rounded-lg border">
               <div className="w-full overflow-x-auto">
                   <div className="divide-y divide-border">
-                  <div className="grid grid-cols-[auto_repeat(6,1fr)] bg-muted font-semibold">
+                  <div className="grid grid-cols-[auto_repeat(7,1fr)] bg-muted font-semibold">
                       <div className="p-1 text-center flex items-center justify-center text-xs shrink-0 w-[80px]">Date</div>
                       <div className="border-l p-1 text-center text-xs">MON</div>
                       <div className="border-l p-1 text-center text-xs">TUE</div>
@@ -162,9 +162,10 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
                       <div className="border-l p-1 text-center text-xs">THU</div>
                       <div className="border-l p-1 text-center text-xs">FRI</div>
                       <div className="border-l p-1 text-center text-xs">SAT</div>
+                      <div className="border-l p-1 text-center text-xs">SUN</div>
                   </div>
                   {weeklyData.map((week, weekIndex) => (
-                      <div key={weekIndex} className="grid grid-cols-[auto_repeat(6,1fr)]">
+                      <div key={weekIndex} className="grid grid-cols-[auto_repeat(7,1fr)]">
                       <div className="p-1 text-center flex flex-col items-center justify-center text-xs shrink-0 w-[80px]">
                           <span className="text-[10px]">{week.dateRange.split(" to ")[0]}</span>
                           <span className="text-muted-foreground text-[10px]">to</span>
@@ -212,6 +213,3 @@ export default function PanelChartPage() {
     </div>
   );
 }
-
-
-
