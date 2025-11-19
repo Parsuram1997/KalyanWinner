@@ -85,6 +85,7 @@ export default function WalletPage() {
 
   useEffect(() => {
     async function fetchSettings() {
+      if (isAddFundsOpen) {
         setIsLoadingSettings(true);
         try {
             const currentSettings = await getPaymentSettings();
@@ -94,10 +95,9 @@ export default function WalletPage() {
         } finally {
             setIsLoadingSettings(false);
         }
+      }
     }
-    if (isAddFundsOpen) {
-        fetchSettings();
-    }
+    fetchSettings();
   }, [isAddFundsOpen, toast]);
 
   const sortedTransactions = useMemo(() => {
