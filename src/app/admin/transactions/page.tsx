@@ -79,44 +79,44 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>UTR/Method</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="text-xs">User</TableHead>
+                        <TableHead className="text-xs">Type</TableHead>
+                        <TableHead className="text-xs">Amount</TableHead>
+                        <TableHead className="text-xs">Date</TableHead>
+                        <TableHead className="text-xs">UTR/Method</TableHead>
+                        <TableHead className="text-xs">Status</TableHead>
+                        <TableHead className="text-xs">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {items.map((txn) => (
                         <TableRow key={txn.id}>
-                            <TableCell>
+                            <TableCell className="py-1 text-xs">
                                 <div>{txn.userName}</div>
                                 <div className="text-xs text-muted-foreground">{txn.customId || txn.userId}</div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="py-1 text-xs">
                                 <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"}>
                                     {txn.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell>₹{txn.amount.toFixed(2)}</TableCell>
-                            <TableCell>{new Date(txn.date).toLocaleString()}</TableCell>
-                            <TableCell>{txn.utr || 'N/A'}</TableCell>
-                            <TableCell>
+                            <TableCell className="py-1 text-xs">₹{txn.amount.toFixed(2)}</TableCell>
+                            <TableCell className="py-1 text-xs">{new Date(txn.date).toLocaleString()}</TableCell>
+                            <TableCell className="py-1 text-xs">{txn.utr || 'N/A'}</TableCell>
+                            <TableCell className="py-1 text-xs">
                                 <Badge variant={txn.status === "Approved" || txn.status === "Completed" ? "default" : txn.status === "Pending" ? "secondary" : "destructive"}>
                                     {txn.status}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="flex gap-2">
+                            <TableCell className="flex gap-2 py-1">
                                 {txn.status === "Pending" && (
                                     <>
-                                        <Button variant="outline" size="sm" onClick={() => handleAction(txn.id, txn.userId, txn.amount, 'Approved')}>Approve</Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleAction(txn.id, txn.userId, txn.amount, 'Rejected')}>Reject</Button>
+                                        <Button variant="outline" size="xs" onClick={() => handleAction(txn.id, txn.userId, txn.amount, 'Approved')}>Approve</Button>
+                                        <Button variant="destructive" size="xs" onClick={() => handleAction(txn.id, txn.userId, txn.amount, 'Rejected')}>Reject</Button>
                                     </>
                                 )}
                                 {txn.status !== "Pending" && (
-                                    <Button variant="ghost" size="sm" disabled>Processed</Button>
+                                    <Button variant="ghost" size="xs" disabled>Processed</Button>
                                 )}
                             </TableCell>
                         </TableRow>
@@ -262,4 +262,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
