@@ -49,7 +49,7 @@ export default function DashboardPage() {
     [firestore, authUser]
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
-  const walletBalance = userData?.balance ?? 0;
+  const walletBalance = (userData?.depositBalance ?? 0) + (userData?.winningBalance ?? 0);
 
   const transactionsQuery = useMemoFirebase(
     () => (firestore && authUser ? query(
@@ -124,7 +124,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         <Card className="bg-gradient-to-br from-primary/20 to-accent/20 hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

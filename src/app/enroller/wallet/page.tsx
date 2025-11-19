@@ -81,7 +81,7 @@ export default function EnrollerWalletPage() {
   }, [transactions]);
 
   const isLoading = isUserLoading || isEnrollerLoading || areTxnsLoading;
-  const availableBalance = enrollerData?.balance || 0;
+  const availableBalance = enrollerData?.winningBalance || 0;
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,12 +102,12 @@ export default function EnrollerWalletPage() {
             const enrollerDocRef = doc(firestore, "users", authUser.uid);
             const enrollerDoc = await transaction.get(enrollerDocRef);
             
-            if (!enrollerDoc.exists() || enrollerDoc.data().balance < amount) {
-                throw new Error("Insufficient balance.");
+            if (!enrollerDoc.exists() || enrollerDoc.data().winningBalance < amount) {
+                throw new Error("Insufficient winning balance.");
             }
 
             // Decrement balance
-            transaction.update(enrollerDocRef, { balance: enrollerDoc.data().balance - amount });
+            transaction.update(enrollerDocRef, { winningBalance: enrollerDoc.data().winningBalance - amount });
             
             // Create withdrawal transaction
             const transactionsCollection = collection(firestore, "transactions");
@@ -229,7 +229,7 @@ export default function EnrollerWalletPage() {
                     </div>
                     </div>
                     <DialogFooter>
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full" variant="destructive">
                         <Landmark className="mr-2 h-4 w-4" />
                         Submit Request
                     </Button>

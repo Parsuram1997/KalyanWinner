@@ -30,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { MinusCircle, PlusCircle, QrCode } from "lucide-react";
+import { MinusCircle, PlusCircle, QrCode, Wallet, ArrowUp, ArrowDown } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -66,8 +66,10 @@ export default function WalletPage() {
   const firestore = useFirestore();
 
   const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
-  const { data: userData } = useDoc<any>(userDocRef);
-  const balance = userData?.balance || 0;
+  const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
+  const depositBalance = userData?.depositBalance || 0;
+  const winningBalance = userData?.winningBalance || 0;
+  const totalBalance = depositBalance + winningBalance;
 
   const transactionsQuery = useMemoFirebase(() => (firestore && authUser ? query(collection(firestore, "transactions"), where("userId", "==", authUser.uid)) : null), [firestore, authUser]);
   const { data: transactions, isLoading: areTxnsLoading } = useCollection<Transaction>(transactionsQuery);
@@ -184,11 +186,11 @@ export default function WalletPage() {
       });
       return;
     }
-     if (amount > balance) {
+     if (amount > winningBalance) {
       toast({
         variant: 'destructive',
-        title: 'Insufficient Balance',
-        description: `You cannot withdraw more than your available balance of ₹${balance.toFixed(2)}.`,
+        title: 'Insufficient Winning Balance',
+        description: `You can only withdraw from your winning balance of ₹${winningBalance.toFixed(2)}.`,
       });
       return;
     }
@@ -213,26 +215,45 @@ export default function WalletPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
-          <CardHeader>
-            <CardTitle className="text-lg">Current Balance</CardTitle>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Deposit Balance</CardTitle>
+            <ArrowDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isUserLoading ? <Skeleton className="h-9 w-40" /> : (
-                <div className="text-3xl sm:text-4xl font-bold tracking-tight">
-                {balance.toLocaleString("en-IN", {
+            {isUserDataLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">₹{depositBalance.toFixed(2)}</div>}
+            <p className="text-xs text-muted-foreground">Cannot be withdrawn. For playing only.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Winning Balance</CardTitle>
+            <ArrowUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isUserDataLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">₹{winningBalance.toFixed(2)}</div>}
+            <p className="text-xs text-muted-foreground">Can be withdrawn.</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isUserDataLoading ? <Skeleton className="h-9 w-40" /> : (
+                <div className="text-3xl font-bold tracking-tight">
+                {totalBalance.toLocaleString("en-IN", {
                     style: "currency",
                     currency: "INR",
                 })}
                 </div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Your available funds to play.
-            </p>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-bl from-secondary/20 to-accent/10">
+      </div>
+      
+       <Card className="bg-gradient-to-bl from-secondary/20 to-accent/10">
           <CardHeader>
             <CardTitle className="text-lg">Manage Funds</CardTitle>
           </CardHeader>
@@ -443,20 +464,14 @@ export default function WalletPage() {
                   )}
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleWithdraw} className="w-full">
+                  <Button onClick={handleWithdraw} className="w-full" variant="destructive">
                     Request Withdrawal
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </CardContent>
-          <CardFooter className="pt-0">
-            <p className="text-xs text-muted-foreground text-center w-full">
-              Secure payments powered by Stripe & Razorpay.
-            </p>
-          </CardFooter>
         </Card>
-      </div>
 
       <Card className="bg-gradient-to-tr from-card to-secondary/10">
         <CardHeader>

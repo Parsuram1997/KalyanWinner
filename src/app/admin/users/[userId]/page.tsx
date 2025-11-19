@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -51,6 +52,8 @@ export default function UserDetailsPage() {
   if (!user) {
     return <div>User not found</div>;
   }
+  
+  const totalBalance = (user.depositBalance || 0) + (user.winningBalance || 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,8 +91,22 @@ export default function UserDetailsPage() {
           <div className="flex items-center gap-3">
             <Wallet className="h-5 w-5 text-muted-foreground" />
             <div>
-              <p className="text-sm text-muted-foreground">Balance</p>
-              <p className="font-medium">₹{(user.balance || 0).toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">Total Balance</p>
+              <p className="font-medium">₹{totalBalance.toFixed(2)}</p>
+            </div>
+          </div>
+           <div className="flex items-center gap-3">
+            <Wallet className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">Deposit Balance</p>
+              <p className="font-medium">₹{(user.depositBalance || 0).toFixed(2)}</p>
+            </div>
+          </div>
+           <div className="flex items-center gap-3">
+            <Wallet className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">Winning Balance</p>
+              <p className="font-medium">₹{(user.winningBalance || 0).toFixed(2)}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

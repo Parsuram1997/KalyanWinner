@@ -89,7 +89,8 @@ export async function createUser(userData: {
         email: authEmail,
         state: userData.state,
         district: userData.district,
-        balance: 0,
+        depositBalance: 0,
+        winningBalance: 0,
         status: "Active",
         role: role, 
         createdAt: new Date().toISOString(),
@@ -184,4 +185,3 @@ export async function deleteUser(userId: string) {
         throw new Error(error.message || "Failed to delete user.");
     }
 }
-

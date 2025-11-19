@@ -21,7 +21,7 @@ import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { doc, writeBatch, serverTimestamp, FieldValue, increment } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
@@ -33,12 +33,14 @@ type Bet = {
 function BetForm({
   gameType,
   market,
-  walletBalance,
+  depositBalance,
+  winningBalance,
   isLoadingBalance
 }: {
   gameType: string;
   market: string;
-  walletBalance: number;
+  depositBalance: number;
+  winningBalance: number;
   isLoadingBalance: boolean;
 }) {
   const { toast } = useToast();
@@ -48,6 +50,8 @@ function BetForm({
   const [currentNumber, setCurrentNumber] = useState("");
   const [currentAmount, setCurrentAmount] = useState("");
   const [isPlacingBet, setIsPlacingBet] = useState(false);
+  
+  const totalBalance = depositBalance + winningBalance;
 
   const totalBetAmount = useMemo(() => {
     return bets.reduce((sum, bet) => sum + parseInt(bet.amount || "0"), 0);
@@ -162,7 +166,6 @@ function BetForm({
         }
     }
     
-    // This check will be re-evaluated after we know if it's a new bet or an update
     return true;
   };
 
@@ -175,15 +178,13 @@ function BetForm({
     let newTotalAmount = totalBetAmount;
     
     if (existingBetIndex !== -1) {
-        // Bet exists, calculate the difference in amount
         const oldAmount = parseInt(bets[existingBetIndex].amount);
         newTotalAmount = totalBetAmount - oldAmount + amountInt;
     } else {
-        // New bet
         newTotalAmount = totalBetAmount + amountInt;
     }
 
-    if (newTotalAmount > walletBalance) {
+    if (newTotalAmount > totalBalance) {
       toast({
         variant: "destructive",
         title: "Insufficient Balance",
@@ -193,7 +194,6 @@ function BetForm({
     }
 
     if (existingBetIndex !== -1) {
-        // Update existing bet
         const newBets = [...bets];
         newBets[existingBetIndex].amount = currentAmount;
         setBets(newBets);
@@ -202,7 +202,6 @@ function BetForm({
             description: `Amount changed to ₹${currentAmount}.`,
         });
     } else {
-        // Add new bet
         setBets([...bets, { number: currentNumber, amount: currentAmount }]);
     }
     
@@ -229,7 +228,7 @@ function BetForm({
       return;
     }
 
-    if (totalBetAmount > walletBalance) {
+    if (totalBetAmount > totalBalance) {
       toast({
         variant: "destructive",
         title: "Insufficient Balance",
@@ -253,12 +252,31 @@ function BetForm({
         const batch = writeBatch(firestore);
         const userRef = doc(firestore, "users", authUser.uid);
         
-        // 1. Decrement user balance
+        // Logic to deduct from balances
+        let amountToDeduct = totalBetAmount;
+        let depositDeduction = 0;
+        let winningDeduction = 0;
+
+        if (amountToDeduct > 0 && depositBalance > 0) {
+            const deduction = Math.min(amountToDeduct, depositBalance);
+            depositDeduction = deduction;
+            amountToDeduct -= deduction;
+        }
+        if (amountToDeduct > 0 && winningBalance > 0) {
+            const deduction = Math.min(amountToDeduct, winningBalance);
+            winningDeduction = deduction;
+            amountToDeduct -= deduction;
+        }
+        
+        if (amountToDeduct > 0) {
+           throw new Error("Calculation error led to insufficient balance.");
+        }
+
         batch.update(userRef, {
-            balance: walletBalance - totalBetAmount
+            depositBalance: increment(-depositDeduction),
+            winningBalance: increment(-winningDeduction)
         });
 
-        // 2. Create transaction for each bet
         for (const bet of bets) {
             const transactionRef = doc(firestore, "transactions", doc(firestore, "transactions").id);
             batch.set(transactionRef, {
@@ -348,8 +366,8 @@ function BetForm({
                     <div className="flex justify-between items-center p-3 pb-0">
                         <h4 className="text-sm font-medium">Your Bets</h4>
                         <div className="text-xs font-mono text-muted-foreground text-right">
-                        <div>Total: ₹{totalBetAmount}</div>
-                        {isLoadingBalance ? <Skeleton className="h-4 w-20 mt-1" /> : <div className="text-green-600">Remaining: ₹{(walletBalance - totalBetAmount).toFixed(2)}</div> }
+                        <div>Total Bet: ₹{totalBetAmount}</div>
+                        {isLoadingBalance ? <Skeleton className="h-4 w-20 mt-1" /> : <div className="text-green-600">Remaining: ₹{(totalBalance - totalBetAmount).toFixed(2)}</div> }
                         </div>
                     </div>
                     <Separator className="mt-3" />
@@ -404,14 +422,38 @@ function BetForm({
   );
 }
 
-const WalletCard = ({ balance, isLoading }: { balance: number, isLoading: boolean }) => (
+const WalletCard = ({ depositBalance, winningBalance, isLoading }: { depositBalance: number, winningBalance: number, isLoading: boolean }) => (
     <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-0">
-            <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+        <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium flex items-center justify-between">
+                <span>Wallet Balance</span>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 pt-2">
-            {isLoading ? <Skeleton className="h-7 w-28" /> : <div className="text-xl font-bold">₹{balance.toFixed(2)}</div>}
+        <CardContent className="p-4 pt-2 text-xs space-y-2">
+            {isLoading ? 
+            <>
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-6 w-32 mt-1" />
+            </>
+             : 
+            <>
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">Deposit:</span>
+                    <span className="font-semibold">₹{depositBalance.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">Winnings:</span>
+                    <span className="font-semibold">₹{winningBalance.toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-sm">
+                    <span className="font-bold">Total:</span>
+                    <span className="font-bold text-base">₹{(depositBalance + winningBalance).toFixed(2)}</span>
+                </div>
+            </>
+            }
         </CardContent>
         <CardFooter className="p-4 pt-0">
             <Button size="sm" asChild>
@@ -439,14 +481,15 @@ export default function PlaceBetPage() {
   const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
   const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
 
-  const walletBalance = userData?.balance || 0;
+  const depositBalance = userData?.depositBalance || 0;
+  const winningBalance = userData?.winningBalance || 0;
   const isLoading = isUserLoading || isUserDataLoading;
 
   return (
     <div className="flex flex-col gap-6">
       {/* Mobile Layout */}
       <div className="flex flex-col gap-4 sm:hidden">
-        <WalletCard balance={walletBalance} isLoading={isLoading} />
+        <WalletCard depositBalance={depositBalance} winningBalance={winningBalance} isLoading={isLoading} />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
           <p className="text-muted-foreground">
@@ -464,11 +507,11 @@ export default function PlaceBetPage() {
           </p>
         </div>
         <div className="sm:justify-self-end">
-            <WalletCard balance={walletBalance} isLoading={isLoading} />
+            <WalletCard depositBalance={depositBalance} winningBalance={winningBalance} isLoading={isLoading} />
         </div>
       </div>
 
-      <BetForm gameType={betTypeName} market={marketName} walletBalance={walletBalance} isLoadingBalance={isLoading} />
+      <BetForm gameType={betTypeName} market={marketName} depositBalance={depositBalance} winningBalance={winningBalance} isLoadingBalance={isLoading} />
     </div>
   );
 }

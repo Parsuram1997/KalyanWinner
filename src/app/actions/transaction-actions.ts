@@ -36,7 +36,7 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
         
         if (status === 'Approved') {
             if (txnData?.type === 'Deposit') {
-                 transaction.update(userRef, { balance: FieldValue.increment(amount) });
+                 transaction.update(userRef, { depositBalance: FieldValue.increment(amount) });
 
                  // Check for enroller commission logic
                  if (userData.enrollerId && !userData.commissionPaid && amount >= 500) {
@@ -44,7 +44,7 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
                     const commissionAmount = 100;
 
                     // Credit enroller and create a commission transaction for them
-                    transaction.update(enrollerRef, { balance: FieldValue.increment(commissionAmount) });
+                    transaction.update(enrollerRef, { winningBalance: FieldValue.increment(commissionAmount) });
                     const commissionTxnRef = firestore.collection('transactions').doc(); // New transaction for enroller
                     transaction.set(commissionTxnRef, {
                         userId: userData.enrollerId,
@@ -65,8 +65,8 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
             }
         } else { // Rejected
              if (txnData?.type === 'Withdrawal') {
-                // Return funds to user if withdrawal is rejected. Note: withdrawal amount is positive.
-                transaction.update(userRef, { balance: FieldValue.increment(amount) });
+                // Return funds to user's winningBalance if withdrawal is rejected.
+                transaction.update(userRef, { winningBalance: FieldValue.increment(amount) });
             }
             // No balance change if deposit is rejected.
         }
@@ -78,5 +78,6 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
     // Revalidate the path to refresh the data on the client
     revalidatePath('/admin/transactions');
 }
+
 
 

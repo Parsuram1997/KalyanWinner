@@ -1183,7 +1183,7 @@ export default function ManageUsersPage() {
                       <div className="text-xs">{user.state}</div>
                       <div className="text-muted-foreground text-xs">{user.district}</div>
                     </TableCell>
-                    <TableCell className="text-xs py-1">₹{(user.balance || 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-xs py-1">₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(2)}</TableCell>
                     <TableCell className="py-1">
                       <Badge
                         variant={
@@ -1255,7 +1255,7 @@ export default function ManageUsersPage() {
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Balance:</span>
-                        <span>₹{(user.balance || 0).toFixed(2)}</span>
+                        <span>₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(2)}</span>
                     </div>
                 </div>
                 <div className="mt-4 flex justify-end gap-2 border-t pt-3">
