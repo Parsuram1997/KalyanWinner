@@ -20,8 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
-import { useMemo } from "react";
+import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { useMemo, useState, useEffect } from "react";
 import { updateTransactionStatus } from "@/app/actions/transaction-actions";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +35,7 @@ type Transaction = {
     status: "Pending" | "Approved" | "Rejected" | "Completed";
     date: string;
     utr?: string;
+    customId?: string; // Add customId to the type
 }
 
 const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[], isLoading: boolean, onAction: () => void }) => {
@@ -92,7 +93,7 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
                         <TableRow key={txn.id}>
                             <TableCell>
                                 <div>{txn.userName}</div>
-                                <div className="text-xs text-muted-foreground">{txn.userId}</div>
+                                <div className="text-xs text-muted-foreground">{txn.customId || txn.userId}</div>
                             </TableCell>
                             <TableCell>
                                 <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"}>
@@ -131,7 +132,7 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
                      <div className="flex justify-between items-start">
                         <div>
                             <p className="font-semibold">{txn.userName}</p>
-                            <p className="text-xs text-muted-foreground">{txn.id} - {new Date(txn.date).toLocaleDateString()}</p>
+                            <p className="text-xs text-muted-foreground">{txn.customId || txn.userId} - {new Date(txn.date).toLocaleDateString()}</p>
                         </div>
                          <Badge variant={txn.status === "Approved" || txn.status === "Completed" ? "default" : txn.status === "Pending" ? "secondary" : "destructive"}>
                             {txn.status}
@@ -168,6 +169,8 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
 }
 export default function TransactionsPage() {
   const firestore = useFirestore();
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const transactionsQuery = useMemoFirebase(
     () => firestore 
@@ -175,11 +178,54 @@ export default function TransactionsPage() {
             : null,
     [firestore]
   );
-  const { data: transactions, isLoading, error } = useCollection<Transaction>(transactionsQuery);
+  const { data: transactions, isLoading: isTxnsLoading, error } = useCollection<Transaction>(transactionsQuery);
 
-  const pendingDeposits = useMemo(() => transactions?.filter(t => t.type === 'Deposit' && t.status === 'Pending') || [], [transactions]);
-  const pendingWithdrawals = useMemo(() => transactions?.filter(t => t.type === 'Withdrawal' && t.status === 'Pending') || [], [transactions]);
-  const processedTransactions = useMemo(() => transactions?.filter(t => t.status !== 'Pending') || [], [transactions]);
+  useEffect(() => {
+    const fetchCustomIds = async () => {
+        if (transactions && firestore) {
+            setIsLoading(true);
+            const userIds = [...new Set(transactions.map(t => t.userId))];
+            
+            if (userIds.length === 0) {
+              setAllTransactions(transactions);
+              setIsLoading(false);
+              return;
+            }
+
+            const usersMap = new Map<string, string>();
+            
+            // Firestore 'in' query supports up to 30 items. We need to batch requests.
+            const batches = [];
+            for (let i = 0; i < userIds.length; i += 30) {
+                batches.push(userIds.slice(i, i + 30));
+            }
+
+            for (const batch of batches) {
+                const usersQuery = query(collection(firestore, 'users'), where('id', 'in', batch));
+                const usersSnapshot = await getDocs(usersQuery);
+                usersSnapshot.forEach(doc => {
+                    usersMap.set(doc.data().id, doc.data().customId);
+                });
+            }
+
+            const transactionsWithCustomIds = transactions.map(t => ({
+                ...t,
+                customId: usersMap.get(t.userId) || t.userId
+            }));
+
+            setAllTransactions(transactionsWithCustomIds);
+            setIsLoading(false);
+        } else if (!isTxnsLoading) {
+            setIsLoading(false);
+        }
+    };
+
+    fetchCustomIds();
+  }, [transactions, firestore, isTxnsLoading]);
+
+  const pendingDeposits = useMemo(() => allTransactions?.filter(t => t.type === 'Deposit' && t.status === 'Pending') || [], [allTransactions]);
+  const pendingWithdrawals = useMemo(() => allTransactions?.filter(t => t.type === 'Withdrawal' && t.status === 'Pending') || [], [allTransactions]);
+  const processedTransactions = useMemo(() => allTransactions?.filter(t => t.status !== 'Pending') || [], [allTransactions]);
 
   if (error) {
     return <div>Error: {error.message}</div>
@@ -194,8 +240,8 @@ export default function TransactionsPage() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="pending-deposits">
-                <div className="border rounded-lg p-2 mb-4">
-                  <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto p-0 border-0 bg-transparent">
+                <div className="mb-4 rounded-lg border p-2">
+                  <TabsList className="grid h-auto w-full grid-cols-1 border-0 bg-transparent p-0 sm:grid-cols-3">
                       <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
                       <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
                       <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
@@ -216,3 +262,4 @@ export default function TransactionsPage() {
     </div>
   );
 }
+
