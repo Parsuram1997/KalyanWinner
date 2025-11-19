@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
+  CardContent,
 } from "@/components/ui/card";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -29,7 +30,7 @@ export default function ChooseBetTypePage() {
         : null,
     [firestore]
   );
-  const { data: betTypes, isLoading } = useCollection<any>(betTypesQuery);
+  const { data: betTypes, isLoading } = useCollection<any>(betTypesQuery, { skip: !firestore });
 
   return (
     <div className="flex flex-col gap-6">
