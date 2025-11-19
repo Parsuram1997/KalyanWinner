@@ -172,15 +172,19 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
                           <span className="text-[10px]">{week.dateRange.split(" to ")[1]}</span>
                       </div>
                       {week.results.map((day, dayIndex) => (
-                          <div key={dayIndex} className="border-l p-1 text-center">
+                          <div key={dayIndex} className="border-l p-1 text-center flex items-center justify-center min-h-[50px]">
                           {day && isDataAvailable(day) ? (
                               day.jodi === 'L' ? (
                                 <div className="flex items-center justify-center h-full text-destructive font-bold text-xs">H</div>
                               ) : (
-                                <div>
-                                  <div className="text-[10px] text-muted-foreground">{day.openPanna}</div>
-                                  <div className={`font-bold text-xs my-0.5 ${isRedJodi(day.jodi) ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
-                                  <div className="text-[10px] text-muted-foreground">{day.closePanna}</div>
+                                <div className="flex justify-around items-center w-full text-[10px] text-muted-foreground font-mono">
+                                  <div className="flex flex-col items-center">
+                                    {day.openPanna.split('').map((digit, i) => <div key={i}>{digit}</div>)}
+                                  </div>
+                                  <div className={`font-bold text-xs mx-1 ${isRedJodi(day.jodi) ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
+                                  <div className="flex flex-col items-center">
+                                    {day.closePanna.split('').map((digit, i) => <div key={i}>{digit}</div>)}
+                                  </div>
                                 </div>
                               )
                           ) : (
