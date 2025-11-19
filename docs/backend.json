@@ -79,15 +79,25 @@
           "type": "string",
           "description": "The name of the market (e.g., Kalyan Day)."
         },
-        "openTime": {
+        "openBiddingTime": {
           "type": "string",
           "format": "time",
-          "description": "The opening time of the market."
+          "description": "The opening time for bidding."
         },
-        "closeTime": {
+        "openResultTime": {
           "type": "string",
           "format": "time",
-          "description": "The closing time of the market."
+          "description": "The result declaration time for the open panna."
+        },
+        "closeBiddingTime": {
+          "type": "string",
+          "format": "time",
+          "description": "The closing time for bidding."
+        },
+        "closeResultTime": {
+          "type": "string",
+          "format": "time",
+          "description": "The result declaration time for the close panna."
         },
         "status": {
           "type": "string",
@@ -95,7 +105,7 @@
           "description": "The current status of the market."
         }
       },
-      "required": ["name", "openTime", "closeTime", "status"]
+      "required": ["name", "openBiddingTime", "openResultTime", "closeBiddingTime", "closeResultTime", "status"]
     },
     "BetType": {
       "title": "Bet Type",

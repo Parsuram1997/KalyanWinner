@@ -24,8 +24,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 type Market = {
   id: string;
   name: string;
-  openTime: string;
-  closeTime: string;
+  openBiddingTime: string;
+  openResultTime: string;
+  closeBiddingTime: string;
+  closeResultTime: string;
 };
 
 export default function GameTimingsPage() {
@@ -44,7 +46,7 @@ export default function GameTimingsPage() {
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">Game Timings</h1>
         <p className="text-muted-foreground">
-          A schedule of open and close times for all active markets.
+          A schedule of bidding and result times for all active markets.
         </p>
       </div>
       <Card>
@@ -62,9 +64,15 @@ export default function GameTimingsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-base">Market Name</TableHead>
-                  <TableHead className="text-center text-base">Open Time</TableHead>
-                  <TableHead className="text-center text-base">Close Time</TableHead>
+                  <TableHead rowSpan={2} className="text-base align-middle">Market Name</TableHead>
+                  <TableHead colSpan={2} className="text-center text-base border-b border-l">Bidding Time</TableHead>
+                  <TableHead colSpan={2} className="text-center text-base border-b border-l">Result Time</TableHead>
+                </TableRow>
+                 <TableRow>
+                  <TableHead className="text-center text-base border-l">Open</TableHead>
+                  <TableHead className="text-center text-base border-l">Close</TableHead>
+                  <TableHead className="text-center text-base border-l">Open</TableHead>
+                  <TableHead className="text-center text-base border-l">Close</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -74,12 +82,10 @@ export default function GameTimingsPage() {
                         <TableCell>
                           <Skeleton className="h-5 w-24" />
                         </TableCell>
-                        <TableCell className="text-center">
-                          <Skeleton className="h-5 w-20 mx-auto" />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Skeleton className="h-5 w-20 mx-auto" />
-                        </TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
+                        <TableCell className="text-center"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
+                         <TableCell className="text-center"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
                       </TableRow>
                     ))
                   : markets?.map((market) => (
@@ -87,18 +93,24 @@ export default function GameTimingsPage() {
                         <TableCell className="font-medium text-base">
                           {market.name}
                         </TableCell>
-                        <TableCell className="text-center font-semibold text-primary text-base">
-                          {market.openTime}
+                        <TableCell className="text-center font-semibold text-primary text-base border-l">
+                          {market.openBiddingTime}
                         </TableCell>
-                        <TableCell className="text-center font-semibold text-destructive text-base">
-                          {market.closeTime}
+                        <TableCell className="text-center font-semibold text-destructive text-base border-l">
+                          {market.closeBiddingTime}
+                        </TableCell>
+                         <TableCell className="text-center font-semibold text-primary text-base border-l">
+                          {market.openResultTime}
+                        </TableCell>
+                        <TableCell className="text-center font-semibold text-destructive text-base border-l">
+                          {market.closeResultTime}
                         </TableCell>
                       </TableRow>
                     ))}
                 {!isLoading && markets?.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={3}
+                      colSpan={5}
                       className="text-center text-muted-foreground"
                     >
                       No active markets found.
@@ -113,3 +125,5 @@ export default function GameTimingsPage() {
     </div>
   );
 }
+
+    

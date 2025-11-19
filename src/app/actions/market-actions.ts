@@ -6,8 +6,10 @@ import { revalidatePath } from "next/cache";
 
 export async function createMarket(marketData: {
   name: string;
-  openTime: string;
-  closeTime: string;
+  openBiddingTime: string;
+  openResultTime: string;
+  closeBiddingTime: string;
+  closeResultTime: string;
 }) {
   try {
     await firestore.collection("markets").add({
@@ -15,6 +17,7 @@ export async function createMarket(marketData: {
       status: "Active", // Default status
     });
     revalidatePath("/admin/manage-markets");
+    revalidatePath("/admin/manage-timings");
     return { success: true };
   } catch (error: any) {
     console.error("Error creating market:", error);
@@ -24,13 +27,16 @@ export async function createMarket(marketData: {
 
 export async function updateMarket(marketId: string, marketData: {
   name?: string;
-  openTime?: string;
-  closeTime?: string;
+  openBiddingTime?: string;
+  openResultTime?: string;
+  closeBiddingTime?: string;
+  closeResultTime?: string;
   status?: "Active" | "Inactive";
 }) {
   try {
     await firestore.collection("markets").doc(marketId).update(marketData);
     revalidatePath("/admin/manage-markets");
+    revalidatePath("/admin/manage-timings");
     return { success: true };
   } catch (error: any) {
     console.error("Error updating market:", error);
@@ -42,9 +48,12 @@ export async function deleteMarket(marketId: string) {
     try {
         await firestore.collection("markets").doc(marketId).delete();
         revalidatePath("/admin/manage-markets");
+        revalidatePath("/admin/manage-timings");
         return { success: true };
     } catch (error: any) {
         console.error("Error deleting market:", error);
         throw new Error(error.message || "Failed to delete market.");
     }
 }
+
+    
