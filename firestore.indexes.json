@@ -14,6 +14,20 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "kalyan_results",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "marketName",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ]
 }

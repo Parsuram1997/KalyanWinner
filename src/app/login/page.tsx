@@ -119,7 +119,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-6">
             <div className="text-center">
                 <div className="flex justify-center mb-4">
-                   <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} />
+                   <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="object-contain" />
                 </div>
                 <h1 className="text-3xl font-bold tracking-tight">
                     {view === 'login' ? "Secure User Login" : "Reset Your Password"}
