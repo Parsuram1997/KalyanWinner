@@ -2,6 +2,7 @@
 'use server';
 
 import { firestore } from "@/lib/firebase-admin";
+import { revalidatePath } from "next/cache";
 
 const settingsRef = firestore.collection("payment_settings").doc("main");
 
@@ -30,6 +31,7 @@ export async function getPaymentSettings(): Promise<PaymentSettings | null> {
 export async function updatePaymentSettings(settings: PaymentSettings) {
     try {
         await settingsRef.set(settings, { merge: true });
+        revalidatePath('/admin/manage-payments');
         return { success: true };
     } catch (error: any) {
         console.error("Error updating payment settings:", error);
