@@ -32,10 +32,9 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
         }
         
         const txnData = transactionDoc.data();
-        let finalStatus: 'Completed' | 'Rejected' = 'Rejected';
+        let finalStatus: 'Completed' | 'Rejected' = status === 'Approved' ? 'Completed' : 'Rejected';
         
         if (status === 'Approved') {
-            finalStatus = 'Completed';
             if (txnData?.type === 'Deposit') {
                  transaction.update(userRef, { balance: FieldValue.increment(amount) });
 
@@ -60,12 +59,12 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
                     transaction.update(userRef, { commissionPaid: true });
                  }
             } else if (txnData?.type === 'Withdrawal') {
-                 // The balance for withdrawal is already decremented when the request is made by enroller
-                 // So we don't need to do anything here.
+                 // The balance for withdrawal is already decremented when the request is made by enroller/user
+                 // So we don't need to do anything here for balance.
             }
         } else { // Rejected
              if (txnData?.type === 'Withdrawal') {
-                // Return funds to user if withdrawal is rejected
+                // Return funds to user if withdrawal is rejected. Note: withdrawal amount is positive.
                 transaction.update(userRef, { balance: FieldValue.increment(amount) });
             }
             // No balance change if deposit is rejected.
@@ -78,3 +77,4 @@ export async function updateTransactionStatus(params: UpdateTransactionStatusPar
     // Revalidate the path to refresh the data on the client
     revalidatePath('/admin/transactions');
 }
+
