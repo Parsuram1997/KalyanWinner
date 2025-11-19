@@ -194,13 +194,11 @@ export default function TransactionsPage() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="pending-deposits">
-                <div className="border rounded-lg p-2 mb-4">
-                  <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 bg-transparent p-0">
-                      <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
-                      <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
-                      <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
-                  </TabsList>
-                </div>
+                <TabsList className="mb-4 grid w-full grid-cols-1 sm:grid-cols-3 h-auto p-2 border rounded-lg bg-background">
+                    <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
+                    <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
+                    <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
+                </TabsList>
                 <TabsContent value="pending-deposits">
                     <TransactionTable items={pendingDeposits} isLoading={isLoading} onAction={() => {}} />
                 </TabsContent>
