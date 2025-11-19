@@ -32,7 +32,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 type KalyanResult = {
   id: string;
@@ -54,7 +54,7 @@ export default function EnterResultsPage() {
     const params = useParams();
     const marketSlug = params.market as string;
     const marketName = marketSlug.split('-').map(word => {
-        if (word.toLowerCase() === 'bazzar') return 'Bazzar';
+        if (word.toLowerCase() === 'bazzar') return 'Bazzar'; // Specific fix for 'Bazzar'
         return word.charAt(0).toUpperCase() + word.slice(1);
     }).join(' ');
 
@@ -62,33 +62,32 @@ export default function EnterResultsPage() {
     const [results, setResults] = useState<KalyanResult[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
+    const fetchResults = useCallback(async () => {
         if (!firestore) return;
         setIsLoading(true);
-
-        const fetchResults = async () => {
-            try {
-                const q = query(
-                    collection(firestore, 'kalyan_results'),
-                    where('marketName', '==', marketName),
-                    orderBy('date', 'desc')
-                );
-                const querySnapshot = await getDocs(q);
-                const resultsData: KalyanResult[] = [];
-                querySnapshot.forEach((doc) => {
-                    resultsData.push({ id: doc.id, ...doc.data() } as KalyanResult);
-                });
-                setResults(resultsData);
-            } catch (error) {
-                console.error("Error fetching results: ", error);
-                toast({ variant: "destructive", title: "Error", description: "Could not fetch market results." });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchResults();
+        try {
+            const q = query(
+                collection(firestore, 'kalyan_results'),
+                where('marketName', '==', marketName),
+                orderBy('date', 'desc')
+            );
+            const querySnapshot = await getDocs(q);
+            const resultsData: KalyanResult[] = [];
+            querySnapshot.forEach((doc) => {
+                resultsData.push({ id: doc.id, ...doc.data() } as KalyanResult);
+            });
+            setResults(resultsData);
+        } catch (error) {
+            console.error("Error fetching results: ", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not fetch market results." });
+        } finally {
+            setIsLoading(false);
+        }
     }, [firestore, marketName, toast]);
+
+    useEffect(() => {
+        fetchResults();
+    }, [fetchResults]);
 
     const [openPanna, setOpenPanna] = useState('');
     const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);
@@ -121,6 +120,7 @@ export default function EnterResultsPage() {
             form.reset();
             setOpenPanna('');
             setAddOpenResultDialogOpen(false);
+            fetchResults(); // Refetch results
         } catch (error: any) {
              toast({
                 variant: "destructive",
@@ -145,6 +145,7 @@ export default function EnterResultsPage() {
         setUpdateResultDialogOpen(false);
         setSelectedResult(null);
         setUpdateClosePanna("");
+        fetchResults(); // Refetch results
       } catch (error: any) {
          toast({ variant: "destructive", title: "Update Failed", description: error.message });
       }
@@ -175,6 +176,7 @@ export default function EnterResultsPage() {
             });
             form.reset();
             setHolidayDialogOpen(false);
+            fetchResults(); // Refetch results
         } catch (error: any) {
              toast({
                 variant: "destructive",
@@ -191,6 +193,7 @@ export default function EnterResultsPage() {
           title: "Result Deleted",
           description: "The result has been successfully deleted.",
         });
+        fetchResults(); // Refetch results
       } catch (error: any) {
         toast({
           variant: "destructive",
@@ -276,7 +279,7 @@ export default function EnterResultsPage() {
                         <TableCell>{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell className="font-mono">{result.openPanna}</TableCell>
                         <TableCell className="font-bold text-primary font-mono">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
-                        <TableCell className="font-mono">{result.closePanna}</TableCell>
+                        <TableCell className="font-mono">{result.closePanna || '--'}</TableCell>
                         <TableCell className="flex gap-2">
                           {!result.closePanna && result.jodi !== 'L' ? (
                             <Button variant="outline" size="sm" onClick={() => {
@@ -294,7 +297,7 @@ export default function EnterResultsPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This will permanently delete the result for {result.date}.
+                                This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -365,7 +368,7 @@ export default function EnterResultsPage() {
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    This will permanently delete the result for {result.date}.
+                                    This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
