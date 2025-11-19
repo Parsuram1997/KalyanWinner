@@ -132,6 +132,10 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
     return jodi[0] === jodi[1];
   };
 
+  const isDataAvailable = (day: DayResult | null) => {
+    return day && day.openPanna && day.closePanna && day.jodi && day.jodi !== '--';
+  }
+
   return (
     <>
       <div className="space-y-1">
@@ -168,12 +172,16 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
                       </div>
                       {week.results.map((day, dayIndex) => (
                           <div key={dayIndex} className="border-l p-1 text-center">
-                          {day ? (
-                              <div>
-                              <div className="text-[10px] text-muted-foreground">{day.openPanna}</div>
-                              <div className={`font-bold text-xs my-0.5 ${isRedJodi(day.jodi) ? "text-destructive" : "text-primary"}`}>{day.jodi === 'L' ? <span className="text-destructive">H</span> : day.jodi}</div>
-                              <div className="text-[10px] text-muted-foreground">{day.closePanna}</div>
-                              </div>
+                          {day && isDataAvailable(day) ? (
+                              day.jodi === 'L' ? (
+                                <div className="flex items-center justify-center h-full text-destructive font-bold text-xs">H</div>
+                              ) : (
+                                <div>
+                                  <div className="text-[10px] text-muted-foreground">{day.openPanna}</div>
+                                  <div className={`font-bold text-xs my-0.5 ${isRedJodi(day.jodi) ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
+                                  <div className="text-[10px] text-muted-foreground">{day.closePanna}</div>
+                                </div>
+                              )
                           ) : (
                               <div className="flex items-center justify-center h-full text-muted-foreground text-lg">
                               *
@@ -204,4 +212,5 @@ export default function PanelChartPage() {
     </div>
   );
 }
+
 
