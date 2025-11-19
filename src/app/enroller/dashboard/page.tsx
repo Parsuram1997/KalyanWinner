@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ArrowUpCircle, Store, CheckCircle } from "lucide-react";
+import { Users, ArrowUpCircle, Store, CheckCircle, UserCheck, UserX } from "lucide-react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -62,6 +62,8 @@ export default function EnrollerDashboardPage() {
 
         return {
             totalEnrolledUsers: enrolledUsers?.length.toString() || '0',
+            activeUsers: enrolledUsers?.filter(u => u.status === 'Active').length.toString() || '0',
+            inactiveUsers: enrolledUsers?.filter(u => u.status === 'Inactive' || u.status === 'Suspended').length.toString() || '0',
             totalDeposits: formatCurrency(totalDeposits),
             totalActiveMarkets: activeMarkets?.length.toString() || '0',
             totalActiveBetTypes: activeBetTypes?.length.toString() || '0',
@@ -78,8 +80,10 @@ export default function EnrollerDashboardPage() {
           An overview of your enrolled users and their activity.
         </p>
       </div>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <StatCard name="Total Enrolled Users" value={stats.totalEnrolledUsers} icon={Users} isLoading={isLoading} />
+        <StatCard name="Total Active Users" value={stats.activeUsers} icon={UserCheck} isLoading={isLoading} />
+        <StatCard name="Total Inactive Users" value={stats.inactiveUsers} icon={UserX} isLoading={isLoading} />
         <StatCard name="Total Deposits from Your Users" value={stats.totalDeposits} icon={ArrowUpCircle} isLoading={isLoading} />
         <StatCard name="Total Active Markets" value={stats.totalActiveMarkets} icon={Store} isLoading={isLoading} />
         <StatCard name="Total Active Bet Types" value={stats.totalActiveBetTypes} icon={CheckCircle} isLoading={isLoading} />
