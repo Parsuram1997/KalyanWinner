@@ -43,12 +43,6 @@ export default function GameTimingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Game Timings</h1>
-        <p className="text-muted-foreground">
-          A schedule of bidding and result times for all active markets.
-        </p>
-      </div>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
