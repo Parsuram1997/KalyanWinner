@@ -42,12 +42,6 @@ export default function ActiveMarketsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Active Markets</h1>
-        <p className="text-muted-foreground">
-          A list of all currently active game markets.
-        </p>
-      </div>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
