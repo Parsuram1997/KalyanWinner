@@ -350,7 +350,7 @@ export default function WalletPage() {
             </Dialog>
             <Dialog open={isWithdrawOpen} onOpenChange={setWithdrawOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="destructive">
                   <MinusCircle className="mr-2 h-4 w-4" /> Withdraw
                 </Button>
               </DialogTrigger>

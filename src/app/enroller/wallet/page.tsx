@@ -183,7 +183,7 @@ export default function EnrollerWalletPage() {
             </div>
             <Dialog open={isWithdrawDialogOpen} onOpenChange={setWithdrawDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button variant="destructive">
                   <Wallet className="mr-2 h-4 w-4" /> Request Withdrawal
                 </Button>
               </DialogTrigger>
@@ -284,5 +284,3 @@ export default function EnrollerWalletPage() {
     </div>
   );
 }
-
-    
