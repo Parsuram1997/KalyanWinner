@@ -75,12 +75,8 @@ export default function EnterResultsPage() {
 
     const sortedResults = useMemo(() => {
         if (!results) return [];
-        const allResults = [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        if (marketName === 'Rajdhani Day') {
-            return allResults.slice(0, 10);
-        }
-        return allResults;
-    }, [results, marketName]);
+        return [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [results]);
 
     const [openPanna, setOpenPanna] = useState('');
     const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);
