@@ -80,7 +80,6 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
                 <TableHeader>
                     <TableRow>
                         <TableHead className="text-xs">User</TableHead>
-                        <TableHead className="text-xs">Type</TableHead>
                         <TableHead className="text-xs">Amount</TableHead>
                         <TableHead className="text-xs">Date</TableHead>
                         <TableHead className="text-xs">UTR/Method</TableHead>
@@ -95,12 +94,12 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
                                 <div>{txn.userName}</div>
                                 <div className="text-xs text-muted-foreground">{txn.customId || txn.userId}</div>
                             </TableCell>
-                            <TableCell className="py-1 text-xs">
-                                <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"}>
+                             <TableCell className="py-1 text-xs">
+                                <div>₹{txn.amount.toFixed(2)}</div>
+                                <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"} className="text-xs">
                                     {txn.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="py-1 text-xs">₹{txn.amount.toFixed(2)}</TableCell>
                             <TableCell className="py-1 text-xs">{new Date(txn.date).toLocaleString()}</TableCell>
                             <TableCell className="py-1 text-xs">{txn.utr || 'N/A'}</TableCell>
                             <TableCell className="py-1 text-xs">
