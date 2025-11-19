@@ -194,7 +194,7 @@ export default function TransactionsPage() {
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="pending-deposits">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3">
                     <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
                     <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
                     <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
