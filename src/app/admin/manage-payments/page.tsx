@@ -5,36 +5,38 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Landmark, QrCode } from "lucide-react";
-import { getPaymentSettings, updatePaymentSettings } from "@/app/actions/payment-settings-actions";
+import { getPaymentSettings, updatePaymentSettings } from "@/app/actions/payment-actions";
 import { useEffect, useState, FormEvent } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type PaymentSettings = {
-    upiId?: string;
-    bankAccountHolder?: string;
-    bankAccountNumber?: string;
-    bankIfscCode?: string;
-    bankName?: string;
-    bankAccountType?: 'Current' | 'Savings';
+// A simpler type for just the UPI settings
+type UpiSettings = {
+    upiId: string;
+    payeeName: string;
 }
 
 export default function ManagePaymentsPage() {
     const { toast } = useToast();
-    const [settings, setSettings] = useState<PaymentSettings>({});
+    const [settings, setSettings] = useState<UpiSettings>({ upiId: '', payeeName: '' });
     const [isLoading, setIsLoading] = useState(true);
 
+    // Fetch existing settings on component mount
     useEffect(() => {
         async function fetchSettings() {
             setIsLoading(true);
             try {
-                const currentSettings = await getPaymentSettings();
-                setSettings(currentSettings || {});
+                const result = await getPaymentSettings();
+                if (result.success && result.data) {
+                    setSettings(result.data);
+                } else if (!result.success) {
+                    // Don't show an error if settings just aren't configured yet
+                    if (result.message !== "Payment settings have not been configured in the admin panel.") {
+                         toast({ variant: "destructive", title: "Failed to load settings", description: result.message });
+                    }
+                }
             } catch (error) {
-                toast({ variant: "destructive", title: "Failed to load settings" });
+                toast({ variant: "destructive", title: "An unexpected error occurred" });
             } finally {
                 setIsLoading(false);
             }
@@ -42,15 +44,20 @@ export default function ManagePaymentsPage() {
         fetchSettings();
     }, [toast]);
 
+    // Handle the form submission
     const handleSettingsUpdate = async (e: FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            await updatePaymentSettings(settings);
-            toast({
-                title: "Settings Saved",
-                description: "The payment details have been updated successfully.",
-            });
+            const result = await updatePaymentSettings(settings);
+            if (result.success) {
+                toast({
+                    title: "Settings Saved",
+                    description: result.message,
+                });
+            } else {
+                throw new Error(result.message);
+            }
         } catch (error: any) {
             toast({
                 variant: "destructive",
@@ -62,101 +69,60 @@ export default function ManagePaymentsPage() {
         }
     }
 
-    const handleChange = (key: keyof PaymentSettings, value: string) => {
+    // Update state on input change
+    const handleChange = (key: keyof UpiSettings, value: string) => {
         setSettings(prev => ({...prev, [key]: value}));
     }
 
   return (
-    <div className="flex flex-col gap-6">
-      <Card>
+    <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Manage Payment Details</CardTitle>
+          <CardTitle>Manage UPI Payments</CardTitle>
           <CardDescription>
-            Update the UPI and Bank Account details for receiving payments.
+            This UPI ID and Payee Name will be used to generate QR codes for user deposits.
           </CardDescription>
         </CardHeader>
         <CardContent>
             <form onSubmit={handleSettingsUpdate}>
-                <Tabs defaultValue="upi" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="upi">
-                            <QrCode className="mr-2 h-4 w-4" />
-                            UPI Details
-                        </TabsTrigger>
-                        <TabsTrigger value="bank">
-                            <Landmark className="mr-2 h-4 w-4" />
-                            Bank Details
-                        </TabsTrigger>
-                    </TabsList>
-                    {isLoading ? (
-                        <div className="mt-6 space-y-4">
+                {isLoading ? (
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-1/4" />
                             <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-1/4" />
                         </div>
-                    ) : (
-                    <>
-                        <TabsContent value="upi" className="mt-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>UPI ID for Payments</CardTitle>
-                                    <CardDescription>This UPI ID will be used to generate QR codes for users.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4 max-w-md">
-                                    <div>
-                                        <Label htmlFor="upi-id">UPI ID</Label>
-                                        <Input id="upi-id" placeholder="yourname@upi" value={settings.upiId || ''} onChange={(e) => handleChange('upiId', e.target.value)} />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                        <TabsContent value="bank" className="mt-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Bank Account for Payments</CardTitle>
-                                    <CardDescription>This account will be shown for bank transfer options.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4 max-w-md">
-                                    <div>
-                                        <Label htmlFor="account-holder">Account Holder Name</Label>
-                                        <Input id="account-holder" placeholder="e.g., Kalyan Winner Pvt Ltd" value={settings.bankAccountHolder || ''} onChange={(e) => handleChange('bankAccountHolder', e.target.value)} />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="account-number">Account Number</Label>
-                                        <Input id="account-number" placeholder="e.g., 123456789012" value={settings.bankAccountNumber || ''} onChange={(e) => handleChange('bankAccountNumber', e.target.value)} />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="ifsc-code">IFSC Code</Label>
-                                        <Input id="ifsc-code" placeholder="e.g., HDFC0001234" value={settings.bankIfscCode || ''} onChange={(e) => handleChange('bankIfscCode', e.target.value)} />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="bank-name">Bank Name</Label>
-                                        <Input id="bank-name" placeholder="e.g., HDFC Bank" value={settings.bankName || ''} onChange={(e) => handleChange('bankName', e.target.value)} />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="account-type">Account Type</Label>
-                                        <Select value={settings.bankAccountType || ''} onValueChange={(value) => handleChange('bankAccountType', value)}>
-                                            <SelectTrigger id="account-type">
-                                                <SelectValue placeholder="Select account type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Current">Current</SelectItem>
-                                                <SelectItem value="Savings">Savings</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    </>
-                    )}
-                </Tabs>
-                <div className="mt-6 flex justify-start">
-                    <Button type="submit" disabled={isLoading}>{isLoading ? "Saving..." : "Save All Details"}</Button>
-                </div>
+                        <div className="space-y-2">
+                             <Skeleton className="h-4 w-1/4" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                         <Skeleton className="h-10 w-1/3 mt-4" />
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="payee-name">Payee Name</Label>
+                            <Input 
+                                id="payee-name" 
+                                placeholder="e.g., Your Company Name" 
+                                value={settings.payeeName || ''} 
+                                onChange={(e) => handleChange('payeeName', e.target.value)} 
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="upi-id">UPI ID</Label>
+                            <Input 
+                                id="upi-id" 
+                                placeholder="yourname@ybl" 
+                                value={settings.upiId || ''} 
+                                onChange={(e) => handleChange('upiId', e.target.value)} 
+                                required
+                            />
+                        </div>
+                         <Button type="submit" disabled={isLoading}>{isLoading ? "Saving..." : "Save UPI Details"}</Button>
+                    </div>
+                )}
             </form>
         </CardContent>
       </Card>
-    </div>
   );
 }

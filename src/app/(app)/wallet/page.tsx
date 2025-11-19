@@ -1,618 +1,170 @@
 
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { MinusCircle, PlusCircle, QrCode, Wallet, ArrowUp, ArrowDown } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
+import { useUser, useFirestore } from "@/firebase";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
-import { doc, collection, query, where, addDoc, serverTimestamp } from "firebase/firestore";
+import Link from "next/link";
+import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
 
-
-const TRANSACTIONS_PER_PAGE = 10;
-
-type PaymentSettings = {
-    upiId?: string;
-    bankAccountHolder?: string;
-    bankAccountNumber?: string;
-    bankIfscCode?: string;
-    bankName?: string;
-    bankAccountType?: 'Current' | 'Savings';
+// Type for user balance data
+type UserBalance = {
+    deposit: number;
+    winning: number;
+    balance: number;
 }
 
+// Type for a single transaction
 type Transaction = {
     id: string;
-    date: string;
-    description: string;
-    type: "Credit" | "Debit";
     amount: number;
-    status: string;
+    type: 'Deposit' | 'Withdrawal';
+    status: 'Pending' | 'Completed' | 'Failed';
+    description: string;
+    date: string; // Date is stored as an ISO string
+}
+
+const BalanceCard = ({ title, amount, isLoading }: { title: string, amount: number, isLoading: boolean }) => (
+    <div className="flex flex-col items-center justify-center p-4 border rounded-lg bg-background">
+        <p className="text-sm text-muted-foreground">{title}</p>
+        {isLoading ? (
+            <Skeleton className="h-7 w-24 mt-1" />
+        ) : (
+            <p className="text-2xl font-bold font-mono">₹{amount.toLocaleString('en-IN')}</p>
+        )}
+    </div>
+);
+
+const getStatusVariant = (status: Transaction['status']) => {
+    switch (status) {
+        case 'Completed': return 'success';
+        case 'Pending': return 'secondary';
+        case 'Failed': return 'destructive';
+        default: return 'default';
+    }
 }
 
 export default function WalletPage() {
-  const { toast } = useToast();
-  const { user: authUser, isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const [balance, setBalance] = useState<UserBalance | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
-  const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
-  const depositBalance = userData?.depositBalance || 0;
-  const winningBalance = userData?.winningBalance || 0;
-  const totalBalance = depositBalance + winningBalance;
+  const fetchData = useCallback(async () => {
+    if (!user || !firestore) return;
+    setIsLoading(true);
+    try {
+        // Fetch balance
+        const userDocRef = doc(firestore, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+            const data = userDoc.data();
+            setBalance({
+                deposit: data.depositBalance || 0,
+                winning: data.winningBalance || 0,
+                balance: data.balance || 0,
+            });
+        }
 
-  const transactionsQuery = useMemoFirebase(() => (firestore && authUser ? query(collection(firestore, "transactions"), where("userId", "==", authUser.uid)) : null), [firestore, authUser]);
-  const { data: transactions, isLoading: areTxnsLoading } = useCollection<Transaction>(transactionsQuery);
+        // Fetch all transactions for the user (will be sorted on client)
+        const transQuery = query(
+            collection(firestore, "transactions"), 
+            where("userId", "==", user.uid)
+        );
+        const transSnapshot = await getDocs(transQuery);
+        const fetchedTransactions = transSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
+        setTransactions(fetchedTransactions);
 
-  const [addAmount, setAddAmount] = useState("1000");
-  const [withdrawAmount, setWithdrawAmount] = useState("2000");
-  const [isAddFundsOpen, setAddFundsOpen] = useState(false);
-  const [isWithdrawOpen, setWithdrawOpen] = useState(false);
-  const [addMethod, setAddMethod] = useState("upi");
-  const [withdrawMethod, setWithdrawMethod] = useState("bank");
-  const [utr, setUtr] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+    } catch (error) {
+        console.error("Failed to fetch wallet data:", error);
+    } finally {
+        setIsLoading(false);
+    }
+  }, [user, firestore]);
 
   useEffect(() => {
-    async function fetchSettings() {
-      if (isAddFundsOpen) {
-        setIsLoadingSettings(true);
-        try {
-            const currentSettings = await getPaymentSettings();
-            setPaymentSettings(currentSettings);
-        } catch (error) {
-            toast({ variant: "destructive", title: "Could not load payment details." });
-        } finally {
-            setIsLoadingSettings(false);
-        }
-      }
-    }
-    fetchSettings();
-  }, [isAddFundsOpen, toast]);
+    fetchData();
+  }, [fetchData]);
 
+  // Sort transactions on the client-side, exactly like the dashboard
   const sortedTransactions = useMemo(() => {
-    return transactions ? [...transactions].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
+      return [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions]);
-  
-  const totalPages = Math.ceil(sortedTransactions.length / TRANSACTIONS_PER_PAGE);
 
-  const paginatedTransactions = useMemo(() => {
-    const startIndex = (currentPage - 1) * TRANSACTIONS_PER_PAGE;
-    const endIndex = startIndex + TRANSACTIONS_PER_PAGE;
-    return sortedTransactions.slice(startIndex, endIndex);
-  }, [sortedTransactions, currentPage]);
-
-
-  const handleAddFunds = async () => {
-    if (!firestore || !authUser || !userData) return;
-    
-    const amount = parseInt(addAmount, 10);
-    if (isNaN(amount) || amount < 500) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Amount",
-        description: "Minimum deposit amount is ₹500.",
-      });
-      return;
-    }
-    if (!utr) {
-      toast({
-        variant: "destructive",
-        title: "UTR Number Required",
-        description: "Please enter the transaction UTR number.",
-      });
-      return;
-    }
-    
-    try {
-        const transactionsCollection = collection(firestore, "transactions");
-        await addDoc(transactionsCollection, {
-            userId: authUser.uid,
-            userName: userData.name,
-            type: "Deposit",
-            amount: amount,
-            status: "Pending",
-            date: new Date().toISOString(),
-            description: `Wallet Deposit via ${addMethod.toUpperCase()}`,
-            method: addMethod,
-            utr: utr,
-        });
-
-        toast({
-          title: "Deposit Request Submitted",
-          description: `Your request to add ₹${amount} with UTR ${utr} has been received and is being verified.`,
-        });
-        
-        setUtr("");
-        setAddFundsOpen(false);
-    } catch(error: any) {
-         toast({
-            variant: "destructive",
-            title: "Request Failed",
-            description: "Could not submit your deposit request. Please try again.",
-        });
-    }
-  };
-
-  const handleWithdraw = () => {
-    const today = new Date();
-    if (today.getDay() !== 0) {
-      toast({
-        variant: "destructive",
-        title: "Withdrawal Not Allowed",
-        description: "Withdrawals are only processed on Sundays.",
-      });
-      return;
-    }
-
-    const amount = parseInt(withdrawAmount, 10);
-    if (isNaN(amount) || amount < 2000) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Amount",
-        description: "Minimum withdrawal amount is ₹2000.",
-      });
-      return;
-    }
-     if (amount > winningBalance) {
-      toast({
-        variant: 'destructive',
-        title: 'Insufficient Winning Balance',
-        description: `You can only withdraw from your winning balance of ₹${winningBalance.toFixed(2)}.`,
-      });
-      return;
-    }
-    
-    // In a real app, this would create a 'Withdrawal' transaction with 'Pending' status
-    toast({
-      title: "Withdrawal Requested",
-      description: `Your request to withdraw ₹${amount} is being processed. Funds will be transferred within 24 hours.`,
-    });
-    setWithdrawOpen(false);
-  };
-  
+  const recentTransactions = useMemo(() => sortedTransactions.slice(0, 10), [sortedTransactions]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Wallet
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your funds and view transaction history.
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-3">
+    <div className="max-w-2xl mx-auto">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Deposit Balance</CardTitle>
-            <ArrowDown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isUserDataLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">₹{depositBalance.toFixed(2)}</div>}
-            <p className="text-xs text-muted-foreground">Cannot be withdrawn. For playing only.</p>
-          </CardContent>
+            <CardHeader>
+                <CardTitle>My Wallet</CardTitle>
+                <CardDescription>View your account balance and manage your funds.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                {/* Balance Display */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <BalanceCard title="Deposit Balance" amount={balance?.deposit ?? 0} isLoading={isLoading} />
+                    <BalanceCard title="Winning Balance" amount={balance?.winning ?? 0} isLoading={isLoading} />
+                    <BalanceCard title="Total Balance" amount={balance?.balance ?? 0} isLoading={isLoading} />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+                   <Button asChild size="lg">
+                        <Link href="/wallet/deposit">Make a Deposit</Link>
+                   </Button>
+                   <Button asChild size="lg" variant="outline">
+                        <Link href="/wallet/withdraw">Request Withdrawal</Link>
+                   </Button>
+                </div>
+
+                 {/* Recent Transactions */}
+                <div className="space-y-2 pt-4">
+                    <h3 className="text-lg font-semibold">Recent Activity</h3>
+                     {isLoading ? (
+                         <div className="space-y-2">
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                         </div>
+                     ) : recentTransactions.length > 0 ? (
+                        <div className="border rounded-md">
+                            {recentTransactions.map(tx => (
+                                <div key={tx.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
+                                    <div className="flex items-center gap-3">
+                                        {tx.type === 'Deposit' ? 
+                                            <ArrowDownLeft className="h-5 w-5 text-green-500" /> : 
+                                            <ArrowUpRight className="h-5 w-5 text-red-500" />
+                                        }
+                                        <div className="flex flex-col">
+                                            <p className="font-medium">{tx.description}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {new Date(tx.date).toLocaleString()} 
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <p className={`font-mono font-semibold ${tx.type === 'Deposit' ? 'text-green-600' : 'text-red-600'}`}>
+                                            {tx.type === 'Deposit' ? '+' : '-'}{tx.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                        </p>
+                                        <Badge variant={getStatusVariant(tx.status)}>{tx.status}</Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                     ) : (
+                        <p className="text-center text-sm text-muted-foreground p-4">
+                           You have no recent activity.
+                        </p>
+                     )}
+                </div>
+            </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Winning Balance</CardTitle>
-            <ArrowUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isUserDataLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold">₹{winningBalance.toFixed(2)}</div>}
-            <p className="text-xs text-muted-foreground">Can be withdrawn.</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isUserDataLoading ? <Skeleton className="h-9 w-40" /> : (
-                <div className="text-3xl font-bold tracking-tight">
-                {totalBalance.toLocaleString("en-IN", {
-                    style: "currency",
-                    currency: "INR",
-                })}
-                </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      
-       <Card className="bg-gradient-to-bl from-secondary/20 to-accent/10">
-          <CardHeader>
-            <CardTitle className="text-lg">Manage Funds</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <Dialog open={isAddFundsOpen} onOpenChange={setAddFundsOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Funds
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add Funds to Wallet</DialogTitle>
-                  <DialogDescription>
-                    Minimum deposit is ₹500. After payment, enter the UTR number and submit.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-right">
-                      Amount
-                    </Label>
-                    <Input
-                      id="amount"
-                      value={addAmount}
-                      onChange={(e) => setAddAmount(e.target.value)}
-                      className="col-span-3"
-                      type="number"
-                      placeholder="e.g. 1000"
-                    />
-                  </div>
-                  <RadioGroup defaultValue={addMethod} onValueChange={setAddMethod} className="grid grid-cols-2 gap-4 my-2">
-                    <div>
-                      <RadioGroupItem value="upi" id="add-upi" className="peer sr-only" />
-                      <Label
-                        htmlFor="add-upi"
-                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                      >
-                        UPI
-                      </Label>
-                    </div>
-                     <div>
-                      <RadioGroupItem value="bank" id="add-bank" className="peer sr-only" />
-                      <Label
-                        htmlFor="add-bank"
-                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                      >
-                        Bank Transfer
-                      </Label>
-                    </div>
-                  </RadioGroup>
-
-                  {isLoadingSettings && <div className="flex justify-center"><Skeleton className="h-32 w-32" /></div>}
-                  
-                  {!isLoadingSettings && addMethod === 'upi' && (
-                    <div className="flex flex-col items-center gap-4 text-center">
-                      <div className="bg-white p-2 rounded-md border">
-                        <QrCode className="h-32 w-32" />
-                      </div>
-                      <p className="text-sm text-muted-foreground">Scan the QR or use the UPI ID below.</p>
-                      <Input
-                        readOnly
-                        value={paymentSettings?.upiId || 'Not available'}
-                        className="text-center font-mono"
-                      />
-                       <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(paymentSettings?.upiId || '')}>Copy UPI ID</Button>
-                    </div>
-                  )}
-
-                  {!isLoadingSettings && addMethod === "bank" && (
-                     <div className="space-y-4 rounded-md border p-4 text-sm">
-                      <div className="flex justify-between">
-                          <span className="text-muted-foreground">Name:</span>
-                          <span className="font-medium">{paymentSettings?.bankAccountHolder || 'Not available'}</span>
-                      </div>
-                       <div className="flex justify-between">
-                          <span className="text-muted-foreground">Account:</span>
-                          <span className="font-medium">{paymentSettings?.bankAccountNumber || 'Not available'}</span>
-                      </div>
-                       <div className="flex justify-between">
-                          <span className="text-muted-foreground">IFSC:</span>
-                           <span className="font-medium">{paymentSettings?.bankIfscCode || 'Not available'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                          <span className="text-muted-foreground">Bank:</span>
-                           <span className="font-medium">{paymentSettings?.bankName || 'Not available'}</span>
-                      </div>
-                       <div className="flex justify-between">
-                          <span className="text-muted-foreground">Type:</span>
-                          <span className="font-medium">{paymentSettings?.bankAccountType || 'Not available'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-4 items-center gap-4 pt-4">
-                    <Label htmlFor="utr" className="text-right">
-                      UTR Number
-                    </Label>
-                    <Input
-                      id="utr"
-                      value={utr}
-                      onChange={(e) => setUtr(e.target.value)}
-                      className="col-span-3"
-                      placeholder="Transaction Reference ID"
-                    />
-                  </div>
-
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleAddFunds} className="w-full">
-                    Submit
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Dialog open={isWithdrawOpen} onOpenChange={setWithdrawOpen}>
-              <DialogTrigger asChild>
-                <Button variant="destructive">
-                  <MinusCircle className="mr-2 h-4 w-4" /> Withdraw
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Withdraw Funds</DialogTitle>
-                  <DialogDescription>
-                    Minimum withdrawal is ₹2000 (Sundays only). Funds will be transferred within 24 hours.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="withdraw-amount" className="text-right">
-                      Amount
-                    </Label>
-                    <Input
-                      id="withdraw-amount"
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      className="col-span-3"
-                      type="number"
-                      placeholder="e.g. 2000"
-                    />
-                  </div>
-                  <RadioGroup defaultValue={withdrawMethod} onValueChange={setWithdrawMethod} className="grid grid-cols-2 gap-4 my-4">
-                    <div>
-                      <RadioGroupItem value="bank" id="bank" className="peer sr-only" />
-                      <Label
-                        htmlFor="bank"
-                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                      >
-                        Bank Transfer
-                      </Label>
-                    </div>
-                    <div>
-                      <RadioGroupItem value="upi" id="upi" className="peer sr-only" />
-                      <Label
-                        htmlFor="upi"
-                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                      >
-                        UPI
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                  {withdrawMethod === "bank" && (
-                    <div className="space-y-4">
-                       <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="account-holder" className="text-right">
-                          Name
-                        </Label>
-                        <Input
-                          id="account-holder"
-                          className="col-span-3"
-                          placeholder="Account Holder Name"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="account-number" className="text-right">
-                          Account No.
-                        </Label>
-                        <Input
-                          id="account-number"
-                          className="col-span-3"
-                          placeholder="Bank Account Number"
-                        />
-                      </div>
-                       <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="ifsc-code" className="text-right">
-                          IFSC
-                        </Label>
-                        <Input
-                          id="ifsc-code"
-                          className="col-span-3"
-                          placeholder="IFSC Code"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {withdrawMethod === "upi" && (
-                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="upi-id" className="text-right">
-                        UPI ID
-                      </Label>
-                      <Input
-                        id="upi-id"
-                        className="col-span-3"
-                        placeholder="upi id / mobile number"
-                      />
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleWithdraw} className="w-full" variant="destructive">
-                    Request Withdrawal
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-
-      <Card className="bg-gradient-to-tr from-card to-secondary/10">
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>
-            A record of your recent wallet activity.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Desktop Table */}
-          <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px]">Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-[100px]">Type</TableHead>
-                  <TableHead className="w-[120px]">Status</TableHead>
-                  <TableHead className="text-right w-[150px]">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {areTxnsLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center">Loading transactions...</TableCell></TableRow>
-                ) : paginatedTransactions.length > 0 ? (paginatedTransactions.map((txn) => (
-                  <TableRow key={txn.id}>
-                    <TableCell className="font-medium">{new Date(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
-                    <TableCell>{txn.description}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          txn.type === "Credit"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
-                      >
-                        {txn.type}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          txn.status === "Won" || txn.status === "Completed"
-                            ? "secondary"
-                            : txn.status === "Pending"
-                            ? "default"
-                            : "outline"
-                        }
-                      >
-                        {txn.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell
-                      className={`text-right font-semibold ${
-                        txn.type === "Credit" ? "text-green-600" : ""
-                      }`}
-                    >
-                      {txn.amount.toLocaleString("en-IN", {
-                        style: "currency",
-                        currency: "INR",
-                      })}
-                    </TableCell>
-                  </TableRow>
-                ))) : (
-                   <TableRow><TableCell colSpan={5} className="text-center">No transactions yet.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          {/* Mobile List */}
-          <div className="grid gap-4 md:hidden">
-            {areTxnsLoading ? <p>Loading...</p> : paginatedTransactions.length > 0 ? (
-            paginatedTransactions.map((txn) => (
-              <div
-                key={txn.id}
-                className="flex items-start justify-between gap-4 p-3 -m-3 rounded-lg hover:bg-muted/50"
-              >
-                <div>
-                  <p className="font-medium text-sm">{txn.description}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(txn.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-                  <div className="mt-1">
-                     <span
-                        className={`px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
-                          txn.type === "Credit"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
-                      >
-                        {txn.type}
-                      </span>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p
-                    className={`font-semibold text-sm ${
-                      txn.type === "Credit" ? "text-green-600" : ""
-                    }`}
-                  >
-                    {txn.amount.toLocaleString("en-IN", {
-                      style: "currency",
-                      currency: "INR",
-                    })}
-                  </p>
-                  <Badge
-                     variant={
-                        txn.status === "Won" || txn.status === "Completed"
-                          ? "secondary"
-                          : txn.status === "Pending"
-                          ? "default"
-                          : "outline"
-                      }
-                      className="mt-1"
-                  >
-                    {txn.status}
-                  </Badge>
-                </div>
-              </div>
-            ))
-            ) : <p>No transactions yet.</p>}
-          </div>
-          <div className="flex items-center justify-between mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

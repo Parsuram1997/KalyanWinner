@@ -165,12 +165,16 @@ const ResultsList = ({ resultsToShow, isLoading }: { resultsToShow: Result[], is
 export default function ResultsPage() {
   const firestore = useFirestore();
 
+  const ratanMorningQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "kalyan_results"), where("marketName", "==", "Ratan Morning"), orderBy("date", "desc")) : null, [firestore]);
+  const { data: ratanMorningResults, isLoading: isRatanMorningLoading } = useCollection<any>(ratanMorningQuery);
+
   const kalyanDayQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "kalyan_results"), where("marketName", "==", "Kalyan Day"), orderBy("date", "desc")) : null, [firestore]);
   const { data: kalyanDayResults, isLoading: isDayLoading } = useCollection<any>(kalyanDayQuery);
 
   const kalyanNightQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "kalyan_results"), where("marketName", "==", "Kalyan Night"), orderBy("date", "desc")) : null, [firestore]);
   const { data: kalyanNightResults, isLoading: isNightLoading } = useCollection<any>(kalyanNightQuery);
 
+  const ratanMorning = ratanMorningResults?.map(r => ({ ...r, market: r.marketName })) || [];
   const dayResults = kalyanDayResults?.map(r => ({ ...r, market: r.marketName })) || [];
   const nightResults = kalyanNightResults?.map(r => ({ ...r, market: r.marketName })) || [];
 
@@ -183,11 +187,22 @@ export default function ResultsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="kalyan-day" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="ratan-morning" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="ratan-morning">Ratan Morning</TabsTrigger>
           <TabsTrigger value="kalyan-day">Kalyan Day</TabsTrigger>
           <TabsTrigger value="kalyan-night">Kalyan Night</TabsTrigger>
         </TabsList>
+        <TabsContent value="ratan-morning">
+          <Card>
+            <CardHeader>
+              <CardTitle>Ratan Morning</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResultsList resultsToShow={ratanMorning} isLoading={isRatanMorningLoading} />
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="kalyan-day">
           <Card>
             <CardHeader>

@@ -54,7 +54,7 @@ export default function EnterResultsPage() {
     const params = useParams();
     const marketSlug = params.market as string;
     
-    const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').trim();
 
     const firestore = useFirestore();
     const [results, setResults] = useState<KalyanResult[]>([]);
@@ -108,7 +108,7 @@ export default function EnterResultsPage() {
         try {
             await createKalyanResult({
                 date,
-                marketName: marketName.trim(),
+                marketName: marketName,
                 openPanna,
             }, marketSlug);
             toast({
@@ -163,7 +163,7 @@ export default function EnterResultsPage() {
         try {
             await createKalyanResult({
                 date,
-                marketName: marketName.trim(),
+                marketName: marketName,
                 openPanna: "H",
                 closePanna: "O",
                 jodi: "L"
@@ -279,13 +279,20 @@ export default function EnterResultsPage() {
                         <TableCell className="font-bold text-primary font-mono">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
                         <TableCell className="font-mono">{result.closePanna || '--'}</TableCell>
                         <TableCell className="flex gap-2">
-                          {!result.closePanna && result.jodi !== 'L' ? (
-                            <Button variant="outline" size="sm" onClick={() => {
-                                setSelectedResult(result);
-                                setUpdateResultDialogOpen(true);
-                            }}>Add Close</Button>
+                          {result.jodi === 'L' ? (
+                              <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
                           ) : (
-                            <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
+                              <Button 
+                                  variant="outline" 
+                                  size={result.closePanna ? "icon" : "sm"} 
+                                  onClick={() => {
+                                      setSelectedResult(result);
+                                      setUpdateClosePanna(result.closePanna || ""); // Pre-fill
+                                      setUpdateResultDialogOpen(true);
+                                  }}
+                              >
+                                  {result.closePanna ? <Edit className="h-4 w-4" /> : 'Add Close'}
+                              </Button>
                           )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -350,13 +357,20 @@ export default function EnterResultsPage() {
                         )}
 
                         <div className="flex justify-end gap-2 pt-2 border-t">
-                            {!result.closePanna && result.jodi !== 'L' ? (
-                                <Button variant="outline" size="sm" onClick={() => {
-                                setSelectedResult(result);
-                                setUpdateResultDialogOpen(true);
-                                }}>Add Close</Button>
-                            ) : (
+                            {result.jodi === 'L' ? (
                                 <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
+                            ) : (
+                                <Button 
+                                    variant="outline" 
+                                    size={result.closePanna ? "icon" : "sm"} 
+                                    onClick={() => {
+                                        setSelectedResult(result);
+                                        setUpdateClosePanna(result.closePanna || "");
+                                        setUpdateResultDialogOpen(true);
+                                    }}
+                                >
+                                    {result.closePanna ? <Edit className="h-4 w-4" /> : 'Add Close'}
+                                </Button>
                             )}
                              <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -386,7 +400,7 @@ export default function EnterResultsPage() {
        <Dialog open={isUpdateResultDialogOpen} onOpenChange={setUpdateResultDialogOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Add Close Panna for {selectedResult?.marketName}</DialogTitle>
+                <DialogTitle>{selectedResult?.closePanna ? 'Update' : 'Add Close'} Result for {selectedResult?.marketName}</DialogTitle>
                 <DialogDescription>Date: {selectedResult ? new Date(selectedResult.date).toLocaleDateString('en-GB') : ''}</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleUpdateResult}>
@@ -405,7 +419,7 @@ export default function EnterResultsPage() {
                     </div>
                 </div>
                  <DialogFooter>
-                    <Button type="submit">Update Result</Button>
+                    <Button type="submit">{selectedResult?.closePanna ? 'Update' : 'Add'} Result</Button>
                 </DialogFooter>
             </form>
         </DialogContent>

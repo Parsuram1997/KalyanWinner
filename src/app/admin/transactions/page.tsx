@@ -20,37 +20,63 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
-import { useMemo, useState, useEffect } from "react";
-import { updateTransactionStatus } from "@/app/actions/transaction-actions";
+import { collection, query, where, orderBy, getDocs, DocumentData } from "firebase/firestore";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { approveDeposit, approveWithdrawal, rejectTransaction } from "@/app/actions/transaction-actions";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Define clear types for our data structures
+type User = {
+    id: string;
+    name: string;
+    customId: string;
+}
 
 type Transaction = {
     id: string;
     userId: string;
-    userName: string;
-    type: "Deposit" | "Withdrawal";
+    type: "Deposit" | "Withdrawal"; // Simplified from previous version
     amount: number;
-    status: "Pending" | "Approved" | "Rejected" | "Completed";
+    status: "Pending" | "Completed" | "Failed";
     date: string;
     utr?: string;
-    customId?: string; // Add customId to the type
+    description?: string;
+    failureReason?: string; // For displaying why a transaction failed
+    userName?: string; 
+    customId?: string; 
 }
 
 const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[], isLoading: boolean, onAction: () => void }) => {
     const { toast } = useToast();
 
-    const handleAction = async (txnId: string, userId: string, amount: number, newStatus: 'Approved' | 'Rejected') => {
+    const handleAction = async (transaction: Transaction, action: 'approve' | 'reject') => {
         try {
-            await updateTransactionStatus({ txnId, userId, amount, status: newStatus });
-            toast({
-                title: "Transaction Updated",
-                description: `Transaction has been ${newStatus.toLowerCase()}.`,
-            });
-            onAction(); 
+            let result;
+            if (action === 'approve') {
+                if (transaction.type === 'Deposit') {
+                    result = await approveDeposit(transaction.id, transaction.userId, transaction.amount);
+                } else if (transaction.type === 'Withdrawal') {
+                    result = await approveWithdrawal(transaction.id, transaction.userId, transaction.amount);
+                } else {
+                    toast({ variant: "destructive", title: "Unsupported Action", description: `Approving ${transaction.type} is not supported.`});
+                    return;
+                }
+            } else { 
+                result = await rejectTransaction(transaction.id);
+            }
+
+            if (result?.success) {
+                 toast({
+                    title: `Transaction ${action === 'approve' ? 'Approved' : 'Rejected'}`,
+                    description: result.message,
+                });
+                onAction(); 
+            } else {
+                throw new Error(result?.message || "An unknown error occurred.");
+            }
         } catch (error: any) {
-            toast({
+             toast({
                 variant: "destructive",
                 title: "Update Failed",
                 description: error.message || "Could not update the transaction.",
@@ -60,62 +86,58 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
     
     if (isLoading) {
         return (
-            <div className="space-y-2">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
+            <div className="space-y-4 p-4">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
         )
     }
     
     if (items.length === 0) {
-        return <p className="text-center text-muted-foreground p-8">No transactions found.</p>
+        return <p className="text-center text-muted-foreground p-8">No transactions in this category.</p>
     }
 
   return (
     <div>
-        {/* Desktop Table */}
-        <div className="hidden md:block">
+        <div className="hidden md:block border rounded-md">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="text-xs">User</TableHead>
-                        <TableHead className="text-xs">Amount</TableHead>
-                        <TableHead className="text-xs">Date</TableHead>
-                        <TableHead className="text-xs">UTR/Method</TableHead>
-                        <TableHead className="text-xs">Status</TableHead>
-                        <TableHead className="text-xs">Actions</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Amount & Type</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Details</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {items.map((txn) => (
                         <TableRow key={txn.id}>
-                            <TableCell className="py-1 text-xs">
-                                <div>{txn.userName}</div>
+                            <TableCell className="py-2 font-medium">
+                                <div>{txn.userName || 'N/A'}</div>
                                 <div className="text-xs text-muted-foreground">{txn.customId || txn.userId}</div>
                             </TableCell>
-                             <TableCell className="py-1 text-xs">
-                                <div>₹{txn.amount.toFixed(2)}</div>
-                                <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"} className="text-xs">
+                             <TableCell className="py-2">
+                                <div className="font-mono">₹{txn.amount.toLocaleString('en-IN')}</div>
+                                <Badge variant={txn.type === "Deposit" ? "default" : "outline"} className="text-xs">
                                     {txn.type}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="py-1 text-xs">{new Date(txn.date).toLocaleString()}</TableCell>
-                            <TableCell className="py-1 text-xs">{txn.utr || 'N/A'}</TableCell>
-                            <TableCell className="py-1 text-xs">
-                                <Badge variant={txn.status === "Approved" || txn.status === "Completed" ? "default" : txn.status === "Pending" ? "secondary" : "destructive"}>
+                            <TableCell className="py-2 text-xs">{new Date(txn.date).toLocaleString()}</TableCell>
+                            <TableCell className="py-2 text-xs max-w-[150px] truncate" title={txn.utr || txn.description}>
+                                {txn.utr || txn.description ||'N/A'}
+                            </TableCell>
+                           <TableCell className="py-2">
+                                <Badge variant={txn.status === "Completed" ? "success" : txn.status === "Pending" ? "secondary" : "destructive"} title={txn.failureReason}>
                                     {txn.status}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="flex gap-2 py-1">
+                            <TableCell className="flex gap-2 py-2">
                                 {txn.status === "Pending" && (
                                     <>
-                                        <Button variant="outline" size="xs" onClick={() => handleAction(txn.id, txn.userId, txn.amount, 'Approved')}>Approve</Button>
-                                        <Button variant="destructive" size="xs" onClick={() => handleAction(txn.id, txn.userId, txn.amount, 'Rejected')}>Reject</Button>
+                                        <Button variant="outline" size="xs" onClick={() => handleAction(txn, 'approve')}>Approve</Button>
+                                        <Button variant="destructive" size="xs" onClick={() => handleAction(txn, 'reject')}>Reject</Button>
                                     </>
-                                )}
-                                {txn.status !== "Pending" && (
-                                    <Button variant="ghost" size="xs" disabled>Processed</Button>
                                 )}
                             </TableCell>
                         </TableRow>
@@ -124,40 +146,40 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
             </Table>
         </div>
 
-        {/* Mobile Cards */}
         <div className="grid gap-4 md:hidden">
             {items.map((txn) => (
                 <Card key={txn.id} className="p-4">
                      <div className="flex justify-between items-start">
                         <div>
-                            <p className="font-semibold">{txn.userName}</p>
-                            <p className="text-xs text-muted-foreground">{txn.customId || txn.userId} - {new Date(txn.date).toLocaleDateString()}</p>
+                            <p className="font-semibold">{txn.userName || 'N/A'}</p>
+                            <p className="text-xs text-muted-foreground">{txn.customId || txn.userId}</p>
+                             <p className="text-xs text-muted-foreground mt-1">{new Date(txn.date).toLocaleString()}</p>
                         </div>
-                         <Badge variant={txn.status === "Approved" || txn.status === "Completed" ? "default" : txn.status === "Pending" ? "secondary" : "destructive"}>
+                         <Badge variant={txn.status === "Completed" ? "success" : txn.status === "Pending" ? "secondary" : "destructive"} title={txn.failureReason}>
                             {txn.status}
                         </Badge>
                     </div>
-                     <div className="mt-4 space-y-2 text-sm">
-                         <div className="flex justify-between">
+                     <div className="mt-4 space-y-3">
+                         <div className="flex justify-between items-center text-sm">
                             <span className="text-muted-foreground">Type:</span>
-                            <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"} className="font-medium">
+                            <Badge variant={txn.type === "Deposit" ? "default" : "outline"} className="font-medium">
                                 {txn.type}
                             </Badge>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center text-sm">
                             <span className="text-muted-foreground">Amount:</span>
-                            <span className="font-medium">₹{txn.amount.toFixed(2)}</span>
+                            <span className="font-medium font-mono">₹{txn.amount.toLocaleString('en-IN')}</span>
                         </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">UTR:</span>
-                            <span className="font-mono text-xs">{txn.utr || 'N/A'}</span>
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Details:</span>
+                            <span className="font-mono text-xs truncate" title={txn.utr || txn.description}>{txn.utr || txn.description || 'N/A'}</span>
                         </div>
                     </div>
 
                     {txn.status === "Pending" && (
                         <div className="mt-4 flex justify-end gap-2 border-t pt-4">
-                            <Button variant="outline" size="sm" onClick={() => handleAction(txn.id, txn.userId, txn.amount, 'Approved')}>Approve</Button>
-                            <Button variant="destructive" size="sm" onClick={() => handleAction(txn.id, txn.userId, txn.amount, 'Rejected')}>Reject</Button>
+                            <Button variant="outline" size="sm" onClick={() => handleAction(txn, 'approve')}>Approve</Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleAction(txn, 'reject')}>Reject</Button>
                         </div>
                     )}
                 </Card>
@@ -166,94 +188,108 @@ const TransactionTable = ({ items, isLoading, onAction }: { items: Transaction[]
     </div>
 )
 }
+
 export default function TransactionsPage() {
   const firestore = useFirestore();
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [key, setKey] = useState(0);
 
   const transactionsQuery = useMemoFirebase(
     () => firestore 
             ? query(collection(firestore, 'transactions'), orderBy('date', 'desc')) 
             : null,
-    [firestore]
+    [firestore, key]
   );
-  const { data: transactions, isLoading: isTxnsLoading, error } = useCollection<Transaction>(transactionsQuery, { skip: !firestore });
+  const { data: baseTransactions, isLoading: isTxnsLoading, error } = useCollection<Transaction>(transactionsQuery);
+  
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isEnriching, setIsEnriching] = useState(true);
 
   useEffect(() => {
-    const fetchCustomIds = async () => {
-        if (transactions && firestore) {
-            setIsLoading(true);
-            const userIds = [...new Set(transactions.map(t => t.userId))];
-            
-            if (userIds.length === 0) {
-              setAllTransactions(transactions);
-              setIsLoading(false);
-              return;
-            }
+    const enrichTransactions = async () => {
+        if (!baseTransactions || !firestore) {
+            if (!isTxnsLoading) setIsEnriching(false);
+            return;
+        }
 
-            const usersMap = new Map<string, string>();
-            
-            // Firestore 'in' query supports up to 30 items. We need to batch requests.
-            const batches = [];
-            for (let i = 0; i < userIds.length; i += 30) {
-                batches.push(userIds.slice(i, i + 30));
-            }
+        setIsEnriching(true);
+        const userIds = [...new Set(baseTransactions.map(t => t.userId))];
+        
+        if (userIds.length === 0) {
+            setTransactions(baseTransactions);
+            setIsEnriching(false);
+            return;
+        }
 
-            for (const batch of batches) {
+        const usersMap = new Map<string, { name: string, customId: string }>();
+        const batches = [];
+        for (let i = 0; i < userIds.length; i += 30) {
+            batches.push(userIds.slice(i, i + 30));
+        }
+
+        try {
+            await Promise.all(batches.map(async (batch) => {
                 const usersQuery = query(collection(firestore, 'users'), where('id', 'in', batch));
                 const usersSnapshot = await getDocs(usersQuery);
                 usersSnapshot.forEach(doc => {
-                    usersMap.set(doc.data().id, doc.data().customId);
+                    const user = doc.data() as User;
+                    if(user.id && user.name) {
+                       usersMap.set(user.id, { name: user.name, customId: user.customId });
+                    }
                 });
-            }
-
-            const transactionsWithCustomIds = transactions.map(t => ({
-                ...t,
-                customId: usersMap.get(t.userId) || t.userId
             }));
-
-            setAllTransactions(transactionsWithCustomIds);
-            setIsLoading(false);
-        } else if (!isTxnsLoading) {
-            setIsLoading(false);
+        } catch (e) {
+            console.error("Failed to fetch user details:", e);
         }
+
+        const enriched = baseTransactions.map(t => ({
+            ...t,
+            userName: usersMap.get(t.userId)?.name,
+            customId: usersMap.get(t.userId)?.customId,
+        }));
+
+        setTransactions(enriched);
+        setIsEnriching(false);
     };
 
-    fetchCustomIds();
-  }, [transactions, firestore, isTxnsLoading]);
+    enrichTransactions();
+  }, [baseTransactions, firestore, isTxnsLoading]);
+  
+  const forceRefresh = useCallback(() => setKey(prev => prev + 1), []);
 
-  const pendingDeposits = useMemo(() => allTransactions?.filter(t => t.type === 'Deposit' && t.status === 'Pending') || [], [allTransactions]);
-  const pendingWithdrawals = useMemo(() => allTransactions?.filter(t => t.type === 'Withdrawal' && t.status === 'Pending') || [], [allTransactions]);
-  const processedTransactions = useMemo(() => allTransactions?.filter(t => t.status !== 'Pending') || [], [allTransactions]);
+  const pendingDeposits = useMemo(() => transactions?.filter(t => t.type === 'Deposit' && t.status === 'Pending') || [], [transactions]);
+  const pendingWithdrawals = useMemo(() => transactions?.filter(t => t.type === 'Withdrawal' && t.status === 'Pending') || [], [transactions]);
+  const processedTransactions = useMemo(() => transactions?.filter(t => t.status !== 'Pending') || [], [transactions]);
+
+  const isLoading = isTxnsLoading || isEnriching;
 
   if (error) {
-    return <div>Error: {error.message}</div>
+    return <div className="p-4 text-red-600">Error: {error.message}</div>
   }
 
   return (
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>All Transactions</CardTitle>
-          <CardDescription>Approve or reject user deposits and withdrawals.</CardDescription>
+          <CardTitle>Manage Transactions</CardTitle>
+          <CardDescription>Approve or reject deposits and withdrawals.</CardDescription>
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="pending-deposits">
-                <div className="mb-4 rounded-lg border p-2">
-                  <TabsList className="grid h-auto w-full grid-cols-1 border-0 bg-transparent p-0 sm:grid-cols-3">
+                <div className="mb-4 rounded-lg border bg-background p-1 sm:p-2">
+                  <TabsList className="grid h-auto w-full grid-cols-1 sm:grid-cols-3">
                       <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
                       <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
                       <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
                   </TabsList>
                 </div>
                 <TabsContent value="pending-deposits">
-                    <TransactionTable items={pendingDeposits} isLoading={isLoading} onAction={() => {}} />
+                    <TransactionTable items={pendingDeposits} isLoading={isLoading} onAction={forceRefresh} />
                 </TabsContent>
                 <TabsContent value="pending-withdrawals">
-                    <TransactionTable items={pendingWithdrawals} isLoading={isLoading} onAction={() => {}} />
+                    <TransactionTable items={pendingWithdrawals} isLoading={isLoading} onAction={forceRefresh} />
                 </TabsContent>
                 <TabsContent value="processed">
-                    <TransactionTable items={processedTransactions} isLoading={isLoading} onAction={() => {}} />
+                    <TransactionTable items={processedTransactions} isLoading={isLoading} onAction={forceRefresh} />
                 </TabsContent>
             </Tabs>
         </CardContent>
@@ -261,5 +297,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
-    

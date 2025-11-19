@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -16,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, Wallet } from "lucide-react";
+import { DollarSign, Wallet, PiggyBank, Trophy } from "lucide-react";
 import Link from "next/link";
 import {
   Table,
@@ -30,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, doc, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
@@ -49,7 +48,9 @@ export default function DashboardPage() {
     [firestore, authUser]
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
-  const walletBalance = (userData?.depositBalance ?? 0) + (userData?.winningBalance ?? 0);
+  const depositBalance = userData?.depositBalance ?? 0;
+  const winningBalance = userData?.winningBalance ?? 0;
+  const totalBalance = depositBalance + winningBalance;
 
   const transactionsQuery = useMemoFirebase(
     () => (firestore && authUser ? query(
@@ -72,37 +73,52 @@ export default function DashboardPage() {
     });
   }, [recentActivity]);
 
+  const [latestResults, setLatestResults] = useState<any[]>([]);
+  const [isResultsLoading, setResultsLoading] = useState(true);
 
-  const kalyanDayResultQuery = useMemoFirebase(
-    () => firestore ? query(
-      collection(firestore, "kalyan_results"),
-      where("marketName", "==", "Kalyan Day"),
-      orderBy("date", "desc"),
-      limit(1)
-    ) : null,
-    [firestore]
-  );
-  const { data: kalyanDayResult, isLoading: isDayResultLoading } = useCollection<any>(kalyanDayResultQuery, { skip: !firestore });
+  useEffect(() => {
+    const fetchLatestResults = async () => {
+      if (!firestore) return;
+      setResultsLoading(true);
+      
+      try {
+        // 1. Fetch all markets from the 'markets' collection
+        const marketsQuery = query(collection(firestore, "markets"), orderBy("name"));
+        const marketsSnapshot = await getDocs(marketsQuery);
+        const marketNames = marketsSnapshot.docs.map(doc => doc.data().name);
 
-  const kalyanNightResultQuery = useMemoFirebase(
-    () => firestore ? query(
-      collection(firestore, "kalyan_results"),
-      where("marketName", "==", "Kalyan Night"),
-      orderBy("date", "desc"),
-      limit(1)
-    ) : null,
-    [firestore]
-  );
-  const { data: kalyanNightResult, isLoading: isNightResultLoading } = useCollection<any>(kalyanNightResultQuery, { skip: !firestore });
+        // 2. Fetch the latest result for each market
+        const resultsPromises = marketNames.map(marketName => {
+            const q = query(
+            collection(firestore, "kalyan_results"),
+            where("marketName", "==", marketName),
+            orderBy("date", "desc"),
+            limit(1)
+            );
+            return getDocs(q);
+        });
 
-  const latestResults = useMemo(() => {
-    const results = [];
-    if (kalyanDayResult?.[0]) results.push(kalyanDayResult[0]);
-    if (kalyanNightResult?.[0]) results.push(kalyanNightResult[0]);
-    return results;
-  }, [kalyanDayResult, kalyanNightResult]);
+        const snapshots = await Promise.all(resultsPromises);
+        const results = snapshots
+          .map(snapshot => snapshot.docs.length > 0 ? {id: snapshot.docs[0].id, ...snapshot.docs[0].data()} : null)
+          .filter(Boolean); // Filter out nulls for markets with no results
+        
+        // 3. Sort results by date descending, so the absolute latest is first
+        results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const isLoading = isUserLoading || isUserDataLoading || isActivityLoading || isDayResultLoading || isNightResultLoading;
+        setLatestResults(results);
+      } catch (error) {
+        console.error("Error fetching latest results: ", error);
+      } finally {
+        setResultsLoading(false);
+      }
+    };
+
+    fetchLatestResults();
+  }, [firestore]);
+
+
+  const isLoading = isUserLoading || isUserDataLoading || isActivityLoading || isResultsLoading;
 
   const totalPages = Math.ceil((sortedRecentActivity?.length || 0) / ACTIVITY_PER_PAGE);
 
@@ -123,32 +139,55 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         <Card className="bg-gradient-to-br from-primary/20 to-accent/20 hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? <Skeleton className="h-8 w-32" /> : (
-              <div className="text-2xl font-bold">
-                {walletBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Your available funds.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button size="sm" asChild>
-              <Link href="/wallet">
-                <Wallet className="mr-1.5 h-4 w-4" /> Manage Funds
-              </Link>
-            </Button>
-          </CardFooter>
-        </Card>
+            <CardHeader>
+                <CardTitle className="text-base">Wallet Balance</CardTitle>
+                <CardDescription>Your available funds.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {isLoading ? (
+                    <div className="space-y-4">
+                        <Skeleton className="h-8 w-3/4" />
+                        <Skeleton className="h-8 w-3/4" />
+                        <Skeleton className="h-8 w-1/2" />
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <PiggyBank className="h-5 w-5" />
+                                <span className="text-sm font-medium">Deposit</span>
+                            </div>
+                            <span className="font-semibold text-lg">{depositBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                                <Trophy className="h-5 w-5" />
+                                <span className="text-sm font-medium">Winnings</span>
+                            </div>
+                            <span className="font-semibold text-lg">{winningBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t mt-4">
+                            <div className="flex items-center gap-2 font-bold">
+                                <DollarSign className="h-5 w-5" />
+                                <span className="text-sm">Total</span>
+                            </div>
+                            <span className="font-bold text-xl text-primary">{totalBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+            <CardFooter>
+                <Button size="sm" asChild className="w-full">
+                <Link href="/wallet">
+                    <Wallet className="mr-1.5 h-4 w-4" /> Manage Funds
+                </Link>
+                </Button>
+            </CardFooter>
+            </Card>
         <Card className="bg-gradient-to-tl from-secondary/20 to-background hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
           <CardHeader>
-            <CardTitle className="text-base">Latest Result</CardTitle>
-            <CardDescription>Swipe to see Day and Night results.</CardDescription>
+            <CardTitle className="text-base">Latest Results</CardTitle>
+            <CardDescription>Swipe to see results for all markets.</CardDescription>
           </CardHeader>
           {isLoading ? (
             <CardContent className="p-6 pt-0 flex-1 flex items-center justify-center">
@@ -157,8 +196,8 @@ export default function DashboardPage() {
           ) : latestResults.length > 0 ? (
             <Carousel setApi={setApi} className="w-full h-full flex flex-col justify-center">
                 <CarouselContent>
-                {latestResults.map((result, index) => (
-                    <CarouselItem key={index} className="h-full">
+                {latestResults.map((result) => (
+                    <CarouselItem key={result.id} className="h-full">
                     <CardContent className="p-6 pt-0 flex items-center justify-center">
                         {result.jodi === 'L' ? (
                             <div className="flex flex-col items-center gap-2 text-center">
@@ -206,7 +245,7 @@ export default function DashboardPage() {
             </Carousel>
           ) : (
              <CardContent className="p-6 pt-0 flex-1 flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">No results found.</p>
+                <p className="text-sm text-muted-foreground">No recent results found.</p>
              </CardContent>
           )}
           <CardFooter className="mt-auto pt-4">

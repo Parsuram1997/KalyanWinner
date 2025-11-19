@@ -1,83 +1,120 @@
 
-'use server';
+"use server";
 
 import { firestore } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
 import { revalidatePath } from "next/cache";
+import { FieldValue } from "firebase-admin/firestore";
 
-type UpdateTransactionStatusParams = {
-    txnId: string;
-    userId: string;
-    amount: number;
-    status: 'Approved' | 'Rejected';
+// Action to create a new transaction (e.g., for a deposit or withdrawal request)
+export async function createTransaction(transactionData: {
+  userId: string;
+  amount: number;
+  type: "credit" | "debit";
+  description: string;
+  status: "Pending" | "Completed" | "Failed";
+  utr?: string;
+}) {
+  try {
+    const transaction = {
+      ...transactionData,
+      // Map credit/debit to more descriptive types
+      type: transactionData.type === 'credit' ? 'Deposit' : 'Withdrawal',
+      date: new Date().toISOString(),
+    };
+    await firestore.collection("transactions").add(transaction);
+    
+    revalidatePath("/wallet");
+    revalidatePath("/admin/transactions");
+
+    return { success: true, message: "Transaction created successfully." };
+
+  } catch (error: any) {
+    console.error("Error creating transaction: ", error);
+    return { success: false, message: error.message || "Failed to create transaction." };
+  }
 }
 
-export async function updateTransactionStatus(params: UpdateTransactionStatusParams) {
-    const { txnId, userId, amount, status } = params;
+// Action for an admin to approve a deposit transaction
+export async function approveDeposit(transactionId: string, userId: string, amount: number) {
+  const transactionRef = firestore.collection("transactions").doc(transactionId);
+  const userRef = firestore.collection("users").doc(userId);
 
-    const transactionRef = firestore.collection('transactions').doc(txnId);
-    const userRef = firestore.collection('users').doc(userId);
-
-    // Use a transaction to ensure atomicity
-    await firestore.runTransaction(async (transaction) => {
-        const userDoc = await transaction.get(userRef);
-        if (!userDoc.exists) {
-            throw new Error("User not found.");
-        }
-        const userData = userDoc.data()!;
-
-        const transactionDoc = await transaction.get(transactionRef);
-        if (!transactionDoc.exists || transactionDoc.data()?.status !== 'Pending') {
-            throw new Error("Transaction is not pending or does not exist.");
-        }
-        
-        const txnData = transactionDoc.data();
-        let finalStatus: 'Completed' | 'Rejected' = status === 'Approved' ? 'Completed' : 'Rejected';
-        
-        if (status === 'Approved') {
-            if (txnData?.type === 'Deposit') {
-                 transaction.update(userRef, { depositBalance: FieldValue.increment(amount) });
-
-                 // Check for enroller commission logic
-                 if (userData.enrollerId && !userData.commissionPaid && amount >= 500) {
-                    const enrollerRef = firestore.collection('users').doc(userData.enrollerId);
-                    const commissionAmount = 100;
-
-                    // Credit enroller and create a commission transaction for them
-                    transaction.update(enrollerRef, { winningBalance: FieldValue.increment(commissionAmount) });
-                    const commissionTxnRef = firestore.collection('transactions').doc(); // New transaction for enroller
-                    transaction.set(commissionTxnRef, {
-                        userId: userData.enrollerId,
-                        userName: (await transaction.get(enrollerRef)).data()?.name || 'Enroller',
-                        amount: commissionAmount,
-                        type: 'Commission',
-                        status: 'Completed',
-                        date: new Date().toISOString(),
-                        description: `Commission for enrolling user ${userData.name} (${userData.customId})`,
-                    });
-                    
-                    // Mark commission as paid for the user
-                    transaction.update(userRef, { commissionPaid: true });
-                 }
-            } else if (txnData?.type === 'Withdrawal') {
-                 // The balance for withdrawal is already decremented when the request is made by enroller/user in a transaction
-                 // So we don't need to do anything here for balance. The admin simply approves the payout.
-            }
-        } else { // Rejected
-             if (txnData?.type === 'Withdrawal') {
-                // Return funds to user's winningBalance if withdrawal is rejected.
-                transaction.update(userRef, { winningBalance: FieldValue.increment(amount) });
-            }
-            // No balance change if deposit is rejected.
-        }
-
-        // Update transaction status
-        transaction.update(transactionRef, { status: finalStatus });
+  try {
+    await firestore.runTransaction(async (t) => {
+      // No need to read the user doc for deposits, just increment
+      t.update(transactionRef, { status: "Completed" });
+      t.update(userRef, {
+         depositBalance: FieldValue.increment(amount),
+         balance: FieldValue.increment(amount) 
+        });
     });
 
-    // Revalidate the path to refresh the data on the client
-    revalidatePath('/admin/transactions');
+    revalidatePath("/admin/transactions");
+    revalidatePath("/admin/users/" + userId);
+    revalidatePath("/wallet");
+
+    return { success: true, message: "Deposit approved and balance updated." };
+
+  } catch (error: any) {
+    console.error("Error approving deposit: ", error);
+    return { success: false, message: error.message || "Failed to approve deposit." };
+  }
 }
 
+// Action for an admin to approve a withdrawal transaction
+export async function approveWithdrawal(transactionId: string, userId: string, amount: number) {
+    const transactionRef = firestore.collection("transactions").doc(transactionId);
+    const userRef = firestore.collection("users").doc(userId);
 
+    try {
+        await firestore.runTransaction(async (t) => {
+            const userDoc = await t.get(userRef);
+            if (!userDoc.exists) {
+                throw new Error("User not found.");
+            }
 
+            const userData = userDoc.data()!;
+            const currentWinningBalance = userData.winningBalance || 0;
+
+            if (currentWinningBalance < amount) {
+                throw new Error("User has insufficient winning balance for this withdrawal.");
+            }
+            
+            // 1. Update the transaction status
+            t.update(transactionRef, { status: "Completed" });
+
+            // 2. Decrement the user's balances
+            t.update(userRef, {
+                winningBalance: FieldValue.increment(-amount),
+                balance: FieldValue.increment(-amount),
+            });
+        });
+
+        revalidatePath("/admin/transactions");
+        revalidatePath("/admin/users/" + userId);
+        revalidatePath("/wallet");
+
+        return { success: true, message: "Withdrawal approved and balance updated." };
+
+    } catch (error: any) {
+        console.error("Error approving withdrawal: ", error);
+        // If the transaction fails, mark the transaction as 'Failed'
+        await transactionRef.update({ status: "Failed", failureReason: error.message });
+        return { success: false, message: error.message || "Failed to approve withdrawal." };
+    }
+}
+
+// Action for an admin to reject a transaction (deposit or withdrawal)
+export async function rejectTransaction(transactionId: string) {
+    try {
+        await firestore.collection("transactions").doc(transactionId).update({ status: 'Failed' });
+
+        revalidatePath('/admin/transactions');
+
+        return { success: true, message: "Transaction rejected." };
+
+    } catch (error: any) {
+        console.error("Error rejecting transaction: ", error);
+        return { success: false, message: error.message || "Failed to reject transaction." };
+    }
+}
