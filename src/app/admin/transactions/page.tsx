@@ -201,17 +201,15 @@ export default function TransactionsPage() {
                       <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
                   </TabsList>
                 </div>
-                <div className="mt-4">
-                    <TabsContent value="pending-deposits" className="mt-0">
-                        <TransactionTable items={pendingDeposits} isLoading={isLoading} onAction={() => {}} />
-                    </TabsContent>
-                    <TabsContent value="pending-withdrawals" className="mt-0">
-                        <TransactionTable items={pendingWithdrawals} isLoading={isLoading} onAction={() => {}} />
-                    </TabsContent>
-                    <TabsContent value="processed" className="mt-0">
-                        <TransactionTable items={processedTransactions} isLoading={isLoading} onAction={() => {}} />
-                    </TabsContent>
-                </div>
+                <TabsContent value="pending-deposits">
+                    <TransactionTable items={pendingDeposits} isLoading={isLoading} onAction={() => {}} />
+                </TabsContent>
+                <TabsContent value="pending-withdrawals">
+                    <TransactionTable items={pendingWithdrawals} isLoading={isLoading} onAction={() => {}} />
+                </TabsContent>
+                <TabsContent value="processed">
+                    <TransactionTable items={processedTransactions} isLoading={isLoading} onAction={() => {}} />
+                </TabsContent>
             </Tabs>
         </CardContent>
       </Card>
