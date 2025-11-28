@@ -388,16 +388,23 @@ export default function PlaceBetPage() {
     // Fetch today's result to decide the session for Panna bets
     const today = new Date();
     const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const resultQuery = query(
-        collection(firestore, "kalyan_results"),
-        where("marketName", "==", marketName),
-        where("date", "==", dateString),
-        limit(1)
-    );
-    const resultSnapshot = await getDocs(resultQuery);
-    const todaysResult = resultSnapshot.empty ? null : resultSnapshot.docs[0].data();
-    const isOpenResultDeclared = !!todaysResult?.openPanna;
-
+    let isOpenResultDeclared = false;
+    try {
+        const resultQuery = query(
+            collection(firestore, "kalyan_results"),
+            where("marketName", "==", marketName),
+            where("date", "==", dateString),
+            limit(1)
+        );
+        const resultSnapshot = await getDocs(resultQuery);
+        const todaysResult = resultSnapshot.empty ? null : resultSnapshot.docs[0].data();
+        isOpenResultDeclared = !!todaysResult?.openPanna && todaysResult.openPanna !== 'H';
+    } catch(error) {
+        console.error("Could not fetch today's result for session determination:", error);
+        toast({ variant: "destructive", title: "Session Error", description: "Could not determine if open market has passed." });
+        setIsPlacingBet(false);
+        return;
+    }
 
     try {
         const batch = writeBatch(firestore);
@@ -433,10 +440,13 @@ export default function PlaceBetPage() {
             session = 'Jodi';
         } else if (betTypeName.includes('Panna')) {
             session = isOpenResultDeclared ? 'Close' : 'Open';
+        } else if (betTypeName === 'Open') {
+            session = 'Open';
         } else if (betTypeName === 'Close') {
             session = 'Close';
         } else {
-            session = 'Open';
+            // Default case, e.g. for 'Single Digit' when not specified as Open/Close
+            session = isOpenResultDeclared ? 'Close' : 'Open';
         }
 
         const gameTypeForDb = (betTypeName === 'Open' || betTypeName === 'Close') ? 'Single Digit' : betTypeName;
@@ -552,7 +562,3 @@ export default function PlaceBetPage() {
     </div>
   );
 }
-
-    
-
-    
