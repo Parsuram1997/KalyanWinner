@@ -166,7 +166,7 @@ export const sendResultNotification = functions.firestore
     // Case 3: Close result has been declared for the first time
     else if (closePanna && !resultDataBefore?.closePanna) {
         title = `${marketName} Final Result Out!`;
-        body = `Result: ${openPanna}-${jodi}-${closePanna}`;
+        body = `Final Result: ${openPanna}-${jodi}-${closePanna}`;
         shouldSend = true;
     }
 
