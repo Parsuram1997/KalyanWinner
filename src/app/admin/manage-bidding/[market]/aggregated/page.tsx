@@ -55,7 +55,15 @@ const AggregatedBidsTable = ({ bids, isLoading }: { bids: AggregatedBid[], isLoa
     }, [bids]);
 
     const sortedGameTypes = useMemo(() => {
-        return Object.keys(groupedBids).sort();
+        const order = ["Single Digit", "Jodi", "Single Panna", "Double Panna", "Triple Panna", "Open Sangam", "Close Sangam", "Full Sangam"];
+        return Object.keys(groupedBids).sort((a, b) => {
+            const indexA = order.indexOf(a);
+            const indexB = order.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            return a.localeCompare(b);
+        });
     }, [groupedBids]);
 
     if (isLoading) {
@@ -135,12 +143,12 @@ export default function AggregatedBiddingDetailsPage() {
 
     const { data: bets, isLoading } = useCollection<Bet>(betsQuery, { skip: !betsQuery });
 
-    const aggregateBids = (betsToAggregate: Bet[] | undefined) => {
-        if (!betsToAggregate) return [];
+    const aggregateBids = (filteredBets: Bet[] | undefined) => {
+        if (!filteredBets) return [];
 
         const bidMap: Record<string, { gameType: string, totalAmount: number, totalBids: number }> = {};
 
-        betsToAggregate.forEach((bet) => {
+        filteredBets.forEach((bet) => {
             const { gameType, number, amount } = bet;
             const key = `${gameType}-${number}`;
             if (!bidMap[key]) {
