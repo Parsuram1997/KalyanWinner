@@ -132,15 +132,10 @@ export default function AggregatedBiddingDetailsPage() {
         
         let filteredBets;
         if (sessionType === 'Open') {
-            // Open session includes 'Open', 'Jodi', and 'Sangam' type sessions
-            filteredBets = bets.filter((bet: any) => 
-                bet.session === 'Open' || 
-                bet.session === 'Jodi' ||
-                bet.gameType === 'Open Sangam' || 
-                bet.gameType === 'Close Sangam' || 
-                bet.gameType === 'Full Sangam'
-            );
+            // Open session includes bids with session 'Open' or 'Jodi'
+            filteredBets = bets.filter((bet: any) => bet.session === 'Open' || bet.session === 'Jodi');
         } else { // 'Close'
+            // Close session includes ONLY bids with session 'Close'
             filteredBets = bets.filter((bet: any) => bet.session === 'Close');
         }
 
