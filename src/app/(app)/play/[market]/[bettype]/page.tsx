@@ -493,9 +493,14 @@ export default function PlaceBetPage() {
 
       <Card>
           <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-start">
                   <CardTitle>Your Bets</CardTitle>
-                  {isLoading ? <Skeleton className="h-6 w-24" /> : <div className="text-sm font-mono">Total: ₹{totalBetAmount}</div> }
+                  {isLoading ? <Skeleton className="h-10 w-32" /> : (
+                      <div className="text-right text-sm">
+                          <p className="font-mono">Total: <span className="font-semibold">₹{totalBetAmount}</span></p>
+                          <p className="font-mono text-muted-foreground">Remaining: <span className="font-semibold">₹{totalBalance - totalBetAmount}</span></p>
+                      </div>
+                  )}
               </div>
                <CardDescription>
                   A summary of the bets you are about to place.
@@ -560,3 +565,4 @@ export default function PlaceBetPage() {
     </div>
   );
 }
+
