@@ -8,6 +8,7 @@ import { useUser } from '@/firebase';
 import { getMessaging, getToken } from 'firebase/messaging';
 import { saveFcmToken } from '@/app/actions/user-actions';
 import { SidebarMenuButton } from './ui/sidebar';
+import { initializeFirebase } from '@/firebase';
 
 
 export default function NotificationBell() {
@@ -35,7 +36,7 @@ export default function NotificationBell() {
 
       if (currentPermission === 'granted') {
         const { getMessaging, getToken } = await import('firebase/messaging');
-        const { firebaseApp } = await import('@/firebase/client-provider');
+        const { firebaseApp } = initializeFirebase();
         
         const messaging = getMessaging();
         const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
