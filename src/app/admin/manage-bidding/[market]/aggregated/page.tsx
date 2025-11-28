@@ -26,6 +26,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, startOfDay, endOfDay } from 'date-fns';
 import { cn } from "@/lib/utils";
 
+type Bet = {
+    id: string;
+    gameType: string;
+    number: string;
+    amount: number;
+    session: 'Open' | 'Close' | 'Jodi';
+}
+
 type AggregatedBid = {
   gameType: string;
   number: string;
@@ -125,23 +133,14 @@ export default function AggregatedBiddingDetailsPage() {
         );
     }, [firestore, marketName, date]);
 
-    const { data: bets, isLoading } = useCollection(betsQuery, { skip: !betsQuery });
+    const { data: bets, isLoading } = useCollection<Bet>(betsQuery, { skip: !betsQuery });
 
-    const aggregateBids = (sessionType: 'Open' | 'Close') => {
-        if (!bets) return [];
-        
-        let filteredBets;
-        if (sessionType === 'Open') {
-            // Open session includes bids with session 'Open' or 'Jodi'
-            filteredBets = bets.filter((bet: any) => bet.session === 'Open' || bet.session === 'Jodi');
-        } else { // 'Close'
-            // Close session includes ONLY bids with session 'Close'
-            filteredBets = bets.filter((bet: any) => bet.session === 'Close');
-        }
+    const aggregateBids = (betsToAggregate: Bet[] | undefined) => {
+        if (!betsToAggregate) return [];
 
         const bidMap: Record<string, { gameType: string, totalAmount: number, totalBids: number }> = {};
 
-        filteredBets.forEach((bet: any) => {
+        betsToAggregate.forEach((bet) => {
             const { gameType, number, amount } = bet;
             const key = `${gameType}-${number}`;
             if (!bidMap[key]) {
@@ -159,8 +158,16 @@ export default function AggregatedBiddingDetailsPage() {
             .sort((a, b) => b.totalAmount - a.totalAmount);
     };
 
-    const openSessionBids = useMemo(() => aggregateBids('Open'), [bets]);
-    const closeSessionBids = useMemo(() => aggregateBids('Close'), [bets]);
+    const openSessionBids = useMemo(() => {
+        const filteredBets = bets?.filter(bet => bet.session === 'Open' || bet.session === 'Jodi');
+        return aggregateBids(filteredBets);
+    }, [bets]);
+    
+    const closeSessionBids = useMemo(() => {
+        const filteredBets = bets?.filter(bet => bet.session === 'Close');
+        return aggregateBids(filteredBets);
+    }, [bets]);
+
 
   return (
     <div className="flex flex-col gap-6">
