@@ -164,100 +164,99 @@ export default function DepositPage() {
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
-      <Card className={cn(currentStep === 2 && "opacity-60")}>
-        <CardHeader>
-          <CardTitle>Step 1: Make Payment</CardTitle>
-          <CardDescription>Enter the amount and pay using the QR code or UPI ID.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <div className="space-y-4">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Card className={cn(currentStep === 2 && "opacity-60")}>
+            <CardHeader>
+              <CardTitle>Step 1: Make Payment</CardTitle>
+              <CardDescription>Enter the amount and pay using the QR code or UPI ID.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
                 <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Amount to Deposit</FormLabel>
-                        <FormControl>
-                            <Input type="number" placeholder={`Minimum ₹${minDepositAmount}`} {...field} disabled={currentStep > 1} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Amount to Deposit</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder={`Minimum ₹${minDepositAmount}`} {...field} disabled={currentStep > 1} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
                 {numericAmount >= minDepositAmount && paymentSettings?.upiId && (
-                    <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
-                        {!isMobile && (
-                            <>
-                            <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
-                            <div className="p-4 bg-white rounded-md shadow-inner">
-                                <QRCode value={upiUrl} size={180} />
-                            </div>
-                            </>
-                        )}
-                        <div className="text-center w-full">
-                            <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
-                            <div 
-                                className="flex items-center justify-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground"
-                                onClick={() => copyToClipboard(paymentSettings.upiId!)}
-                            >
-                                <p className="text-xs">To: {paymentSettings.payeeName} ({paymentSettings.upiId})</p>
-                                <Copy className="h-3 w-3" />
-                            </div>
+                  <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
+                    {!isMobile && (
+                      <>
+                        <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
+                        <div className="p-4 bg-white rounded-md shadow-inner">
+                          <QRCode value={upiUrl} size={180} />
                         </div>
-
-                        {isMobile && (
-                            <Button asChild className="w-full mt-2">
-                                <a href={upiUrl}>
-                                    <CreditCard /> Pay with UPI
-                                </a>
-                            </Button>
-                        )}
-                    </div>
-                )}
-            </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-center">
-          <Button size="lg" onClick={handleNextStep} disabled={currentStep > 1}>
-              Next: Confirm Payment <ChevronRight className="ml-2 h-4 w-4"/>
-          </Button>
-      </div>
-
-      <Card className={cn("transition-opacity duration-300", currentStep === 1 ? "opacity-40" : "opacity-100")}>
-        <CardHeader>
-            <CardTitle>Step 2: Confirm Deposit</CardTitle>
-            <CardDescription>Enter the UTR/Transaction ID from your payment app to confirm.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                 <FormField
-                    control={form.control}
-                    name="utr"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>UTR / Transaction ID</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Enter 12-digit UTR" {...field} disabled={currentStep === 1} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
+                      </>
                     )}
-                />
-                <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={currentStep === 1 || form.formState.isSubmitting || isUserLoading || !form.formState.isValid}
-                >
-                    {form.formState.isSubmitting ? "Submitting..." : "Submit Deposit Request"}
-                </Button>
-            </form>
-            </Form>
-        </CardContent>
-      </Card>
+                    <div className="text-center w-full">
+                      <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
+                      <div
+                        className="flex items-center justify-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground"
+                        onClick={() => copyToClipboard(paymentSettings.upiId!)}
+                      >
+                        <p className="text-xs">To: {paymentSettings.payeeName} ({paymentSettings.upiId})</p>
+                        <Copy className="h-3 w-3" />
+                      </div>
+                    </div>
 
+                    {isMobile && (
+                      <Button asChild className="w-full mt-2">
+                        <a href={upiUrl}>
+                          <CreditCard /> Pay with UPI
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-center">
+            <Button size="lg" type="button" onClick={handleNextStep} disabled={currentStep > 1}>
+              Next: Confirm Payment <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+
+          <Card className={cn("transition-opacity duration-300", currentStep === 1 ? "opacity-40" : "opacity-100")}>
+            <CardHeader>
+              <CardTitle>Step 2: Confirm Deposit</CardTitle>
+              <CardDescription>Enter the UTR/Transaction ID from your payment app to confirm.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <FormField
+                control={form.control}
+                name="utr"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>UTR / Transaction ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter 12-digit UTR" {...field} disabled={currentStep === 1} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={currentStep === 1 || form.formState.isSubmitting || isUserLoading || !form.formState.isValid}
+              >
+                {form.formState.isSubmitting ? "Submitting..." : "Submit Deposit Request"}
+              </Button>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
 
       <Card>
         <CardHeader>
@@ -280,3 +279,4 @@ export default function DepositPage() {
     </div>
   );
 }
+
