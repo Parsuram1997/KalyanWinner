@@ -53,17 +53,17 @@ const BidsTable = ({ bids, isLoading }: { bids: Bid[], isLoading: boolean }) => 
         <Table>
             <TableHeader>
             <TableRow>
-                <TableHead>User Name</TableHead>
-                <TableHead>Number</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="py-1">User Name</TableHead>
+                <TableHead className="py-1">Number</TableHead>
+                <TableHead className="text-right py-1">Amount</TableHead>
             </TableRow>
             </TableHeader>
             <TableBody>
             {bids.map((bid) => (
                 <TableRow key={bid.id}>
-                <TableCell>{bid.userName}</TableCell>
-                <TableCell className="font-mono font-medium">{bid.number}</TableCell>
-                <TableCell className="text-right font-mono">₹{bid.amount.toLocaleString('en-IN')}</TableCell>
+                <TableCell className="py-1">{bid.userName}</TableCell>
+                <TableCell className="font-mono font-medium py-1">{bid.number}</TableCell>
+                <TableCell className="text-right font-mono py-1">₹{bid.amount.toLocaleString('en-IN')}</TableCell>
                 </TableRow>
             ))}
             </TableBody>
@@ -104,13 +104,13 @@ export default function BiddingDetailsPage() {
     const openSessionBids = useMemo(() => bets?.filter((bet: any) => bet.session === 'Open') || [], [bets]);
     const closeSessionBids = useMemo(() => bets?.filter((bet: any) => bet.session === 'Close') || [], [bets]);
     const jodiBids = useMemo(() => {
-        if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam') {
+        if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam' || betTypeName === 'Open Sangam' || betTypeName === 'Close Sangam') {
             return bets || [];
         }
         return [];
     }, [bets, betTypeName]);
     
-    const showTabs = betTypeName !== 'Jodi' && betTypeName !== 'Full Sangam';
+    const showTabs = betTypeName !== 'Jodi' && betTypeName !== 'Full Sangam' && betTypeName !== 'Open Sangam' && betTypeName !== 'Close Sangam';
 
   return (
     <div className="flex flex-col gap-6">
