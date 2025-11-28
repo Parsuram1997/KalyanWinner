@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { cn } from "@/lib/utils";
 
 type Bid = {
@@ -31,6 +31,8 @@ type Bid = {
   userName: string;
   number: string;
   amount: number;
+  createdAt: Timestamp;
+  session: 'Open' | 'Close' | 'Jodi';
 };
 
 const BidsTable = ({ bids, isLoading }: { bids: Bid[], isLoading: boolean }) => {
@@ -83,32 +85,35 @@ export default function BiddingDetailsPage() {
     const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     const betTypeName = betTypeSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     
+    // Fetch all bets for the market and game type, but without a date filter.
     const betsQuery = useMemoFirebase(() => {
-        if (!firestore || !date) return null;
-
-        const start = startOfDay(date);
-        const end = endOfDay(date);
-
+        if (!firestore) return null;
         return query(
             collection(firestore, "kalyan_bets"), 
             where("market", "==", marketName),
             where("gameType", "==", betTypeName),
-            where("createdAt", ">=", Timestamp.fromDate(start)),
-            where("createdAt", "<=", Timestamp.fromDate(end)),
-            orderBy("createdAt", "desc")
+            where("status", "==", "Placed")
         );
-    }, [firestore, marketName, betTypeName, date]);
+    }, [firestore, marketName, betTypeName]);
 
-    const { data: bets, isLoading } = useCollection<Bid>(betsQuery, { skip: !betsQuery });
+    const { data: allBets, isLoading } = useCollection<Bid>(betsQuery, { skip: !betsQuery });
 
-    const openSessionBids = useMemo(() => bets?.filter((bet: any) => bet.session === 'Open') || [], [bets]);
-    const closeSessionBids = useMemo(() => bets?.filter((bet: any) => bet.session === 'Close') || [], [bets]);
+    // Filter by date on the client-side
+    const filteredBetsByDate = useMemo(() => {
+        if (!allBets || !date) return [];
+        const interval = { start: startOfDay(date), end: endOfDay(date) };
+        return allBets.filter(bet => bet.createdAt && isWithinInterval(bet.createdAt.toDate(), interval));
+    }, [allBets, date]);
+
+
+    const openSessionBids = useMemo(() => filteredBetsByDate?.filter((bet: any) => bet.session === 'Open') || [], [filteredBetsByDate]);
+    const closeSessionBids = useMemo(() => filteredBetsByDate?.filter((bet: any) => bet.session === 'Close') || [], [filteredBetsByDate]);
     const jodiBids = useMemo(() => {
         if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam' || betTypeName === 'Open Sangam' || betTypeName === 'Close Sangam') {
-            return bets || [];
+            return filteredBetsByDate || [];
         }
         return [];
-    }, [bets, betTypeName]);
+    }, [filteredBetsByDate, betTypeName]);
     
     const showTabs = betTypeName !== 'Jodi' && betTypeName !== 'Full Sangam' && betTypeName !== 'Open Sangam' && betTypeName !== 'Close Sangam';
 
