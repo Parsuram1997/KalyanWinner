@@ -83,9 +83,22 @@ export default function BiddingDetailsPage() {
     const betTypeSlug = params.bettype as string;
 
     const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    const betTypeName = betTypeSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     
-    // Fetch all bets for the market and game type, but without a date filter.
+    // Convert slug to the name stored in the database
+    const betTypeName = useMemo(() => {
+        const slugToNameMap: { [key: string]: string } = {
+            'single-digit': 'Single Digit',
+            'jodi': 'Jodi',
+            'single-panna': 'Single Panna',
+            'double-panna': 'Double Panna',
+            'triple-panna': 'Triple Panna',
+            'open-sangam': 'Open Sangam',
+            'close-sangam': 'Close Sangam',
+            'full-sangam': 'Full Sangam',
+        };
+        return slugToNameMap[betTypeSlug] || betTypeSlug.replace(/-/g, ' ');
+    }, [betTypeSlug]);
+
     const betsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(
@@ -109,13 +122,14 @@ export default function BiddingDetailsPage() {
     const openSessionBids = useMemo(() => filteredBetsByDate?.filter((bet: any) => bet.session === 'Open') || [], [filteredBetsByDate]);
     const closeSessionBids = useMemo(() => filteredBetsByDate?.filter((bet: any) => bet.session === 'Close') || [], [filteredBetsByDate]);
     const jodiBids = useMemo(() => {
-        if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam' || betTypeName === 'Open Sangam' || betTypeName === 'Close Sangam') {
+        const jodiTypes = ['Jodi', 'Full Sangam', 'Open Sangam', 'Close Sangam'];
+        if (jodiTypes.includes(betTypeName)) {
             return filteredBetsByDate || [];
         }
         return [];
     }, [filteredBetsByDate, betTypeName]);
     
-    const showTabs = betTypeName !== 'Jodi' && betTypeName !== 'Full Sangam' && betTypeName !== 'Open Sangam' && betTypeName !== 'Close Sangam';
+    const showTabs = !['Jodi', 'Full Sangam', 'Open Sangam', 'Close Sangam'].includes(betTypeName);
 
   return (
     <div className="flex flex-col gap-6">
