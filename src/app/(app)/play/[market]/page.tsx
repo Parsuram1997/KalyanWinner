@@ -95,7 +95,7 @@ export default function ChooseBetTypePage() {
           return false; // If open result is not out, nothing is disabled
       }
       
-      const disabledAfterOpen = ['Jodi', 'Open Sangam', 'Open'];
+      const disabledAfterOpen = ['Jodi', 'Open Sangam', 'Full Sangam', 'Open'];
       return disabledAfterOpen.includes(betName);
   };
   
