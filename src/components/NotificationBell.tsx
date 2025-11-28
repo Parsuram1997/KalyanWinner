@@ -34,12 +34,16 @@ export default function NotificationBell() {
       setPermission(currentPermission);
 
       if (currentPermission === 'granted') {
+        const { getMessaging, getToken } = await import('firebase/messaging');
+        const { firebaseApp } = await import('@/firebase/client-provider');
+        
         const messaging = getMessaging();
         const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 
         if (!vapidKey) {
             console.error("VAPID key is missing. Add NEXT_PUBLIC_FIREBASE_VAPID_KEY to your environment variables.");
             toast({ variant: "destructive", title: "Configuration Error", description: "Cannot enable notifications. Missing VAPID key." });
+            setIsSubscribing(false);
             return;
         }
 

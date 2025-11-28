@@ -64,9 +64,6 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <NotificationBell />
-            </SidebarMenuItem>
-            <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/enroller/wallet">
                   <Wallet />
@@ -105,6 +102,9 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
                   FAQ
                 </Link>
               </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <NotificationBell />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>

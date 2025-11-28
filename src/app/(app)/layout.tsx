@@ -97,9 +97,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-              <NotificationBell />
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/wallet">
@@ -131,6 +128,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   FAQ
                 </Link>
               </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <NotificationBell />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
