@@ -438,14 +438,12 @@ export default function PlaceBetPage() {
         
         if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam' || betTypeName === 'Open Sangam' || betTypeName === 'Close Sangam') {
             session = 'Jodi';
-        } else if (betTypeName.includes('Panna')) {
-            session = isOpenResultDeclared ? 'Close' : 'Open';
         } else if (betTypeName === 'Open') {
             session = 'Open';
         } else if (betTypeName === 'Close') {
             session = 'Close';
         } else {
-            // Default case, e.g. for 'Single Digit' when not specified as Open/Close
+             // For Panna and Single Digit (when not specified)
             session = isOpenResultDeclared ? 'Close' : 'Open';
         }
 
@@ -485,10 +483,10 @@ export default function PlaceBetPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col lg:flex-row gap-8">
-        <div className="w-full lg:order-first">
+        <div className="w-full lg:order-first lg:w-1/3 hidden lg:block">
             <WalletCard depositBalance={depositBalance} winningBalance={winningBalance} isLoading={isLoading} />
         </div>
-        <div className="w-full lg:w-2/3">
+        <div className="w-full lg:w-full">
             <BetForm betTypeName={betTypeName} market={marketName} onBetsChange={handleBetsChange} />
         </div>
       </div>
