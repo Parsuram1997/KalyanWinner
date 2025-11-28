@@ -124,42 +124,57 @@ export const processReferralBonus = onTaskDispatched(async (request: Request<{ u
 });
 
 
+// Helper to calculate the single digit from a panna
+const getDigit = (panna: string | undefined): string => {
+  if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '*';
+  return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
+};
+
+
 export const sendResultNotification = functions.firestore
   .document('kalyan_results/{resultId}')
   .onWrite(async (change, context) => {
-    const resultData = change.after.data();
+    const resultDataAfter = change.after.data();
+    const resultDataBefore = change.before.data();
 
-    // If the document was deleted, do nothing.
-    if (!resultData) {
+    if (!resultDataAfter) {
       logger.log(`Result ${context.params.resultId} was deleted. No notification sent.`);
       return null;
     }
     
-    // Determine if it's a new result or an update.
-    const isNew = !change.before.exists;
-    const isUpdate = change.before.exists && change.after.exists;
-
-    const { marketName, openPanna, jodi, closePanna } = resultData;
-    let title = `${marketName} Result Out!`;
+    const { marketName, openPanna, jodi, closePanna } = resultDataAfter;
+    let title = '';
     let body = '';
-
+    let shouldSend = false;
+    
+    // Case 1: Market is on Holiday
     if (jodi === 'L') {
-        title = `${marketName} is on Holiday`;
-        body = `No game results will be declared today for ${marketName}.`;
-    } else if (isUpdate && !change.before.data()?.closePanna && closePanna) {
-        // This is an update where the close panna was just added.
-        title = `${marketName} Close Result Out!`;
-        body = `Jodi: ${jodi}, Close Panna: ${closePanna}`;
-    } else if (isNew) {
-        // This is a brand new result, likely just the open panna.
+        // Send only if it's a new holiday entry
+        if (!resultDataBefore || resultDataBefore.jodi !== 'L') {
+            title = `${marketName} is on Holiday`;
+            body = `No game results will be declared today for ${marketName}.`;
+            shouldSend = true;
+        }
+    } 
+    // Case 2: Open result has been declared for the first time
+    else if (openPanna && !resultDataBefore?.openPanna) {
+        const openDigit = getDigit(openPanna);
         title = `${marketName} Open Result Out!`;
-        body = `Open Panna: ${openPanna}`;
-    } else {
-        // This is just a minor update, no notification needed.
-        logger.log('Minor update to result, no notification sent.');
-        return null;
+        body = `Open: ${openPanna}-${openDigit}`;
+        shouldSend = true;
+    }
+    // Case 3: Close result has been declared for the first time
+    else if (closePanna && !resultDataBefore?.closePanna) {
+        title = `${marketName} Final Result Out!`;
+        body = `Result: ${openPanna}-${jodi}-${closePanna}`;
+        shouldSend = true;
     }
 
+
+    if (!shouldSend) {
+      logger.log('No significant result change detected. No notification sent.');
+      return null;
+    }
 
     const usersSnapshot = await db.collection('users').get();
     
@@ -182,12 +197,12 @@ export const sendResultNotification = functions.firestore
       notification: {
         title: title,
         body: body,
-        icon: '/kalyanwinnerlogo.png', // URL to your logo
-        click_action: '/results' // URL to open when notification is clicked
+        icon: '/kalyanwinnerlogo.png',
+        click_action: '/results'
       },
     };
 
-    logger.log(`Sending notification to ${uniqueTokens.length} tokens.`);
+    logger.log(`Sending notification to ${uniqueTokens.length} tokens: ${title} - ${body}`);
 
     try {
         const response = await getMessaging().sendEachForMulticast({
@@ -205,9 +220,7 @@ export const sendResultNotification = functions.firestore
                 logger.warn(`Failed to send to token: ${uniqueTokens[idx]}`, resp.error);
               }
             });
-            // Here you could add logic to clean up invalid tokens from the database.
         }
-
     } catch (error) {
         logger.error('Error sending notifications:', error);
     }
