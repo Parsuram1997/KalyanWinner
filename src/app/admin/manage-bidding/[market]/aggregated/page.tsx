@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { cn } from "@/lib/utils";
 
 type Bet = {
@@ -32,6 +32,7 @@ type Bet = {
     number: string;
     amount: number;
     session: 'Open' | 'Close' | 'Jodi';
+    createdAt: Timestamp;
 }
 
 type AggregatedBid = {
@@ -127,29 +128,30 @@ export default function AggregatedBiddingDetailsPage() {
 
     const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     
+    // Fetch all 'Placed' bets for the market, without a date filter in the query.
     const betsQuery = useMemoFirebase(() => {
-        if (!firestore || !date) return null;
-
-        const start = startOfDay(date);
-        const end = endOfDay(date);
-
+        if (!firestore) return null;
         return query(
             collection(firestore, "kalyan_bets"), 
             where("market", "==", marketName),
-            where("createdAt", ">=", Timestamp.fromDate(start)),
-            where("createdAt", "<=", Timestamp.fromDate(end)),
             where("status", "==", "Placed")
         );
-    }, [firestore, marketName, date]);
+    }, [firestore, marketName]);
 
-    const { data: bets, isLoading } = useCollection<Bet>(betsQuery, { skip: !betsQuery });
+    const { data: allBets, isLoading } = useCollection<Bet>(betsQuery, { skip: !betsQuery });
     
-    const aggregateBids = (filteredBets: Bet[] | undefined) => {
-        if (!filteredBets || filteredBets.length === 0) return [];
+    // Filter bets by the selected date on the client-side.
+    const filteredBetsByDate = useMemo(() => {
+        if (!allBets || !date) return [];
+        const interval = { start: startOfDay(date), end: endOfDay(date) };
+        return allBets.filter(bet => bet.createdAt && isWithinInterval(bet.createdAt.toDate(), interval));
+    }, [allBets, date]);
 
+    const aggregateBids = (betsForSession: Bet[] | undefined) => {
+        if (!betsForSession) return [];
         const bidMap: Record<string, { gameType: string, totalAmount: number, totalBids: number }> = {};
 
-        filteredBets.forEach((bet) => {
+        betsForSession.forEach((bet) => {
             const { gameType, number, amount } = bet;
             const key = `${gameType}-${number}`;
             if (!bidMap[key]) {
@@ -166,16 +168,16 @@ export default function AggregatedBiddingDetailsPage() {
             })
             .sort((a, b) => b.totalAmount - a.totalAmount);
     };
-
+    
     const openSessionBids = useMemo(() => {
-        const filtered = bets?.filter(bet => bet.session === 'Open' || bet.session === 'Jodi');
-        return aggregateBids(filtered);
-    }, [bets]);
+        const openBets = filteredBetsByDate?.filter(bet => bet.session === 'Open' || bet.session === 'Jodi');
+        return aggregateBids(openBets);
+    }, [filteredBetsByDate]);
     
     const closeSessionBids = useMemo(() => {
-        const filtered = bets?.filter(bet => bet.session === 'Close');
-        return aggregateBids(filtered);
-    }, [bets]);
+        const closeBets = filteredBetsByDate?.filter(bet => bet.session === 'Close');
+        return aggregateBids(closeBets);
+    }, [filteredBetsByDate]);
 
 
   return (
