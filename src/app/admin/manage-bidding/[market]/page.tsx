@@ -45,6 +45,11 @@ export default function BiddingMarketHubPage() {
       .replace(/\s+/g, '-')
       .replace(/[()]/g, '');
   }
+  
+  const specialBetTypes = [
+    { name: 'Open Digit', slug: 'open', description: "View all bids for the Open digit." },
+    { name: 'Close Digit', slug: 'close', description: "View all bids for the Close digit." },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,24 +91,42 @@ export default function BiddingMarketHubPage() {
                 </CardFooter>
               </Card>
             ))
-          : betTypes?.map((bet) => {
-              return (
-              <Card key={bet.id} className="flex flex-col justify-between">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-base">{bet.name}</CardTitle>
-                  <CardDescription className="text-xs">{bet.description}</CardDescription>
-                </CardHeader>
-                <CardFooter className="p-4 pt-2">
-                  <Button asChild className="w-full" size="sm">
-                    <Link href={`/admin/manage-bidding/${marketSlug}/${generateSlug(bet.name)}`} >
-                      <Ticket className="mr-2 h-4 w-4" />
-                      View Bids
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-              )
-          })}
+          : <>
+              {specialBetTypes.map((bet) => (
+                 <Card key={bet.slug} className="flex flex-col justify-between">
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-base">{bet.name}</CardTitle>
+                      <CardDescription className="text-xs">{bet.description}</CardDescription>
+                    </CardHeader>
+                    <CardFooter className="p-4 pt-2">
+                      <Button asChild className="w-full" size="sm">
+                        <Link href={`/admin/manage-bidding/${marketSlug}/${bet.slug}`} >
+                          <Ticket className="mr-2 h-4 w-4" />
+                          View Bids
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+              ))}
+              {betTypes?.filter(bt => !['Open', 'Close'].includes(bt.name)).map((bet) => {
+                  return (
+                  <Card key={bet.id} className="flex flex-col justify-between">
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-base">{bet.name}</CardTitle>
+                      <CardDescription className="text-xs">{bet.description}</CardDescription>
+                    </CardHeader>
+                    <CardFooter className="p-4 pt-2">
+                      <Button asChild className="w-full" size="sm">
+                        <Link href={`/admin/manage-bidding/${marketSlug}/${generateSlug(bet.name)}`} >
+                          <Ticket className="mr-2 h-4 w-4" />
+                          View Bids
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                  )
+              })}
+            </>}
       </div>
        {!isLoadingBetTypes && betTypes?.length === 0 && (
         <Card className="col-span-full">

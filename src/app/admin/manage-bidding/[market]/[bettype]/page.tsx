@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { useParams } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -85,7 +85,7 @@ export default function BiddingDetailsPage() {
     const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     
     // Convert slug to the name stored in the database
-    const betTypeName = useMemo(() => {
+    const { betTypeName, specificSession } = useMemo(() => {
         const slugToNameMap: { [key: string]: string } = {
             'single-digit': 'Single Digit',
             'jodi': 'Jodi',
@@ -96,8 +96,19 @@ export default function BiddingDetailsPage() {
             'close-sangam': 'Close Sangam',
             'full-sangam': 'Full Sangam',
         };
-        return slugToNameMap[betTypeSlug] || betTypeSlug.replace(/-/g, ' ');
+
+        if (betTypeSlug === 'open') {
+            return { betTypeName: 'Single Digit', specificSession: 'Open' as const };
+        }
+        if (betTypeSlug === 'close') {
+            return { betTypeName: 'Single Digit', specificSession: 'Close' as const };
+        }
+
+        const resolvedName = slugToNameMap[betTypeSlug] || betTypeSlug.replace(/-/g, ' ');
+        return { betTypeName: resolvedName, specificSession: null };
     }, [betTypeSlug]);
+
+    const pageTitle = (betTypeSlug === 'open' || betTypeSlug === 'close') ? `${betTypeSlug.charAt(0).toUpperCase() + betTypeSlug.slice(1)} Digit` : betTypeName;
 
     const betsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -129,15 +140,15 @@ export default function BiddingDetailsPage() {
         return [];
     }, [filteredBetsByDate, betTypeName]);
     
-    const showTabs = !['Jodi', 'Full Sangam', 'Open Sangam', 'Close Sangam'].includes(betTypeName);
+    const showTabs = !specificSession && !['Jodi', 'Full Sangam', 'Open Sangam', 'Close Sangam'].includes(betTypeName);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{betTypeName} Bids for {marketName}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{pageTitle} Bids for {marketName}</h1>
           <p className="text-muted-foreground">
-            A summary of all '{betTypeName}' bids placed on this market.
+            A summary of all '{pageTitle}' bids placed on this market.
           </p>
         </div>
          <Popover>
@@ -166,7 +177,11 @@ export default function BiddingDetailsPage() {
 
       <Card>
         <CardContent className="p-4 sm:p-6">
-            {showTabs ? (
+            {specificSession === 'Open' ? (
+                <BidsTable bids={openSessionBids} isLoading={isLoading} />
+            ) : specificSession === 'Close' ? (
+                <BidsTable bids={closeSessionBids} isLoading={isLoading} />
+            ) : showTabs ? (
                 <Tabs defaultValue="open">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="open">Open Session</TabsTrigger>
