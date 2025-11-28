@@ -47,8 +47,8 @@ export default function BiddingMarketHubPage() {
   }
   
   const specialBetTypes = [
-    { name: 'Open Digit', slug: 'open', description: "View all bids for the Open digit." },
-    { name: 'Close Digit', slug: 'close', description: "View all bids for the Close digit." },
+    { name: 'Open', slug: 'open', description: "View all bids for the Open digit." },
+    { name: 'Close', slug: 'close', description: "View all bids for the Close digit." },
   ];
 
   return (

@@ -84,7 +84,6 @@ export default function BiddingDetailsPage() {
 
     const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     
-    // Convert slug to the name stored in the database
     const { betTypeName, specificSession } = useMemo(() => {
         const slugToNameMap: { [key: string]: string } = {
             'single-digit': 'Single Digit',
@@ -122,7 +121,6 @@ export default function BiddingDetailsPage() {
 
     const { data: allBets, isLoading } = useCollection<Bid>(betsQuery, { skip: !betsQuery });
 
-    // Filter by date on the client-side
     const filteredBetsByDate = useMemo(() => {
         if (!allBets || !date) return [];
         const interval = { start: startOfDay(date), end: endOfDay(date) };

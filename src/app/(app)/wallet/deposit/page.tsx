@@ -167,7 +167,6 @@ export default function DepositPage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           
-          {/* Step 1: Make Payment */}
           <Card className={cn("transition-opacity duration-300", currentStep === 2 && "opacity-60")}>
             <CardHeader>
               <CardTitle>Step 1: Make Payment</CardTitle>
@@ -231,7 +230,6 @@ export default function DepositPage() {
             </div>
           )}
 
-          {/* Step 2: Confirm Deposit */}
           {currentStep === 2 && (
             <Card className="animate-in fade-in-0 duration-500">
                 <CardHeader>

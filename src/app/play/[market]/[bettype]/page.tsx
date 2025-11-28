@@ -512,9 +512,9 @@ export default function PlaceBetPage() {
             session = 'Jodi';
         } else if (betTypeName === 'Open') {
             session = 'Open';
-        } else if (betTypeName === 'Close') {
+        } else if (betTypeName === 'Close' || betTypeName === 'Close Sangam') {
             session = 'Close';
-        } else { // Handles Panna types and Close Sangam
+        } else { // Handles Panna types
             session = isOpenResultDeclared ? 'Close' : 'Open';
         }
 
@@ -554,7 +554,7 @@ export default function PlaceBetPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col lg:flex-row gap-8">
-        <div className="hidden lg:block lg:order-first lg:w-1/3">
+        <div className="w-full lg:order-first lg:w-1/3 hidden lg:block">
             <WalletCard depositBalance={depositBalance} winningBalance={winningBalance} isLoading={isLoading} />
         </div>
         <div className="w-full lg:w-full">
@@ -642,3 +642,5 @@ export default function PlaceBetPage() {
     </div>
   );
 }
+
+    
