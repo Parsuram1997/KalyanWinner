@@ -40,6 +40,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const formSchema = z.object({
@@ -247,27 +248,33 @@ export default function ManageTimingsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs h-auto py-0 px-1">Market Name</TableHead>
-                  <TableHead className="text-center text-xs h-auto py-0 px-1">Open Bidding</TableHead>
-                  <TableHead className="text-center text-xs h-auto py-0 px-1">Open Result</TableHead>
-                  <TableHead className="text-center text-xs h-auto py-0 px-1">Close Bidding</TableHead>
-                  <TableHead className="text-center text-xs h-auto py-0 px-1">Close Result</TableHead>
-                  <TableHead className="text-right text-xs h-auto py-0 px-1">Actions</TableHead>
+                  <TableHead className="text-xs h-auto px-1 py-0">Market Name</TableHead>
+                  <TableHead className="text-center text-xs h-auto px-1 py-0">Open Bidding</TableHead>
+                  <TableHead className="text-center text-xs h-auto px-1 py-0">Open Result</TableHead>
+                  <TableHead className="text-center text-xs h-auto px-1 py-0">Close Bidding</TableHead>
+                  <TableHead className="text-center text-xs h-auto px-1 py-0">Close Result</TableHead>
+                  <TableHead className="text-right text-xs h-auto px-1 py-0">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-0 px-1">Loading timings...</TableCell>
+                     <TableCell colSpan={6} className="text-center py-4">
+                        <div className="space-y-2">
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-full" />
+                        </div>
+                     </TableCell>
                   </TableRow>
                 ) : markets?.map((market) => (
                   <TableRow key={market.id}>
-                    <TableCell className="font-medium text-xs py-0 px-1">{market.name}</TableCell>
-                    <TableCell className="text-center font-semibold text-primary text-xs py-0 px-1">{market.openBiddingTime}</TableCell>
-                    <TableCell className="text-center font-semibold text-primary text-xs py-0 px-1">{market.openResultTime}</TableCell>
-                    <TableCell className="text-center font-semibold text-destructive text-xs py-0 px-1">{market.closeBiddingTime}</TableCell>
-                    <TableCell className="text-center font-semibold text-destructive text-xs py-0 px-1">{market.closeResultTime}</TableCell>
-                    <TableCell className="text-right py-0 px-1">
+                    <TableCell className="font-medium text-xs px-1 py-0">{market.name}</TableCell>
+                    <TableCell className="text-center font-semibold text-primary text-xs px-1 py-0">{market.openBiddingTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-primary text-xs px-1 py-0">{market.openResultTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-destructive text-xs px-1 py-0">{market.closeBiddingTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-destructive text-xs px-1 py-0">{market.closeResultTime}</TableCell>
+                    <TableCell className="text-right px-1 py-0">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(market)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -297,7 +304,7 @@ export default function ManageTimingsPage() {
                 ))}
                 {!isLoading && markets?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-0 px-1">No active markets found.</TableCell>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground px-1 py-4">No active markets found.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -308,5 +315,3 @@ export default function ManageTimingsPage() {
     </div>
   );
 }
-
-    
