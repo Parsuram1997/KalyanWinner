@@ -78,6 +78,28 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "kalyan_bets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "market",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "session",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

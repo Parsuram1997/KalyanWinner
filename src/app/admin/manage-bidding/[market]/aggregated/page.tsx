@@ -137,14 +137,15 @@ export default function AggregatedBiddingDetailsPage() {
             collection(firestore, "kalyan_bets"), 
             where("market", "==", marketName),
             where("createdAt", ">=", Timestamp.fromDate(start)),
-            where("createdAt", "<=", Timestamp.fromDate(end))
+            where("createdAt", "<=", Timestamp.fromDate(end)),
+            where("status", "==", "Placed")
         );
     }, [firestore, marketName, date]);
 
     const { data: bets, isLoading } = useCollection<Bet>(betsQuery, { skip: !betsQuery });
-
+    
     const aggregateBids = (filteredBets: Bet[] | undefined) => {
-        if (!filteredBets) return [];
+        if (!filteredBets || filteredBets.length === 0) return [];
 
         const bidMap: Record<string, { gameType: string, totalAmount: number, totalBids: number }> = {};
 
@@ -167,13 +168,13 @@ export default function AggregatedBiddingDetailsPage() {
     };
 
     const openSessionBids = useMemo(() => {
-        const filteredBets = bets?.filter(bet => bet.session === 'Open' || bet.session === 'Jodi');
-        return aggregateBids(filteredBets);
+        const filtered = bets?.filter(bet => bet.session === 'Open' || bet.session === 'Jodi');
+        return aggregateBids(filtered);
     }, [bets]);
     
     const closeSessionBids = useMemo(() => {
-        const filteredBets = bets?.filter(bet => bet.session === 'Close');
-        return aggregateBids(filteredBets);
+        const filtered = bets?.filter(bet => bet.session === 'Close');
+        return aggregateBids(filtered);
     }, [bets]);
 
 
