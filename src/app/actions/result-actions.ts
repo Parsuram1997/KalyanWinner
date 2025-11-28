@@ -19,198 +19,6 @@ const getDigit = (panna: string) => {
   return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
 };
 
-
-async function calculateAndDistributeWinnings(transaction: FirebaseFirestore.Transaction, result: KalyanResult) {
-    console.log(`Processing wins for ${result.marketName} on ${result.date}. Open declared: ${!!result.openPanna}, Close declared: ${!!result.closePanna}`);
-
-    // --- (1) ALL READS FIRST ---
-
-    // Read all game rates
-    const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
-    const betsSnapshot = await transaction.get(firestore.collection('kalyan_bets')
-        .where('market', '==', result.marketName)
-        .where('status', '==', 'Placed'));
-
-    if (betsSnapshot.empty) {
-        console.log('No placed bets found for this market.');
-        return;
-    }
-
-    // Read all unique user documents involved in the bets
-    const userIds = [...new Set(betsSnapshot.docs.map(doc => doc.data().userId))];
-    const userRefs = userIds.map(id => firestore.collection('users').doc(id));
-    const userDocs = await transaction.getAll(...userRefs);
-    const userDocsCache: { [userId: string]: FirebaseFirestore.DocumentSnapshot } = {};
-    userDocs.forEach(doc => {
-        if(doc.exists) {
-            userDocsCache[doc.id] = doc;
-        }
-    });
-
-    // --- (2) PREPARE DATA AND CALCULATIONS (NO MORE READS) ---
-
-    const payoutMultipliers = new Map<string, number>();
-    if (!ratesSnapshot.empty) {
-        ratesSnapshot.docs.forEach(doc => {
-            const rateData = doc.data();
-            if (rateData.name && rateData.payoutAmount && rateData.betAmount > 0) {
-                payoutMultipliers.set(rateData.name, rateData.payoutAmount / rateData.betAmount);
-            }
-        });
-    }
-
-    const openDigit = getDigit(result.openPanna);
-    const closeDigit = result.closePanna ? getDigit(result.closePanna) : null;
-    const jodi = openDigit && closeDigit ? openDigit + closeDigit : null;
-
-    console.log('Winning Numbers:', { openPanna: result.openPanna, openDigit, closePanna: result.closePanna, closeDigit, jodi });
-    
-    const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
-
-    // --- (3) ALL WRITES LAST ---
-
-    for (const doc of betsSnapshot.docs) {
-        const bet = doc.data();
-        const betNumberAsString = String(bet.number);
-
-        let winningAmount = 0;
-        let isWinner = false;
-
-        switch (bet.gameType) {
-            case 'Single Digit':
-                if (bet.session === 'Open' && openDigit) {
-                    if (betNumberAsString === openDigit) {
-                        isWinner = true;
-                        const multiplier = payoutMultipliers.get('Open') ?? payoutMultipliers.get('Single Digit') ?? 9;
-                        winningAmount = bet.amount * multiplier;
-                    }
-                } else if (bet.session === 'Close' && closeDigit) {
-                    if (betNumberAsString === closeDigit) {
-                        isWinner = true;
-                        const multiplier = payoutMultipliers.get('Close') ?? payoutMultipliers.get('Single Digit') ?? 9;
-                        winningAmount = bet.amount * multiplier;
-                    }
-                }
-                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
-                break;
-            
-            case 'Single Panna':
-            case 'Double Panna':
-            case 'Triple Panna':
-                let pannaMultiplier = 0;
-                if (bet.gameType === 'Single Panna') pannaMultiplier = payoutMultipliers.get('Single Panna') || 140;
-                if (bet.gameType === 'Double Panna') pannaMultiplier = payoutMultipliers.get('Double Panna') || 280;
-                if (bet.gameType === 'Triple Panna') pannaMultiplier = payoutMultipliers.get('Triple Panna') || 700;
-
-                let updated = false;
-                if (bet.session === 'Open' && result.openPanna) {
-                    if (betNumberAsString === result.openPanna) {
-                        isWinner = true;
-                        winningAmount = bet.amount * pannaMultiplier;
-                    }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
-                    updated = true;
-                }
-                if (bet.session === 'Close' && result.closePanna) {
-                     if (betNumberAsString === result.closePanna) {
-                        isWinner = true;
-                        winningAmount = bet.amount * pannaMultiplier;
-                    }
-                    // If it was already updated for open, don't update again unless it also won close
-                    if (updated && !isWinner) { 
-                        // It didn't win close, so it's a loss. Status is already set.
-                    } else {
-                        transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
-                    }
-                }
-                break;
-
-            case 'Jodi':
-                if (jodi) {
-                    if (betNumberAsString === jodi) {
-                        isWinner = true;
-                        winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
-                    }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
-                }
-                break;
-            
-            case 'Open Sangam':
-            case 'Close Sangam':
-                if (jodi) { 
-                    let sangamWinner = false;
-                    
-                    if (bet.gameType === 'Open Sangam') {
-                        const [panna, digit] = betNumberAsString.split(/\s?x\s?/);
-                        if (panna === result.openPanna && digit === closeDigit) {
-                           sangamWinner = true;
-                        }
-                    } else if (bet.gameType === 'Close Sangam') {
-                        const [digit, panna] = betNumberAsString.split(/\s?x\s?/);
-                        if (digit === openDigit && panna === result.closePanna) {
-                          sangamWinner = true;
-                        }
-                    }
-
-                    if(sangamWinner){
-                        isWinner = true;
-                        winningAmount = bet.amount * (payoutMultipliers.get(bet.gameType) || 1200);
-                    }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
-                }
-                break;
-
-            case 'Full Sangam':
-                 if (jodi) { 
-                    const [openPannaSangam, closePannaSangam] = betNumberAsString.split(/\s?x\s?/);
-                    if (openPannaSangam === result.openPanna && closePannaSangam === result.closePanna) {
-                       isWinner = true;
-                       winningAmount = bet.amount * (payoutMultipliers.get('Full Sangam') || 12000);
-                    }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
-                }
-                break;
-        }
-
-        if (isWinner) {
-            console.log(`Winner found! Bet ID: ${doc.id}, Type: ${bet.gameType}, Session: ${bet.session}, Amount: ${winningAmount}`);
-            
-            const userDoc = userDocsCache[bet.userId];
-            const customId = userDoc?.exists ? userDoc.data()?.customId : undefined;
-            const userName = userDoc?.exists ? userDoc.data()?.name : bet.userName;
-
-            if (!userWinnings[bet.userId]) {
-                userWinnings[bet.userId] = { amount: 0, userName: userName, customId };
-            }
-            userWinnings[bet.userId].amount += winningAmount;
-
-            const transactionRef = firestore.collection('transactions').doc();
-            transaction.set(transactionRef, {
-                userId: bet.userId,
-                userName: userName,
-                customId: customId,
-                type: 'Win',
-                amount: winningAmount,
-                status: 'Completed',
-                date: new Date().toISOString(),
-                description: `Won ${bet.gameType} on ${bet.market} with number ${bet.number}`,
-                market: bet.market,
-                gameType: bet.gameType,
-                betId: doc.id
-            });
-        }
-    };
-
-    for (const userId in userWinnings) {
-        console.log(`Crediting user ${userId} with ${userWinnings[userId].amount}`);
-        const userRef = firestore.collection('users').doc(userId);
-        transaction.update(userRef, { winningBalance: FieldValue.increment(userWinnings[userId].amount) });
-    }
-
-    console.log('Transaction batch prepared.');
-}
-
-
 export async function createKalyanResult(resultData: KalyanResult) {
   try {
     resultData.marketName = resultData.marketName.trim();
@@ -226,16 +34,153 @@ export async function createKalyanResult(resultData: KalyanResult) {
       const existingResultQuery = resultsRef
           .where("marketName", "==", resultData.marketName)
           .where("date", "==", resultData.date);
-      
-      const snapshot = await transaction.get(existingResultQuery);
-      if (!snapshot.empty) {
+
+      // --- (1) ALL READS FIRST ---
+      const existingResultSnapshot = await transaction.get(existingResultQuery);
+      if (!existingResultSnapshot.empty) {
           throw new Error(`A result for ${resultData.marketName} on ${resultData.date} already exists.`);
       }
 
-      const docRef = resultsRef.doc(); 
-      transaction.set(docRef, resultData);
+      // Read all game rates and relevant bets
+      const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
+      const betsSnapshot = await transaction.get(firestore.collection('kalyan_bets')
+          .where('market', '==', resultData.marketName)
+          .where('status', '==', 'Placed'));
 
-      await calculateAndDistributeWinnings(transaction, resultData);
+      // Read all unique user documents involved in the bets
+      const userIds = [...new Set(betsSnapshot.docs.map(doc => doc.data().userId))];
+      const userRefs = userIds.map(id => firestore.collection('users').doc(id));
+      const userDocs = userIds.length > 0 ? await transaction.getAll(...userRefs) : [];
+      
+      const userDocsCache: { [userId: string]: FirebaseFirestore.DocumentSnapshot } = {};
+      userDocs.forEach(doc => {
+          if(doc.exists) userDocsCache[doc.id] = doc;
+      });
+
+      // --- (2) PREPARE DATA AND CALCULATIONS ---
+      const payoutMultipliers = new Map<string, number>();
+      ratesSnapshot.forEach(doc => {
+          const rateData = doc.data();
+          if (rateData.name && rateData.payoutAmount && rateData.betAmount > 0) {
+              payoutMultipliers.set(rateData.name, rateData.payoutAmount / rateData.betAmount);
+          }
+      });
+
+      const openDigit = getDigit(resultData.openPanna);
+      const closeDigit = resultData.closePanna ? getDigit(resultData.closePanna) : null;
+      const jodi = openDigit && closeDigit ? openDigit + closeDigit : null;
+
+      const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
+
+      // --- (3) ALL WRITES LAST ---
+
+      // Write 1: Create the new result document
+      const newResultRef = resultsRef.doc();
+      transaction.set(newResultRef, resultData);
+      
+      // Writes 2: Update bets and create win transactions
+      betsSnapshot.forEach(doc => {
+        const bet = doc.data();
+        const betNumberAsString = String(bet.number);
+        let winningAmount = 0;
+        let isWinner = false;
+
+        switch (bet.gameType) {
+             case 'Single Digit':
+                if (bet.session === 'Open' && openDigit && betNumberAsString === openDigit) {
+                    isWinner = true;
+                    winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
+                } else if (bet.session === 'Close' && closeDigit && betNumberAsString === closeDigit) {
+                    isWinner = true;
+                    winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
+                }
+                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                break;
+            
+            case 'Single Panna':
+            case 'Double Panna':
+            case 'Triple Panna':
+                let pannaMultiplier = 0;
+                if (bet.gameType === 'Single Panna') pannaMultiplier = payoutMultipliers.get('Single Panna') || 140;
+                if (bet.gameType === 'Double Panna') pannaMultiplier = payoutMultipliers.get('Double Panna') || 280;
+                if (bet.gameType === 'Triple Panna') pannaMultiplier = payoutMultipliers.get('Triple Panna') || 700;
+
+                if ((bet.session === 'Open' && resultData.openPanna && betNumberAsString === resultData.openPanna) ||
+                    (bet.session === 'Close' && resultData.closePanna && betNumberAsString === resultData.closePanna)) {
+                    isWinner = true;
+                    winningAmount = bet.amount * pannaMultiplier;
+                }
+                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                break;
+
+            case 'Jodi':
+                if (jodi && betNumberAsString === jodi) {
+                    isWinner = true;
+                    winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
+                }
+                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                break;
+            
+            case 'Open Sangam':
+                 if (jodi) { 
+                    const [panna, digit] = betNumberAsString.split('x');
+                    if (panna === resultData.openPanna && digit === closeDigit) {
+                       isWinner = true;
+                       winningAmount = bet.amount * (payoutMultipliers.get('Open Sangam') || 1200);
+                    }
+                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                }
+                break;
+
+            case 'Close Sangam':
+                 if (jodi) {
+                    const [digit, panna] = betNumberAsString.split('x');
+                    if (digit === openDigit && panna === resultData.closePanna) {
+                      isWinner = true;
+                      winningAmount = bet.amount * (payoutMultipliers.get('Close Sangam') || 1200);
+                    }
+                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                }
+                break;
+
+            case 'Full Sangam':
+                 if (jodi) { 
+                    const [openPannaSangam, closePannaSangam] = betNumberAsString.split('x');
+                    if (openPannaSangam === resultData.openPanna && closePannaSangam === resultData.closePanna) {
+                       isWinner = true;
+                       winningAmount = bet.amount * (payoutMultipliers.get('Full Sangam') || 12000);
+                    }
+                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                }
+                break;
+        }
+
+        if (isWinner) {
+            const userDoc = userDocsCache[bet.userId];
+            const userName = userDoc?.data()?.name || bet.userName;
+            const customId = userDoc?.data()?.customId;
+            
+            if (!userWinnings[bet.userId]) {
+                userWinnings[bet.userId] = { amount: 0, userName, customId };
+            }
+            userWinnings[bet.userId].amount += winningAmount;
+            
+            const winTransactionRef = firestore.collection('transactions').doc();
+            transaction.set(winTransactionRef, {
+                userId: bet.userId, userName, customId,
+                type: 'Win', amount: winningAmount, status: 'Completed',
+                date: new Date().toISOString(),
+                description: `Won ${bet.gameType} on ${bet.market} with number ${bet.number}`,
+                betId: doc.id
+            });
+        }
+      });
+
+      // Writes 3: Update user balances
+      for (const userId in userWinnings) {
+        const userRef = firestore.collection('users').doc(userId);
+        transaction.update(userRef, { winningBalance: FieldValue.increment(userWinnings[userId].amount) });
+      }
     });
 
     revalidatePath("/admin/manage-results", 'page');
@@ -261,25 +206,151 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
     await firestore.runTransaction(async (transaction) => {
       const resultRef = firestore.collection("kalyan_results").doc(resultId);
       
-      // Read must be before write
+      // --- (1) ALL READS FIRST ---
       const fullResultDoc = await transaction.get(resultRef);
-      const originalData = fullResultDoc.data() as KalyanResult | undefined;
-      
-      if (!originalData) {
+      if (!fullResultDoc.exists) {
           throw new Error("Result to update not found.");
       }
-
-      // Perform write
-      transaction.update(resultRef, resultData);
-
-      // Pass merged data to calculation function
+      const originalData = fullResultDoc.data() as KalyanResult;
       const mergedData: KalyanResult = { ...originalData, ...resultData };
 
-      if (!mergedData.date || !mergedData.marketName || !mergedData.openPanna) {
-        throw new Error("Result data is incomplete. Cannot calculate winnings.");
-      }
+      const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
+      const betsSnapshot = await transaction.get(firestore.collection('kalyan_bets')
+          .where('market', '==', mergedData.marketName)
+          .where('status', '==', 'Placed'));
+          
+      const userIds = [...new Set(betsSnapshot.docs.map(doc => doc.data().userId))];
+      const userRefs = userIds.map(id => firestore.collection('users').doc(id));
+      const userDocs = userIds.length > 0 ? await transaction.getAll(...userRefs) : [];
 
-      await calculateAndDistributeWinnings(transaction, mergedData);
+      const userDocsCache: { [userId: string]: FirebaseFirestore.DocumentSnapshot } = {};
+      userDocs.forEach(doc => {
+          if(doc.exists) userDocsCache[doc.id] = doc;
+      });
+
+      // --- (2) PREPARE DATA AND CALCULATIONS ---
+      const payoutMultipliers = new Map<string, number>();
+      ratesSnapshot.forEach(doc => {
+          const rateData = doc.data();
+          if (rateData.name && rateData.payoutAmount && rateData.betAmount > 0) {
+              payoutMultipliers.set(rateData.name, rateData.payoutAmount / rateData.betAmount);
+          }
+      });
+      
+      const openDigit = getDigit(mergedData.openPanna);
+      const closeDigit = mergedData.closePanna ? getDigit(mergedData.closePanna) : null;
+      const jodi = openDigit && closeDigit ? openDigit + closeDigit : null;
+
+      const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
+
+      // --- (3) ALL WRITES LAST ---
+
+      // Write 1: Update the result
+      transaction.update(resultRef, resultData);
+
+      // Writes 2: Update bets and create win transactions
+      betsSnapshot.forEach(doc => {
+        const bet = doc.data();
+        const betNumberAsString = String(bet.number);
+        let winningAmount = 0;
+        let isWinner = false;
+
+        switch (bet.gameType) {
+            case 'Single Digit':
+                if (bet.session === 'Open' && openDigit && betNumberAsString === openDigit) {
+                    isWinner = true;
+                    winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
+                } else if (bet.session === 'Close' && closeDigit && betNumberAsString === closeDigit) {
+                    isWinner = true;
+                    winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
+                }
+                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                break;
+            
+            case 'Single Panna':
+            case 'Double Panna':
+            case 'Triple Panna':
+                let pannaMultiplier = 0;
+                if (bet.gameType === 'Single Panna') pannaMultiplier = payoutMultipliers.get('Single Panna') || 140;
+                if (bet.gameType === 'Double Panna') pannaMultiplier = payoutMultipliers.get('Double Panna') || 280;
+                if (bet.gameType === 'Triple Panna') pannaMultiplier = payoutMultipliers.get('Triple Panna') || 700;
+
+                if ((bet.session === 'Open' && mergedData.openPanna && betNumberAsString === mergedData.openPanna) ||
+                    (bet.session === 'Close' && mergedData.closePanna && betNumberAsString === mergedData.closePanna)) {
+                    isWinner = true;
+                    winningAmount = bet.amount * pannaMultiplier;
+                }
+                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                break;
+
+            case 'Jodi':
+                if (jodi && betNumberAsString === jodi) {
+                    isWinner = true;
+                    winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
+                }
+                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                break;
+
+            case 'Open Sangam':
+                 if (jodi) { 
+                    const [panna, digit] = betNumberAsString.split('x');
+                    if (panna === mergedData.openPanna && digit === closeDigit) {
+                       isWinner = true;
+                       winningAmount = bet.amount * (payoutMultipliers.get('Open Sangam') || 1200);
+                    }
+                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                }
+                break;
+
+            case 'Close Sangam':
+                 if (jodi) {
+                    const [digit, panna] = betNumberAsString.split('x');
+                    if (digit === openDigit && panna === mergedData.closePanna) {
+                      isWinner = true;
+                      winningAmount = bet.amount * (payoutMultipliers.get('Close Sangam') || 1200);
+                    }
+                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                }
+                break;
+
+            case 'Full Sangam':
+                 if (jodi) { 
+                    const [openPannaSangam, closePannaSangam] = betNumberAsString.split('x');
+                    if (openPannaSangam === mergedData.openPanna && closePannaSangam === mergedData.closePanna) {
+                       isWinner = true;
+                       winningAmount = bet.amount * (payoutMultipliers.get('Full Sangam') || 12000);
+                    }
+                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
+                }
+                break;
+        }
+
+        if (isWinner) {
+            const userDoc = userDocsCache[bet.userId];
+            const userName = userDoc?.data()?.name || bet.userName;
+            const customId = userDoc?.data()?.customId;
+            
+            if (!userWinnings[bet.userId]) {
+                userWinnings[bet.userId] = { amount: 0, userName, customId };
+            }
+            userWinnings[bet.userId].amount += winningAmount;
+            
+            const winTransactionRef = firestore.collection('transactions').doc();
+            transaction.set(winTransactionRef, {
+                userId: bet.userId, userName, customId,
+                type: 'Win', amount: winningAmount, status: 'Completed',
+                date: new Date().toISOString(),
+                description: `Won ${bet.gameType} on ${bet.market} with number ${bet.number}`,
+                betId: doc.id
+            });
+        }
+      });
+
+      // Writes 3: Update user balances
+      for (const userId in userWinnings) {
+        const userRef = firestore.collection('users').doc(userId);
+        transaction.update(userRef, { winningBalance: FieldValue.increment(userWinnings[userId].amount) });
+      }
     });
 
     revalidatePath("/admin/manage-results", 'page');
@@ -362,3 +433,4 @@ export async function deleteKalyanResult(resultId: string) {
     }
 }
     
+
