@@ -512,9 +512,9 @@ export default function PlaceBetPage() {
             session = 'Jodi';
         } else if (betTypeName === 'Open') {
             session = 'Open';
-        } else if (betTypeName === 'Close') {
+        } else if (betTypeName === 'Close' || betTypeName === 'Close Sangam') {
             session = 'Close';
-        } else { // Handles Panna types and Close Sangam
+        } else { // Handles Panna types
             session = isOpenResultDeclared ? 'Close' : 'Open';
         }
 

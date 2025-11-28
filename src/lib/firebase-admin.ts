@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, cert, type App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getMessaging } from 'firebase-admin/messaging';
 
 function initializeAdminApp(): App {
   // If an app is already initialized, return it.
@@ -31,5 +32,6 @@ function initializeAdminApp(): App {
 const app = initializeAdminApp();
 const auth = getAuth(app);
 const firestore = getFirestore(app);
+const messaging = getMessaging(app);
 
-export { app, auth, firestore };
+export { app, auth, firestore, messaging };
