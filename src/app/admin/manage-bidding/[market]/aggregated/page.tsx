@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { useParams } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, where, Timestamp } from 'firebase/firestore';
 import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -132,8 +132,14 @@ export default function AggregatedBiddingDetailsPage() {
         
         let filteredBets;
         if (sessionType === 'Open') {
-            // Open session includes 'Open' and 'Jodi' type sessions
-            filteredBets = bets.filter((bet: any) => bet.session === 'Open' || bet.session === 'Jodi');
+            // Open session includes 'Open', 'Jodi', and 'Sangam' type sessions
+            filteredBets = bets.filter((bet: any) => 
+                bet.session === 'Open' || 
+                bet.session === 'Jodi' ||
+                bet.gameType === 'Open Sangam' || 
+                bet.gameType === 'Close Sangam' || 
+                bet.gameType === 'Full Sangam'
+            );
         } else { // 'Close'
             filteredBets = bets.filter((bet: any) => bet.session === 'Close');
         }
@@ -214,5 +220,3 @@ export default function AggregatedBiddingDetailsPage() {
     </div>
   );
 }
-
-    
