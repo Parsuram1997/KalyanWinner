@@ -435,15 +435,14 @@ export default function PlaceBetPage() {
         });
         
         let session: 'Open' | 'Close' | 'Jodi';
-        
-        if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam' || betTypeName === 'Open Sangam' || betTypeName === 'Close Sangam') {
+
+        if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam' || betTypeName === 'Open Sangam') {
             session = 'Jodi';
         } else if (betTypeName === 'Open') {
             session = 'Open';
         } else if (betTypeName === 'Close') {
             session = 'Close';
-        } else {
-             // For Panna and Single Digit (when not specified)
+        } else { // Handles Panna types and Close Sangam
             session = isOpenResultDeclared ? 'Close' : 'Open';
         }
 
@@ -565,4 +564,5 @@ export default function PlaceBetPage() {
     </div>
   );
 }
+
 
