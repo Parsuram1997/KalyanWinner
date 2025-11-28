@@ -14,15 +14,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useState, useMemo, ChangeEvent, useRef, useEffect } from "react";
-import { PlusCircle, Trash2, Wallet, DollarSign } from "lucide-react";
+import { PlusCircle, Trash2, Wallet, DollarSign, Loader, Ban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, writeBatch, serverTimestamp, FieldValue, increment, collection, query, where, limit, getDocs } from "firebase/firestore";
+import { doc, writeBatch, serverTimestamp, FieldValue, increment, collection, query, where, limit, getDocs, getDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 
 type Bet = {
@@ -312,6 +313,10 @@ export default function PlaceBetPage() {
 
   const [bets, setBets] = useState<Bet[]>([]);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
+  const [marketDetails, setMarketDetails] = useState<any>(null);
+  const [buttonState, setButtonState] = useState({ text: 'Place Bets', disabled: true, loading: true });
+
+  const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   
   const betTypeName = useMemo(() => {
     const slugToNameMap: { [key: string]: string } = {
@@ -329,7 +334,75 @@ export default function PlaceBetPage() {
     return slugToNameMap[betTypeSlug] || betTypeSlug.replace(/-/g, ' ');
   }, [betTypeSlug]);
 
-  const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  useEffect(() => {
+    if (!firestore || !marketName) return;
+
+    const fetchMarketDetails = async () => {
+        const q = query(collection(firestore, "markets"), where("name", "==", marketName), limit(1));
+        const snapshot = await getDocs(q);
+        if (!snapshot.empty) {
+            setMarketDetails(snapshot.docs[0].data());
+        }
+    };
+    fetchMarketDetails();
+  }, [firestore, marketName]);
+  
+  useEffect(() => {
+    if (!marketDetails) return;
+
+    const parseTime = (timeStr: string) => {
+        if (!timeStr) return new Date(0);
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return date;
+    };
+
+    const openBiddingTime = parseTime(marketDetails.openBiddingTime);
+    const openResultTime = parseTime(marketDetails.openResultTime);
+    const closeBiddingTime = parseTime(marketDetails.closeBiddingTime);
+    const closeResultTime = parseTime(marketDetails.closeResultTime);
+    
+    const bettingClosedTypes = ['Jodi', 'Open Sangam', 'Full Sangam', 'Open'];
+    const closeOnlyTypes = ['Close', 'Close Sangam'];
+
+    const updateButtonState = () => {
+        const now = new Date();
+        let isDisabled = false;
+        let text = `Place Bets (Total: ₹${totalBetAmount})`;
+
+        if (bettingClosedTypes.includes(betTypeName)) {
+            if (now >= openBiddingTime) {
+                text = "Betting Closed";
+                isDisabled = true;
+            }
+        } else if (closeOnlyTypes.includes(betTypeName)) {
+             if (now < openResultTime || now >= closeBiddingTime) {
+                text = "Betting Closed";
+                isDisabled = true;
+            }
+        } else { // For Pannas (which can be open or close)
+            if ((now >= openBiddingTime && now < openResultTime) || (now >= closeBiddingTime && now < closeResultTime)) {
+                text = "Betting Closed";
+                isDisabled = true;
+            }
+        }
+        
+        if (now > closeResultTime) {
+             text = "Betting Closed";
+             isDisabled = true;
+        }
+
+        setButtonState({ text, disabled: isDisabled, loading: false });
+    };
+    
+    updateButtonState();
+    const intervalId = setInterval(updateButtonState, 30000); 
+
+    return () => clearInterval(intervalId);
+
+  }, [marketDetails, betTypeName, bets.length]);
+
 
   const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
   const { data: userData, isLoading: isUserDataLoading } = useDoc<any>(userDocRef);
@@ -385,7 +458,6 @@ export default function PlaceBetPage() {
         return;
     }
     
-    // Fetch today's result to decide the session for Panna bets
     const today = new Date();
     const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     let isOpenResultDeclared = false;
@@ -555,9 +627,15 @@ export default function PlaceBetPage() {
                   type="button"
                   className="w-full"
                   onClick={handleSubmit}
-                  disabled={bets.length === 0 || isPlacingBet || isLoading}
+                  disabled={bets.length === 0 || isPlacingBet || isLoading || buttonState.disabled}
+                  variant={buttonState.disabled && buttonState.text === "Betting Closed" ? "destructive" : "default"}
               >
-                  {isPlacingBet ? "Placing Bets..." : `Place Bets (Total: ₹${totalBetAmount})`}
+                  {isPlacingBet ? (
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : buttonState.text !== `Place Bets (Total: ₹${totalBetAmount})` ? (
+                    <Ban className="mr-2 h-4 w-4" />
+                  ) : null}
+                  {isPlacingBet ? "Placing Bets..." : buttonState.text}
               </Button>
           </CardFooter>
       </Card>
@@ -565,4 +643,4 @@ export default function PlaceBetPage() {
   );
 }
 
-
+    
