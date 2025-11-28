@@ -97,17 +97,17 @@ const AggregatedBidsTable = ({ bids, isLoading }: { bids: AggregatedBid[], isLoa
                 <Table>
                     <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[100px]">Number</TableHead>
-                        <TableHead className="text-right">Total Amount</TableHead>
-                        <TableHead className="text-right">Total Bids</TableHead>
+                        <TableHead className="w-[100px] py-1">Number</TableHead>
+                        <TableHead className="text-right py-1">Total Amount</TableHead>
+                        <TableHead className="text-right py-1">Total Bids</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
                     {groupedBids[gameType].map((bid) => (
                         <TableRow key={`${gameType}-${bid.number}`}>
-                        <TableCell className="font-mono font-medium">{bid.number}</TableCell>
-                        <TableCell className="text-right font-mono">₹{bid.totalAmount.toLocaleString('en-IN')}</TableCell>
-                        <TableCell className="text-right font-mono">{bid.totalBids}</TableCell>
+                        <TableCell className="font-mono font-medium py-1">{bid.number}</TableCell>
+                        <TableCell className="text-right font-mono py-1">₹{bid.totalAmount.toLocaleString('en-IN')}</TableCell>
+                        <TableCell className="text-right font-mono py-1">{bid.totalBids}</TableCell>
                         </TableRow>
                     ))}
                     </TableBody>
@@ -146,6 +146,7 @@ export default function AggregatedBiddingDetailsPage() {
         const interval = { start: startOfDay(date), end: endOfDay(date) };
         return allBets.filter(bet => bet.createdAt && isWithinInterval(bet.createdAt.toDate(), interval));
     }, [allBets, date]);
+    
 
     const aggregateBids = (betsForSession: Bet[] | undefined) => {
         if (!betsForSession) return [];
@@ -168,7 +169,7 @@ export default function AggregatedBiddingDetailsPage() {
             })
             .sort((a, b) => b.totalAmount - a.totalAmount);
     };
-    
+
     const openSessionBids = useMemo(() => {
         const openBets = filteredBetsByDate?.filter(bet => bet.session === 'Open' || bet.session === 'Jodi');
         return aggregateBids(openBets);
