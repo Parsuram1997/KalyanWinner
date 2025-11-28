@@ -9,42 +9,39 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 // Type for user balance data
 type UserBalance = {
     deposit: number;
     winning: number;
-    balance: number;
 }
 
 // Type for a single transaction
 type Transaction = {
     id: string;
     amount: number;
-    type: 'Deposit' | 'Withdrawal';
-    status: 'Pending' | 'Completed' | 'Failed';
+    type: 'Deposit' | 'Withdrawal' | 'Bet' | 'Win' | 'Commission';
+    status: 'Pending' | 'Completed' | 'Approved' | 'Rejected' | 'Won' | 'Lost' | 'Placed';
     description: string;
     date: string; // Date is stored as an ISO string
 }
 
-const BalanceCard = ({ title, amount, isLoading }: { title: string, amount: number, isLoading: boolean }) => (
-    <div className="flex flex-col items-center justify-center p-4 border rounded-lg bg-background">
-        <p className="text-sm text-muted-foreground">{title}</p>
-        {isLoading ? (
-            <Skeleton className="h-7 w-24 mt-1" />
-        ) : (
-            <p className="text-2xl font-bold font-mono">₹{amount.toLocaleString('en-IN')}</p>
-        )}
-    </div>
-);
-
 const getStatusVariant = (status: Transaction['status']) => {
     switch (status) {
-        case 'Completed': return 'success';
-        case 'Pending': return 'secondary';
-        case 'Failed': return 'destructive';
-        default: return 'default';
+        case 'Completed':
+        case 'Won':
+        case 'Approved':
+            return 'secondary';
+        case 'Pending': 
+            return 'default';
+        case 'Rejected':
+        case 'Lost':
+            return 'destructive';
+        default: return 'outline';
     }
 }
 
@@ -67,14 +64,14 @@ export default function WalletPage() {
             setBalance({
                 deposit: data.depositBalance || 0,
                 winning: data.winningBalance || 0,
-                balance: data.balance || 0,
             });
         }
 
-        // Fetch all transactions for the user (will be sorted on client)
+        // Fetch only deposit and withdrawal transactions
         const transQuery = query(
             collection(firestore, "transactions"), 
-            where("userId", "==", user.uid)
+            where("userId", "==", user.uid),
+            where("type", "in", ["Deposit", "Withdrawal"])
         );
         const transSnapshot = await getDocs(transQuery);
         const fetchedTransactions = transSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
@@ -93,78 +90,133 @@ export default function WalletPage() {
 
   // Sort transactions on the client-side, exactly like the dashboard
   const sortedTransactions = useMemo(() => {
+      if (!transactions) return [];
       return [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions]);
+  
+  const totalBalance = useMemo(() => {
+      if (!balance) return 0;
+      return balance.deposit + balance.winning;
+  }, [balance]);
+
 
   const recentTransactions = useMemo(() => sortedTransactions.slice(0, 10), [sortedTransactions]);
 
   return (
-    <div className="max-w-2xl mx-auto">
-        <Card>
-            <CardHeader>
-                <CardTitle>My Wallet</CardTitle>
-                <CardDescription>View your account balance and manage your funds.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                {/* Balance Display */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <BalanceCard title="Deposit Balance" amount={balance?.deposit ?? 0} isLoading={isLoading} />
-                    <BalanceCard title="Winning Balance" amount={balance?.winning ?? 0} isLoading={isLoading} />
-                    <BalanceCard title="Total Balance" amount={balance?.balance ?? 0} isLoading={isLoading} />
-                </div>
+    <div className="space-y-6">
+        <Tabs defaultValue="wallet" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="wallet">Wallet</TabsTrigger>
+                <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+            </TabsList>
+            <TabsContent value="wallet" className="mt-4">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>My Wallet</CardTitle>
+                        <CardDescription>View your account balance and manage your funds.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Unified Balance Card */}
+                        <Card className="bg-gradient-to-br from-primary/10 to-accent/10">
+                            <CardContent className="p-4 sm:p-6 space-y-4">
+                                {isLoading ? (
+                                    <div className="space-y-4">
+                                        <Skeleton className="h-8 w-3/4" />
+                                        <Skeleton className="h-8 w-3/4" />
+                                        <Separator/>
+                                        <Skeleton className="h-8 w-1/2" />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                    <PiggyBank className="h-5 w-5" />
+                                                    <span className="text-sm font-medium">Deposit Balance</span>
+                                                </div>
+                                                <span className="font-semibold text-base font-mono">₹{(balance?.deposit ?? 0).toFixed(0)}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                    <Trophy className="h-5 w-5" />
+                                                    <span className="text-sm font-medium">Winning Balance</span>
+                                                </div>
+                                                <span className="font-semibold text-base font-mono">₹{(balance?.winning ?? 0).toFixed(0)}</span>
+                                            </div>
+                                        </div>
+                                        <Separator />
+                                        <div className="flex items-center justify-between pt-2">
+                                            <div className="flex items-center gap-2 font-bold">
+                                                <DollarSign className="h-5 w-5" />
+                                                <span className="text-sm">Total Balance</span>
+                                            </div>
+                                            <span className="font-bold text-xl font-mono text-primary">₹{totalBalance.toFixed(0)}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </CardContent>
+                        </Card>
 
-                {/* Action Buttons */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
-                   <Button asChild size="lg">
-                        <Link href="/wallet/deposit">Make a Deposit</Link>
-                   </Button>
-                   <Button asChild size="lg" variant="outline">
-                        <Link href="/wallet/withdraw">Request Withdrawal</Link>
-                   </Button>
-                </div>
-
-                 {/* Recent Transactions */}
-                <div className="space-y-2 pt-4">
-                    <h3 className="text-lg font-semibold">Recent Activity</h3>
-                     {isLoading ? (
-                         <div className="space-y-2">
-                            <Skeleton className="h-12 w-full" />
-                            <Skeleton className="h-12 w-full" />
-                            <Skeleton className="h-12 w-full" />
-                         </div>
-                     ) : recentTransactions.length > 0 ? (
-                        <div className="border rounded-md">
-                            {recentTransactions.map(tx => (
-                                <div key={tx.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
-                                    <div className="flex items-center gap-3">
-                                        {tx.type === 'Deposit' ? 
-                                            <ArrowDownLeft className="h-5 w-5 text-green-500" /> : 
-                                            <ArrowUpRight className="h-5 w-5 text-red-500" />
-                                        }
-                                        <div className="flex flex-col">
-                                            <p className="font-medium">{tx.description}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {new Date(tx.date).toLocaleString()} 
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+                        <Button asChild size="lg">
+                                <Link href="/wallet/deposit">Make a Deposit</Link>
+                        </Button>
+                        <Button asChild size="lg" variant="destructive">
+                                <Link href="/wallet/withdraw">Request Withdrawal</Link>
+                        </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="activity" className="mt-4">
+                 <Card>
+                    <CardHeader>
+                        <h3 className="text-lg font-semibold">Recent Activity</h3>
+                    </CardHeader>
+                    <CardContent className="p-0 sm:p-6">
+                        {isLoading ? (
+                            <div className="space-y-2 p-4">
+                                <Skeleton className="h-12 w-full" />
+                                <Skeleton className="h-12 w-full" />
+                                <Skeleton className="h-12 w-full" />
+                            </div>
+                        ) : recentTransactions.length > 0 ? (
+                            <div className="border-t sm:border rounded-md">
+                                {recentTransactions.map(tx => (
+                                    <div key={tx.id} className="flex items-center justify-between px-4 py-2 border-b last:border-b-0">
+                                        <div className="flex items-center gap-3">
+                                            {tx.type === 'Deposit' ? 
+                                                <ArrowDownLeft className="h-4 w-4 text-green-500" /> : 
+                                                <ArrowUpRight className="h-4 w-4 text-red-500" />
+                                            }
+                                            <div className="flex flex-col">
+                                                <p className="text-xs font-medium">{tx.description}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {new Date(tx.date).toLocaleString()} 
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <p className={`font-mono text-xs font-semibold ${tx.type === 'Deposit' ? 'text-green-600' : 'text-red-600'}`}>
+                                                {tx.type === 'Deposit' ? '+' : '-'}{`₹${tx.amount.toFixed(0)}`}
                                             </p>
+                                            <Badge variant={getStatusVariant(tx.status)}>{tx.status}</Badge>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-1">
-                                        <p className={`font-mono font-semibold ${tx.type === 'Deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {tx.type === 'Deposit' ? '+' : '-'}{tx.amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
-                                        </p>
-                                        <Badge variant={getStatusVariant(tx.status)}>{tx.status}</Badge>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                     ) : (
-                        <p className="text-center text-sm text-muted-foreground p-4">
-                           You have no recent activity.
-                        </p>
-                     )}
-                </div>
-            </CardContent>
-        </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-center text-sm text-muted-foreground p-4">
+                            You have no recent activity.
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
     </div>
   );
 }
+
+    

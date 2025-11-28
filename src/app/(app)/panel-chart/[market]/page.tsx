@@ -138,24 +138,17 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
 
   return (
     <>
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">{marketName} Panel Chart</h1>
-        <p className="text-muted-foreground">
-          Showing results from the last 365 days for the {marketName} Matka game.
-        </p>
-      </div>
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription>A rolling yearly record of game results.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
           {isLoading ? <Skeleton className="w-full h-96" /> : weeklyData.length === 0 ? <p className="text-center text-muted-foreground p-8">No results found for this market in the last 365 days.</p> : (
-              <div className="rounded-lg border">
-              <div className="w-full overflow-x-auto">
-                  <div className="divide-y divide-border">
-                  <div className="grid grid-cols-[auto_repeat(7,1fr)] bg-muted font-semibold">
-                      <div className="p-1 text-center flex items-center justify-center text-xs shrink-0 w-[80px]">Date</div>
+              <div className="w-full overflow-x-auto rounded-lg border">
+                  <div className="divide-y divide-border min-w-full">
+                  <div className="grid grid-cols-[minmax(50px,auto)_repeat(7,minmax(40px,1fr))] bg-muted font-semibold">
+                      <div className="p-1 text-center flex items-center justify-center text-xs shrink-0">Date</div>
                       <div className="border-l p-1 text-center text-xs">MON</div>
                       <div className="border-l p-1 text-center text-xs">TUE</div>
                       <div className="border-l p-1 text-center text-xs">WED</div>
@@ -165,23 +158,23 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
                       <div className="border-l p-1 text-center text-xs">SUN</div>
                   </div>
                   {weeklyData.map((week, weekIndex) => (
-                      <div key={weekIndex} className="grid grid-cols-[auto_repeat(7,1fr)]">
-                      <div className="p-1 text-center flex flex-col items-center justify-center text-xs shrink-0 w-[80px]">
+                      <div key={weekIndex} className="grid grid-cols-[minmax(50px,auto)_repeat(7,minmax(40px,1fr))]">
+                      <div className="py-1 text-center flex flex-col items-center justify-center text-xs shrink-0">
                           <span className="text-[10px]">{week.dateRange.split(" to ")[0]}</span>
                           <span className="text-muted-foreground text-[10px]">to</span>
                           <span className="text-[10px]">{week.dateRange.split(" to ")[1]}</span>
                       </div>
                       {week.results.map((day, dayIndex) => (
-                          <div key={dayIndex} className="border-l p-1 text-center flex items-center justify-center min-h-[50px]">
+                          <div key={dayIndex} className="border-l py-1 text-center flex items-center justify-center min-h-[60px]">
                           {day && isDataAvailable(day) ? (
                               day.jodi === 'L' ? (
                                 <div className="flex items-center justify-center h-full text-destructive font-bold text-xs">H</div>
                               ) : (
-                                <div className="flex justify-around items-center w-full text-[10px] text-muted-foreground font-mono">
+                                <div className="flex justify-around items-center w-full text-xs font-mono text-muted-foreground">
                                   <div className="flex flex-col items-center">
                                     {day.openPanna.split('').map((digit, i) => <div key={i}>{digit}</div>)}
                                   </div>
-                                  <div className={`font-bold text-xs mx-1 ${isRedJodi(day.jodi) ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
+                                  <div className={`font-bold text-sm mx-0.5 ${isRedJodi(day.jodi) ? "text-destructive" : "text-primary"}`}>{day.jodi}</div>
                                   <div className="flex flex-col items-center">
                                     {day.closePanna.split('').map((digit, i) => <div key={i}>{digit}</div>)}
                                   </div>
@@ -197,7 +190,6 @@ const PanelChart = ({ title, marketName }: { title: string, marketName: string }
                       </div>
                   ))}
                   </div>
-              </div>
               </div>
           )}
         </CardContent>

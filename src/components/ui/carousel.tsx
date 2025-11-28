@@ -58,13 +58,14 @@ const Carousel = React.forwardRef<
     },
     ref
   ) => {
-    const [carouselRef, api] = useEmblaCarousel(
-      {
+    const memoizedOptions = React.useMemo(
+      () => ({
         ...opts,
-        axis: orientation === "horizontal" ? "x" : "y",
-      },
-      plugins
-    )
+        axis: orientation === "horizontal" ? ("x" as const) : ("y" as const),
+      }),
+      [opts, orientation]
+    );
+    const [carouselRef, api] = useEmblaCarousel(memoizedOptions, plugins)
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
 

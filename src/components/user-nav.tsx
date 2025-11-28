@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { doc } from "firebase/firestore";
 import { Skeleton } from "./ui/skeleton";
@@ -18,7 +18,6 @@ export function UserNav() {
   const auth = useAuth();
   const { user: authUser, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const { toast } = useToast();
   const router = useRouter();
 
   const userDocRef = useMemoFirebase(
@@ -31,14 +30,21 @@ export function UserNav() {
 
   const handleLogout = async () => {
     if (!auth) return;
+    const role = userData?.role;
     try {
       await auth.signOut();
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out.",
       });
-      // Redirect to a public page after logout
-      router.push('/login');
+      // Redirect based on role
+      if (role === 'Admin') {
+        router.replace('/admin');
+      } else if (role === 'Enroller') {
+        router.replace('/enroller');
+      } else {
+        router.replace('/login');
+      }
     } catch (error) {
       toast({
         variant: "destructive",

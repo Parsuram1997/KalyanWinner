@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Coins,
   Clock,
+  Trophy,
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,8 +29,14 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { doc } from "firebase/firestore";
+import NotificationBell from "@/components/NotificationBell";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <Sidebar>
@@ -68,6 +75,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
+                <Link href="/leaderboard">
+                  <Trophy />
+                  Leaderboard
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
                 <Link href="/results">
                   <ClipboardList />
                   Results
@@ -81,6 +96,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   Panel Chart
                 </Link>
               </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <NotificationBell />
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
@@ -124,7 +142,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarInset>
         <div className="flex flex-col h-dvh">
           <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-14 sm:px-6">
-            <SidebarTrigger className="md:hidden" />
+            <div className="flex items-center gap-2">
+              <SidebarTrigger />
+            </div>
             <div className="flex flex-1 items-center justify-end gap-2">
               <ThemeToggle />
             </div>
@@ -133,5 +153,45 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(
+    () => (firestore && user ? doc(firestore, "users", user.uid) : null),
+    [firestore, user]
   );
+  const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
+
+  useEffect(() => {
+    // If auth state is determined and there's no user, redirect to login
+    if (!isUserLoading && !user) {
+      router.replace("/login");
+    }
+    // If user data is loaded and the user doesn't have the 'User' role, redirect
+    if (!isUserDataLoading && userData && userData.role !== 'User') {
+        router.replace('/login');
+    }
+  }, [user, isUserLoading, userData, isUserDataLoading, router]);
+
+  // While checking auth or user data, show a loading state
+  if (isUserLoading || isUserDataLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Skeleton className="h-20 w-20 rounded-full" />
+      </div>
+    );
+  }
+
+  // If user is logged in and has the correct role, render the layout
+  if (user && userData?.role === 'User') {
+    return <AppLayoutContent>{children}</AppLayoutContent>;
+  }
+
+  // In all other cases (e.g., redirecting), render nothing
+  return null;
 }

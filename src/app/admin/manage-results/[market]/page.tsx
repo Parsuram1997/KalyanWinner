@@ -1,16 +1,17 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Edit, Trash, CalendarOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
-import { useFirestore } from "@/firebase";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where, orderBy } from "firebase/firestore";
 import { createKalyanResult, deleteKalyanResult, updateKalyanResult } from "@/app/actions/result-actions";
 import {
   AlertDialog,
@@ -32,7 +33,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
 
 type KalyanResult = {
   id: string;
@@ -45,47 +49,33 @@ type KalyanResult = {
 
 const getPannaSum = (panna: string) => {
     if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '';
-    return panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10;
+    return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
 };
 
 
 export default function EnterResultsPage() {
-    const {toast} = useToast();
     const params = useParams();
     const marketSlug = params.market as string;
     
-    const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').trim();
-
     const firestore = useFirestore();
-    const [results, setResults] = useState<KalyanResult[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
 
-    const fetchResults = useCallback(async () => {
-        if (!firestore || !marketName) return;
-        setIsLoading(true);
-        try {
-            const q = query(
-                collection(firestore, 'kalyan_results'),
-                where('marketName', '==', marketName),
-                orderBy('date', 'desc')
-            );
-            const querySnapshot = await getDocs(q);
-            const resultsData: KalyanResult[] = [];
-            querySnapshot.forEach((doc) => {
-                resultsData.push({ id: doc.id, ...doc.data() } as KalyanResult);
-            });
-            setResults(resultsData);
-        } catch (error) {
-            console.error("Error fetching results: ", error);
-            toast({ variant: "destructive", title: "Error", description: "Could not fetch market results." });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [firestore, marketName, toast]);
+    const marketName = marketSlug ? marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : "";
 
-    useEffect(() => {
-        fetchResults();
-    }, [fetchResults]);
+    const resultsQuery = useMemoFirebase(() => {
+        if (!firestore || !marketName) return null;
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const dateString = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`;
+
+        return query(
+          collection(firestore, 'kalyan_results'),
+          where('marketName', '==', marketName),
+          where('date', '>=', dateString),
+          orderBy('date', 'desc')
+        );
+    }, [firestore, marketName]);
+
+    const { data: results, isLoading, error } = useCollection<KalyanResult>(resultsQuery, { skip: !firestore || !marketName });
 
     const [openPanna, setOpenPanna] = useState('');
     const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);
@@ -93,6 +83,7 @@ export default function EnterResultsPage() {
     const [isHolidayDialogOpen, setHolidayDialogOpen] = useState(false);
     const [selectedResult, setSelectedResult] = useState<KalyanResult | null>(null);
     const [updateClosePanna, setUpdateClosePanna] = useState("");
+
 
     const handleSubmitOpenResult = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -108,9 +99,9 @@ export default function EnterResultsPage() {
         try {
             await createKalyanResult({
                 date,
-                marketName: marketName,
+                marketName: marketName.trim(),
                 openPanna,
-            }, marketSlug);
+            });
             toast({
                 title: "Open Result Added",
                 description: `The open panna for ${marketName} has been added.`,
@@ -118,7 +109,6 @@ export default function EnterResultsPage() {
             form.reset();
             setOpenPanna('');
             setAddOpenResultDialogOpen(false);
-            fetchResults(); // Refetch results
         } catch (error: any) {
              toast({
                 variant: "destructive",
@@ -138,12 +128,11 @@ export default function EnterResultsPage() {
       const newJodi = `${getPannaSum(selectedResult.openPanna)}${getPannaSum(updateClosePanna)}`;
 
       try {
-        await updateKalyanResult(selectedResult.id, { closePanna: updateClosePanna, jodi: newJodi }, marketSlug);
+        await updateKalyanResult(selectedResult.id, { closePanna: updateClosePanna, jodi: newJodi });
         toast({ title: "Result Updated", description: "Close panna and jodi have been added." });
         setUpdateResultDialogOpen(false);
         setSelectedResult(null);
         setUpdateClosePanna("");
-        fetchResults(); // Refetch results
       } catch (error: any) {
          toast({ variant: "destructive", title: "Update Failed", description: error.message });
       }
@@ -163,18 +152,17 @@ export default function EnterResultsPage() {
         try {
             await createKalyanResult({
                 date,
-                marketName: marketName,
+                marketName: marketName.trim(),
                 openPanna: "H",
                 closePanna: "O",
                 jodi: "L"
-            }, marketSlug);
+            });
             toast({
                 title: "Holiday Marked",
                 description: `${new Date(date).toLocaleDateString('en-GB')} has been marked as a holiday for ${marketName}.`,
             });
             form.reset();
             setHolidayDialogOpen(false);
-            fetchResults(); // Refetch results
         } catch (error: any) {
              toast({
                 variant: "destructive",
@@ -191,7 +179,6 @@ export default function EnterResultsPage() {
           title: "Result Deleted",
           description: "The result has been successfully deleted.",
         });
-        fetchResults(); // Refetch results
       } catch (error: any) {
         toast({
           variant: "destructive",
@@ -201,19 +188,23 @@ export default function EnterResultsPage() {
       }
     }
 
+    if (!marketSlug) {
+      return <div>Loading market...</div>
+    }
+
   return (
     <div className="flex flex-col gap-6">
       
       <div className="grid gap-6">
         <Card>
-          <CardHeader className="flex flex-row justify-between items-start">
+          <CardHeader className="flex flex-col gap-4">
             <div>
                 <CardTitle>Results for {marketName}</CardTitle>
-                <CardDescription>View and manage game results.</CardDescription>
+                <CardDescription>View and manage game results for the last 7 days.</CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
                 <Dialog open={isHolidayDialogOpen} onOpenChange={setHolidayDialogOpen}>
-                    <DialogTrigger asChild><Button variant="outline"><CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday</Button></DialogTrigger>
+                    <DialogTrigger asChild><Button variant="outline" className="w-full sm:w-auto"><CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday</Button></DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Mark Holiday for {marketName}</DialogTitle>
@@ -231,7 +222,7 @@ export default function EnterResultsPage() {
                 </Dialog>
                 <Dialog open={isAddOpenResultDialogOpen} onOpenChange={setAddOpenResultDialogOpen}>
                 <DialogTrigger asChild>
-                    <Button>Add Open Result</Button>
+                    <Button className="w-full sm:w-auto">Add Open Result</Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
@@ -254,44 +245,51 @@ export default function EnterResultsPage() {
                 </Dialog>
             </div>
           </CardHeader>
-          <CardContent>
-            {/* Desktop Table */}
-            <div className="hidden md:block">
+          <CardContent className="p-0 sm:p-6">
+             {/* Desktop Table */}
+             <div className="hidden md:block rounded-md border">
                 <Table>
                 <TableHeader>
                     <TableRow>
                     <TableHead>Date</TableHead>
-                    <TableHead>Open Panna</TableHead>
-                    <TableHead>Jodi</TableHead>
-                    <TableHead>Close Panna</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-center">Open Panna</TableHead>
+                    <TableHead className="text-center">Jodi</TableHead>
+                    <TableHead className="text-center">Close Panna</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {isLoading ? (
                          <TableRow>
-                            <TableCell colSpan={5} className="text-center">Loading results...</TableCell>
+                            <TableCell colSpan={5} className="text-center p-4">
+                               <Skeleton className="h-24 w-full" />
+                            </TableCell>
                          </TableRow>
-                    ) : results.length > 0 ? results.map((result) => (
+                    ) : error ? (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center text-red-500 py-4">{error.message}</TableCell>
+                        </TableRow>
+                    ) : results && results.length > 0 ? results.map((result) => (
                     <TableRow key={result.id}>
                         <TableCell>{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
-                        <TableCell className="font-mono">{result.openPanna}</TableCell>
-                        <TableCell className="font-bold text-primary font-mono">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
-                        <TableCell className="font-mono">{result.closePanna || '--'}</TableCell>
-                        <TableCell className="flex gap-2">
+                        <TableCell className="font-mono text-center">{result.openPanna}</TableCell>
+                        <TableCell className="font-bold text-primary font-mono text-center">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
+                        <TableCell className="font-mono text-center">{result.closePanna || '--'}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2 justify-center">
                           {result.jodi === 'L' ? (
                               <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
                           ) : (
                               <Button 
                                   variant="outline" 
-                                  size={result.closePanna ? "icon" : "sm"} 
+                                  size="icon" 
                                   onClick={() => {
                                       setSelectedResult(result);
                                       setUpdateClosePanna(result.closePanna || ""); // Pre-fill
                                       setUpdateResultDialogOpen(true);
                                   }}
                               >
-                                  {result.closePanna ? <Edit className="h-4 w-4" /> : 'Add Close'}
+                                  <Edit className="h-4 w-4" />
                               </Button>
                           )}
                         <AlertDialog>
@@ -311,87 +309,88 @@ export default function EnterResultsPage() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        </div>
                         </TableCell>
                     </TableRow>
                     )) : (
                         <TableRow>
-                           <TableCell colSpan={5} className="text-center">No results found for this market.</TableCell>
+                           <TableCell colSpan={5} className="text-center py-4">No results found for this market in the last 7 days.</TableCell>
                         </TableRow>
                     )}
                 </TableBody>
                 </Table>
             </div>
-            
-            {/* Mobile Cards */}
-            <div className="grid gap-4 md:hidden">
-                {isLoading ? <p className="text-center">Loading results...</p> :
-                 results.length > 0 ? results.map((result) => (
-                    <div key={result.id} className="rounded-lg border bg-card text-card-foreground p-4 space-y-4">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="font-semibold">{result.marketName}</p>
-                                <p className="text-sm text-muted-foreground">{new Date(result.date).toLocaleDateString('en-GB')}</p>
+             {/* Mobile List */}
+             <div className="grid gap-4 md:hidden">
+              {isLoading ? (
+                <div className="p-4"><Skeleton className="h-24 w-full" /></div>
+              ) : error ? (
+                <div className="p-4 text-center text-red-500">{error.message}</div>
+              ) : results && results.length > 0 ? (
+                results.map((result) => (
+                  <Card key={result.id} className="p-4">
+                     <div className="flex justify-between items-start">
+                          <div>
+                              <p className="font-semibold">{new Date(result.date).toLocaleDateString('en-GB')}</p>
+                              <p className="text-xs text-muted-foreground">{marketName}</p>
+                          </div>
+                          {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : (
+                            <div className="text-right">
+                                <p className="font-bold text-lg text-primary">{result.jodi || '--'}</p>
                             </div>
-                            <Badge variant={result.marketName.includes("Night") ? "secondary" : "default"}>{result.marketName.split(" ")[1]}</Badge>
+                          )}
+                      </div>
+                      <div className={cn("grid grid-cols-2 gap-2 mt-2 pt-2 border-t", result.jodi === 'L' && 'hidden')}>
+                          <div className="text-xs">
+                              <p className="text-muted-foreground">Open</p>
+                              <p className="font-mono font-medium">{result.openPanna || '---'}</p>
+                          </div>
+                           <div className="text-xs text-right">
+                              <p className="text-muted-foreground">Close</p>
+                              <p className="font-mono font-medium">{result.closePanna || '---'}</p>
+                          </div>
+                      </div>
+                       <div className="flex gap-2 justify-end mt-4 pt-2 border-t">
+                          {result.jodi === 'L' ? (
+                               <Button variant="outline" size="xs" disabled><Edit className="h-4 w-4 mr-1"/> Edit</Button>
+                          ) : (
+                               <Button 
+                                  variant="outline" 
+                                  size="xs" 
+                                  onClick={() => {
+                                      setSelectedResult(result);
+                                      setUpdateClosePanna(result.closePanna || "");
+                                      setUpdateResultDialogOpen(true);
+                                  }}
+                              >
+                                  <Edit className="h-4 w-4 mr-1"/> {result.closePanna ? 'Update' : 'Add Close'}
+                              </Button>
+                          )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="xs"><Trash className="h-4 w-4 mr-1" /> Delete</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(result.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                         </div>
-
-                         {result.jodi === 'L' ? (
-                             <div className="flex items-center justify-center p-4">
-                                <Badge variant="destructive" className="text-lg">HOLIDAY</Badge>
-                             </div>
-                         ) : (
-                            <div className="flex items-center justify-around text-center font-mono">
-                                <div className="flex flex-col items-center">
-                                    <span className="text-xs text-muted-foreground">Open</span>
-                                    <span className="text-lg font-bold">{result.openPanna}</span>
-                                </div>
-                                <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-                                    <span className="text-2xl font-bold tracking-wider">{result.jodi || '--'}</span>
-                                    <span className="text-[10px] font-medium">Jodi</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                    <span className="text-xs text-muted-foreground">Close</span>
-                                    <span className="text-lg font-bold">{result.closePanna || '--'}</span>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex justify-end gap-2 pt-2 border-t">
-                            {result.jodi === 'L' ? (
-                                <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
-                            ) : (
-                                <Button 
-                                    variant="outline" 
-                                    size={result.closePanna ? "icon" : "sm"} 
-                                    onClick={() => {
-                                        setSelectedResult(result);
-                                        setUpdateClosePanna(result.closePanna || "");
-                                        setUpdateResultDialogOpen(true);
-                                    }}
-                                >
-                                    {result.closePanna ? <Edit className="h-4 w-4" /> : 'Add Close'}
-                                </Button>
-                            )}
-                             <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(result.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
-                    </div>
-                )) : <p className="text-center text-muted-foreground pt-4">No results found for this market.</p>}
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No results found in the last 7 days.
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

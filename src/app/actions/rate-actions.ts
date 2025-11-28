@@ -2,12 +2,10 @@
 'use server';
 
 import { firestore } from "@/lib/firebase-admin";
-import { revalidatePath } from "next/cache";
 
 export async function createGameRate(rateData: { name: string; betAmount: number; payoutAmount: number }) {
   try {
     await firestore.collection("game_rates").add(rateData);
-    revalidatePath("/admin/settings");
     return { success: true };
   } catch (error: any) {
     console.error("Error creating game rate:", error);
@@ -21,7 +19,6 @@ export async function updateGameRate(rateId: string, rateData: {
 }) {
   try {
     await firestore.collection("game_rates").doc(rateId).update(rateData);
-    revalidatePath("/admin/settings");
     return { success: true };
   } catch (error: any) {
     console.error("Error updating game rate:", error);
@@ -32,7 +29,6 @@ export async function updateGameRate(rateId: string, rateData: {
 export async function deleteGameRate(rateId: string) {
     try {
         await firestore.collection("game_rates").doc(rateId).delete();
-        revalidatePath("/admin/settings");
         return { success: true };
     } catch (error: any) {
         console.error("Error deleting game rate:", error);

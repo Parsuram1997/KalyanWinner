@@ -43,6 +43,18 @@
             "type": "number",
             "description": "The user's current wallet balance from winnings."
         },
+        "commissionBalance": {
+            "type": "number",
+            "description": "The enroller's current wallet balance from referral commissions."
+        },
+        "totalDeposits": {
+            "type": "number",
+            "description": "The cumulative sum of all completed deposits by the user."
+        },
+        "totalWithdrawals": {
+            "type": "number",
+            "description": "The cumulative sum of all completed withdrawals by the user."
+        },
         "status": {
           "type": "string",
           "enum": ["Active", "Suspended", "Inactive"],
@@ -70,9 +82,34 @@
         "commissionPaid": {
           "type": "boolean",
           "description": "Indicates if the commission for this user's first qualifying deposit has been paid to the enroller."
+        },
+        "paymentMethod": {
+            "type": "string",
+            "enum": ["bank", "upi"],
+            "description": "The user's preferred payment method for withdrawals."
+        },
+        "bankName": {
+            "type": "string",
+            "description": "The name of the user's bank."
+        },
+        "accountHolderName": {
+            "type": "string",
+            "description": "The name of the user as per bank records."
+        },
+        "accountNumber": {
+            "type": "string",
+            "description": "The user's bank account number."
+        },
+        "ifscCode": {
+            "type": "string",
+            "description": "The IFSC code of the user's bank."
+        },
+        "upiId": {
+            "type": "string",
+            "description": "The user's UPI ID."
         }
       },
-      "required": ["id", "customId", "name", "mobile", "email", "state", "district", "depositBalance", "winningBalance", "status", "role", "createdAt"]
+      "required": ["id", "customId", "name", "mobile", "email", "state", "district", "depositBalance", "winningBalance", "commissionBalance", "status", "role", "createdAt"]
     },
      "Market": {
       "title": "Market",
@@ -183,7 +220,7 @@
     },
     "PaymentSettings": {
       "title": "Payment Settings",
-      "description": "Stores the payment details for the application.",
+      "description": "Stores the payment and other financial settings for the application.",
       "type": "object",
       "properties": {
         "upiId": {
@@ -210,6 +247,22 @@
           "type": "string",
           "enum": ["Current", "Savings"],
           "description": "The type of the bank account."
+        },
+        "referralBonusAmount": {
+          "type": "number",
+          "description": "The commission amount to be paid to the enroller."
+        },
+        "minDepositForBonus": {
+          "type": "number",
+          "description": "The minimum deposit amount for the commission to be triggered."
+        },
+        "minDeposit": {
+          "type": "number",
+          "description": "The minimum amount a user can deposit in a single transaction."
+        },
+        "minWithdrawal": {
+          "type": "number",
+          "description": "The minimum amount a user can withdraw in a single transaction."
         }
       }
     },
@@ -228,7 +281,7 @@
         },
         "type": {
           "type": "string",
-          "enum": ["Deposit", "Withdrawal", "Bet", "Win", "Commission"],
+          "enum": ["Deposit", "Withdrawal", "Bet", "Win", "Referral Bonus"],
           "description": "The type of transaction."
         },
         "amount": {
@@ -341,5 +394,3 @@
     ]
   }
 }
-
-    

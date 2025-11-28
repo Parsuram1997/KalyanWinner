@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -33,7 +33,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,15 +52,12 @@ import { createMarket, deleteMarket, updateMarket } from "@/app/actions/market-a
 type Market = {
     id: string;
     name: string;
-    openTime: string;
-    closeTime: string;
     status: "Active" | "Inactive";
 };
 
 export default function ManageMarketsPage() {
-  const { toast } = useToast();
   const firestore = useFirestore();
-
+  
   const marketsQuery = useMemoFirebase(() => firestore ? collection(firestore, "markets") : null, [firestore]);
   const { data: markets, isLoading } = useCollection<Market>(marketsQuery, { skip: !firestore });
   
@@ -74,8 +71,6 @@ export default function ManageMarketsPage() {
     const formData = new FormData(form);
     const newMarketData = {
       name: formData.get("name") as string,
-      openTime: formData.get("openTime") as string,
-      closeTime: formData.get("closeTime") as string,
     };
     try {
         await createMarket(newMarketData);
@@ -94,8 +89,6 @@ export default function ManageMarketsPage() {
     const formData = new FormData(form);
     const updatedData = {
       name: formData.get("name") as string,
-      openTime: formData.get("openTime") as string,
-      closeTime: formData.get("closeTime") as string,
     };
     
     try {
@@ -134,19 +127,20 @@ export default function ManageMarketsPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Store className="h-6 w-6" />
               <span>Manage Markets</span>
             </CardTitle>
             <CardDescription>
-              Add, edit, or remove game markets and their timings.
+              Add, edit, or remove game markets. Timings are managed on the 'Manage Timings' page.
             </CardDescription>
           </div>
+          <div className="flex gap-2 w-full sm:w-auto">
            <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="w-full sm:w-auto">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Add Market
                   </Button>
@@ -155,7 +149,7 @@ export default function ManageMarketsPage() {
                   <DialogHeader>
                     <DialogTitle>Add New Market</DialogTitle>
                     <DialogDescription>
-                      Fill in the details for the new market.
+                      Enter the name for the new market.
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleAddMarket} className="grid gap-4 py-4">
@@ -163,20 +157,13 @@ export default function ManageMarketsPage() {
                       <Label htmlFor="name" className="text-right">Name</Label>
                       <Input id="name" name="name" className="col-span-3" required />
                     </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="openTime" className="text-right">Open Time</Label>
-                      <Input id="openTime" name="openTime" type="time" className="col-span-3" required />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="closeTime" className="text-right">Close Time</Label>
-                      <Input id="closeTime" name="closeTime" type="time" className="col-span-3" required />
-                    </div>
                     <DialogFooter>
                       <Button type="submit">Add Market</Button>
                     </DialogFooter>
                   </form>
                 </DialogContent>
               </Dialog>
+            </div>
         </CardHeader>
         <CardContent>
           {/* Desktop Table */}
@@ -185,8 +172,6 @@ export default function ManageMarketsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Market Name</TableHead>
-                  <TableHead>Open Time</TableHead>
-                  <TableHead>Close Time</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -194,13 +179,11 @@ export default function ManageMarketsPage() {
               <TableBody>
                 {isLoading ? (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">Loading markets...</TableCell>
+                        <TableCell colSpan={3} className="text-center">Loading markets...</TableCell>
                     </TableRow>
                 ) : markets?.map((market) => (
                   <TableRow key={market.id}>
                     <TableCell className="font-medium">{market.name}</TableCell>
-                    <TableCell>{market.openTime}</TableCell>
-                    <TableCell>{market.closeTime}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch
@@ -252,15 +235,7 @@ export default function ManageMarketsPage() {
                           </Badge>
                       </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                      <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Open Time:</span>
-                          <span className="font-medium">{market.openTime}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Close Time:</span>
-                          <span className="font-medium">{market.closeTime}</span>
-                      </div>
+                  <CardContent>
                       <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">Status:</span>
                           <Switch
@@ -303,21 +278,13 @@ export default function ManageMarketsPage() {
           <DialogHeader>
             <DialogTitle>Edit Market</DialogTitle>
             <DialogDescription>
-              Update the details for {selectedMarket?.name}.
+              Update the name for {selectedMarket?.name}.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditMarket} className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-name" className="text-right">Name</Label>
               <Input id="edit-name" name="name" defaultValue={selectedMarket?.name} className="col-span-3" required />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-openTime" className="text-right">Open Time</Label>
-              <Input id="edit-openTime" name="openTime" defaultValue={selectedMarket?.openTime} type="time" className="col-span-3" required />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-closeTime" className="text-right">Close Time</Label>
-              <Input id="edit-closeTime" name="closeTime" defaultValue={selectedMarket?.closeTime} type="time" className="col-span-3" required />
             </div>
             <DialogFooter>
               <Button type="submit">Save Changes</Button>
@@ -328,3 +295,5 @@ export default function ManageMarketsPage() {
     </div>
   );
 }
+
+    

@@ -21,20 +21,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Clock, PlusCircle, Trash2, Pencil, Save } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc, query, where } from "firebase/firestore";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useMemo, useEffect } from "react";
+import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 const formSchema = z.object({
-  name: z.string().min(1, "Market name is required"),
+  name: z.string().optional(),
+  newName: z.string().optional(),
   openBiddingTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
   openResultTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
   closeBiddingTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
   closeResultTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
+}).refine(data => editingMarket || data.name || data.newName, {
+  message: "Market name is required. Please select one or enter a new name.",
+  path: ["name"],
 });
+
 
 type Market = {
   id: string;
@@ -45,41 +64,76 @@ type Market = {
   closeResultTime: string;
 };
 
+let editingMarket: Market | null = null;
+
 export default function ManageTimingsPage() {
   const firestore = useFirestore();
-  const { toast } = useToast();
-  const [editingMarket, setEditingMarket] = useState<Market | null>(null);
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [marketNamesFromDb, setMarketNamesFromDb] = useState<string[]>([]);
 
   const marketsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, "markets") : null),
+    () => (firestore ? query(collection(firestore, "markets"), where("status", "==", "Active")) : null),
     [firestore]
   );
   const { data: markets, isLoading } = useCollection<Market>(marketsQuery, { skip: !firestore });
+  
+  useEffect(() => {
+    if (markets) {
+      const names = [...new Set(markets.map(market => market.name))].sort();
+      setMarketNamesFromDb(names);
+    }
+  }, [markets]);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<z.infer<typeof formSchema>>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
         name: "",
-        openBiddingTime: "",
-        openResultTime: "",
-        closeBiddingTime: "",
-        closeResultTime: ""
+        newName: "",
+        openBiddingTime: "00:00",
+        openResultTime: "00:00",
+        closeBiddingTime: "00:00",
+        closeResultTime: "00:00"
     }
   });
+  
+  const selectedMarketName = watch("name");
+
+  useEffect(() => {
+    if (editingMarket) {
+        reset(editingMarket);
+    } else {
+        reset({ name: "", newName: "", openBiddingTime: "00:00", openResultTime: "00:00", closeBiddingTime: "00:00", closeResultTime: "00:00" });
+    }
+  }, [editingMarket, reset]);
+
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     if (!firestore) return;
+    const finalName = data.newName || data.name;
+
+    if (!finalName) {
+        toast({ variant: "destructive", title: "Validation Error", description: "Market name is required." });
+        return;
+    }
+
+    const submissionData = {
+        name: finalName,
+        openBiddingTime: data.openBiddingTime,
+        openResultTime: data.openResultTime,
+        closeBiddingTime: data.closeBiddingTime,
+        closeResultTime: data.closeResultTime,
+    };
+
     try {
       if (editingMarket) {
         const marketDocRef = doc(firestore, "markets", editingMarket.id);
-        await updateDoc(marketDocRef, data);
-        toast({ title: "Market Updated", description: `${data.name} has been updated.` });
-        setEditingMarket(null);
+        await updateDoc(marketDocRef, submissionData);
+        toast({ title: "Market Updated", description: `${submissionData.name} has been updated.` });
       } else {
-        await addDoc(collection(firestore, "markets"), { ...data, status: "Active" });
-        toast({ title: "Market Added", description: `${data.name} has been added.` });
+        await addDoc(collection(firestore, "markets"), { ...submissionData, status: "Active" });
+        toast({ title: "Market Added", description: `${submissionData.name} has been added.` });
       }
-      reset({ name: "", openBiddingTime: "", openResultTime: "", closeBiddingTime: "", closeResultTime: "" });
+      setDialogOpen(false);
     } catch (e: any) {
       console.error("Error writing document: ", e);
       toast({ variant: "destructive", title: "Operation Failed", description: e.message });
@@ -98,128 +152,159 @@ export default function ManageTimingsPage() {
   };
 
   const handleEdit = (market: Market) => {
-    setEditingMarket(market);
+    editingMarket = market;
     reset(market);
+    setDialogOpen(true);
   };
 
-  const handleCancelEdit = () => {
-    setEditingMarket(null);
-    reset({ name: "", openBiddingTime: "", openResultTime: "", closeBiddingTime: "", closeResultTime: "" });
-  };
-
+  const handleAddNew = () => {
+    editingMarket = null;
+    reset({ name: "", newName: "", openBiddingTime: "00:00", openResultTime: "00:00", closeBiddingTime: "00:00", closeResultTime: "00:00" });
+    setDialogOpen(true);
+  }
+  
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Manage Timings</h1>
-        <p className="text-muted-foreground">
-          Add, update, or remove market bidding and result timings.
-        </p>
-      </div>
-      <div className="grid grid-cols-1">
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingMarket ? "Edit Market" : "Add New Market"}</CardTitle>
-            <CardDescription>
-              {editingMarket ? "Update the details of the market." : "Enter the details of the new market."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Market Name</Label>
-                  <Input id="name" {...register("name")} />
-                  {errors.name && <p className="text-sm text-red-500">{errors.name.message as string}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="openBiddingTime">Open Bidding</Label>
-                  <Input id="openBiddingTime" type="time" {...register("openBiddingTime")} />
-                  {errors.openBiddingTime && <p className="text-sm text-red-500">{errors.openBiddingTime.message as string}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="openResultTime">Open Result</Label>
-                  <Input id="openResultTime" type="time" {...register("openResultTime")} />
-                  {errors.openResultTime && <p className="text-sm text-red-500">{errors.openResultTime.message as string}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="closeBiddingTime">Close Bidding</Label>
-                  <Input id="closeBiddingTime" type="time" {...register("closeBiddingTime")} />
-                  {errors.closeBiddingTime && <p className="text-sm text-red-500">{errors.closeBiddingTime.message as string}</p>}
-                </div>
-                 <div className="space-y-2">
-                  <Label htmlFor="closeResultTime">Close Result</Label>
-                  <Input id="closeResultTime" type="time" {...register("closeResultTime")} />
-                  {errors.closeResultTime && <p className="text-sm text-red-500">{errors.closeResultTime.message as string}</p>}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 pt-4">
-                  <Button type="submit" className="w-full md:w-auto">
-                      {editingMarket ? <><Save className="mr-2 h-4 w-4" /> Update Market</> : <><PlusCircle className="mr-2 h-4 w-4" /> Add Market</>}
-                  </Button>
-                  {editingMarket && (
-                      <Button type="button" variant="outline" className="w-full md:w-auto" onClick={handleCancelEdit}>
-                          Cancel
-                      </Button>
-                  )}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-        
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+      <Card>
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+              <CardTitle className="flex items-center gap-2">
               <Clock className="h-6 w-6" />
               <span>Market Schedule</span>
-            </CardTitle>
-            <CardDescription>All timings are in 24-hour format (IST).</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
+              </CardTitle>
+              <CardDescription>All timings are in 24-hour format (IST).</CardDescription>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+                <Button onClick={handleAddNew} className="w-full sm:w-auto">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add/Edit Timings
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{editingMarket ? "Edit Market" : "Add New Market"}</DialogTitle>
+                    <DialogDescription>
+                    {editingMarket ? "Update the details of the market." : "Enter the details of the new market."}
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="name">Market Name</Label>
+                       <Select onValueChange={(value) => setValue('name', value)} value={selectedMarketName}>
+                          <SelectTrigger>
+                              <SelectValue placeholder="Select an existing market" />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {marketNamesFromDb.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                          </SelectContent>
+                      </Select>
+                      {errors.name && <p className="text-sm text-red-500">{errors.name.message as string}</p>}
+                    </div>
+
+                     <div className="space-y-2 col-span-2">
+                      <Label htmlFor="newName">Or Add New Market Name</Label>
+                      <Input
+                        id="newName"
+                        {...register("newName")}
+                        placeholder="Type a new market name here"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="openBiddingTime">Open Bidding</Label>
+                      <Input id="openBiddingTime" type="time" {...register("openBiddingTime")} />
+                      {errors.openBiddingTime && <p className="text-sm text-red-500">{errors.openBiddingTime.message as string}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="openResultTime">Open Result</Label>
+                      <Input id="openResultTime" type="time" {...register("openResultTime")} />
+                      {errors.openResultTime && <p className="text-sm text-red-500">{errors.openResultTime.message as string}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="closeBiddingTime">Close Bidding</Label>
+                      <Input id="closeBiddingTime" type="time" {...register("closeBiddingTime")} />
+                      {errors.closeBiddingTime && <p className="text-sm text-red-500">{errors.closeBiddingTime.message as string}</p>}
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="closeResultTime">Close Result</Label>
+                      <Input id="closeResultTime" type="time" {...register("closeResultTime")} />
+                      {errors.closeResultTime && <p className="text-sm text-red-500">{errors.closeResultTime.message as string}</p>}
+                    </div>
+                  </div>
+                  <DialogFooter>
+                      <Button type="submit">
+                          {editingMarket ? <><Save className="mr-2 h-4 w-4" /> Update Market</> : <><PlusCircle className="mr-2 h-4 w-4" /> Add Market</>}
+                      </Button>
+                  </DialogFooter>
+                </form>
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent className="p-0 sm:p-6">
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs h-auto py-0 px-1">Market Name</TableHead>
+                  <TableHead className="text-center text-xs h-auto py-0 px-1">Open Bidding</TableHead>
+                  <TableHead className="text-center text-xs h-auto py-0 px-1">Open Result</TableHead>
+                  <TableHead className="text-center text-xs h-auto py-0 px-1">Close Bidding</TableHead>
+                  <TableHead className="text-center text-xs h-auto py-0 px-1">Close Result</TableHead>
+                  <TableHead className="text-right text-xs h-auto py-0 px-1">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
                   <TableRow>
-                    <TableHead>Market Name</TableHead>
-                    <TableHead className="text-center">Open Bidding</TableHead>
-                    <TableHead className="text-center">Open Result</TableHead>
-                    <TableHead className="text-center">Close Bidding</TableHead>
-                    <TableHead className="text-center">Close Result</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableCell colSpan={6} className="text-center py-0 px-1">Loading timings...</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center">Loading timings...</TableCell>
-                    </TableRow>
-                  ) : markets?.map((market) => (
-                    <TableRow key={market.id}>
-                      <TableCell className="font-medium">{market.name}</TableCell>
-                      <TableCell className="text-center font-semibold text-primary">{market.openBiddingTime}</TableCell>
-                      <TableCell className="text-center font-semibold text-primary">{market.openResultTime}</TableCell>
-                      <TableCell className="text-center font-semibold text-destructive">{market.closeBiddingTime}</TableCell>
-                      <TableCell className="text-center font-semibold text-destructive">{market.closeResultTime}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(market)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(market.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {!isLoading && markets?.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">No active markets found.</TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                ) : markets?.map((market) => (
+                  <TableRow key={market.id}>
+                    <TableCell className="font-medium text-xs py-0 px-1">{market.name}</TableCell>
+                    <TableCell className="text-center font-semibold text-primary text-xs py-0 px-1">{market.openBiddingTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-primary text-xs py-0 px-1">{market.openResultTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-destructive text-xs py-0 px-1">{market.closeBiddingTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-destructive text-xs py-0 px-1">{market.closeResultTime}</TableCell>
+                    <TableCell className="text-right py-0 px-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(market)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the <strong>{market.name}</strong> market.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(market.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!isLoading && markets?.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-0 px-1">No active markets found.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -33,7 +33,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,12 +57,37 @@ type BetType = {
   status: "Active" | "Inactive";
 };
 
+const betOrder = [
+    "Open Digit",
+    "Close Digit",
+    "Jodi",
+    "Single Panna",
+    "Double Panna",
+    "Triple Panna",
+    "Half Sangam",
+    "Full Sangam",
+];
+
 export default function ManageBetTypesPage() {
-  const { toast } = useToast();
   const firestore = useFirestore();
 
   const betTypesQuery = useMemoFirebase(() => firestore ? collection(firestore, "bet_types") : null, [firestore]);
   const { data: betTypes, isLoading } = useCollection<BetType>(betTypesQuery, { skip: !firestore });
+
+  const sortedBetTypes = useMemo(() => {
+    if (!betTypes) return [];
+    return [...betTypes].sort((a, b) => {
+        const indexA = betOrder.indexOf(a.name);
+        const indexB = betOrder.indexOf(b.name);
+
+        if (indexA !== -1 && indexB !== -1) {
+            return indexA - indexB;
+        }
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.name.localeCompare(b.name);
+    });
+  }, [betTypes]);
   
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
@@ -189,7 +214,7 @@ export default function ManageBetTypesPage() {
                   <TableRow>
                     <TableCell colSpan={4} className="text-center">Loading bet types...</TableCell>
                   </TableRow>
-                ) : betTypes?.map((betType) => (
+                ) : sortedBetTypes.map((betType) => (
                   <TableRow key={betType.id}>
                     <TableCell className="font-medium">{betType.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{betType.description}</TableCell>
@@ -233,7 +258,7 @@ export default function ManageBetTypesPage() {
           
            {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
-              {isLoading ? <p className="text-center">Loading...</p> : betTypes?.map((betType) => (
+              {isLoading ? <p className="text-center">Loading...</p> : sortedBetTypes.map((betType) => (
                 <Card key={betType.id}>
                   <CardHeader>
                       <div className="flex justify-between items-start">
@@ -308,3 +333,5 @@ export default function ManageBetTypesPage() {
     </div>
   );
 }
+
+    

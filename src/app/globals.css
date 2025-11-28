@@ -20,6 +20,8 @@
     --accent-foreground: 220 20% 15%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+    --warning: 48 96% 50%;
+    --warning-foreground: 48 96% 10%;
     --border: 210 50% 88%;
     --input: 210 50% 90%;
     --ring: 220 80% 55%;
@@ -56,6 +58,8 @@
     --accent-foreground: 210 10% 90%;
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
+    --warning: 48 96% 50%;
+    --warning-foreground: 48 96% 10%;
     --border: 210 30% 20%;
     --input: 210 30% 20%;
     --ring: 220 70% 65%;
@@ -81,11 +85,6 @@
   }
   body {
     @apply text-foreground font-body;
-    background-color: hsl(var(--background));
-    background-image: linear-gradient(to right, hsl(var(--background)), hsl(var(--secondary), 0.3));
-  }
-
-  .dark body {
-     background-image: linear-gradient(to right, hsl(var(--background)), hsl(var(--secondary), 0.3));
+    background-image: linear-gradient(to bottom right, hsl(var(--primary)/0.2), hsl(var(--secondary)/0.3), hsl(var(--background)));
   }
 }

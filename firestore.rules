@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -11,21 +12,20 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.role == 'Enroller';
     }
 
-    match /{document=**} {
-      allow read, write: if request.auth != null;
-    }
-
+    // Allow list read for users collection to enable mobile login
     match /users/{userId} {
+      allow list: if true; 
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null && request.auth.uid == userId;
-      allow list: if isAdmin() || (isEnroller() && request.query.where.enrollerId == request.auth.uid);
     }
 
     match /transactions/{transactionId} {
       allow get: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
-      allow list: if isAdmin() || (request.auth != null && request.query.where.userId == request.auth.uid);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if false; 
+      allow list: if isAdmin() 
+                  || (request.auth != null && request.query.where.userId == request.auth.uid)
+                  || (request.auth != null && request.query.where.type == 'Win'); // Allow any user to list 'Win' transactions
+      allow create: if request.auth != null; // Allow any authenticated user to create a transaction
+      allow update, delete: if isAdmin(); // Only Admin can update or delete
     }
     
     match /markets/{marketId} {
@@ -55,6 +55,18 @@ service cloud.firestore {
 
     match /counters/{counterId} {
       allow read, write: if true;
+    }
+    
+    match /kalyan_bets/{betId} {
+       allow read, list: if isAdmin() || (request.auth != null && request.query.where.userId == request.auth.uid);
+       allow create: if request.auth != null;
+       allow update, delete: if isAdmin();
+    }
+
+    // Fallback for any other path - generally deny unless authenticated.
+    match /{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
     }
   }
 }

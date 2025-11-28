@@ -59,9 +59,8 @@ const faqs = [
     answer: "In Full Sangam, you bet on the complete result, which includes both the Open Panna and the Close Panna. For example, you can bet on Open Panna '123' and Close Panna '456'."
   },
   {
-    question: "How are the results declared?",
-    answer:
-      "Each result has two parts: an 'Open' result and a 'Close' result. Each part is a three-digit Panna. The sum of the digits of the Panna gives a single digit (Ank). The Jodi is formed by combining the Open single digit and the Close single digit.",
+      question: "How are the results declared?",
+      answer: "The result is declared in two parts: 'Open' and 'Close'. For each part, a three-digit number (Panna) is drawn. The sum of the three digits of the Panna gives a single digit (Ank). For example, if the Open Panna is 123, the Open Ank is 1+2+3 = 6. The final result is a combination of the Open Ank and Close Ank, which forms the Jodi."
   },
   {
     question: "How can I check the results?",
@@ -89,17 +88,11 @@ const faqs = [
 export default function FaqPage() {
   return (
     <div className="flex flex-col gap-6">
-       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Frequently Asked Questions (FAQ)</h1>
-        <p className="text-muted-foreground">
-          Find answers to common questions about playing Kalyan Matka.
-        </p>
-      </div>
       <Card>
          <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <HelpCircle className="h-6 w-6" />
-            <span>General Information</span>
+            <span>Frequently Asked Questions (FAQ)</span>
           </CardTitle>
           <CardDescription>
             Click on a question to see the answer.

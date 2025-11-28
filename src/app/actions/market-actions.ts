@@ -4,20 +4,25 @@
 import { firestore } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 
+// Helper function to convert a string to title case
+const toTitleCase = (str: string) => {
+  return str.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  );
+};
+
 export async function createMarket(marketData: {
   name: string;
-  openBiddingTime: string;
-  openResultTime: string;
-  closeBiddingTime: string;
-  closeResultTime: string;
 }) {
   try {
-    await firestore.collection("markets").add({
+    const standardizedMarketData = {
       ...marketData,
+      name: toTitleCase(marketData.name),
       status: "Active", // Default status
-    });
+    };
+    await firestore.collection("markets").add(standardizedMarketData);
     revalidatePath("/admin/manage-markets");
-    revalidatePath("/admin/manage-timings");
     return { success: true };
   } catch (error: any) {
     console.error("Error creating market:", error);
@@ -27,16 +32,15 @@ export async function createMarket(marketData: {
 
 export async function updateMarket(marketId: string, marketData: {
   name?: string;
-  openBiddingTime?: string;
-  openResultTime?: string;
-  closeBiddingTime?: string;
-  closeResultTime?: string;
   status?: "Active" | "Inactive";
 }) {
   try {
-    await firestore.collection("markets").doc(marketId).update(marketData);
+    let standardizedMarketData: { [key: string]: any } = { ...marketData };
+    if (marketData.name) {
+      standardizedMarketData.name = toTitleCase(marketData.name);
+    }
+    await firestore.collection("markets").doc(marketId).update(standardizedMarketData);
     revalidatePath("/admin/manage-markets");
-    revalidatePath("/admin/manage-timings");
     return { success: true };
   } catch (error: any) {
     console.error("Error updating market:", error);
@@ -48,12 +52,9 @@ export async function deleteMarket(marketId: string) {
     try {
         await firestore.collection("markets").doc(marketId).delete();
         revalidatePath("/admin/manage-markets");
-        revalidatePath("/admin/manage-timings");
         return { success: true };
     } catch (error: any) {
         console.error("Error deleting market:", error);
         throw new Error(error.message || "Failed to delete market.");
     }
 }
-
-    

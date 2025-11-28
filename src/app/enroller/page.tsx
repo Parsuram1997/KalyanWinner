@@ -8,20 +8,20 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 type View = "login" | "forgot_password";
 
 export default function EnrollerLoginPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
-  const [email, setEmail] = useState("enroller@kalyanwinner.app");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState<View>("login");
 
@@ -118,28 +118,22 @@ export default function EnrollerLoginPage() {
 
   return (
     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-       <div className="relative hidden lg:block">
-         <Image
-            src="/placeholder.svg"
-            alt="Image"
-            layout="fill"
-            objectFit="cover"
-            className="dark:brightness-[0.2] dark:grayscale"
-        />
-         <div className="relative z-10 flex h-full flex-col justify-end bg-black/50 p-10 text-white">
+       <div className="relative hidden items-center justify-center bg-gradient-to-br from-primary/80 via-primary to-secondary p-10 text-white lg:flex">
+         <div className="relative z-10 w-full max-w-md rounded-xl bg-black/20 p-8 text-center backdrop-blur-sm">
             <h2 className="text-4xl font-bold tracking-tight">Kalyan Winner Enroller Panel</h2>
-            <p className="mt-4 text-lg">Welcome to the Enroller Panel. Manage your enrolled users and track your progress.</p>
+            <p className="mt-4 text-lg text-primary-foreground/90">Welcome! Use this panel to enroll new users, track their activity, and monitor your referral commissions. Your efforts are key to our community's growth.</p>
         </div>
       </div>
-      <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white p-4 lg:bg-background lg:text-foreground">
-        <div className="w-full max-w-md space-y-6">
-            <div className="text-center">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground p-4">
+        <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
                 <div className="flex justify-center mb-4">
                    <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight">{view === 'login' ? 'Enroller Login' : 'Reset Password'}</h1>
-                <p className="text-muted-foreground mt-2">{view === 'login' ? 'Enter your credentials to access your dashboard.' : 'Enter your email to receive a password reset link.'}</p>
-            </div>
+                <CardTitle className="text-3xl font-bold tracking-tight">{view === 'login' ? 'Enroller Login' : 'Reset Password'}</CardTitle>
+                <CardDescription>{view === 'login' ? 'Enter your credentials to access your dashboard.' : 'Enter your email to receive a password reset link.'}</CardDescription>
+            </CardHeader>
+            <CardContent>
             {view === 'login' ? (
                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid gap-2">
@@ -152,7 +146,7 @@ export default function EnrollerLoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                            className="bg-gray-800 border-gray-700 h-12 text-base text-white"
+                            className="h-12 text-base"
                         />
                     </div>
                     <div className="grid gap-2">
@@ -165,11 +159,12 @@ export default function EnrollerLoginPage() {
                         <Input 
                             id="password" 
                             type="password" 
+                            placeholder="••••••••"
                             required 
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isLoading}
-                            className="bg-gray-800 border-gray-700 h-12 text-base text-white"
+                            className="h-12 text-base"
                         />
                     </div>
                     <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
@@ -188,22 +183,22 @@ export default function EnrollerLoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
-                             className="bg-gray-800 border-gray-700 h-12 text-base text-white"
+                             className="h-12 text-base"
                         />
                     </div>
                     <Button onClick={handleForgotPassword} className="w-full h-12 text-base" disabled={isLoading}>
                     {isLoading ? 'Sending Link...' : 'Send Password Reset Link'}
                     </Button>
-                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12 border-gray-700 hover:bg-gray-800">
+                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12">
                         Back to Login
                     </Button>
                 </div>
             )}
-
-            <div className="mt-6 text-center text-sm">
-                <Link href="/" className="font-semibold text-primary underline-offset-4 hover:underline">Go to Home</Link>
-            </div>
-        </div>
+            </CardContent>
+            <CardFooter className="text-center text-sm">
+                <Link href="/" className="w-full font-semibold text-primary underline-offset-4 hover:underline">Go to Home</Link>
+            </CardFooter>
+        </Card>
       </div>
     </div>
   );

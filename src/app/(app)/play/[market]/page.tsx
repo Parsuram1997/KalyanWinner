@@ -12,16 +12,67 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Ticket } from "lucide-react";
+import { Ticket, Ban } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { collection, query, where, limit, getDocs } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+
+type BetType = {
+  id: string;
+  name: string;
+  description: string;
+  status: 'Active' | 'Inactive';
+};
+
+type Result = {
+    id: string;
+    openPanna: string;
+};
 
 export default function ChooseBetTypePage() {
   const params = useParams();
   const marketSlug = params.market as string;
   const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   const firestore = useFirestore();
+
+  const [todaysResult, setTodaysResult] = useState<Result | null | undefined>(undefined); // undefined means not yet fetched
+  const [isLoadingResult, setIsLoadingResult] = useState(true);
+
+  useEffect(() => {
+    if (!firestore) return;
+
+    const fetchTodaysResult = async () => {
+        setIsLoadingResult(true);
+        const today = new Date();
+        const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const resultQuery = query(
+            collection(firestore, "kalyan_results"),
+            where("marketName", "==", marketName),
+            where("date", "==", dateString),
+            limit(1)
+        );
+
+        try {
+            const snapshot = await getDocs(resultQuery);
+            if (!snapshot.empty) {
+                const resultDoc = snapshot.docs[0];
+                setTodaysResult({ id: resultDoc.id, ...resultDoc.data() } as Result);
+            } else {
+                setTodaysResult(null); // No result for today
+            }
+        } catch (error) {
+            console.error("Error fetching today's result:", error);
+            setTodaysResult(null);
+        } finally {
+            setIsLoadingResult(false);
+        }
+    };
+
+    fetchTodaysResult();
+  }, [firestore, marketName]);
 
   const betTypesQuery = useMemoFirebase(
     () =>
@@ -30,15 +81,28 @@ export default function ChooseBetTypePage() {
         : null,
     [firestore]
   );
-  const { data: betTypes, isLoading } = useCollection<any>(betTypesQuery, { skip: !firestore });
+  const { data: betTypes, isLoading: isLoadingBetTypes } = useCollection<BetType>(betTypesQuery, { skip: !firestore });
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[()]/g, '');
+  }
+
+  const isDisabled = (betName: string) => {
+      if (!todaysResult || !todaysResult.openPanna) {
+          return false; // If open result is not out, nothing is disabled
+      }
+      
+      const disabledAfterOpen = ['Jodi', 'Open Sangam', 'Open'];
+      return disabledAfterOpen.includes(betName);
+  };
+  
+  const isLoading = isLoadingBetTypes || isLoadingResult;
 
   return (
     <div className="flex flex-col gap-6">
-       <div>
-          <h1 className="text-2xl font-bold tracking-tight">Choose Bet Type</h1>
-          <p className="text-muted-foreground">Market: <span className="font-semibold text-primary">{marketName}</span></p>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
@@ -52,22 +116,30 @@ export default function ChooseBetTypePage() {
                 </CardFooter>
               </Card>
             ))
-          : betTypes?.map((bet) => (
-          <Card key={bet.id} className="flex flex-col justify-between">
-             <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">{bet.name}</CardTitle>
-              <CardDescription className="text-xs">{bet.description}</CardDescription>
-            </CardHeader>
-            <CardFooter className="p-4 pt-2">
-               <Button asChild className="w-full" size="sm">
-                <Link href={`/play/${marketSlug}/${bet.name.toLowerCase().replace(/\s+/g, '-')}`}>
-                  <Ticket className="mr-2 h-4 w-4" />
-                  Place Bet
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+          : betTypes?.map((bet) => {
+              const disabled = isDisabled(bet.name);
+              return (
+              <Card key={bet.id} className={cn("flex flex-col justify-between", disabled && "bg-muted/50 opacity-60")}>
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-base">{bet.name}</CardTitle>
+                  <CardDescription className="text-xs">{bet.description}</CardDescription>
+                </CardHeader>
+                <CardFooter className="p-4 pt-2">
+                  <Button asChild className="w-full" size="sm" disabled={disabled}>
+                    <Link 
+                        href={disabled ? '#' : `/play/${marketSlug}/${generateSlug(bet.name)}`} 
+                        aria-disabled={disabled} 
+                        tabIndex={disabled ? -1 : undefined}
+                        onClick={(e) => { if (disabled) e.preventDefault(); }}
+                    >
+                      {disabled ? <Ban className="mr-2 h-4 w-4" /> : <Ticket className="mr-2 h-4 w-4" />}
+                      {disabled ? 'Betting Closed' : 'Place Bet'}
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+              )
+          })}
       </div>
        {!isLoading && betTypes?.length === 0 && (
         <Card className="col-span-full">

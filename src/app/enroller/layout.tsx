@@ -9,7 +9,6 @@ import {
   Coins,
   Clock,
   Wallet,
-  TrendingUp,
   Store,
   HelpCircle,
 } from "lucide-react";
@@ -27,23 +26,16 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
+import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Skeleton } from "@/components/ui/skeleton";
+import { doc } from "firebase/firestore";
+import NotificationBell from "@/components/NotificationBell";
 
-export default function EnrollerLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (pathname === '/enroller') {
-    return <>{children}</>;
-  }
-
-  return (
+function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
+    return (
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-0 px-2">
@@ -72,18 +64,13 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/enroller/wallet">
-                  <Wallet />
-                  Commission Wallet
-                </Link>
-              </SidebarMenuButton>
+              <NotificationBell />
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/enroller/earnings">
-                  <TrendingUp />
-                  Earnings
+                <Link href="/enroller/wallet">
+                  <Wallet />
+                  Wallet
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -95,19 +82,19 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/enroller/game-rates">
-                  <Coins />
-                  Game Rates
+                <Link href="/enroller/game-timings">
+                  <Clock />
+                  Game Timings
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/enroller/game-timings">
-                  <Clock />
-                  Game Timings
+                <Link href="/enroller/game-rates">
+                  <Coins />
+                  Game Rates
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -129,14 +116,56 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
       <SidebarInset>
         <div className="flex flex-col h-dvh">
           <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-14 sm:px-6">
-            <SidebarTrigger className="md:hidden" />
+            <div className="flex items-center gap-2">
+              <SidebarTrigger />
+            </div>
             <div className="flex flex-1 items-center justify-end gap-2">
-              <ThemeToggle />
+               <ThemeToggle />
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
         </div>
       </SidebarInset>
     </SidebarProvider>
+    )
+}
+
+export default function EnrollerLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  if (pathname === '/enroller') {
+    return <>{children}</>;
+  }
+
+  const userDocRef = useMemoFirebase(
+    () => (firestore && user ? doc(firestore, "users", user.uid) : null),
+    [firestore, user]
   );
+  const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace("/enroller");
+    }
+     if (!isUserDataLoading && userData && userData.role !== 'Enroller') {
+        router.replace('/enroller');
+    }
+  }, [user, isUserLoading, userData, isUserDataLoading, router]);
+
+  if (isUserLoading || isUserDataLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Skeleton className="h-20 w-20 rounded-full" />
+      </div>
+    );
+  }
+
+  if (user && userData?.role === 'Enroller') {
+    return <EnrollerLayoutContent>{children}</EnrollerLayoutContent>;
+  }
+
+  return null;
 }

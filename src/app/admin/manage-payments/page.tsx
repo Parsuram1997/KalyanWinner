@@ -1,128 +1,110 @@
-
 "use client";
 
+import { useEffect, useState } from "react";
+import { getPaymentSettings, updatePaymentSettings } from "@/app/actions/payment-settings-actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { getPaymentSettings, updatePaymentSettings } from "@/app/actions/payment-actions";
-import { useEffect, useState, FormEvent } from "react";
+import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// A simpler type for just the UPI settings
-type UpiSettings = {
-    upiId: string;
-    payeeName: string;
+interface PaymentSettings {
+  upiId?: string;
+  payeeName?: string;
+    bankAccountHolder?: string;
+    bankAccountNumber?: string;
+    bankIfscCode?: string;
+    bankName?: string;
+    bankAccountType?: 'Current' | 'Savings';
+    referralBonusAmount?: number;
+    minDepositForBonus?: number;
+    minDeposit?: number;
+    minWithdrawal?: number;
 }
 
 export default function ManagePaymentsPage() {
-    const { toast } = useToast();
-    const [settings, setSettings] = useState<UpiSettings>({ upiId: '', payeeName: '' });
+    const [settings, setSettings] = useState<PaymentSettings>({});
     const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch existing settings on component mount
     useEffect(() => {
-        async function fetchSettings() {
+        const fetchSettings = async () => {
             setIsLoading(true);
             try {
-                const result = await getPaymentSettings();
-                if (result.success && result.data) {
-                    setSettings(result.data);
-                } else if (!result.success) {
-                    // Don't show an error if settings just aren't configured yet
-                    if (result.message !== "Payment settings have not been configured in the admin panel.") {
-                         toast({ variant: "destructive", title: "Failed to load settings", description: result.message });
-                    }
-                }
+                const currentSettings = await getPaymentSettings();
+                setSettings(currentSettings || {});
             } catch (error) {
-                toast({ variant: "destructive", title: "An unexpected error occurred" });
+                toast({ variant: "destructive", title: "Failed to load settings" });
             } finally {
                 setIsLoading(false);
             }
-        }
+        };
+
         fetchSettings();
-    }, [toast]);
+    }, []);
 
-    // Handle the form submission
-    const handleSettingsUpdate = async (e: FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsLoading(true);
+        setIsSubmitting(true);
         try {
-            const result = await updatePaymentSettings(settings);
-            if (result.success) {
-                toast({
-                    title: "Settings Saved",
-                    description: result.message,
-                });
-            } else {
-                throw new Error(result.message);
-            }
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Failed to save settings",
-                description: error.message || "An unknown error occurred.",
-            });
+            await updatePaymentSettings(settings);
+            toast({ title: "Settings updated successfully" });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Failed to update settings" });
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
-    }
+    };
 
-    // Update state on input change
-    const handleChange = (key: keyof UpiSettings, value: string) => {
-        setSettings(prev => ({...prev, [key]: value}));
-    }
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setSettings(prev => ({ ...prev, [name]: value }));
+    };
 
-  return (
-    <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Manage UPI Payments</CardTitle>
-          <CardDescription>
-            This UPI ID and Payee Name will be used to generate QR codes for user deposits.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <form onSubmit={handleSettingsUpdate}>
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Manage Payments</CardTitle>
+                <CardDescription>Update payment settings for UPI and bank transfers.</CardDescription>
+            </CardHeader>
+            <CardContent>
                 {isLoading ? (
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                        <div className="space-y-2">
-                             <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                         <Skeleton className="h-10 w-1/3 mt-4" />
+                    <div className="space-y-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
                     </div>
                 ) : (
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="payee-name">Payee Name</Label>
-                            <Input 
-                                id="payee-name" 
-                                placeholder="e.g., Your Company Name" 
-                                value={settings.payeeName || ''} 
-                                onChange={(e) => handleChange('payeeName', e.target.value)} 
-                                required
-                            />
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <Label htmlFor="upiId">UPI ID</Label>
+                            <Input id="upiId" name="upiId" value={settings.upiId || ''} onChange={handleChange} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="upi-id">UPI ID</Label>
-                            <Input 
-                                id="upi-id" 
-                                placeholder="yourname@ybl" 
-                                value={settings.upiId || ''} 
-                                onChange={(e) => handleChange('upiId', e.target.value)} 
-                                required
-                            />
+                        <div>
+                            <Label htmlFor="bankName">Bank Name</Label>
+                            <Input id="bankName" name="bankName" value={settings.bankName || ''} onChange={handleChange} />
                         </div>
-                         <Button type="submit" disabled={isLoading}>{isLoading ? "Saving..." : "Save UPI Details"}</Button>
-                    </div>
+                        <div>
+                            <Label htmlFor="accountNumber">Account Number</Label>
+                            <Input id="accountNumber" name="bankAccountNumber" value={settings.bankAccountNumber || ''} onChange={handleChange} />
+                        </div>
+                        <div>
+                            <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                            <Input id="accountHolderName" name="bankAccountHolder" value={settings.bankAccountHolder || ''} onChange={handleChange} />
+                        </div>
+                        <div>
+                            <Label htmlFor="ifscCode">IFSC Code</Label>
+                            <Input id="ifscCode" name="bankIfscCode" value={settings.bankIfscCode || ''} onChange={handleChange} />
+                        </div>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Save Settings'}
+                        </Button>
+                    </form>
                 )}
-            </form>
-        </CardContent>
-      </Card>
-  );
+            </CardContent>
+        </Card>
+    );
 }

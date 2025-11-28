@@ -77,5 +77,3 @@ export default function GameRatesPage() {
     </div>
   );
 }
-
-    

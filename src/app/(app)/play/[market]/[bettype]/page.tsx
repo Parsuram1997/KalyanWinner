@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo } from "react";
+import { toast } from "@/hooks/use-toast";
+import { useState, useMemo, ChangeEvent, useRef, useEffect } from "react";
 import { PlusCircle, Trash2, Wallet, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -21,7 +21,7 @@ import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, writeBatch, serverTimestamp, FieldValue, increment } from "firebase/firestore";
+import { doc, writeBatch, serverTimestamp, FieldValue, increment, collection, query, where, limit, getDocs } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
@@ -30,407 +30,245 @@ type Bet = {
   amount: string;
 };
 
-function BetForm({
-  gameType,
-  market,
-  depositBalance,
-  winningBalance,
-  isLoadingBalance
+// ====================================================================\
+// START: Specialized Form Components
+// ====================================================================\
+
+// Form for Single Digit, Jodi, Single/Double/Triple Panna
+const SingleInputForm = ({
+  label,
+  maxLength,
+  onAddBet,
 }: {
-  gameType: string;
-  market: string;
-  depositBalance: number;
-  winningBalance: number;
-  isLoadingBalance: boolean;
-}) {
-  const { toast } = useToast();
-  const firestore = useFirestore();
-  const { user: authUser } = useUser();
-  const [bets, setBets] = useState<Bet[]>([]);
-  const [currentNumber, setCurrentNumber] = useState("");
-  const [currentAmount, setCurrentAmount] = useState("");
-  const [isPlacingBet, setIsPlacingBet] = useState(false);
-  
-  const totalBalance = depositBalance + winningBalance;
+  label: string;
+  maxLength: number;
+  onAddBet: (bet: Bet) => void;
+}) => {
+  const [number, setNumber] = useState("");
+  const [amount, setAmount] = useState("");
+  const numberRef = useRef<HTMLInputElement>(null);
+  const amountRef = useRef<HTMLInputElement>(null);
 
-  const totalBetAmount = useMemo(() => {
-    return bets.reduce((sum, bet) => sum + parseInt(bet.amount || "0"), 0);
-  }, [bets]);
+  useEffect(() => {
+    numberRef.current?.focus();
+  }, []);
 
-  const getPlaceholder = () => {
-    switch (gameType) {
-      case "Jodi":
-        return "e.g., 45";
-      case "Single Panna":
-      case "Double Panna":
-      case "Triple Panna":
-        return "e.g., 128";
-      case "Half Sangam":
-        return "e.g., 123 x 4";
-      case "Full Sangam":
-        return "e.g., 123 x 456";
-      default: // Open Digit, Close Digit
-        return "e.g., 8";
+  const handleNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setNumber(value);
+    if (value.length === maxLength) {
+      amountRef.current?.focus();
     }
+  }
+
+  const handleAdd = () => {
+    onAddBet({ number, amount });
+    setNumber("");
+    setAmount("");
+    numberRef.current?.focus();
   };
-
-  const getLabel = () => {
-    switch (gameType) {
-      case "Jodi":
-        return "Jodi Number";
-      case "Single Panna":
-      case "Double Panna":
-      case "Triple Panna":
-        return "Panna Number";
-      case "Half Sangam":
-      case "Full Sangam":
-        return "Sangam Number";
-      default: // Open Digit, Close Digit
-        return "Digit";
-    }
-  };
-
-
-  const validateBet = (number: string, amount: string) => {
-    if (!number || !amount) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Bet",
-        description: "Please enter both a number and amount.",
-      });
-      return false;
-    }
-    const amountInt = parseInt(amount);
-    if (isNaN(amountInt) || amountInt <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Amount",
-        description: "Amount must be a positive number.",
-      });
-      return false;
-    }
-
-    if (amountInt % 5 !== 0) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Amount",
-        description: "Bet amount must be a multiple of 5.",
-      });
-      return false;
-    }
-
-    if (gameType === "Open Digit" || gameType === "Close Digit") {
-      if (!/^\d$/.test(number)) {
-        toast({
-          variant: "destructive",
-          title: "Invalid Number",
-          description: "Digit must be a single digit (0-9).",
-        });
-        return false;
-      }
-    } else if (gameType === "Jodi") {
-      if (!/^\d{2}$/.test(number)) {
-        toast({
-          variant: "destructive",
-          title: "Invalid Number",
-          description: "Jodi must be two digits (00-99).",
-        });
-        return false;
-      }
-    } else if (gameType.includes("Panna")) {
-      if (!/^\d{3}$/.test(number)) {
-        toast({
-          variant: "destructive",
-          title: "Invalid Number",
-          description: "Panna must be three digits (000-999).",
-        });
-        return false;
-      }
-    } else if (gameType === "Half Sangam") {
-        if (!/^\d{3}\s?x\s?\d$/.test(number)) {
-            toast({
-            variant: "destructive",
-            title: "Invalid Number",
-            description: "Half Sangam format must be 'Open Panna x Close Digit' (e.g., 123 x 4).",
-            });
-            return false;
-        }
-    } else if (gameType === "Full Sangam") {
-        if (!/^\d{3}\s?x\s?\d{3}$/.test(number)) {
-            toast({
-            variant: "destructive",
-            title: "Invalid Number",
-            description: "Full Sangam format must be 'Open Panna x Close Panna' (e.g., 123 x 456).",
-            });
-            return false;
-        }
-    }
-    
-    return true;
-  };
-
-  const handleAddBet = () => {
-    if (!validateBet(currentNumber, currentAmount)) return;
-
-    const existingBetIndex = bets.findIndex(bet => bet.number === currentNumber);
-    const amountInt = parseInt(currentAmount);
-
-    let newTotalAmount = totalBetAmount;
-    
-    if (existingBetIndex !== -1) {
-        const oldAmount = parseInt(bets[existingBetIndex].amount);
-        newTotalAmount = totalBetAmount - oldAmount + amountInt;
-    } else {
-        newTotalAmount = totalBetAmount + amountInt;
-    }
-
-    if (newTotalAmount > totalBalance) {
-      toast({
-        variant: "destructive",
-        title: "Insufficient Balance",
-        description: `Your total bet of ₹${newTotalAmount} exceeds your wallet balance.`,
-      });
-      return;
-    }
-
-    if (existingBetIndex !== -1) {
-        const newBets = [...bets];
-        newBets[existingBetIndex].amount = currentAmount;
-        setBets(newBets);
-        toast({
-            title: `Bet Updated: ${currentNumber}`,
-            description: `Amount changed to ₹${currentAmount}.`,
-        });
-    } else {
-        setBets([...bets, { number: currentNumber, amount: currentAmount }]);
-    }
-    
-    setCurrentNumber("");
-    setCurrentAmount("");
-  };
-
-  const handleRemoveBet = (index: number) => {
-    const newBets = bets.filter((_, i) => i !== index);
-    setBets(newBets);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsPlacingBet(true);
-
-    if (bets.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No Bets Added",
-        description: "Please add at least one bet before placing.",
-      });
-      setIsPlacingBet(false);
-      return;
-    }
-
-    if (totalBetAmount > totalBalance) {
-      toast({
-        variant: "destructive",
-        title: "Insufficient Balance",
-        description: "Total bet amount exceeds your wallet balance.",
-      });
-      setIsPlacingBet(false);
-      return;
-    }
-
-    if (!firestore || !authUser) {
-         toast({
-            variant: "destructive",
-            title: "Database Error",
-            description: "Could not connect to the database. Please try again.",
-        });
-        setIsPlacingBet(false);
-        return;
-    }
-
-    try {
-        const batch = writeBatch(firestore);
-        const userRef = doc(firestore, "users", authUser.uid);
-        
-        // Logic to deduct from balances
-        let amountToDeduct = totalBetAmount;
-        let depositDeduction = 0;
-        let winningDeduction = 0;
-
-        if (amountToDeduct > 0 && depositBalance > 0) {
-            const deduction = Math.min(amountToDeduct, depositBalance);
-            depositDeduction = deduction;
-            amountToDeduct -= deduction;
-        }
-        if (amountToDeduct > 0 && winningBalance > 0) {
-            const deduction = Math.min(amountToDeduct, winningBalance);
-            winningDeduction = deduction;
-            amountToDeduct -= deduction;
-        }
-        
-        if (amountToDeduct > 0) {
-           throw new Error("Calculation error led to insufficient balance.");
-        }
-
-        batch.update(userRef, {
-            depositBalance: increment(-depositDeduction),
-            winningBalance: increment(-winningDeduction)
-        });
-
-        for (const bet of bets) {
-            const transactionRef = doc(firestore, "transactions", doc(firestore, "transactions").id);
-            batch.set(transactionRef, {
-                userId: authUser.uid,
-                userName: authUser.displayName || 'Unknown User',
-                type: 'Bet',
-                amount: -parseInt(bet.amount, 10),
-                status: 'Placed',
-                date: new Date().toISOString(),
-                description: `Bet on ${gameType} (${bet.number}) in ${market}`,
-                market: market,
-                gameType: gameType,
-                betNumber: bet.number
-            });
-        }
-        
-        await batch.commit();
-
-        toast({
-          title: "Bets Placed!",
-          description: `Your bets for ${gameType} (${market}) totaling ₹${totalBetAmount} have been placed.`,
-        });
-        setBets([]);
-    } catch(error: any) {
-        console.error("Bet placement failed:", error);
-        toast({
-            variant: "destructive",
-            title: "Bet Failed",
-            description: error.message || "Could not place your bets. Please try again.",
-        });
-    } finally {
-        setIsPlacingBet(false);
-    }
-  };
-  
-  const isNumericOnly = !gameType.toLowerCase().includes('sangam');
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
-        <form onSubmit={handleSubmit}>
-            <CardHeader>
-            <CardTitle>{gameType} Bet</CardTitle>
-            <CardDescription>
-                Add bets and place them for the {market} market.
-            </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor={`${market}-${gameType}-digit`}>
-                    {getLabel()}
-                </Label>
-                <Input
-                    id={`${market}-${gameType}-digit`}
-                    placeholder={getPlaceholder()}
-                    value={currentNumber}
-                    onChange={(e) => setCurrentNumber(e.target.value)}
-                    type={isNumericOnly ? "text" : "text"}
-                    inputMode={isNumericOnly ? "numeric" : "text"}
-                    pattern={isNumericOnly ? "[0-9]*" : undefined}
-                />
-              </div>
+    <>
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <Input
+          ref={numberRef}
+          value={number}
+          onChange={handleNumberChange}
+          maxLength={maxLength}
+          type="text"
+          inputMode="numeric"
+          autoFocus
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="bet-amount-single">Amount</Label>
+        <Input
+          id="bet-amount-single"
+          ref={amountRef}
+          type="number"
+          placeholder="e.g., 10"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+      </div>
+      <Button type="button" className="w-full" onClick={handleAdd}>
+        <PlusCircle className="mr-2 h-4 w-4" /> Add Bet
+      </Button>
+    </>
+  );
+};
 
-              <div className="space-y-2">
-                <Label htmlFor={`${market}-${gameType}-amount`}>Amount</Label>
-                 <div className="flex gap-2">
-                    <Input
-                        id={`${market}-${gameType}-amount`}
-                        type="number"
-                        placeholder="e.g., 10"
-                        value={currentAmount}
-                        onChange={(e) => setCurrentAmount(e.target.value)}
-                    />
-                     <Button
-                      type="button"
-                      size="icon"
-                      onClick={handleAddBet}
-                      className="shrink-0"
-                    >
-                      <PlusCircle className="h-5 w-5" />
-                      <span className="sr-only">Add Bet</span>
-                    </Button>
-                </div>
-              </div>
+// Form for Close Sangam and Full Sangam
+const TwoPartInputForm = ({
+  label1,
+  len1,
+  label2,
+  len2,
+  onAddBet,
+}: {
+  label1: string;
+  len1: number;
+  label2: string;
+  len2: number;
+  onAddBet: (bet: Bet) => void;
+}) => {
+  const [number1, setNumber1] = useState("");
+  const [number2, setNumber2] = useState("");
+  const [amount, setAmount] = useState("");
+  const number1Ref = useRef<HTMLInputElement>(null);
+  const number2Ref = useRef<HTMLInputElement>(null);
+  const amountRef = useRef<HTMLInputElement>(null);
 
-            {bets.length > 0 && (
-                <div className="rounded-lg border">
-                    <div className="flex justify-between items-center p-3 pb-0">
-                        <h4 className="text-sm font-medium">Your Bets</h4>
-                        <div className="text-xs font-mono text-muted-foreground text-right">
-                        <div>Total Bet: ₹{totalBetAmount}</div>
-                        {isLoadingBalance ? <Skeleton className="h-4 w-20 mt-1" /> : <div className="text-green-600">Remaining: ₹{(totalBalance - totalBetAmount).toFixed(2)}</div> }
-                        </div>
-                    </div>
-                    <Separator className="mt-3" />
-                     <div className="w-full pt-0">
-                        <Table style={{tableLayout: 'fixed', width: '100%'}}>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Digit</TableHead>
-                                    <TableHead>Amount</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {bets.map((bet, index) => (
-                                <TableRow key={index}>
-                                    <TableCell className="font-medium py-1">
-                                        <Badge variant="secondary" className="font-mono">
-                                            {bet.number}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="py-1">₹{bet.amount}</TableCell>
-                                    <TableCell className="text-right py-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                        onClick={() => handleRemoveBet(index)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="sr-only">Remove bet</span>
-                                    </Button>
-                                    </TableCell>
-                                </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </div>
-            )}
-            </CardContent>
-            <CardFooter>
-            <Button
-                type="submit"
-                className="w-full"
-                disabled={bets.length === 0 || isPlacingBet || isLoadingBalance}
-            >
-                {isPlacingBet ? "Placing Bets..." : `Place Bets for ${gameType} (Total: ₹${totalBetAmount})`}
-            </Button>
-            </CardFooter>
-        </form>
+  useEffect(() => {
+    number1Ref.current?.focus();
+  }, []);
+
+  const handleNumber1Change = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setNumber1(value);
+    if (value.length === len1) {
+      number2Ref.current?.focus();
+    }
+  }
+  
+  const handleNumber2Change = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setNumber2(value);
+    if (value.length === len2) {
+      amountRef.current?.focus();
+    }
+  }
+
+  const handleAdd = () => {
+    onAddBet({ number: `${number1}x${number2}`, amount });
+    setNumber1("");
+    setNumber2("");
+    setAmount("");
+    number1Ref.current?.focus();
+  };
+
+  return (
+    <>
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <Label>{label1}</Label>
+          <Input
+            ref={number1Ref}
+            value={number1}
+            onChange={handleNumber1Change}
+            maxLength={len1}
+            type="text"
+            inputMode="numeric"
+            autoFocus
+          />
+        </div>
+        <span className="pb-2 font-bold text-muted-foreground">x</span>
+        <div className="flex-1">
+          <Label>{label2}</Label>
+          <Input
+            ref={number2Ref}
+            value={number2}
+            onChange={handleNumber2Change}
+            maxLength={len2}
+            type="text"
+            inputMode="numeric"
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="bet-amount-multi">Amount</Label>
+        <Input
+          id="bet-amount-multi"
+          ref={amountRef}
+          type="number"
+          placeholder="e.g., 10"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+      </div>
+      <Button type="button" className="w-full" onClick={handleAdd}>
+        <PlusCircle className="mr-2 h-4 w-4" /> Add Bet
+      </Button>
+    </>
+  );
+};
+
+// ====================================================================\
+// END: Specialized Form Components
+// ====================================================================\
+
+
+function BetForm({
+  betTypeName,
+  market,
+  onBetsChange,
+}: {
+  betTypeName: string;
+  market: string;
+  onBetsChange: (bet: Bet) => void;
+}) {
+  
+  const handleAddBet = (bet: Bet) => {
+     if (!bet.number || !bet.amount) {
+        toast({ variant: "destructive", title: "Invalid Bet", description: "Please fill all fields." });
+        return;
+    }
+    if (parseInt(bet.amount) % 5 !== 0) {
+        toast({ variant: "destructive", title: "Invalid Amount", description: "Amount must be a multiple of 5." });
+        return;
+    }
+    onBetsChange(bet);
+  };
+
+  const renderForm = () => {
+    switch (betTypeName) {
+      case 'Open Sangam':
+        return <TwoPartInputForm label1="Open Panna" len1={3} label2="Close Digit" len2={1} onAddBet={handleAddBet} />;
+      case 'Close Sangam':
+        return <TwoPartInputForm label1="Open Digit" len1={1} label2="Close Panna" len2={3} onAddBet={handleAddBet} />;
+      case 'Full Sangam':
+        return <TwoPartInputForm label1="Open Panna" len1={3} label2="Close Panna" len2={3} onAddBet={handleAddBet} />;
+      case 'Single Panna':
+      case 'Double Panna':
+      case 'Triple Panna':
+        return <SingleInputForm label="Enter Panna" maxLength={3} onAddBet={handleAddBet} />;
+      case 'Jodi':
+        return <SingleInputForm label="Enter Jodi" maxLength={2} onAddBet={handleAddBet} />;
+      case 'Open':
+      case 'Close':
+        return <SingleInputForm label="Enter Digit" maxLength={1} onAddBet={handleAddBet} />;
+      default: // Fallback for any other type, assuming single digit
+        return <SingleInputForm label="Enter Digit" maxLength={1} onAddBet={handleAddBet} />;
+    }
+  };
+
+
+  return (
+    <Card className="w-full h-full flex flex-col">
+      <CardHeader>
+        <CardTitle>{betTypeName}</CardTitle>
+        <CardDescription>
+          Add bets for the <span className="font-bold text-lg text-primary">{market}</span> market.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4 flex-grow">
+        {renderForm()}
+      </CardContent>
     </Card>
   );
 }
 
 const WalletCard = ({ depositBalance, winningBalance, isLoading }: { depositBalance: number, winningBalance: number, isLoading: boolean }) => (
-    <Card className="bg-gradient-to-br from-primary/20 to-accent/20">
+    <Card className="bg-gradient-to-br from-primary/20 to-accent/20 h-full flex flex-col">
         <CardHeader className="p-4 pb-2">
             <CardTitle className="text-sm font-medium flex items-center justify-between">
                 <span>Wallet Balance</span>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 pt-2 text-xs space-y-2">
+        <CardContent className="p-4 pt-2 text-xs space-y-2 flex-grow">
             {isLoading ? 
             <>
                 <Skeleton className="h-5 w-24" />
@@ -471,11 +309,26 @@ export default function PlaceBetPage() {
   const { user: authUser, isUserLoading } = useUser();
   const marketSlug = params.market as string;
   const betTypeSlug = params.bettype as string;
+
+  const [bets, setBets] = useState<Bet[]>([]);
+  const [isPlacingBet, setIsPlacingBet] = useState(false);
   
-  const betTypeName = betTypeSlug.split('-').map(word => {
-    if (word.toLowerCase() === 'panna') return 'Panna';
-    return word.charAt(0).toUpperCase() + word.slice(1);
-  }).join(' ');
+  const betTypeName = useMemo(() => {
+    const slugToNameMap: { [key: string]: string } = {
+      'single-digit': 'Single Digit',
+      'jodi': 'Jodi',
+      'single-panna': 'Single Panna',
+      'double-panna': 'Double Panna',
+      'triple-panna': 'Triple Panna',
+      'open-sangam': 'Open Sangam',
+      'close-sangam': 'Close Sangam',
+      'full-sangam': 'Full Sangam',
+      'open': 'Open',
+      'close': 'Close',
+    };
+    return slugToNameMap[betTypeSlug] || betTypeSlug.replace(/-/g, ' ');
+  }, [betTypeSlug]);
+
   const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
   const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
@@ -484,36 +337,222 @@ export default function PlaceBetPage() {
   const depositBalance = userData?.depositBalance || 0;
   const winningBalance = userData?.winningBalance || 0;
   const isLoading = isUserLoading || isUserDataLoading;
+  const totalBalance = depositBalance + winningBalance;
+
+  const totalBetAmount = useMemo(() => {
+    return bets.reduce((sum, bet) => sum + parseInt(bet.amount || "0"), 0);
+  }, [bets]);
+
+  const handleBetsChange = (newBet: Bet) => {
+     setBets(prevBets => {
+        const updatedBets = [...prevBets, newBet];
+        const newTotalBetAmount = updatedBets.reduce((sum, bet) => sum + parseInt(bet.amount || "0"), 0);
+        if (newTotalBetAmount > totalBalance) {
+            toast({
+                variant: "destructive",
+                title: "Insufficient Balance",
+                description: `Your total bet of ₹${newTotalBetAmount} exceeds your wallet balance.`,
+            });
+            return prevBets; 
+        }
+        return updatedBets;
+     });
+  };
+
+  const handleRemoveBet = (index: number) => {
+    const newBets = bets.filter((_, i) => i !== index);
+    setBets(newBets);
+  };
+
+  const handleSubmit = async () => {
+    setIsPlacingBet(true);
+
+    if (bets.length === 0) {
+      toast({ variant: "destructive", title: "No Bets Added" });
+      setIsPlacingBet(false);
+      return;
+    }
+
+    if (totalBetAmount > totalBalance) {
+      toast({ variant: "destructive", title: "Insufficient Balance" });
+      setIsPlacingBet(false);
+      return;
+    }
+
+    if (!firestore || !authUser) {
+         toast({ variant: "destructive", title: "Database Error" });
+        setIsPlacingBet(false);
+        return;
+    }
+    
+    // Fetch today's result to decide the session for Panna bets
+    const today = new Date();
+    const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const resultQuery = query(
+        collection(firestore, "kalyan_results"),
+        where("marketName", "==", marketName),
+        where("date", "==", dateString),
+        limit(1)
+    );
+    const resultSnapshot = await getDocs(resultQuery);
+    const todaysResult = resultSnapshot.empty ? null : resultSnapshot.docs[0].data();
+    const isOpenResultDeclared = !!todaysResult?.openPanna;
+
+
+    try {
+        const batch = writeBatch(firestore);
+        const userRef = doc(firestore, "users", authUser.uid);
+        
+        let amountToDeduct = totalBetAmount;
+        let depositDeduction = Math.min(amountToDeduct, depositBalance);
+        amountToDeduct -= depositDeduction;
+        let winningDeduction = Math.min(amountToDeduct, winningBalance);
+
+        batch.update(userRef, {
+            depositBalance: increment(-depositDeduction),
+            winningBalance: increment(-winningDeduction)
+        });
+
+        const transactionRef = doc(collection(firestore, "transactions"));
+        batch.set(transactionRef, {
+            userId: authUser.uid,
+            userName: authUser.displayName || 'Unknown User',
+            type: 'Bet',
+            amount: -totalBetAmount,
+            status: 'Placed',
+            date: new Date().toISOString(),
+            description: `Bets on ${betTypeName} (${bets.length} numbers) in ${marketName}`,
+            market: marketName,
+            gameType: betTypeName,
+            betCount: bets.length
+        });
+        
+        let session: 'Open' | 'Close' | 'Jodi';
+        
+        if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam' || betTypeName === 'Open Sangam' || betTypeName === 'Close Sangam') {
+            session = 'Jodi';
+        } else if (betTypeName.includes('Panna')) {
+            session = isOpenResultDeclared ? 'Close' : 'Open';
+        } else if (betTypeName === 'Close') {
+            session = 'Close';
+        } else {
+            session = 'Open';
+        }
+
+        const gameTypeForDb = (betTypeName === 'Open' || betTypeName === 'Close') ? 'Single Digit' : betTypeName;
+
+        bets.forEach(bet => {
+            const betRef = doc(collection(firestore, "kalyan_bets"));
+            batch.set(betRef, {
+                userId: authUser.uid,
+                userName: authUser.displayName || 'Unknown User',
+                market: marketName,
+                gameType: gameTypeForDb,
+                number: bet.number,
+                amount: parseInt(bet.amount, 10),
+                status: 'Placed',
+                session: session,
+                transactionId: transactionRef.id,
+                createdAt: serverTimestamp(),
+            });
+        });
+        
+        await batch.commit();
+
+        toast({
+          title: "Bets Placed!",
+          description: `Your bets for ${betTypeName} (${marketName}) totaling ₹${totalBetAmount} have been placed.`
+        });
+        setBets([]);
+    } catch(error: any) {
+        console.error("Bet placement failed:", error);
+        toast({ variant: "destructive", title: "Bet Failed", description: error.message || "Could not place your bets." });
+    } finally {
+        setIsPlacingBet(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Mobile Layout */}
-      <div className="flex flex-col gap-4 sm:hidden">
-        <WalletCard depositBalance={depositBalance} winningBalance={winningBalance} isLoading={isLoading} />
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
-          <p className="text-muted-foreground">
-            Market: <span className="font-semibold text-primary">{marketName}</span>
-          </p>
-        </div>
-      </div>
-
-      {/* Desktop Layout */}
-      <div className="hidden sm:grid sm:grid-cols-2 gap-4 items-start">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Place Bet</h1>
-          <p className="text-muted-foreground">
-            Market: <span className="font-semibold text-primary">{marketName}</span>
-          </p>
-        </div>
-        <div className="sm:justify-self-end">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="w-full lg:order-first">
             <WalletCard depositBalance={depositBalance} winningBalance={winningBalance} isLoading={isLoading} />
         </div>
+        <div className="w-full lg:w-2/3">
+            <BetForm betTypeName={betTypeName} market={marketName} onBetsChange={handleBetsChange} />
+        </div>
       </div>
 
-      <BetForm gameType={betTypeName} market={marketName} depositBalance={depositBalance} winningBalance={winningBalance} isLoadingBalance={isLoading} />
+      <Card>
+          <CardHeader>
+              <div className="flex justify-between items-center">
+                  <CardTitle>Your Bets</CardTitle>
+                  {isLoading ? <Skeleton className="h-6 w-24" /> : <div className="text-sm font-mono">Total: ₹{totalBetAmount}</div> }
+              </div>
+               <CardDescription>
+                  A summary of the bets you are about to place.
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+              {bets.length > 0 ? (
+                  <div className="rounded-lg border">
+                       <div className="w-full">
+                          <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                      <TableHead>Number</TableHead>
+                                      <TableHead>Amount</TableHead>
+                                      <TableHead className="text-right">Action</TableHead>
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {bets.map((bet, index) => (
+                                  <TableRow key={index}>
+                                      <TableCell className="font-medium py-2">
+                                          <Badge variant="secondary" className="font-mono">
+                                              {bet.number}
+                                          </Badge>
+                                      </TableCell>
+                                      <TableCell className="py-2">₹{bet.amount}</TableCell>
+                                      <TableCell className="text-right py-2">
+                                      <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                          onClick={() => handleRemoveBet(index)}
+                                      >
+                                          <Trash2 className="h-4 w-4" />
+                                          <span className="sr-only">Remove bet</span>
+                                      </Button>
+                                      </TableCell>
+                                  </TableRow>
+                                  ))}
+                              </TableBody>
+                          </Table>
+                      </div>
+                  </div>
+              ) : (
+                  <div className="text-center text-sm text-muted-foreground py-8">
+                      Add bets using the form to see them here.
+                  </div>
+              )}
+          </CardContent>
+           <CardFooter>
+              <Button
+                  type="button"
+                  className="w-full"
+                  onClick={handleSubmit}
+                  disabled={bets.length === 0 || isPlacingBet || isLoading}
+              >
+                  {isPlacingBet ? "Placing Bets..." : `Place Bets (Total: ₹${totalBetAmount})`}
+              </Button>
+          </CardFooter>
+      </Card>
     </div>
   );
 }
+
+    
 
     

@@ -58,6 +58,7 @@ export default function ActiveMarketsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-base">Market Name</TableHead>
+
                   <TableHead className="text-center text-base">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -89,5 +90,3 @@ export default function ActiveMarketsPage() {
     </div>
   );
 }
-
-    

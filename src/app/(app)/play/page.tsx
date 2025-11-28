@@ -5,23 +5,26 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Ticket, Clock } from "lucide-react";
+import { Ticket, Clock, Loader } from "lucide-react";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy, limit } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 type Market = {
   id: string;
   name: string;
   openBiddingTime: string;
+  openResultTime: string;
   closeBiddingTime: string;
+  closeResultTime: string;
+  status: "Active" | "Inactive";
 };
 
 type Result = {
@@ -35,64 +38,84 @@ type Result = {
 
 const getPannaSum = (panna: string) => {
     if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '-';
-    return panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10;
+    return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
 };
 
 
 const MarketResult = ({ marketName }: { marketName: string }) => {
     const firestore = useFirestore();
+    const [today, setToday] = useState('');
+
+    useEffect(() => {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        setToday(`${year}-${month}-${day}`);
+    }, []);
 
     const resultQuery = useMemoFirebase(
-        () => firestore ? query(
+        () => firestore && today ? query(
             collection(firestore, "kalyan_results"),
             where("marketName", "==", marketName),
-            orderBy("date", "desc"),
+            where("date", "==", today),
             limit(1)
         ) : null,
-        [firestore, marketName]
+        [firestore, marketName, today]
     );
 
-    const { data: results, isLoading } = useCollection<Result>(resultQuery, { skip: !firestore });
+    const { data: results, isLoading } = useCollection<Result>(resultQuery, { skip: !firestore || !today });
     const result = results?.[0];
-
+    
     if (isLoading) {
-        return <Skeleton className="h-5 w-full" />;
+        return <Skeleton className="h-12 w-full mt-2" />;
     }
 
-    const isOpenResult = result && result.openPanna && !result.closePanna;
-    const isFullResult = result && result.openPanna && result.closePanna;
+    const isOpenResult = result && result.openPanna && !result.closePanna && result.jodi !== 'L';
+    const isFullResult = result && result.openPanna && result.closePanna && result.jodi !== 'L';
+    const isHoliday = result && result.jodi === 'L';
+    const openDigit = getPannaSum(result?.openPanna || '');
 
     return (
-        <div className="mt-2 text-center font-mono text-sm">
-            {isFullResult ? (
+        <div className="mt-2 text-center font-mono text-sm flex items-center justify-center">
+            {isHoliday ? (
+                 <div className="flex items-center justify-center gap-2 text-destructive font-bold">
+                    <span>HOLIDAY</span>
+                </div>
+            ) : isFullResult ? (
                  <div className="flex items-center justify-center gap-2">
                     <div className="flex flex-col items-center">
-                        <span className="text-2xl font-bold tracking-widest">{result.openPanna}</span>
+                        <span className="text-xl font-bold tracking-widest">{result.openPanna}</span>
                     </div>
                     <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-                        <span className="text-3xl font-bold tracking-wider">{result.jodi}</span>
+                        <span className="text-2xl font-bold tracking-wider">{result.jodi}</span>
                     </div>
                     <div className="flex flex-col items-center">
-                        <span className="text-2xl font-bold tracking-widest">{result.closePanna}</span>
+                        <span className="text-xl font-bold tracking-widest">{result.closePanna}</span>
                     </div>
                 </div>
             ) : isOpenResult ? (
-                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                    <span className="text-2xl font-bold tracking-widest text-foreground">{result.openPanna}</span>
-                    <span className="text-2xl font-bold"> - </span>
-                    <span className="text-3xl font-bold text-primary">{getPannaSum(result.openPanna)}</span>
-                    <span className="text-3xl font-bold text-muted-foreground animate-pulse"> - </span>
+                 <div className="flex items-center justify-center gap-2">
+                    <div className="flex flex-col items-center">
+                        <span className="text-xl font-bold tracking-widest">{result.openPanna}</span>
+                    </div>
+                    <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                        <span className="text-2xl font-bold tracking-wider">{openDigit}</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <span className="text-xl font-bold tracking-widest">---</span>
+                    </div>
                 </div>
             ) : (
                 <div className="flex items-center justify-center gap-2 text-muted-foreground">
                     <div className="flex flex-col items-center">
-                        <span className="text-2xl font-bold tracking-widest">***</span>
+                        <span className="text-lg font-bold tracking-widest">***</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-md bg-muted px-3 py-1 text-muted-foreground">
-                        <span className="text-3xl font-bold tracking-wider">**</span>
+                    <div className="flex flex-col items-center rounded-md bg-muted px-2 py-1 text-muted-foreground">
+                        <span className="text-xl font-bold tracking-wider">**</span>
                     </div>
                     <div className="flex flex-col items-center">
-                        <span className="text-2xl font-bold tracking-widest">***</span>
+                        <span className="text-lg font-bold tracking-widest">***</span>
                     </div>
                 </div>
             )}
@@ -100,9 +123,107 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
     );
 }
 
+const MarketCard = ({ market }: { market: Market }) => {
+    const [buttonState, setButtonState] = useState({ text: "Play Now", disabled: false, loading: true });
+    
+    useEffect(() => {
+        const parseTime = (timeStr: string) => {
+            if (!timeStr) return new Date(0);
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const date = new Date();
+            date.setHours(hours, minutes, 0, 0);
+            return date;
+        };
+        
+        const openBiddingTime = parseTime(market.openBiddingTime);
+        const openResultTime = parseTime(market.openResultTime);
+        const closeBiddingTime = parseTime(market.closeBiddingTime);
+        const closeResultTime = parseTime(market.closeResultTime);
+
+        const updateButtonState = () => {
+            const now = new Date();
+            
+            if (now < openBiddingTime) {
+                setButtonState({ text: "Play Now", disabled: false, loading: false });
+            } 
+            else if (now >= openBiddingTime && now < openResultTime) {
+                setButtonState({ text: "Waiting for Open Result", disabled: true, loading: false });
+            } 
+            else if (now >= openResultTime && now < closeBiddingTime) {
+                setButtonState({ text: "Play Now", disabled: false, loading: false });
+            } 
+            else if (now >= closeBiddingTime && now < closeResultTime) {
+                setButtonState({ text: "Waiting for Close Results", disabled: true, loading: false });
+            } 
+            else { 
+                setButtonState({ text: "Betting Closed", disabled: true, loading: false });
+            }
+        };
+
+        updateButtonState();
+        const intervalId = setInterval(updateButtonState, 60000); 
+
+        return () => clearInterval(intervalId);
+    }, [market.openBiddingTime, market.openResultTime, market.closeBiddingTime, market.closeResultTime]);
+    
+    return (
+         <Card className={cn("flex flex-col justify-between", buttonState.disabled && buttonState.text === "Betting Closed" && "opacity-70 bg-muted/50")}>
+            <div>
+                <CardHeader className="p-4 pb-2 flex-row justify-between items-start">
+                  <CardTitle className="text-base">{market.name}</CardTitle>
+                   <div className="text-right">
+                      <p className="text-xs font-semibold">{new Date().toLocaleDateString('en-GB')}</p>
+                      <p className="text-xs text-muted-foreground">{new Date().toLocaleDateString('en-US', { weekday: 'long' })}</p>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-4 pb-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                        <Clock className="h-3 w-3 shrink-0" />
+                        <span className="font-medium w-12">Bidding:</span>
+                        <span className="font-semibold text-primary">{market.openBiddingTime}</span>
+                        <span className="mx-1">to</span>
+                        <span className="font-semibold text-destructive">{market.closeBiddingTime}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                        <Clock className="h-3 w-3 shrink-0" />
+                        <span className="font-medium w-12">Result:</span>
+                        <span className="font-semibold text-primary">{market.openResultTime}</span>
+                        <span className="mx-1">to</span>
+                        <span className="font-semibold text-destructive">{market.closeResultTime}</span>
+                    </div>
+                    <MarketResult marketName={market.name} />
+                </CardContent>
+            </div>
+            <CardFooter className="p-4">
+               <Button 
+                    asChild={!buttonState.disabled} 
+                    className="w-full" 
+                    size="sm" 
+                    disabled={buttonState.disabled || buttonState.loading}
+                    variant={buttonState.disabled && buttonState.text !== "Play Now" ? "destructive" : "default"}
+               >
+                <Link 
+                    href={`/play/${market.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    aria-disabled={buttonState.disabled || buttonState.loading}
+                    tabIndex={buttonState.disabled || buttonState.loading ? -1 : undefined}
+                    onClick={(e) => { if (buttonState.disabled || buttonState.loading) e.preventDefault(); }}
+                >
+                    {buttonState.loading ? (
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    ) : buttonState.text === 'Play Now' ? (
+                        <Ticket className="mr-2 h-4 w-4" />
+                    ) : null}
+                  {buttonState.text}
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+    )
+}
 
 export default function MarketSelectionPage() {
     const firestore = useFirestore();
+    
     const activeMarketsQuery = useMemoFirebase(
         () =>
         firestore
@@ -110,15 +231,10 @@ export default function MarketSelectionPage() {
             : null,
         [firestore]
     );
-    const { data: markets, isLoading } = useCollection<any>(activeMarketsQuery, { skip: !firestore });
-
+    const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery, { skip: !firestore });
+    
   return (
     <div className="flex flex-col gap-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Choose a Market</h1>
-        <p className="text-muted-foreground">Select a market you want to play in.</p>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
@@ -128,7 +244,8 @@ export default function MarketSelectionPage() {
                 </CardHeader>
                 <CardContent className="p-4 pt-2 pb-2">
                    <Skeleton className="h-3 w-full" />
-                   <Skeleton className="h-8 w-full mt-2" />
+                   <Skeleton className="h-3 w-full mt-1" />
+                   <Skeleton className="h-12 w-full mt-2" />
                 </CardContent>
                 <CardFooter className="p-4 pt-2">
                   <Skeleton className="h-8 w-full" />
@@ -136,30 +253,7 @@ export default function MarketSelectionPage() {
               </Card>
             ))
           : markets?.map((market) => (
-          <Card key={market.id} className="flex flex-col justify-between">
-            <div>
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-base">{market.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-2 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                        <Clock className="h-3 w-3" />
-                        <span>Bidding: <span className="font-semibold text-primary">{market.openBiddingTime}</span></span>
-                        <span> to </span>
-                        <span><span className="font-semibold text-destructive">{market.closeBiddingTime}</span></span>
-                    </div>
-                    <MarketResult marketName={market.name} />
-                </CardContent>
-            </div>
-            <CardFooter className="p-4 pt-2">
-               <Button asChild className="w-full" size="sm">
-                <Link href={`/play/${market.name.toLowerCase().replace(/\s+/g, '-')}`}>
-                  <Ticket className="mr-2 h-4 w-4" />
-                  Play Now
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
+              <MarketCard key={market.id} market={market} />
         ))}
       </div>
        {!isLoading && markets?.length === 0 && (
@@ -172,5 +266,3 @@ export default function MarketSelectionPage() {
     </div>
   );
 }
-
-    

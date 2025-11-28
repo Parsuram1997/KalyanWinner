@@ -33,18 +33,18 @@ export default function RatesPage() {
   const { data: rates, isLoading } = useCollection<GameRate>(ratesQuery, { skip: !firestore });
 
   return (
-    <div className="flex justify-center items-start p-4">
-      <Card className="w-full max-w-2xl">
+    <div className="flex flex-col gap-6">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Coins className="h-6 w-6" />
-            <span>Kalyan Matka Payout Rates</span>
+            <span>Payout Rates</span>
           </CardTitle>
           <CardDescription>
             The rates below show the payout for a winning bet.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -69,7 +69,7 @@ export default function RatesPage() {
               </TableBody>
             </Table>
           </div>
-           <p className="text-xs text-muted-foreground mt-4">
+           <p className="text-xs text-muted-foreground mt-4 px-6 sm:px-0">
             Disclaimer: These rates are for informational purposes only and are subject to change. Please confirm the rates before placing a bet. Playing Matka is a game of chance and may not be legal in your jurisdiction.
           </p>
         </CardContent>

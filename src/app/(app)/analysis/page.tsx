@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -23,7 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { analyzeHistoricalData } from "@/ai/flows/historical-data-analysis";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
@@ -45,7 +46,6 @@ const sampleData = `Kalyan Day Results:
 16/07/2024: 789-44-220`;
 
 export default function AnalysisPage() {
-  const { toast } = useToast();
   const [analysisResult, setAnalysisResult] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
