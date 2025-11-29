@@ -75,80 +75,67 @@ const getStatusVariant = (status: Transaction['status']) => {
 };
 
 const FeaturedMarkets = () => {
-  const markets = [
-    {
-      name: 'Kalahandi Day',
-      slug: 'kalahandi-day',
-      description: 'Din mein apni kismat aazmayein!',
-    },
-    {
-      name: 'Kalahandi Night',
-      slug: 'kalahandi-night',
-      description: 'Raat ke shandar inaam jeetein!',
-    },
-  ];
+    const markets = [
+      {
+        name: 'Kalahandi Day',
+        slug: 'kalahandi-day',
+        description: 'Din mein apni kismat aazmayein!',
+      },
+      {
+        name: 'Kalahandi Night',
+        slug: 'kalahandi-night',
+        description: 'Raat ke shandar inaam jeetein!',
+      },
+    ];
 
-  return (
-    <div className="mt-6">
-      <div className="px-4 sm:px-6 pb-2">
-        <h3 className="flex items-center gap-2 text-lg font-semibold">
-          <Flame className="text-destructive h-5 w-5" />
-          <span>Hamare Special Markets</span>
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1 hidden sm:block">
-          In markets par bet lagayein aur bade inaam jeetein!
-        </p>
-      </div>
-
-      {/* --- Mobile Custom Scroll Snap Carousel --- */}
-      <div className="md:hidden overflow-x-auto pb-4 scroll-snap-x-mandatory scrollbar-hide">
-        <div className="flex w-max px-4 sm:px-6 [&_>_*+_*]:ml-4">
-          {markets.map((market, index) => (
-            <div key={index} className="w-[80vw] sm:w-[40vw] flex-shrink-0 scroll-snap-start">
-              <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
-                <CardHeader className="p-3 pb-2">
-                  <CardTitle className="text-base">{market.name}</CardTitle>
-                  <CardDescription className="text-xs h-8 sm:h-auto">
-                    {market.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter className="p-3 pt-0 mt-auto">
-                  <Button asChild className="w-full" size="sm">
-                    <Link href={`/play/${market.slug}`}>
-                      <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+    return (
+        <div className="mt-6">
+            <div className="px-4 sm:px-6 pb-2">
+                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                    <Flame className="text-destructive h-5 w-5" />
+                    <span>Hamare Special Markets</span>
+                </h3>
             </div>
-          ))}
+            
+            {/* --- DESKTOP GRID --- */}
+            <div className="hidden md:grid grid-cols-2 gap-4 px-4 sm:px-6">
+                {markets.map((market, index) => (
+                    <Card key={index} className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                        <CardHeader className="p-3 pb-2">
+                            <CardTitle className="text-base">{market.name}</CardTitle>
+                            <CardDescription className="text-xs h-8 sm:h-auto">{market.description}</CardDescription>
+                        </CardHeader>
+                        <CardFooter className="p-3 pt-0 mt-auto">
+                            <Button asChild className="w-full" size="sm">
+                                <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                ))}
+            </div>
+
+            {/* --- MOBILE CSS SCROLL-SNAP CAROUSEL --- */}
+            <div className="md:hidden">
+                <ul className="flex gap-4 overflow-x-auto scroll-snap-x-mandatory scrollbar-hide px-4 sm:px-6">
+                    {markets.map((market, index) => (
+                        <li key={index} className="scroll-snap-start flex-shrink-0 w-4/5">
+                             <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                                <CardHeader className="p-3 pb-2">
+                                    <CardTitle className="text-base">{market.name}</CardTitle>
+                                    <CardDescription className="text-xs h-8">{market.description}</CardDescription>
+                                </CardHeader>
+                                <CardFooter className="p-3 pt-0 mt-auto">
+                                    <Button asChild className="w-full" size="sm">
+                                        <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
-      </div>
-      
-      {/* --- DESKTOP GRID --- */}
-      <div className="hidden md:grid grid-cols-2 gap-4 px-4 sm:px-6">
-         {markets.map((market, index) => (
-          <div key={index}>
-             <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
-              <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-base">{market.name}</CardTitle>
-                <CardDescription className="text-xs h-8 sm:h-auto">
-                  {market.description}
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="p-3 pt-0 mt-auto">
-                <Button asChild className="w-full" size="sm">
-                  <Link href={`/play/${market.slug}`}>
-                    <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    );
 };
 
 

@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    overflow-x: hidden;
+  }
+  
   :root {
     --background: 220 50% 96%;
     --foreground: 220 20% 15%;
@@ -95,6 +99,9 @@
   }
   .scroll-snap-start {
     scroll-snap-align: start;
+  }
+  .scroll-snap-center {
+    scroll-snap-align: center;
   }
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
