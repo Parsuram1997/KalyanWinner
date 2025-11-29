@@ -83,15 +83,15 @@ const FeaturedMarkets = () => {
             <Flame className="text-destructive h-5 w-5" />
             <span>Hamare Special Markets</span>
         </CardTitle>
-        <CardDescription className="hidden sm:block h-8">In markets par bet lagayein aur bade inaam jeetein!</CardDescription>
+        <CardDescription className="hidden sm:block">In markets par bet lagayein aur bade inaam jeetein!</CardDescription>
       </CardHeader>
-      <CardContent className="p-0 sm:p-6">
+      <CardContent>
          {/* Carousel for Mobile */}
-        <div className="sm:hidden">
+        <div className="sm:hidden px-4">
            <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
-            <CarouselContent className="-ml-4">
+            <CarouselContent>
               {markets.map((market) => (
-                <CarouselItem key={market.slug} className="pl-4 basis-2/3">
+                <CarouselItem key={market.slug} className="basis-2/3">
                   <Card className="bg-accent/50 border-primary/50">
                     <CardHeader className="p-3">
                       <CardTitle className="text-base">{market.name}</CardTitle>
