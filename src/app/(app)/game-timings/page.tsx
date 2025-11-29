@@ -54,7 +54,7 @@ export default function GameTimingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
