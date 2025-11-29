@@ -19,7 +19,7 @@ import {
 import { Trophy } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
-import { startOfDay, endOfDay } from 'date-fns';
+import { format } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo } from "react";
 
@@ -45,16 +45,15 @@ export default function LeaderboardPage() {
   const leaderboardQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     
-    const today = new Date();
-    const startDate = startOfDay(today).toISOString();
-    const endDate = endOfDay(today).toISOString();
+    // Get today's date in YYYY-MM-DD format
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
 
+    // Query for dates greater than or equal to the start of today
     return query(
       collection(firestore, "transactions"),
       where("type", "==", "Win"),
       where("status", "==", "Completed"),
-      where("date", ">=", startDate),
-      where("date", "<=", endDate)
+      where("date", ">=", todayStr)
     );
   }, [firestore]);
 
@@ -67,10 +66,14 @@ export default function LeaderboardPage() {
     if (!transactions || transactions.length === 0) {
         return [];
     }
+    
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const todaysTransactions = transactions.filter(txn => txn.date.startsWith(todayStr));
+
 
     const winnerMap: { [userId: string]: AggregatedWinner } = {};
 
-    transactions.forEach(txn => {
+    todaysTransactions.forEach(txn => {
         if (!winnerMap[txn.userId]) {
             winnerMap[txn.userId] = {
                 userId: txn.userId,
