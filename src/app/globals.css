@@ -88,3 +88,19 @@
     background-image: linear-gradient(to bottom right, hsl(var(--primary)/0.2), hsl(var(--secondary)/0.3), hsl(var(--background)));
   }
 }
+
+@layer utilities {
+  .scroll-snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+  }
+  .scroll-snap-start {
+    scroll-snap-align: start;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}

@@ -1,63 +1,96 @@
+'use client';
 
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useUser, useFirestore } from "@/firebase";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import Link from "next/link";
-import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy, Ticket, Flame, ArrowRight, TrendingUp } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
-import { cn } from "@/lib/utils";
-
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useUser, useFirestore } from '@/firebase';
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+import {
+  ArrowUpRight,
+  ArrowDownLeft,
+  DollarSign,
+  PiggyBank,
+  Trophy,
+  Ticket,
+  Flame,
+  ArrowRight,
+  TrendingUp,
+} from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Type for user balance data
 type UserBalance = {
-    deposit: number;
-    winning: number;
-}
+  deposit: number;
+  winning: number;
+};
 
 // Type for a single transaction
 type Transaction = {
-    id: string;
-    amount: number;
-    type: 'Deposit' | 'Withdrawal' | 'Bet' | 'Win' | 'Commission';
-    status: 'Pending' | 'Completed' | 'Approved' | 'Rejected' | 'Won' | 'Lost' | 'Placed';
-    description: string;
-    date: string; // Date is stored as an ISO string
-}
+  id: string;
+  amount: number;
+  type: 'Deposit' | 'Withdrawal' | 'Bet' | 'Win' | 'Commission';
+  status:
+    | 'Pending'
+    | 'Completed'
+    | 'Approved'
+    | 'Rejected'
+    | 'Won'
+    | 'Lost'
+    | 'Placed';
+  description: string;
+  date: string; // Date is stored as an ISO string
+};
 
 const getStatusVariant = (status: Transaction['status']) => {
-    switch (status) {
-        case 'Completed':
-        case 'Won':
-        case 'Approved':
-            return 'secondary';
-        case 'Pending': 
-            return 'default';
-        case 'Rejected':
-            return 'destructive';
-        default: return 'outline';
-    }
-}
+  switch (status) {
+    case 'Completed':
+    case 'Won':
+    case 'Approved':
+      return 'secondary';
+    case 'Pending':
+      return 'default';
+    case 'Rejected':
+      return 'destructive';
+    default:
+      return 'outline';
+  }
+};
 
 const FeaturedMarkets = () => {
   const markets = [
     {
-      name: "Kalahandi Day",
-      slug: "kalahandi-day",
-      description: "Din mein apni kismat aazmayein!",
+      name: 'Kalahandi Day',
+      slug: 'kalahandi-day',
+      description: 'Din mein apni kismat aazmayein!',
     },
     {
-      name: "Kalahandi Night",
-      slug: "kalahandi-night",
-      description: "Raat ke shandar inaam jeetein!",
+      name: 'Kalahandi Night',
+      slug: 'kalahandi-night',
+      description: 'Raat ke shandar inaam jeetein!',
     },
+    {
+        name: 'Main Bazar',
+        slug: 'main-bazar',
+        description: 'Sabse popular, sabse damdaar!',
+    }
   ];
 
   return (
@@ -72,42 +105,32 @@ const FeaturedMarkets = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-          <div className="overflow-hidden p-6">
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent className="-ml-4">
-                {markets.map((market, index) => (
-                  <CarouselItem key={index} className="pl-4 basis-full">
-                      <Card className="bg-accent/50 border-primary/50">
-                        <CardHeader className="p-3">
-                          <CardTitle className="text-base">{market.name}</CardTitle>
-                          <CardDescription className="text-xs h-8 sm:h-auto">
-                            {market.description}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <Button asChild className="w-full" size="sm">
-                            <Link href={`/play/${market.slug}`}>
-                              <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                            </Link>
-                          </Button>
-                        </CardContent>
-                      </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          </div>
+        {/* Custom Scroll Snap Carousel */}
+        <div className="overflow-x-auto scroll-snap-x-mandatory scrollbar-hide flex gap-4 px-6 py-4">
+          {markets.map((market, index) => (
+            <div key={index} className="scroll-snap-start shrink-0 w-2/3 sm:w-1/3">
+              <Card className="bg-accent/50 border-primary/50 h-full">
+                <CardHeader className="p-3">
+                  <CardTitle className="text-base">{market.name}</CardTitle>
+                  <CardDescription className="text-xs h-8 sm:h-auto">
+                    {market.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-3 pt-0">
+                  <Button asChild className="w-full" size="sm">
+                    <Link href={`/play/${market.slug}`}>
+                      <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
 };
-
 
 export default function WalletPage() {
   const { user, isUserLoading } = useUser();
@@ -120,31 +143,32 @@ export default function WalletPage() {
     if (!user || !firestore) return;
     setIsLoading(true);
     try {
-        // Fetch balance
-        const userDocRef = doc(firestore, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-            const data = userDoc.data();
-            setBalance({
-                deposit: data.depositBalance || 0,
-                winning: data.winningBalance || 0,
-            });
-        }
+      // Fetch balance
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setBalance({
+          deposit: data.depositBalance || 0,
+          winning: data.winningBalance || 0,
+        });
+      }
 
-        // Fetch only deposit and withdrawal transactions
-        const transQuery = query(
-            collection(firestore, "transactions"), 
-            where("userId", "==", user.uid),
-            where("type", "in", ["Deposit", "Withdrawal"])
-        );
-        const transSnapshot = await getDocs(transQuery);
-        const fetchedTransactions = transSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
-        setTransactions(fetchedTransactions);
-
+      // Fetch only deposit and withdrawal transactions
+      const transQuery = query(
+        collection(firestore, 'transactions'),
+        where('userId', '==', user.uid),
+        where('type', 'in', ['Deposit', 'Withdrawal'])
+      );
+      const transSnapshot = await getDocs(transQuery);
+      const fetchedTransactions = transSnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Transaction)
+      );
+      setTransactions(fetchedTransactions);
     } catch (error) {
-        console.error("Failed to fetch wallet data:", error);
+      console.error('Failed to fetch wallet data:', error);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   }, [user, firestore]);
 
@@ -154,135 +178,165 @@ export default function WalletPage() {
 
   // Sort transactions on the client-side, exactly like the dashboard
   const sortedTransactions = useMemo(() => {
-      if (!transactions) return [];
-      return [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (!transactions) return [];
+    return [...transactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
   }, [transactions]);
-  
+
   const totalBalance = useMemo(() => {
-      if (!balance) return 0;
-      return balance.deposit + balance.winning;
+    if (!balance) return 0;
+    return balance.deposit + balance.winning;
   }, [balance]);
 
-
-  const recentTransactions = useMemo(() => sortedTransactions.slice(0, 10), [sortedTransactions]);
+  const recentTransactions = useMemo(
+    () => sortedTransactions.slice(0, 10),
+    [sortedTransactions]
+  );
 
   return (
     <div className="space-y-6">
-        <Tabs defaultValue="wallet" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="wallet">Wallet</TabsTrigger>
-                <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-            </TabsList>
-            <TabsContent value="wallet" className="mt-4">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>My Wallet</CardTitle>
-                        <CardDescription>View your account balance and manage your funds.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Unified Balance Card */}
-                        <Card className="bg-gradient-to-br from-primary/10 to-accent/10">
-                            <CardContent className="p-4 sm:p-6 space-y-4">
-                                {isLoading ? (
-                                    <div className="space-y-4">
-                                        <Skeleton className="h-8 w-3/4" />
-                                        <Skeleton className="h-8 w-3/4" />
-                                        <Separator/>
-                                        <Skeleton className="h-8 w-1/2" />
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2 text-muted-foreground">
-                                                    <PiggyBank className="h-5 w-5" />
-                                                    <span className="text-sm font-medium">Deposit Balance</span>
-                                                </div>
-                                                <span className="font-semibold text-base font-mono">₹{(balance?.deposit ?? 0).toFixed(0)}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2 text-muted-foreground">
-                                                    <Trophy className="h-5 w-5" />
-                                                    <span className="text-sm font-medium">Winning Balance</span>
-                                                </div>
-                                                <span className="font-semibold text-base font-mono">₹{(balance?.winning ?? 0).toFixed(0)}</span>
-                                            </div>
-                                        </div>
-                                        <Separator />
-                                        <div className="flex items-center justify-between pt-2">
-                                            <div className="flex items-center gap-2 font-bold">
-                                                <DollarSign className="h-5 w-5" />
-                                                <span className="text-sm">Total Balance</span>
-                                            </div>
-                                            <span className="font-bold text-xl font-mono text-primary">₹{totalBalance.toFixed(0)}</span>
-                                        </div>
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Action Buttons */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
-                        <Button asChild size="lg">
-                                <Link href="/wallet/deposit">Make a Deposit</Link>
-                        </Button>
-                        <Button asChild size="lg" variant="destructive">
-                                <Link href="/wallet/withdraw">Request Withdrawal</Link>
-                        </Button>
+      <Tabs defaultValue="wallet" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="wallet">Wallet</TabsTrigger>
+          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+        </TabsList>
+        <TabsContent value="wallet" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>My Wallet</CardTitle>
+              <CardDescription>
+                View your account balance and manage your funds.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Unified Balance Card */}
+              <Card className="bg-gradient-to-br from-primary/10 to-accent/10">
+                <CardContent className="p-4 sm:p-6 space-y-4">
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-8 w-3/4" />
+                      <Skeleton className="h-8 w-3/4" />
+                      <Separator />
+                      <Skeleton className="h-8 w-1/2" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <PiggyBank className="h-5 w-5" />
+                            <span className="text-sm font-medium">
+                              Deposit Balance
+                            </span>
+                          </div>
+                          <span className="font-semibold text-base font-mono">
+                            ₹{(balance?.deposit ?? 0).toFixed(0)}
+                          </span>
                         </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Trophy className="h-5 w-5" />
+                            <span className="text-sm font-medium">
+                              Winning Balance
+                            </span>
+                          </div>
+                          <span className="font-semibold text-base font-mono">
+                            ₹{(balance?.winning ?? 0).toFixed(0)}
+                          </span>
+                        </div>
+                      </div>
+                      <Separator />
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-2 font-bold">
+                          <DollarSign className="h-5 w-5" />
+                          <span className="text-sm">Total Balance</span>
+                        </div>
+                        <span className="font-bold text-xl font-mono text-primary">
+                          ₹{totalBalance.toFixed(0)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
 
-                         {/* Featured Markets Section */}
-                        <FeaturedMarkets />
+              {/* Action Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+                <Button asChild size="lg">
+                  <Link href="/wallet/deposit">Make a Deposit</Link>
+                </Button>
+                <Button asChild size="lg" variant="destructive">
+                  <Link href="/wallet/withdraw">Request Withdrawal</Link>
+                </Button>
+              </div>
 
-                    </CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="activity" className="mt-4">
-                 <Card>
-                    <CardHeader>
-                        <h3 className="text-lg font-semibold">Recent Activity</h3>
-                    </CardHeader>
-                    <CardContent className="p-0 sm:p-6">
-                        {isLoading ? (
-                            <div className="space-y-2 p-4">
-                                <Skeleton className="h-12 w-full" />
-                                <Skeleton className="h-12 w-full" />
-                                <Skeleton className="h-12 w-full" />
-                            </div>
-                        ) : recentTransactions.length > 0 ? (
-                            <div className="border-t sm:border rounded-md">
-                                {recentTransactions.map(tx => (
-                                    <div key={tx.id} className="flex items-center justify-between px-4 py-2 border-b last:border-b-0">
-                                        <div className="flex items-center gap-3">
-                                            {tx.type === 'Deposit' ? 
-                                                <ArrowDownLeft className="h-4 w-4 text-green-500" /> : 
-                                                <ArrowUpRight className="h-4 w-4 text-red-500" />
-                                            }
-                                            <div className="flex flex-col">
-                                                <p className="text-xs font-medium">{tx.description}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {new Date(tx.date).toLocaleString()} 
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-1">
-                                            <p className={`font-mono text-xs font-semibold ${tx.type === 'Deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                                                {tx.type === 'Deposit' ? '+' : '-'}{`₹${tx.amount.toFixed(0)}`}
-                                            </p>
-                                            <Badge variant={getStatusVariant(tx.status)}>{tx.status}</Badge>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+              {/* Featured Markets Section */}
+              <FeaturedMarkets />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="activity" className="mt-4">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Recent Activity</h3>
+            </CardHeader>
+            <CardContent className="p-0 sm:p-6">
+              {isLoading ? (
+                <div className="space-y-2 p-4">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ) : recentTransactions.length > 0 ? (
+                <div className="border-t sm:border rounded-md">
+                  {recentTransactions.map((tx) => (
+                    <div
+                      key={tx.id}
+                      className="flex items-center justify-between px-4 py-2 border-b last:border-b-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        {tx.type === 'Deposit' ? (
+                          <ArrowDownLeft className="h-4 w-4 text-green-500" />
                         ) : (
-                            <p className="text-center text-sm text-muted-foreground p-4">
-                            You have no recent activity.
-                            </p>
+                          <ArrowUpRight className="h-4 w-4 text-red-500" />
                         )}
-                    </CardContent>
-                </Card>
-            </TabsContent>
-        </Tabs>
+                        <div className="flex flex-col">
+                          <p className="text-xs font-medium">
+                            {tx.description}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(tx.date).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <p
+                          className={`font-mono text-xs font-semibold ${
+                            tx.type === 'Deposit'
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                          }`}
+                        >
+                          {tx.type === 'Deposit' ? '+' : '-'}
+                          {`₹${tx.amount.toFixed(0)}`}
+                        </p>
+                        <Badge variant={getStatusVariant(tx.status)}>
+                          {tx.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-sm text-muted-foreground p-4">
+                  You have no recent activity.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
