@@ -9,7 +9,7 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy, Ticket, Flame } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy, Ticket, Flame, ArrowRight } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
@@ -80,8 +80,8 @@ const FeaturedMarkets = () => {
   return (
     <Card className="mt-6">
        <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-            <Flame className="text-destructive h-6 w-6" />
+        <CardTitle className="flex items-center gap-2 text-lg">
+            <Flame className="text-destructive h-5 w-5" />
             <span>Hamare Special Markets</span>
         </CardTitle>
         <CardDescription>In markets par bet lagayein aur bade inaam jeetein!</CardDescription>
@@ -94,11 +94,11 @@ const FeaturedMarkets = () => {
               {markets.map((market) => (
                 <CarouselItem key={market.slug}>
                   <Card className="bg-accent/50 border-primary/50">
-                    <CardHeader className="p-4">
+                    <CardHeader className="p-3">
                       <CardTitle className="text-base">{market.name}</CardTitle>
-                      <CardDescription className="text-xs">{market.description}</CardDescription>
+                      <CardDescription className="text-[11px] h-8">{market.description}</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
+                    <CardContent className="p-3 pt-0">
                        <Button asChild className="w-full" size="sm">
                         <Link href={`/play/${market.slug}`}>
                           <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
@@ -126,8 +126,8 @@ const FeaturedMarkets = () => {
            {markets.map((market) => (
              <Card key={market.slug} className="bg-accent/50 border-primary/50">
                <CardHeader className="p-4">
-                 <CardTitle className="text-base">{market.name}</CardTitle>
-                 <CardDescription className="text-xs">{market.description}</CardDescription>
+                 <CardTitle className="text-lg">{market.name}</CardTitle>
+                 <CardDescription className="text-sm">{market.description}</CardDescription>
                </CardHeader>
                <CardContent className="p-4 pt-0">
                   <Button asChild className="w-full" size="sm">
