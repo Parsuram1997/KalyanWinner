@@ -127,19 +127,22 @@ export async function approveWithdrawal(transactionId: string, userId: string, a
             const userData = userDoc.data()!;
             const { role, winningBalance, commissionBalance } = userData;
 
-            let balanceToDeductFrom: 'winningBalance' | 'commissionBalance';
-            let currentBalance: number;
-
             if (role === 'Enroller') {
-                balanceToDeductFrom = 'commissionBalance';
-                currentBalance = commissionBalance || 0;
+                if ((commissionBalance || 0) < amount) {
+                    throw new Error(`Enroller has insufficient commission balance for this withdrawal. Current: ${commissionBalance || 0}, Required: ${amount}`);
+                }
+                t.update(userRef, {
+                    commissionBalance: FieldValue.increment(-amount),
+                    totalWithdrawals: FieldValue.increment(amount)
+                });
             } else {
-                balanceToDeductFrom = 'winningBalance';
-                currentBalance = winningBalance || 0;
-            }
-
-            if (currentBalance < amount) {
-                throw new Error(`User has insufficient ${balanceToDeductFrom} for this withdrawal.`);
+                if ((winningBalance || 0) < amount) {
+                    throw new Error(`User has insufficient winning balance for this withdrawal. Current: ${winningBalance || 0}, Required: ${amount}`);
+                }
+                t.update(userRef, {
+                    winningBalance: FieldValue.increment(-amount),
+                    totalWithdrawals: FieldValue.increment(amount)
+                });
             }
             
             const updateData: {status: string, utr?: string} = { status: "Completed" };
@@ -147,11 +150,6 @@ export async function approveWithdrawal(transactionId: string, userId: string, a
                 updateData.utr = utr;
             }
             t.update(transactionRef, updateData);
-
-            t.update(userRef, {
-                [balanceToDeductFrom]: FieldValue.increment(-amount),
-                totalWithdrawals: FieldValue.increment(amount)
-            });
         });
 
         revalidatePath("/admin/transactions", 'page');
