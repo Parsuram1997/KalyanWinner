@@ -85,10 +85,10 @@ const FeaturedMarkets = () => {
         </CardTitle>
         <CardDescription className="hidden sm:block">In markets par bet lagayein aur bade inaam jeetein!</CardDescription>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-6">
          {/* Carousel for Mobile */}
         <div className="sm:hidden">
-            <Carousel setApi={setApi} className="w-full" opts={{ loop: true }}>
+            <Carousel setApi={setApi} opts={{ loop: true }}>
                 <CarouselContent className="-ml-4">
                     {markets.map((market, index) => (
                         <CarouselItem key={index} className="pl-4">
@@ -123,7 +123,7 @@ const FeaturedMarkets = () => {
         </div>
 
         {/* Grid for Desktop */}
-        <div className="hidden sm:grid sm:grid-cols-2 gap-4 p-6">
+        <div className="hidden sm:grid sm:grid-cols-2 gap-4">
            {markets.map((market) => (
              <Card key={market.slug} className="bg-accent/50 border-primary/50">
                <CardHeader className="p-4">
@@ -322,3 +322,5 @@ export default function WalletPage() {
     </div>
   );
 }
+
+    
