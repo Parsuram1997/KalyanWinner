@@ -85,13 +85,13 @@ const FeaturedMarkets = () => {
         </CardTitle>
         <CardDescription className="hidden sm:block">In markets par bet lagayein aur bade inaam jeetein!</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
          {/* Carousel for Mobile */}
         <div className="sm:hidden">
             <Carousel setApi={setApi} className="w-full" opts={{ loop: true }}>
-                <CarouselContent className="-ml-1">
+                <CarouselContent className="-ml-4">
                     {markets.map((market, index) => (
-                        <CarouselItem key={index} className="pl-1 basis-2/3">
+                        <CarouselItem key={index} className="pl-4">
                             <div className="p-1">
                                 <Card className="bg-accent/50 border-primary/50">
                                     <CardHeader className="p-3">
@@ -123,7 +123,7 @@ const FeaturedMarkets = () => {
         </div>
 
         {/* Grid for Desktop */}
-        <div className="hidden sm:grid sm:grid-cols-2 gap-4">
+        <div className="hidden sm:grid sm:grid-cols-2 gap-4 p-6">
            {markets.map((market) => (
              <Card key={market.slug} className="bg-accent/50 border-primary/50">
                <CardHeader className="p-4">
