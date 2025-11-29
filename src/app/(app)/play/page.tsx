@@ -235,7 +235,7 @@ export default function MarketSelectionPage() {
     
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-4 gap-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
               <Card key={i}>
