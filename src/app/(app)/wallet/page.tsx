@@ -90,27 +90,31 @@ const FeaturedMarkets = () => {
     ];
 
     return (
-        <div className="w-full">
-            <h3 className="flex items-center gap-2 text-lg font-semibold px-4 sm:px-6 pb-2">
-                <Flame className="text-destructive h-5 w-5" />
-                <span>Hamare Special Markets</span>
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-6">
-              {markets.map((market, index) => (
-                <Card key={index} className="bg-accent/50 border-primary/50 h-full flex flex-col">
-                  <CardHeader className="p-3 pb-2">
-                      <CardTitle className="text-base">{market.name}</CardTitle>
-                      <CardDescription className="text-xs h-8">{market.description}</CardDescription>
-                  </CardHeader>
-                  <CardFooter className="p-3 pt-0 mt-auto">
-                      <Button asChild className="w-full" size="sm">
-                          <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
-                      </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-        </div>
+        <Card>
+            <CardHeader>
+                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                    <Flame className="text-destructive h-5 w-5" />
+                    <span>Hamare Special Markets</span>
+                </h3>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {markets.map((market, index) => (
+                    <Card key={index} className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                      <CardHeader className="p-3 pb-2">
+                          <CardTitle className="text-base">{market.name}</CardTitle>
+                          <CardDescription className="text-xs h-8">{market.description}</CardDescription>
+                      </CardHeader>
+                      <CardFooter className="p-3 pt-0 mt-auto">
+                          <Button asChild className="w-full" size="sm">
+                              <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
+                          </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+            </CardContent>
+        </Card>
     );
 };
 
