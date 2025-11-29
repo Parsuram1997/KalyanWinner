@@ -32,7 +32,6 @@ import {
   Ticket,
   Flame,
   ArrowRight,
-  TrendingUp,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -92,11 +91,6 @@ const FeaturedMarkets = () => {
       slug: 'kalahandi-night',
       description: 'Raat ke shandar inaam jeetein!',
     },
-    {
-      name: 'Main Bazar',
-      slug: 'main-bazar',
-      description: 'Sabse popular, sabse damdaar!',
-    },
   ];
 
   return (
@@ -111,56 +105,45 @@ const FeaturedMarkets = () => {
         </p>
       </div>
 
-      {/* Mobile Carousel View */}
-      <div className="md:hidden px-4 sm:px-6">
-        <Carousel className="w-full" opts={{ loop: true }}>
-          <CarouselContent className="-ml-4">
-            {markets.map((market, index) => (
-              <CarouselItem key={index} className="pl-4 basis-full">
-                <div className="p-1">
-                  <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
-                    <CardHeader className="p-3 pb-2">
-                      <CardTitle className="text-base">{market.name}</CardTitle>
-                      <CardDescription className="text-xs h-8 sm:h-auto">
-                        {market.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardFooter className="p-3 pt-0 mt-auto">
-                      <Button asChild className="w-full" size="sm">
-                        <Link href={`/play/${market.slug}`}>
-                          <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                        </Link>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
-      </div>
-      
-      {/* Desktop Grid View */}
-       <div className="hidden md:grid md:grid-cols-3 gap-4 px-4 sm:px-6 py-2">
-          {markets.map((market, index) => (
-            <div key={index}>
-              <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
-                <CardHeader className="p-3 pb-2">
-                  <CardTitle className="text-base">{market.name}</CardTitle>
-                  <CardDescription className="text-xs h-8 sm:h-auto">
-                    {market.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter className="p-3 pt-0 mt-auto">
-                  <Button asChild className="w-full" size="sm">
-                    <Link href={`/play/${market.slug}`}>
-                      <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          ))}
+      {/* Simplified Layout - No more carousel */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 sm:px-6">
+        {/* On mobile, only the first market is shown. On desktop, both are shown. */}
+        {markets.map((market, index) => (
+          <div key={index} className={index > 0 ? 'hidden md:block' : ''}>
+             <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
+              <CardHeader className="p-3 pb-2">
+                <CardTitle className="text-base">{market.name}</CardTitle>
+                <CardDescription className="text-xs h-8 sm:h-auto">
+                  {market.description}
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-3 pt-0 mt-auto">
+                <Button asChild className="w-full" size="sm">
+                  <Link href={`/play/${market.slug}`}>
+                    <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        ))}
+         <div className="block md:hidden">
+            <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
+              <CardHeader className="p-3 pb-2">
+                <CardTitle className="text-base">{markets[1].name}</CardTitle>
+                <CardDescription className="text-xs h-8 sm:h-auto">
+                  {markets[1].description}
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-3 pt-0 mt-auto">
+                <Button asChild className="w-full" size="sm">
+                  <Link href={`/play/${markets[1].slug}`}>
+                    <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+        </div>
       </div>
     </div>
   );
