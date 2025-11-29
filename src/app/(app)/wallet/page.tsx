@@ -274,8 +274,6 @@ export default function WalletPage() {
 
             </CardContent>
           </Card>
-           {/* Featured Markets Section - Now outside the main Card */}
-           <FeaturedMarkets />
         </TabsContent>
         <TabsContent value="activity" className="mt-4">
           <Card>
@@ -338,8 +336,9 @@ export default function WalletPage() {
           </Card>
         </TabsContent>
       </Tabs>
+        
+        {/* Featured Markets Section - Now outside the main Card */}
+        <FeaturedMarkets />
     </div>
   );
 }
-
-    
