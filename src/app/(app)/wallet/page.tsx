@@ -87,11 +87,11 @@ const FeaturedMarkets = () => {
       </CardHeader>
       <CardContent>
          {/* Carousel for Mobile */}
-        <div className="sm:hidden px-4">
+        <div className="sm:hidden overflow-hidden">
            <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
-            <CarouselContent>
+            <CarouselContent className="-ml-4">
               {markets.map((market) => (
-                <CarouselItem key={market.slug} className="basis-2/3">
+                <CarouselItem key={market.slug} className="basis-2/3 pl-4">
                   <Card className="bg-accent/50 border-primary/50">
                     <CardHeader className="p-3">
                       <CardTitle className="text-base">{market.name}</CardTitle>
