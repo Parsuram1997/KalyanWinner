@@ -11,6 +11,8 @@ import {
   Wallet,
   Store,
   HelpCircle,
+  Landmark,
+  ArrowDown,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,6 +26,9 @@ import {
   SidebarTrigger,
   SidebarFooter,
   SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -63,13 +68,34 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/enroller/wallet">
-                  <Wallet />
-                  Wallet
-                </Link>
+             <SidebarMenuItem>
+              <SidebarMenuButton isSubmenu>
+                <Wallet />
+                Wallet
               </SidebarMenuButton>
+               <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
+                      <Link href="/enroller/wallet">
+                        Bonus Wallet
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                   <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
+                       <Link href="/enroller/wallet/withdraw">
+                        Withdraw
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
+                      <Link href="/enroller/wallet/account">
+                        Account
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+              </SidebarMenuSub>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild>

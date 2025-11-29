@@ -125,10 +125,21 @@ export async function approveWithdrawal(transactionId: string, userId: string, a
             }
 
             const userData = userDoc.data()!;
-            const currentWinningBalance = userData.winningBalance || 0;
+            const { role, winningBalance, commissionBalance } = userData;
 
-            if (currentWinningBalance < amount) {
-                throw new Error("User has insufficient winning balance for this withdrawal.");
+            let balanceToDeductFrom: 'winningBalance' | 'commissionBalance';
+            let currentBalance: number;
+
+            if (role === 'Enroller') {
+                balanceToDeductFrom = 'commissionBalance';
+                currentBalance = commissionBalance || 0;
+            } else {
+                balanceToDeductFrom = 'winningBalance';
+                currentBalance = winningBalance || 0;
+            }
+
+            if (currentBalance < amount) {
+                throw new Error(`User has insufficient ${balanceToDeductFrom} for this withdrawal.`);
             }
             
             const updateData: {status: string, utr?: string} = { status: "Completed" };
@@ -138,7 +149,7 @@ export async function approveWithdrawal(transactionId: string, userId: string, a
             t.update(transactionRef, updateData);
 
             t.update(userRef, {
-                winningBalance: FieldValue.increment(-amount),
+                [balanceToDeductFrom]: FieldValue.increment(-amount),
                 totalWithdrawals: FieldValue.increment(amount)
             });
         });
@@ -146,6 +157,7 @@ export async function approveWithdrawal(transactionId: string, userId: string, a
         revalidatePath("/admin/transactions", 'page');
         revalidatePath("/admin/cash-ledger", 'page');
         revalidatePath("/admin/users/" + userId, 'page');
+        revalidatePath("/enroller/wallet", 'page');
         revalidatePath("/wallet", 'page');
 
         return { success: true, message: "Withdrawal approved and balance updated." };
@@ -162,6 +174,7 @@ export async function rejectTransaction(transactionId: string) {
         await firestore.collection("transactions").doc(transactionId).set({ status: 'Rejected' }, { merge: true });
         revalidatePath('/admin/transactions', 'page');
         revalidatePath("/wallet", 'page');
+        revalidatePath("/enroller/wallet", 'page');
         return { success: true, message: "Transaction rejected." };
     } catch (error: any) {
         console.error("Error rejecting transaction: ", error);
@@ -214,6 +227,7 @@ export async function createTransaction(transactionData: {
     await firestore.collection("transactions").add(transaction);
     
     revalidatePath("/wallet", 'page');
+    revalidatePath("/enroller/wallet", 'page');
     revalidatePath("/admin/transactions", 'page');
 
     return { success: true, message: "Transaction created successfully." };
@@ -278,10 +292,18 @@ export async function deleteTransaction(transactionId: string) {
                     }
 
                 } else if (type === 'Withdrawal') {
-                    t.update(userRef, { 
-                        winningBalance: FieldValue.increment(amount),
-                        totalWithdrawals: FieldValue.increment(-amount)
-                    });
+                    const userData = (await t.get(userRef)).data();
+                    if (userData?.role === 'Enroller') {
+                         t.update(userRef, { 
+                            commissionBalance: FieldValue.increment(amount),
+                            totalWithdrawals: FieldValue.increment(-amount)
+                        });
+                    } else {
+                         t.update(userRef, { 
+                            winningBalance: FieldValue.increment(amount),
+                            totalWithdrawals: FieldValue.increment(-amount)
+                        });
+                    }
                 }
             }
             
