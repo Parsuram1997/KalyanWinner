@@ -131,16 +131,16 @@ export default function LeaderboardPage() {
                 {isLoading ? (
                   Array.from({ length: 10 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center py-2">
                         <Skeleton className="h-5 w-5 rounded-full mx-auto" />
                       </TableCell>
-                       <TableCell>
+                       <TableCell className="py-2">
                         <Skeleton className="h-5 w-24" />
                       </TableCell>
-                       <TableCell>
+                       <TableCell className="py-2">
                         <Skeleton className="h-5 w-20" />
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right py-2">
                         <Skeleton className="h-5 w-24 ml-auto" />
                       </TableCell>
                     </TableRow>
@@ -148,12 +148,12 @@ export default function LeaderboardPage() {
                 ) : rankedWinners && rankedWinners.length > 0 ? (
                   rankedWinners.map((winner) => (
                     <TableRow key={winner.userId}>
-                      <TableCell className="text-center font-medium">
+                      <TableCell className="text-center font-medium py-2">
                         {winner.rank}
                       </TableCell>
-                      <TableCell>{winner.userName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{winner.customId || 'N/A'}</TableCell>
-                      <TableCell className="text-right font-semibold font-mono text-green-600">
+                      <TableCell className="py-2">{winner.userName}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground py-2">{winner.customId || 'N/A'}</TableCell>
+                      <TableCell className="text-right font-semibold font-mono text-green-600 py-2">
                         ₹{winner.totalWinnings.toLocaleString('en-IN')}
                       </TableCell>
                     </TableRow>
