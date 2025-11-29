@@ -1,12 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processReferralBonus = exports.cleanupuser = void 0;
-const app_1 = require("firebase-admin/app");
+exports.sendResultNotification = exports.processReferralBonus = exports.cleanupuser = void 0;
 const firestore_1 = require("firebase-admin/firestore");
+const messaging_1 = require("firebase-admin/messaging");
 const tasks_1 = require("firebase-functions/v2/tasks");
 const logger = require("firebase-functions/logger");
 const functions = require("firebase-functions/v1");
-(0, app_1.initializeApp)();
 const db = (0, firestore_1.getFirestore)();
 // V1 onDelete function to clean up user data from Firestore when a user is deleted from Auth
 exports.cleanupuser = functions.auth.user().onDelete(async (user) => {
@@ -65,8 +64,8 @@ exports.processReferralBonus = (0, tasks_1.onTaskDispatched)(async (request) => 
                 }
                 const enrollerDoc = enrollerSnapshot.docs[0];
                 const enrollerRef = enrollerDoc.ref;
-                // Credit the enroller's WINNING BALANCE
-                t.update(enrollerRef, { winningBalance: firestore_1.FieldValue.increment(BONUS_AMOUNT) });
+                // Credit the enroller's COMMISSION BALANCE
+                t.update(enrollerRef, { commissionBalance: firestore_1.FieldValue.increment(BONUS_AMOUNT) });
                 // Mark commission as paid for the user
                 t.update(userRef, { commissionPaid: true });
                 const bonusTransactionRef = db.collection('transactions').doc();
@@ -99,4 +98,96 @@ exports.processReferralBonus = (0, tasks_1.onTaskDispatched)(async (request) => 
         throw error;
     }
 });
-//# sourceMappingURL=index.js.map
+// Helper to calculate the single digit from a panna
+const getDigit = (panna) => {
+    if (!panna || panna.length !== 3 || !/^\d+$/.test(panna))
+        return '*';
+    return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
+};
+exports.sendResultNotification = functions.firestore
+    .document('kalyan_results/{resultId}')
+    .onWrite(async (change, context) => {
+    var _a, _b, _c;
+    const resultDataAfter = change.after.data();
+    const resultDataBefore = change.before.data();
+    // If the document is deleted, do nothing.
+    if (!resultDataAfter) {
+        logger.log(`Result ${context.params.resultId} was deleted. No notification sent.`);
+        return null;
+    }
+    const { marketName, openPanna, jodi, closePanna } = resultDataAfter;
+    let title = '';
+    let body = '';
+    let shouldSend = false;
+    const isNewResult = !resultDataBefore; // Document was just created
+    const isOpenResultJustAdded = openPanna && !((_a = resultDataBefore) === null || _a === void 0 ? void 0 : _a.openPanna);
+    const isCloseResultJustAdded = closePanna && !((_b = resultDataBefore) === null || _b === void 0 ? void 0 : _b.closePanna);
+    const isHolidayJustMarked = jodi === 'L' && ((_c = resultDataBefore) === null || _c === void 0 ? void 0 : _c.jodi) !== 'L';
+    if (isHolidayJustMarked) {
+        title = `${marketName} is on Holiday`;
+        body = `No game results will be declared today for ${marketName}.`;
+        shouldSend = true;
+    }
+    else if (isNewResult && openPanna && !closePanna) { // Brand new open result
+        const openDigit = getDigit(openPanna);
+        title = `${marketName} Open Result!`;
+        body = `Open: ${openPanna}-${openDigit}`;
+        shouldSend = true;
+    }
+    else if (isCloseResultJustAdded) { // Close result was just added to an existing document
+        title = `${marketName} Final Result!`;
+        body = `Final Result: ${openPanna}-${jodi}-${closePanna}`;
+        shouldSend = true;
+    }
+    if (!shouldSend) {
+        logger.log('No significant result change detected. No notification sent.');
+        return null;
+    }
+    const usersSnapshot = await db.collection('users').get();
+    const tokens = [];
+    usersSnapshot.forEach(doc => {
+        const user = doc.data();
+        if (user.fcmTokens && Array.isArray(user.fcmTokens)) {
+            tokens.push(...user.fcmTokens);
+        }
+    });
+    if (tokens.length === 0) {
+        logger.log('No registered FCM tokens found. No notifications sent.');
+        return null;
+    }
+    const uniqueTokens = [...new Set(tokens)];
+    const payload = {
+        notification: {
+            title: title,
+            body: body,
+            icon: '/kalyanwinnerlogo.png',
+        },
+        webpush: {
+            fcm_options: {
+                link: '/results'
+            }
+        }
+    };
+    logger.log(`Sending notification to ${uniqueTokens.length} tokens: ${title} - ${body}`);
+    try {
+        const response = await (0, messaging_1.getMessaging)().sendEachForMulticast({
+            tokens: uniqueTokens,
+            notification: payload.notification,
+            webpush: payload.webpush,
+        });
+        logger.log(`Successfully sent ${response.successCount} messages.`);
+        if (response.failureCount > 0) {
+            const failedTokens = [];
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    failedTokens.push(uniqueTokens[idx]);
+                    logger.warn(`Failed to send to token: ${uniqueTokens[idx]}`, resp.error);
+                }
+            });
+        }
+    }
+    catch (error) {
+        logger.error('Error sending notifications:', error);
+    }
+    return null;
+});

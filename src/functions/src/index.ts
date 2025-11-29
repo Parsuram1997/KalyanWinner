@@ -1,12 +1,10 @@
 
-import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Transaction } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { onTaskDispatched, Request } from "firebase-functions/v2/tasks";
 import * as logger from "firebase-functions/logger";
 import * as functions from "firebase-functions/v1";
 
-initializeApp();
 const db = getFirestore();
 
 interface User {
@@ -87,8 +85,8 @@ export const processReferralBonus = onTaskDispatched(async (request: Request<{ u
         const enrollerDoc = enrollerSnapshot.docs[0];
         const enrollerRef = enrollerDoc.ref;
 
-        // Credit the enroller's WINNING BALANCE
-        t.update(enrollerRef, { winningBalance: FieldValue.increment(BONUS_AMOUNT) });
+        // Credit the enroller's COMMISSION BALANCE
+        t.update(enrollerRef, { commissionBalance: FieldValue.increment(BONUS_AMOUNT) });
 
         // Mark commission as paid for the user
         t.update(userRef, { commissionPaid: true });

@@ -4,7 +4,7 @@
 import { firestore } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
-
+import { getFunctions } from "firebase-admin/functions";
 
 // Action to approve a deposit transaction
 export async function approveDeposit(transactionId: string, userId: string, amount: number) {
@@ -12,7 +12,6 @@ export async function approveDeposit(transactionId: string, userId: string, amou
   const userRef = firestore.collection("users").doc(userId);
 
   try {
-    // --- TRANSACTION 1: CORE DEPOSIT APPROVAL ---
     // This transaction's only job is to credit the user. It's simple and reliable.
     await firestore.runTransaction(async (t) => {
       const userDoc = await t.get(userRef);
@@ -30,70 +29,11 @@ export async function approveDeposit(transactionId: string, userId: string, amou
 
     console.log(`Deposit transaction ${transactionId} for user ${userId} completed successfully.`);
 
-    // --- POST-TRANSACTION: BONUS LOGIC ---
-    // Now that the main deposit is safely committed, we can handle the bonus logic.
-    // This runs outside the main transaction to avoid complexity and rule violations.
-    
-    // 1. Get the latest user data after the deposit.
-    const userDocAfterDeposit = await userRef.get();
-    if (!userDocAfterDeposit.exists) {
-        console.warn(`User document ${userId} disappeared after deposit. Skipping bonus check.`);
-        return { success: true, message: "Deposit approved, but could not re-verify user for bonus." };
-    }
-    const userData = userDocAfterDeposit.data()!;
-    const { enrollerId, commissionPaid, totalDeposits } = userData;
-    
-    // 2. Get bonus settings.
-    const settingsDoc = await firestore.collection('payment_settings').doc('main').get();
-    const minDepositForBonus = settingsDoc.data()?.minDepositForBonus || 500;
-    const referralBonusAmount = settingsDoc.data()?.referralBonusAmount || 5;
+    // Enqueue a task to handle the referral bonus check asynchronously.
+    const queue = getFunctions().taskQueue("processReferralBonus");
+    await queue.enqueue({ userId, transactionId });
+    console.log(`Enqueued referral bonus check for user ${userId}.`);
 
-    // 3. Check for bonus eligibility.
-    const isEligibleForBonus = enrollerId && !commissionPaid && totalDeposits >= minDepositForBonus;
-
-    if (isEligibleForBonus) {
-        console.log(`User ${userId} is eligible for a referral bonus. Finding enroller with customId: ${enrollerId}`);
-
-        // 4. Find the enroller by their custom ID.
-        const enrollerQuery = firestore.collection('users').where('customId', '==', enrollerId).limit(1);
-        const enrollerSnapshot = await enrollerQuery.get();
-
-        if (enrollerSnapshot.empty) {
-            console.warn(`Enroller with customId ${enrollerId} not found. Bonus cannot be awarded.`);
-            return { success: true, message: `Deposit approved, but enroller ${enrollerId} not found for bonus.` };
-        }
-
-        // 5. Award the bonus in a new, separate transaction.
-        const enrollerDoc = enrollerSnapshot.docs[0];
-        const enrollerRef = enrollerDoc.ref;
-        
-        await firestore.runTransaction(async (t) => {
-             // Read enroller data inside this new transaction
-            const enrollerData = (await t.get(enrollerRef)).data();
-            
-            console.log(`Awarding bonus of ${referralBonusAmount} to enroller ${enrollerId} (UID: ${enrollerDoc.id})`);
-            
-            // Update enroller's commission balance
-            t.update(enrollerRef, { commissionBalance: FieldValue.increment(referralBonusAmount) });
-            
-            // Mark commission as paid for the depositing user
-            t.update(userRef, { commissionPaid: true });
-
-            // Create a bonus transaction record for the enroller
-            const bonusTransactionRef = firestore.collection('transactions').doc();
-            t.set(bonusTransactionRef, {
-                userId: enrollerDoc.id, // Use the enroller's actual UID
-                userName: enrollerData?.name || 'Enroller',
-                customId: enrollerId,
-                type: "Referral Bonus",
-                amount: referralBonusAmount,
-                status: "Completed",
-                date: new Date().toISOString(),
-                description: `Referral bonus for user ${userData.name} (${userData.customId || userId})`,
-            });
-        });
-        console.log(`Bonus transaction for enroller ${enrollerId} completed.`);
-    }
 
     // Revalidation paths
     revalidatePath("/admin/transactions", 'page');
@@ -103,7 +43,7 @@ export async function approveDeposit(transactionId: string, userId: string, amou
     revalidatePath("/enroller/wallet", 'page');
     revalidatePath("/wallet", 'page');
 
-    return { success: true, message: "Deposit approved and balance updated." };
+    return { success: true, message: "Deposit approved and referral bonus check enqueued." };
 
   } catch (error: any) {
     console.error("FATAL: Error during core deposit approval transaction: ", error);

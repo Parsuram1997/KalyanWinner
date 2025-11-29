@@ -1,9 +1,9 @@
 
-import { defineFlow, run } from '@genkit-ai/flow';
-import { getAuth } from 'firebase-admin/auth';
+import { ai } from '@/ai/genkit';
+import { auth as adminAuth } from '@/lib/firebase-admin';
 import * as z from 'zod';
 
-export const setAdminClaimFlow = defineFlow(
+export const setAdminClaimFlow = ai.defineFlow(
   {
     name: 'setAdminClaim',
     inputSchema: z.object({
@@ -14,7 +14,7 @@ export const setAdminClaimFlow = defineFlow(
     }),
   },
   async ({ uid }) => {
-    await getAuth().setCustomUserClaims(uid, { admin: true });
+    await adminAuth.setCustomUserClaims(uid, { admin: true });
     return { success: true };
   }
 );
