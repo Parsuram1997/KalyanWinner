@@ -283,18 +283,18 @@ export default function EnterResultsPage() {
                         </TableRow>
                     ) : paginatedResults && paginatedResults.length > 0 ? paginatedResults.map((result) => (
                     <TableRow key={result.id}>
-                        <TableCell>{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
-                        <TableCell className="font-mono text-center">{result.openPanna}</TableCell>
-                        <TableCell className="font-bold text-primary font-mono text-center">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
-                        <TableCell className="font-mono text-center">{result.closePanna || '--'}</TableCell>
-                        <TableCell>
+                        <TableCell className="py-1">{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
+                        <TableCell className="font-mono text-center py-1">{result.openPanna}</TableCell>
+                        <TableCell className="font-bold text-primary font-mono text-center py-1">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
+                        <TableCell className="font-mono text-center py-1">{result.closePanna || '--'}</TableCell>
+                        <TableCell className="py-1">
                           <div className="flex gap-2 justify-center">
                           {result.jodi === 'L' ? (
-                              <Button variant="outline" size="icon" disabled><Edit className="h-4 w-4" /></Button>
+                              <Button variant="outline" size="xs" disabled><Edit className="h-4 w-4" /></Button>
                           ) : (
                               <Button 
                                   variant="outline" 
-                                  size="icon" 
+                                  size="xs" 
                                   onClick={() => {
                                       setSelectedResult(result);
                                       setUpdateClosePanna(result.closePanna || ""); // Pre-fill
@@ -306,7 +306,7 @@ export default function EnterResultsPage() {
                           )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                            <Button variant="destructive" size="xs"><Trash className="h-4 w-4" /></Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
