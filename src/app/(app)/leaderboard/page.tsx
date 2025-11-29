@@ -37,6 +37,7 @@ type AggregatedWinner = {
     userName: string;
     customId?: string;
     totalWinnings: number;
+    rank: number;
 }
 
 export default function LeaderboardPage() {
@@ -66,11 +67,10 @@ export default function LeaderboardPage() {
     
     // Filter transactions for today on the client-side
     const todaysTransactions = transactions.filter(txn => {
-        // new Date(txn.date).toISOString() will handle different date formats
         return new Date(txn.date).toISOString().startsWith(todayStr);
     });
 
-    const winnerMap: { [userId: string]: AggregatedWinner } = {};
+    const winnerMap: { [userId: string]: { userId: string, userName: string, customId?:string, totalWinnings: number } } = {};
 
     todaysTransactions.forEach(txn => {
         if (!winnerMap[txn.userId]) {
@@ -84,7 +84,22 @@ export default function LeaderboardPage() {
         winnerMap[txn.userId].totalWinnings += txn.amount;
     });
 
-    return Object.values(winnerMap).sort((a, b) => b.totalWinnings - a.totalWinnings);
+    const sortedWinners = Object.values(winnerMap).sort((a, b) => b.totalWinnings - a.totalWinnings);
+
+    let lastAmount = -1;
+    let currentRank = 0;
+    
+    return sortedWinners.map((winner, index) => {
+        if (winner.totalWinnings !== lastAmount) {
+            currentRank = index + 1;
+            lastAmount = winner.totalWinnings;
+        }
+        return {
+            ...winner,
+            rank: currentRank,
+        };
+    });
+
   }, [transactions]);
 
 
@@ -105,7 +120,7 @@ export default function LeaderboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-center">Sr. No.</TableHead>
+                  <TableHead className="text-center">Rank</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>User ID</TableHead>
                   <TableHead className="text-right">Total Winnings</TableHead>
@@ -130,10 +145,10 @@ export default function LeaderboardPage() {
                     </TableRow>
                   ))
                 ) : rankedWinners && rankedWinners.length > 0 ? (
-                  rankedWinners.map((winner, index) => (
+                  rankedWinners.map((winner) => (
                     <TableRow key={winner.userId}>
                       <TableCell className="text-center font-medium">
-                        {index + 1}
+                        {winner.rank}
                       </TableCell>
                       <TableCell>{winner.userName}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{winner.customId || 'N/A'}</TableCell>
