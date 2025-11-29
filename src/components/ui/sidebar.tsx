@@ -547,6 +547,7 @@ const SidebarMenuButton = React.forwardRef<
   React.ComponentProps<"button"> & {
     asChild?: boolean
     isActive?: boolean
+    isSubmenu?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
@@ -554,6 +555,7 @@ const SidebarMenuButton = React.forwardRef<
     {
       asChild = false,
       isActive = false,
+      isSubmenu = false,
       variant = "default",
       size = "default",
       tooltip,
@@ -564,7 +566,8 @@ const SidebarMenuButton = React.forwardRef<
     ref
   ) => {
     const Comp = asChild ? Slot : "button"
-    const { isMobile, state, setOpenMobile } = useSidebar()
+    const { isMobile, setOpenMobile } = useSidebar()
+    const [isOpen, setIsOpen] = React.useState(false)
 
     const button = (
       <Comp
@@ -572,9 +575,14 @@ const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
+        data-state={isSubmenu && isOpen ? "open" : "closed"}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
         onClick={(e) => {
-          if (isMobile) {
+          if (isSubmenu) {
+            e.preventDefault()
+            setIsOpen((open) => !open)
+          }
+          if (isMobile && !isSubmenu) {
             setOpenMobile(false)
           }
           onClick?.(e)
@@ -599,7 +607,7 @@ const SidebarMenuButton = React.forwardRef<
         <TooltipContent
           side="right"
           align="center"
-          hidden={state !== "collapsed" || isMobile}
+          hidden={status !== "collapsed" || isMobile}
           {...tooltip}
         />
       </Tooltip>
