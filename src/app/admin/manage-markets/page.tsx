@@ -183,8 +183,8 @@ export default function ManageMarketsPage() {
                     </TableRow>
                 ) : markets?.map((market) => (
                   <TableRow key={market.id}>
-                    <TableCell className="font-medium">{market.name}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-medium py-1">{market.name}</TableCell>
+                    <TableCell className="py-1">
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={market.status === "Active"}
@@ -196,7 +196,7 @@ export default function ManageMarketsPage() {
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="flex gap-2 justify-end">
+                    <TableCell className="flex gap-2 justify-end py-1">
                        <Button variant="outline" size="icon" onClick={() => openEditDialog(market)}><Edit className="h-4 w-4" /></Button>
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -295,5 +295,3 @@ export default function ManageMarketsPage() {
     </div>
   );
 }
-
-    
