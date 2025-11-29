@@ -130,15 +130,10 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
     )
 }
 
-export default function EnrollerLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+function EnrollerAuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-
-  if (pathname === '/enroller') {
-    return <>{children}</>;
-  }
 
   const userDocRef = useMemoFirebase(
     () => (firestore && user ? doc(firestore, "users", user.uid) : null),
@@ -168,4 +163,14 @@ export default function EnrollerLayout({ children }: { children: React.ReactNode
   }
 
   return null;
+}
+
+export default function EnrollerLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  if (pathname === '/enroller') {
+    return <>{children}</>;
+  }
+  
+  return <EnrollerAuthLayout>{children}</EnrollerAuthLayout>;
 }
