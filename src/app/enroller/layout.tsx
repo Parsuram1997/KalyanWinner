@@ -40,6 +40,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 import NotificationBell from "@/components/NotificationBell";
 import { toast } from '@/hooks/use-toast';
+import { cn } from "@/lib/utils";
 
 function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
     const { user: authUser } = useUser();
@@ -67,7 +68,6 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
       if (navigator.share) {
         try {
           await navigator.share(shareData);
-          toast({ title: 'Link Shared!', description: 'Your referral link has been shared.' });
         } catch (error) {
           console.log('Share was cancelled or failed', error);
         }
@@ -146,10 +146,15 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
               </SidebarMenuSub>
             </SidebarMenuItem>
              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleShare}>
-                    <Share2 />
-                    <span>Share App</span>
-                </SidebarMenuButton>
+                <button
+                  onClick={handleShare}
+                  className={cn(
+                    "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 h-8",
+                  )}
+                >
+                    <Share2 className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Share App</span>
+                </button>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild>
