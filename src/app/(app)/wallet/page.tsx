@@ -9,9 +9,11 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy, Ticket, Flame } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
 
 
 // Type for user balance data
@@ -43,6 +45,78 @@ const getStatusVariant = (status: Transaction['status']) => {
             return 'destructive';
         default: return 'outline';
     }
+}
+
+const FeaturedMarkets = () => {
+  const markets = [
+    {
+      name: "Kalahandi Day",
+      slug: "kalahandi-day",
+      description: "Din mein apni kismat aazmayein!",
+    },
+    {
+      name: "Kalahandi Night",
+      slug: "kalahandi-night",
+      description: "Raat ke shandar inaam jeetein!",
+    },
+  ];
+
+  return (
+    <Card className="mt-6">
+       <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+            <Flame className="text-destructive h-6 w-6" />
+            <span>Hamare Special Markets</span>
+        </CardTitle>
+        <CardDescription>In markets par bet lagayein aur bade inaam jeetein!</CardDescription>
+      </CardHeader>
+      <CardContent>
+         {/* Carousel for Mobile */}
+        <div className="sm:hidden">
+           <Carousel opts={{ loop: true }} className="w-full">
+            <CarouselContent>
+              {markets.map((market) => (
+                <CarouselItem key={market.slug}>
+                  <Card className="bg-accent/50 border-primary/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{market.name}</CardTitle>
+                      <CardDescription>{market.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                       <Button asChild className="w-full">
+                        <Link href={`/play/${market.slug}`}>
+                          <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+
+        {/* Grid for Desktop */}
+        <div className="hidden sm:grid sm:grid-cols-2 gap-4">
+           {markets.map((market) => (
+             <Card key={market.slug} className="bg-accent/50 border-primary/50">
+               <CardHeader>
+                 <CardTitle className="text-lg">{market.name}</CardTitle>
+                 <CardDescription>{market.description}</CardDescription>
+               </CardHeader>
+               <CardContent>
+                  <Button asChild className="w-full">
+                    <Link href={`/play/${market.slug}`}>
+                      <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                    </Link>
+                  </Button>
+               </CardContent>
+             </Card>
+           ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 export default function WalletPage() {
@@ -166,6 +240,10 @@ export default function WalletPage() {
                                 <Link href="/wallet/withdraw">Request Withdrawal</Link>
                         </Button>
                         </div>
+
+                         {/* Featured Markets Section */}
+                        <FeaturedMarkets />
+
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -218,5 +296,3 @@ export default function WalletPage() {
     </div>
   );
 }
-
-    
