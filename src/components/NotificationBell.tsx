@@ -8,7 +8,7 @@ import { useUser } from '@/firebase';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { initializeFirebase } from '@/firebase';
-
+import { saveFcmToken } from '@/firebase/utils';
 
 export default function NotificationBell() {
   const { user } = useUser();
@@ -58,7 +58,7 @@ export default function NotificationBell() {
             const { getMessaging, getToken } = await import('firebase/messaging');
             const { firebaseApp } = initializeFirebase();
             
-            const messaging = getMessaging();
+            const messaging = getMessaging(firebaseApp);
             const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 
             if (!vapidKey) {
