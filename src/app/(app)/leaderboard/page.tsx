@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -29,8 +30,14 @@ type WinTransaction = {
   customId?: string;
   amount: number;
   date: string; // ISO String
-  description?: string;
 };
+
+type AggregatedWinner = {
+    userId: string;
+    userName: string;
+    customId?: string;
+    totalWinnings: number;
+}
 
 export default function LeaderboardPage() {
   const firestore = useFirestore();
@@ -47,8 +54,7 @@ export default function LeaderboardPage() {
       where("type", "==", "Win"),
       where("status", "==", "Completed"),
       where("date", ">=", startDate),
-      where("date", "<=", endDate),
-      orderBy("date", "desc")
+      where("date", "<=", endDate)
     );
   }, [firestore]);
 
@@ -56,6 +62,29 @@ export default function LeaderboardPage() {
     leaderboardQuery,
     { skip: !firestore }
   );
+
+  const rankedWinners = useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+        return [];
+    }
+
+    const winnerMap: { [userId: string]: AggregatedWinner } = {};
+
+    transactions.forEach(txn => {
+        if (!winnerMap[txn.userId]) {
+            winnerMap[txn.userId] = {
+                userId: txn.userId,
+                userName: txn.userName,
+                customId: txn.customId,
+                totalWinnings: 0,
+            };
+        }
+        winnerMap[txn.userId].totalWinnings += txn.amount;
+    });
+
+    return Object.values(winnerMap).sort((a, b) => b.totalWinnings - a.totalWinnings);
+  }, [transactions]);
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +106,7 @@ export default function LeaderboardPage() {
                   <TableHead className="text-center">Sr. No.</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>User ID</TableHead>
-                  <TableHead className="text-right">Winnings</TableHead>
+                  <TableHead className="text-right">Total Winnings</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -98,16 +127,16 @@ export default function LeaderboardPage() {
                       </TableCell>
                     </TableRow>
                   ))
-                ) : transactions && transactions.length > 0 ? (
-                  transactions.map((entry, index) => (
-                    <TableRow key={entry.id}>
+                ) : rankedWinners && rankedWinners.length > 0 ? (
+                  rankedWinners.map((winner, index) => (
+                    <TableRow key={winner.userId}>
                       <TableCell className="text-center font-medium">
                         {index + 1}
                       </TableCell>
-                      <TableCell>{entry.userName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{entry.customId}</TableCell>
+                      <TableCell>{winner.userName}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{winner.customId}</TableCell>
                       <TableCell className="text-right font-semibold font-mono text-green-600">
-                        ₹{entry.amount.toLocaleString('en-IN')}
+                        ₹{winner.totalWinnings.toLocaleString('en-IN')}
                       </TableCell>
                     </TableRow>
                   ))
