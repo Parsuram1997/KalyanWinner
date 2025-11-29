@@ -134,7 +134,7 @@ export default function LeaderboardPage() {
                         {index + 1}
                       </TableCell>
                       <TableCell>{winner.userName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{winner.customId}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{winner.customId || 'N/A'}</TableCell>
                       <TableCell className="text-right font-semibold font-mono text-green-600">
                         ₹{winner.totalWinnings.toLocaleString('en-IN')}
                       </TableCell>

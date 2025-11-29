@@ -76,7 +76,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
 
       // Write 1: Create the new result document
       const newResultRef = resultsRef.doc();
-      transaction.set(newResultRef, resultData);
+      transaction.set(newResultRef, { ...resultData, jodi: jodi || '--' });
       
       // Writes 2: Update bets and create win transactions
       betsSnapshot.forEach(doc => {
@@ -246,7 +246,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
       // --- (3) ALL WRITES LAST ---
 
       // Write 1: Update the result
-      transaction.update(resultRef, resultData);
+      transaction.update(resultRef, { ...resultData, jodi: jodi || '--' });
 
       // Writes 2: Update bets and create win transactions
       betsSnapshot.forEach(doc => {
@@ -433,4 +433,3 @@ export async function deleteKalyanResult(resultId: string) {
     }
 }
     
-
