@@ -137,6 +137,7 @@ export const sendResultNotification = functions.firestore
     const resultDataAfter = change.after.data();
     const resultDataBefore = change.before.data();
 
+    // If the document is deleted, do nothing.
     if (!resultDataAfter) {
       logger.log(`Result ${context.params.resultId} was deleted. No notification sent.`);
       return null;
@@ -147,25 +148,24 @@ export const sendResultNotification = functions.firestore
     let body = '';
     let shouldSend = false;
     
-    // Case 1: Market is on Holiday
-    if (jodi === 'L') {
-        // Send only if it's a new holiday entry
-        if (!resultDataBefore || resultDataBefore.jodi !== 'L') {
-            title = `${marketName} is on Holiday`;
-            body = `No game results will be declared today for ${marketName}.`;
-            shouldSend = true;
-        }
+    const isNewResult = !resultDataBefore; // Document was just created
+    const isOpenResultJustAdded = openPanna && !resultDataBefore?.openPanna;
+    const isCloseResultJustAdded = closePanna && !resultDataBefore?.closePanna;
+    const isHolidayJustMarked = jodi === 'L' && resultDataBefore?.jodi !== 'L';
+
+    if (isHolidayJustMarked) {
+        title = `${marketName} is on Holiday`;
+        body = `No game results will be declared today for ${marketName}.`;
+        shouldSend = true;
     } 
-    // Case 2: Open result has been declared for the first time
-    else if (openPanna && !resultDataBefore?.openPanna) {
+    else if (isNewResult && openPanna && !closePanna) { // Brand new open result
         const openDigit = getDigit(openPanna);
-        title = `${marketName} Open Result Out!`;
+        title = `${marketName} Open Result!`;
         body = `Open: ${openPanna}-${openDigit}`;
         shouldSend = true;
     }
-    // Case 3: Close result has been declared for the first time
-    else if (closePanna && !resultDataBefore?.closePanna) {
-        title = `${marketName} Final Result Out!`;
+    else if (isCloseResultJustAdded) { // Close result was just added to an existing document
+        title = `${marketName} Final Result!`;
         body = `Final Result: ${openPanna}-${jodi}-${closePanna}`;
         shouldSend = true;
     }
@@ -198,8 +198,12 @@ export const sendResultNotification = functions.firestore
         title: title,
         body: body,
         icon: '/kalyanwinnerlogo.png',
-        click_action: '/results'
       },
+      webpush: {
+        fcm_options: {
+          link: '/results'
+        }
+      }
     };
 
     logger.log(`Sending notification to ${uniqueTokens.length} tokens: ${title} - ${body}`);
@@ -207,7 +211,8 @@ export const sendResultNotification = functions.firestore
     try {
         const response = await getMessaging().sendEachForMulticast({
             tokens: uniqueTokens,
-            ...payload
+            notification: payload.notification,
+            webpush: payload.webpush,
         });
         
         logger.log(`Successfully sent ${response.successCount} messages.`);
