@@ -36,6 +36,11 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel';
 
 // Type for user balance data
 type UserBalance = {
@@ -88,28 +93,57 @@ const FeaturedMarkets = () => {
       description: 'Raat ke shandar inaam jeetein!',
     },
     {
-        name: 'Main Bazar',
-        slug: 'main-bazar',
-        description: 'Sabse popular, sabse damdaar!',
-    }
+      name: 'Main Bazar',
+      slug: 'main-bazar',
+      description: 'Sabse popular, sabse damdaar!',
+    },
   ];
 
   return (
     <div className="mt-6">
       <div className="px-4 sm:px-6 pb-2">
         <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <Flame className="text-destructive h-5 w-5" />
-            <span>Hamare Special Markets</span>
+          <Flame className="text-destructive h-5 w-5" />
+          <span>Hamare Special Markets</span>
         </h3>
         <p className="text-sm text-muted-foreground mt-1 hidden sm:block">
-            In markets par bet lagayein aur bade inaam jeetein!
+          In markets par bet lagayein aur bade inaam jeetein!
         </p>
       </div>
 
-      <div className="overflow-x-auto scroll-snap-x-mandatory scrollbar-hide">
-        <div className="flex gap-2 px-4 sm:px-6 py-2">
+      {/* Mobile Carousel View */}
+      <div className="md:hidden px-4 sm:px-6">
+        <Carousel className="w-full" opts={{ loop: true }}>
+          <CarouselContent className="-ml-4">
+            {markets.map((market, index) => (
+              <CarouselItem key={index} className="pl-4 basis-full">
+                <div className="p-1">
+                  <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                    <CardHeader className="p-3 pb-2">
+                      <CardTitle className="text-base">{market.name}</CardTitle>
+                      <CardDescription className="text-xs h-8 sm:h-auto">
+                        {market.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardFooter className="p-3 pt-0 mt-auto">
+                      <Button asChild className="w-full" size="sm">
+                        <Link href={`/play/${market.slug}`}>
+                          <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      </div>
+      
+      {/* Desktop Grid View */}
+       <div className="hidden md:grid md:grid-cols-3 gap-4 px-4 sm:px-6 py-2">
           {markets.map((market, index) => (
-            <div key={index} className="scroll-snap-start flex-shrink-0 w-3/5 sm:w-1/3">
+            <div key={index}>
               <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
                 <CardHeader className="p-3 pb-2">
                   <CardTitle className="text-base">{market.name}</CardTitle>
@@ -127,11 +161,11 @@ const FeaturedMarkets = () => {
               </Card>
             </div>
           ))}
-        </div>
       </div>
     </div>
   );
 };
+
 
 export default function WalletPage() {
   const { user, isUserLoading } = useUser();
