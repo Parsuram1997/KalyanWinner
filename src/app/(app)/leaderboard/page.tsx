@@ -63,11 +63,11 @@ export default function LeaderboardPage() {
         return [];
     }
     
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const todayStr = new Date().toISOString().split('T')[0];
     
     // Filter transactions for today on the client-side
     const todaysTransactions = transactions.filter(txn => {
-        return new Date(txn.date).toISOString().startsWith(todayStr);
+        return txn.date.startsWith(todayStr);
     });
 
     const winnerMap: { [userId: string]: { userId: string, userName: string, customId?:string, totalWinnings: number } } = {};
@@ -116,11 +116,12 @@ export default function LeaderboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="px-0 sm:px-6">
-          <div className="rounded-md border">
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-center">Rank</TableHead>
+                  <TableHead className="text-center w-20">Rank</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>User ID</TableHead>
                   <TableHead className="text-right">Total Winnings</TableHead>
@@ -169,6 +170,41 @@ export default function LeaderboardPage() {
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="grid gap-4 md:hidden">
+             {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                      <Card key={i} className="p-4">
+                        <Skeleton className="h-20 w-full" />
+                      </Card>
+                  ))
+             ) : rankedWinners && rankedWinners.length > 0 ? (
+                rankedWinners.map((winner) => (
+                    <Card key={winner.userId} className="p-4">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
+                                    {winner.rank}
+                                </div>
+                                <div>
+                                    <p className="font-semibold">{winner.userName}</p>
+                                    <p className="text-xs text-muted-foreground">{winner.customId || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="font-mono font-bold text-green-600">₹{winner.totalWinnings.toLocaleString('en-IN')}</p>
+                                <p className="text-xs text-muted-foreground">Winnings</p>
+                            </div>
+                        </div>
+                    </Card>
+                ))
+             ) : (
+                <div className="text-center text-muted-foreground h-24 flex items-center justify-center">
+                    No winnings recorded yet for today.
+                </div>
+             )}
           </div>
         </CardContent>
       </Card>
