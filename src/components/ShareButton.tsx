@@ -2,7 +2,6 @@
 'use client';
 
 import { Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { SidebarMenuButton } from './ui/sidebar';
 
@@ -57,7 +56,7 @@ export default function ShareButton({ enrollerId }: ShareButtonProps) {
   return (
     <SidebarMenuButton onClick={handleShare}>
         <Share2 />
-        Share App
+        <span>Share App</span>
     </SidebarMenuButton>
   );
 }
