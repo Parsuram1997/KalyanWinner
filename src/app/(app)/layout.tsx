@@ -15,7 +15,7 @@ import {
   Trophy,
   Menu,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -104,6 +104,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col">
+               <SheetHeader>
+                <SheetTitle className="sr-only">Main Menu</SheetTitle>
+                <SheetDescription className="sr-only">
+                  Navigation links for the application.
+                </SheetDescription>
+              </SheetHeader>
               <div className="flex h-14 items-center justify-center border-b">
                  <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                    <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="object-contain" />
