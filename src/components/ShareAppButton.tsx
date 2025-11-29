@@ -39,6 +39,7 @@ export function ShareAppButton({ enroller }: ShareAppButtonProps) {
 
             if (navigator.share) {
                 navigator.share(shareData).catch((error) => {
+                    // AbortError is triggered when the user cancels the share dialog, which is not a real error.
                     if (error.name !== 'AbortError') {
                         console.error('Share failed:', error);
                         toast({
@@ -49,6 +50,7 @@ export function ShareAppButton({ enroller }: ShareAppButtonProps) {
                     }
                 });
             } else {
+                // Fallback for desktop browsers
                 navigator.clipboard.writeText(shareUrl).then(() => {
                     toast({
                         title: 'Link Copied!',
@@ -66,11 +68,7 @@ export function ShareAppButton({ enroller }: ShareAppButtonProps) {
         };
 
         if (button) {
-            // Remove any existing listener to prevent duplicates on re-render
-            // Though with this setup, it's less of an issue.
-            button.removeEventListener('click', handleShareClick); 
-            
-            // Add the native event listener
+            // Add the native event listener. This is more direct and avoids React's event system.
             button.addEventListener('click', handleShareClick);
         }
 
@@ -94,4 +92,3 @@ export function ShareAppButton({ enroller }: ShareAppButtonProps) {
         </button>
     );
 }
-
