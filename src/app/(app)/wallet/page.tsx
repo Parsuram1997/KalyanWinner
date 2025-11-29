@@ -101,11 +101,11 @@ const FeaturedMarkets = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {markets.map((market, index) => (
                     <Card key={index} className="bg-accent/50 border-primary/50 h-full flex flex-col justify-between">
-                      <CardHeader className="p-3 pb-0">
+                      <CardHeader className="p-2 pb-0">
                           <CardTitle className="text-base">{market.name}</CardTitle>
                           <CardDescription className="text-xs h-8">{market.description}</CardDescription>
                       </CardHeader>
-                      <CardFooter className="p-3 pt-2 mt-auto">
+                      <CardFooter className="p-2 pt-2 mt-auto">
                           <Button asChild className="w-full" size="sm">
                               <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
                           </Button>
@@ -181,7 +181,7 @@ export default function WalletPage() {
           <TabsTrigger value="wallet">Wallet</TabsTrigger>
           <TabsTrigger value="activity">Recent Activity</TabsTrigger>
         </TabsList>
-        <TabsContent value="wallet" className="mt-4">
+        <TabsContent value="wallet" className="mt-4 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>My Wallet</CardTitle>
@@ -253,6 +253,9 @@ export default function WalletPage() {
 
             </CardContent>
           </Card>
+          
+          <FeaturedMarkets />
+
         </TabsContent>
         <TabsContent value="activity" className="mt-4">
           <Card>
@@ -315,9 +318,6 @@ export default function WalletPage() {
           </Card>
         </TabsContent>
       </Tabs>
-        
-      {/* Featured Markets Section - Now outside the main Card */}
-      <FeaturedMarkets />
     </div>
   );
 }
