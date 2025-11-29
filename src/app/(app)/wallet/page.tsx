@@ -100,12 +100,12 @@ const FeaturedMarkets = () => {
             <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {markets.map((market, index) => (
-                    <Card key={index} className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                    <Card key={index} className="bg-accent/50 border-primary/50 h-full flex flex-col justify-between">
                       <CardHeader className="p-2">
                           <CardTitle className="text-base">{market.name}</CardTitle>
                           <CardDescription className="text-xs h-8">{market.description}</CardDescription>
                       </CardHeader>
-                      <CardFooter className="p-2 mt-auto">
+                      <CardFooter className="p-2">
                           <Button asChild className="w-full" size="sm">
                               <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
                           </Button>
