@@ -23,7 +23,6 @@ export default function EnrollerLoginPage() {
   const firestore = useFirestore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [resetEmail, setResetEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState<View>("login");
 
@@ -34,7 +33,7 @@ export default function EnrollerLoginPage() {
       setIsLoading(false);
       return;
     }
-     if (!resetEmail) {
+     if (!email) {
       toast({
         variant: "destructive",
         title: "Invalid Email",
@@ -45,13 +44,13 @@ export default function EnrollerLoginPage() {
     }
 
     try {
-      await sendPasswordResetEmail(auth, resetEmail);
+      await sendPasswordResetEmail(auth, email);
       toast({
         title: "Password Reset Email Sent",
-        description: `A link to reset your password has been sent to ${resetEmail}.`,
+        description: `A link to reset your password has been sent to ${email}.`,
       });
       setView("login");
-      setResetEmail("");
+      setEmail("");
     } catch (error: any) {
       console.error(error);
       toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the email is correct." });
@@ -182,14 +181,14 @@ export default function EnrollerLoginPage() {
             ) : (
                  <div className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="reset-email">Email</Label>
+                        <Label htmlFor="email">Email</Label>
                         <Input
-                            id="reset-email"
+                            id="email"
                             type="email"
                             placeholder="m@example.com"
                             required
-                            value={resetEmail}
-                            onChange={(e) => setResetEmail(e.target.value)}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
                              className="h-12 text-base"
                         />
