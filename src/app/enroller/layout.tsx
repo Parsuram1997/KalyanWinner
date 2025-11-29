@@ -41,7 +41,6 @@ import { doc } from "firebase/firestore";
 import NotificationBell from "@/components/NotificationBell";
 import { toast } from '@/hooks/use-toast';
 import { cn } from "@/lib/utils";
-import { ShareAppButton } from "@/components/ShareAppButton";
 
 
 function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
@@ -106,9 +105,6 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
               </SidebarMenuSub>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <ShareAppButton enroller={enroller} />
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild>

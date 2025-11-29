@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: "Kalyan Winner",
   description: "Play, check results, and analyze trends for Kalyan Matka.",
   icons: {
-    icon: "/kalyanwinnerfacicon.png",
+    icon: "/kalyanwinnerfavicon.png",
   },
 };
 
