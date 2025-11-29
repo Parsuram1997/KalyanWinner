@@ -48,7 +48,7 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
     const enrollerRef = useMemoFirebase(() => (authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
     const { data: enroller } = useDoc<any>(enrollerRef);
 
-    const handleShare = useCallback(async () => {
+    const handleShare = useCallback(() => {
       if (!enroller?.customId) {
         toast({
           variant: 'destructive',
@@ -67,7 +67,7 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
 
       if (navigator.share) {
         try {
-          await navigator.share(shareData);
+          navigator.share(shareData);
         } catch (error) {
           console.log('Share was cancelled or failed', error);
         }
