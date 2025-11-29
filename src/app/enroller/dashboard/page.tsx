@@ -54,7 +54,7 @@ export default function EnrollerDashboardPage() {
             inactiveUsers: enrolledUsers?.filter(u => u.status === 'Inactive' || u.status === 'Suspended').length.toString() || '0',
             totalActiveMarkets: activeMarkets?.length.toString() || '0',
             totalActiveBetTypes: activeBetTypes?.length.toString() || '0',
-            referralBonus: formatCurrency(enroller?.winningBalance || 0),
+            referralBonus: formatCurrency(enroller?.commissionBalance || 0),
         }
     }, [enrolledUsers, activeMarkets, activeBetTypes, enroller]);
 
