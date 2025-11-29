@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore } from "@/firebase";
@@ -9,7 +9,7 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy, Ticket, Flame, ArrowRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy, Ticket, Flame, ArrowRight, TrendingUp } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
@@ -87,27 +87,30 @@ const FeaturedMarkets = () => {
       </CardHeader>
       <CardContent>
          {/* Carousel for Mobile */}
-        <div className="sm:hidden overflow-hidden">
-           <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
-            <CarouselContent className="-ml-4">
-              {markets.map((market) => (
-                <CarouselItem key={market.slug} className="basis-2/3 pl-4">
-                  <Card className="bg-accent/50 border-primary/50">
-                    <CardHeader className="p-3">
-                      <CardTitle className="text-base">{market.name}</CardTitle>
-                      <CardDescription className="text-[11px] h-8">{market.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0">
-                       <Button asChild className="w-full" size="sm">
-                        <Link href={`/play/${market.slug}`}>
-                          <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
+        <div className="sm:hidden">
+            <Carousel setApi={setApi} className="w-full" opts={{ loop: true }}>
+                <CarouselContent className="-ml-1">
+                    {markets.map((market, index) => (
+                        <CarouselItem key={index} className="pl-1 basis-2/3">
+                            <div className="p-1">
+                                <Card className="bg-accent/50 border-primary/50">
+                                    <CardHeader className="p-3">
+                                        <CardTitle className="text-base">{market.name}</CardTitle>
+                                        <CardDescription className="text-[11px] h-8">{market.description}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-3 pt-0">
+                                        <Button asChild className="w-full" size="sm">
+                                            <Link href={`/play/${market.slug}`}>
+                                                <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                                            </Link>
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+            </Carousel>
              <div className="py-2 flex justify-center gap-2">
                 {markets.map((_, index) => (
                     <button
@@ -117,7 +120,6 @@ const FeaturedMarkets = () => {
                     />
                 ))}
             </div>
-          </Carousel>
         </div>
 
         {/* Grid for Desktop */}
