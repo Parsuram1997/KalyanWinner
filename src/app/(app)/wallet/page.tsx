@@ -100,28 +100,28 @@ const FeaturedMarkets = () => {
         </p>
       </div>
 
-      {/* --- CUSTOM CSS-POWERED CAROUSEL FOR MOBILE --- */}
-      <div className="md:hidden overflow-x-auto pb-4 scrollbar-hide scroll-snap-x-mandatory">
-          <div className="flex gap-4 px-4 sm:px-6">
-            {markets.map((market, index) => (
-                <div key={index} className="flex-shrink-0 w-[80%] scroll-snap-start">
-                    <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
-                        <CardHeader className="p-3 pb-2">
-                            <CardTitle className="text-base">{market.name}</CardTitle>
-                            <CardDescription className="text-xs h-8 sm:h-auto">
-                            {market.description}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardFooter className="p-3 pt-0 mt-auto">
-                            <Button asChild className="w-full" size="sm">
-                            <Link href={`/play/${market.slug}`}>
-                                <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                            </Link>
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            ))}
+      {/* --- Mobile Custom Scroll Snap Carousel --- */}
+      <div className="md:hidden overflow-x-auto pb-4 scroll-snap-x-mandatory scrollbar-hide">
+        <div className="flex w-max px-4 sm:px-6 [&_>_*+_*]:ml-4">
+          {markets.map((market, index) => (
+            <div key={index} className="w-[80vw] sm:w-[40vw] flex-shrink-0 scroll-snap-start">
+              <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-base">{market.name}</CardTitle>
+                  <CardDescription className="text-xs h-8 sm:h-auto">
+                    {market.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="p-3 pt-0 mt-auto">
+                  <Button asChild className="w-full" size="sm">
+                    <Link href={`/play/${market.slug}`}>
+                      <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+          ))}
         </div>
       </div>
       
@@ -356,8 +356,8 @@ export default function WalletPage() {
         </TabsContent>
       </Tabs>
         
-        {/* Featured Markets Section - Now outside the main Card */}
-        <FeaturedMarkets />
+      {/* Featured Markets Section - Now outside the main Card */}
+      <FeaturedMarkets />
     </div>
   );
 }
