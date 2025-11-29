@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -13,6 +12,7 @@ import {
   HelpCircle,
   Landmark,
   ArrowDown,
+  Share2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,8 +38,14 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 import NotificationBell from "@/components/NotificationBell";
+import ShareButton from "@/components/ShareButton";
 
 function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
+    const { user: authUser } = useUser();
+    const firestore = useFirestore();
+    const enrollerRef = useMemoFirebase(() => (authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
+    const { data: enroller } = useDoc<any>(enrollerRef);
+    
     return (
     <SidebarProvider>
       <Sidebar>
@@ -96,6 +102,9 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
               </SidebarMenuSub>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <ShareButton enrollerId={enroller?.customId} />
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild>
