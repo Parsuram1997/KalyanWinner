@@ -320,19 +320,19 @@ export default function ManageEnrollersPage() {
                 )}
                 {!isLoading && paginatedEnrollers.map((enroller) => (
                   <TableRow key={enroller.id}>
-                    <TableCell>
+                    <TableCell className="py-1">
                       <div className="font-medium">{enroller.name}</div>
                       <div className="text-xs text-muted-foreground">{enroller.customId}</div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-1">
                       <div>{enroller.email}</div>
                       <div className="text-sm text-muted-foreground">{enroller.mobile}</div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-1">
                       <div>{enroller.state}</div>
                       <div className="text-sm text-muted-foreground">{enroller.district}</div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-1">
                       <Badge
                         variant={
                           enroller.status === "Active"
@@ -343,14 +343,14 @@ export default function ManageEnrollersPage() {
                         {enroller.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="flex gap-2">
-                       <Button variant="outline" size="icon" asChild>
+                    <TableCell className="flex gap-2 py-1">
+                       <Button variant="outline" size="icon" className="h-7 w-7" asChild>
                         <Link href={`/admin/enrollers/${enroller.customId}`}><Eye className="h-4 w-4" /></Link>
                        </Button>
-                       <Button variant="outline" size="icon" onClick={() => openEditDialog(enroller)}><Edit className="h-4 w-4" /></Button>
+                       <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openEditDialog(enroller)}><Edit className="h-4 w-4" /></Button>
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
+                            <Button variant="destructive" size="icon" className="h-7 w-7"><Trash className="h-4 w-4" /></Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
