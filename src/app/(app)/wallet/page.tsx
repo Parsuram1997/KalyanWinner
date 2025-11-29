@@ -127,7 +127,7 @@ const FeaturedMarkets = () => {
              <Card key={market.slug} className="bg-accent/50 border-primary/50">
                <CardHeader className="p-4">
                  <CardTitle className="text-lg">{market.name}</CardTitle>
-                 <CardDescription className="text-sm">{market.description}</CardDescription>
+                 <CardDescription className="text-sm h-8">{market.description}</CardDescription>
                </CardHeader>
                <CardContent className="p-4 pt-0">
                   <Button asChild className="w-full" size="sm">
