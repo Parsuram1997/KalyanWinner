@@ -33,19 +33,60 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 import NotificationBell from "@/components/NotificationBell";
-import ShareButton from "@/components/ShareButton";
+import { toast } from '@/hooks/use-toast';
 
 function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
     const { user: authUser } = useUser();
     const firestore = useFirestore();
     const enrollerRef = useMemoFirebase(() => (authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
     const { data: enroller } = useDoc<any>(enrollerRef);
+
+    const handleShare = useCallback(async () => {
+      if (!enroller?.customId) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not find your referral ID.',
+        });
+        return;
+      }
+
+      const shareUrl = `${window.location.origin}/signup?enrollerId=${enroller.customId}`;
+      const shareData = {
+        title: 'Join Kalyan Winner!',
+        text: 'Join me on Kalyan Winner and start playing. Use my link to sign up!',
+        url: shareUrl,
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          toast({ title: 'Link Shared!', description: 'Your referral link has been shared.' });
+        } catch (error) {
+          console.log('Share was cancelled or failed', error);
+        }
+      } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          toast({
+            title: 'Link Copied!',
+            description: 'Your referral link has been copied to your clipboard.',
+          });
+        }).catch(err => {
+          console.error('Could not copy text: ', err);
+          toast({
+              variant: 'destructive',
+              title: 'Failed to Copy',
+              description: 'Could not copy the referral link.',
+          });
+        });
+      }
+    }, [enroller?.customId]);
     
     return (
     <SidebarProvider>
@@ -105,7 +146,10 @@ function EnrollerLayoutContent({ children }: { children: React.ReactNode }) {
               </SidebarMenuSub>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <ShareButton enrollerId={enroller?.customId} />
+                <SidebarMenuButton onClick={handleShare}>
+                    <Share2 />
+                    <span>Share App</span>
+                </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild>
