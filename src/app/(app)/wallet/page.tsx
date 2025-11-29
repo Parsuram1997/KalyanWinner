@@ -71,27 +71,38 @@ const FeaturedMarkets = () => {
           In markets par bet lagayein aur bade inaam jeetein!
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-4">
-        {/* Simple Grid for all screen sizes */}
-        <div className="grid grid-cols-2 gap-4">
-          {markets.map((market) => (
-            <Card key={market.slug} className="bg-accent/50 border-primary/50">
-              <CardHeader className="p-3">
-                <CardTitle className="text-base">{market.name}</CardTitle>
-                <CardDescription className="text-[11px] h-8 sm:h-auto">
-                  {market.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <Button asChild className="w-full" size="sm">
-                  <Link href={`/play/${market.slug}`}>
-                    <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <CardContent className="p-0">
+          <div className="overflow-hidden p-6">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {markets.map((market, index) => (
+                  <CarouselItem key={index} className="pl-4 basis-full">
+                      <Card className="bg-accent/50 border-primary/50">
+                        <CardHeader className="p-3">
+                          <CardTitle className="text-base">{market.name}</CardTitle>
+                          <CardDescription className="text-xs h-8 sm:h-auto">
+                            {market.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <Button asChild className="w-full" size="sm">
+                            <Link href={`/play/${market.slug}`}>
+                              <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                            </Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          </div>
       </CardContent>
     </Card>
   );
