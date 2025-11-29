@@ -47,6 +47,8 @@ type KalyanResult = {
   closePanna: string;
 };
 
+const RESULTS_PER_PAGE = 30;
+
 const getPannaSum = (panna: string) => {
     if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '';
     return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
@@ -63,9 +65,9 @@ export default function EnterResultsPage() {
 
     const resultsQuery = useMemoFirebase(() => {
         if (!firestore || !marketName) return null;
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const dateString = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`;
+        const yearAgo = new Date();
+        yearAgo.setDate(yearAgo.getDate() - 365);
+        const dateString = `${yearAgo.getFullYear()}-${String(yearAgo.getMonth() + 1).padStart(2, '0')}-${String(yearAgo.getDate()).padStart(2, '0')}`;
 
         return query(
           collection(firestore, 'kalyan_results'),
@@ -83,6 +85,16 @@ export default function EnterResultsPage() {
     const [isHolidayDialogOpen, setHolidayDialogOpen] = useState(false);
     const [selectedResult, setSelectedResult] = useState<KalyanResult | null>(null);
     const [updateClosePanna, setUpdateClosePanna] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const { paginatedResults, totalPages } = useMemo(() => {
+      if (!results) return { paginatedResults: [], totalPages: 0 };
+      const totalPages = Math.ceil(results.length / RESULTS_PER_PAGE);
+      const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+      const endIndex = startIndex + RESULTS_PER_PAGE;
+      const paginatedResults = results.slice(startIndex, endIndex);
+      return { paginatedResults, totalPages };
+    }, [results, currentPage]);
 
 
     const handleSubmitOpenResult = async (e: React.FormEvent) => {
@@ -200,7 +212,7 @@ export default function EnterResultsPage() {
           <CardHeader className="flex flex-col gap-4">
             <div>
                 <CardTitle>Results for {marketName}</CardTitle>
-                <CardDescription>View and manage game results for the last 7 days.</CardDescription>
+                <CardDescription>View and manage game results for the last year.</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
                 <Dialog open={isHolidayDialogOpen} onOpenChange={setHolidayDialogOpen}>
@@ -269,7 +281,7 @@ export default function EnterResultsPage() {
                         <TableRow>
                             <TableCell colSpan={5} className="text-center text-red-500 py-4">{error.message}</TableCell>
                         </TableRow>
-                    ) : results && results.length > 0 ? results.map((result) => (
+                    ) : paginatedResults && paginatedResults.length > 0 ? paginatedResults.map((result) => (
                     <TableRow key={result.id}>
                         <TableCell>{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell className="font-mono text-center">{result.openPanna}</TableCell>
@@ -314,7 +326,7 @@ export default function EnterResultsPage() {
                     </TableRow>
                     )) : (
                         <TableRow>
-                           <TableCell colSpan={5} className="text-center py-4">No results found for this market in the last 7 days.</TableCell>
+                           <TableCell colSpan={5} className="text-center py-4">No results found for this market.</TableCell>
                         </TableRow>
                     )}
                 </TableBody>
@@ -326,8 +338,8 @@ export default function EnterResultsPage() {
                 <div className="p-4"><Skeleton className="h-24 w-full" /></div>
               ) : error ? (
                 <div className="p-4 text-center text-red-500">{error.message}</div>
-              ) : results && results.length > 0 ? (
-                results.map((result) => (
+              ) : paginatedResults && paginatedResults.length > 0 ? (
+                paginatedResults.map((result) => (
                   <Card key={result.id} className="p-4">
                      <div className="flex justify-between items-start">
                           <div>
@@ -388,11 +400,34 @@ export default function EnterResultsPage() {
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No results found in the last 7 days.
+                  No results found for this market.
                 </div>
               )}
             </div>
           </CardContent>
+           {totalPages > 1 && (
+             <CardFooter className="flex justify-end items-center gap-4 border-t pt-4">
+                <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                >
+                    Next
+                </Button>
+            </CardFooter>
+          )}
         </Card>
       </div>
 
