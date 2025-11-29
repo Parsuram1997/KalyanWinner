@@ -45,15 +45,10 @@ export default function LeaderboardPage() {
   const leaderboardQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     
-    // Get today's date in YYYY-MM-DD format
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-
-    // Query for dates greater than or equal to the start of today
     return query(
       collection(firestore, "transactions"),
       where("type", "==", "Win"),
-      where("status", "==", "Completed"),
-      where("date", ">=", todayStr)
+      where("status", "==", "Completed")
     );
   }, [firestore]);
 
@@ -68,8 +63,12 @@ export default function LeaderboardPage() {
     }
     
     const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const todaysTransactions = transactions.filter(txn => txn.date.startsWith(todayStr));
-
+    
+    // Filter transactions for today on the client-side
+    const todaysTransactions = transactions.filter(txn => {
+        // new Date(txn.date).toISOString() will handle different date formats
+        return new Date(txn.date).toISOString().startsWith(todayStr);
+    });
 
     const winnerMap: { [userId: string]: AggregatedWinner } = {};
 
