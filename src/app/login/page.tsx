@@ -25,6 +25,7 @@ export default function LoginPage() {
   const [view, setView] = useState<View>("login");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleForgotPassword = async () => {
@@ -34,7 +35,7 @@ export default function LoginPage() {
       setIsLoading(false);
       return;
     }
-     if (!identifier) {
+     if (!resetEmail) {
       toast({
         variant: "destructive",
         title: "Invalid Email",
@@ -45,12 +46,13 @@ export default function LoginPage() {
     }
 
     try {
-      await sendPasswordResetEmail(auth, identifier);
+      await sendPasswordResetEmail(auth, resetEmail);
       toast({
         title: "Password Reset Email Sent",
-        description: `A link to reset your password has been sent to ${identifier}.`,
+        description: `A link to reset your password has been sent to ${resetEmail}.`,
       });
       setView("login");
+      setResetEmail("");
     } catch (error: any) {
       console.error(error);
       toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the email is correct." });
@@ -197,14 +199,14 @@ export default function LoginPage() {
             {view === 'forgot_password' && (
                 <div className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="reset-email">Email</Label>
+                        <Label htmlFor="reset-email">Your Registered Email</Label>
                         <Input
                             id="reset-email"
                             type="email"
                             placeholder="m@example.com"
                             required
-                            value={identifier}
-                            onChange={(e) => setIdentifier(e.target.value)}
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
                             disabled={isLoading}
                              className="h-12 text-base"
                         />

@@ -23,6 +23,7 @@ export default function EnrollerLoginPage() {
   const firestore = useFirestore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState<View>("login");
 
@@ -33,7 +34,7 @@ export default function EnrollerLoginPage() {
       setIsLoading(false);
       return;
     }
-     if (!email) {
+     if (!resetEmail) {
       toast({
         variant: "destructive",
         title: "Invalid Email",
@@ -44,12 +45,13 @@ export default function EnrollerLoginPage() {
     }
 
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, resetEmail);
       toast({
         title: "Password Reset Email Sent",
-        description: `A link to reset your password has been sent to ${email}.`,
+        description: `A link to reset your password has been sent to ${resetEmail}.`,
       });
       setView("login");
+      setResetEmail("");
     } catch (error: any) {
       console.error(error);
       toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the email is correct." });
@@ -186,8 +188,8 @@ export default function EnrollerLoginPage() {
                             type="email"
                             placeholder="m@example.com"
                             required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
                             disabled={isLoading}
                              className="h-12 text-base"
                         />
