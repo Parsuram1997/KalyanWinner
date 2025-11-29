@@ -41,7 +41,6 @@ const getStatusVariant = (status: Transaction['status']) => {
         case 'Pending': 
             return 'default';
         case 'Rejected':
-        case 'Lost':
             return 'destructive';
         default: return 'outline';
     }
@@ -86,9 +85,9 @@ const FeaturedMarkets = () => {
         </CardTitle>
         <CardDescription>In markets par bet lagayein aur bade inaam jeetein!</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 sm:p-6">
          {/* Carousel for Mobile */}
-        <div className="sm:hidden overflow-hidden">
+        <div className="sm:hidden">
            <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
             <CarouselContent className="-ml-4">
               {markets.map((market) => (
