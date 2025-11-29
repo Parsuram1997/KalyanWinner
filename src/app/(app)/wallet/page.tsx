@@ -19,6 +19,7 @@ import {
   query,
   where,
   getDocs,
+  orderBy,
 } from 'firebase/firestore';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,6 +36,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 // Type for user balance data
 type UserBalance = {
@@ -95,25 +97,33 @@ const FeaturedMarkets = () => {
                 <span>Hamare Special Markets</span>
             </h3>
             
-            {/* --- CSS SCROLL-SNAP CAROUSEL --- */}
-            <div className="relative px-4 sm:px-6">
-                 <ul className="flex gap-4 overflow-x-auto scroll-snap-x-mandatory scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
-                    {markets.map((market, index) => (
-                        <li key={index} className="scroll-snap-center flex-shrink-0 w-[80vw] sm:w-[30vw]">
-                             <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
-                                <CardHeader className="p-3 pb-2">
-                                    <CardTitle className="text-base">{market.name}</CardTitle>
-                                    <CardDescription className="text-xs h-8">{market.description}</CardDescription>
-                                </CardHeader>
-                                <CardFooter className="p-3 pt-0 mt-auto">
-                                    <Button asChild className="w-full" size="sm">
-                                        <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        </li>
-                    ))}
-                </ul>
+            <div className="px-4 sm:px-6">
+              <Carousel
+                opts={{
+                  align: "start",
+                }}
+                className="w-full"
+              >
+                <CarouselContent>
+                  {markets.map((market, index) => (
+                    <CarouselItem key={index} className="basis-full">
+                      <div className="p-1">
+                        <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                          <CardHeader className="p-3 pb-2">
+                              <CardTitle className="text-base">{market.name}</CardTitle>
+                              <CardDescription className="text-xs h-8">{market.description}</CardDescription>
+                          </CardHeader>
+                          <CardFooter className="p-3 pt-0 mt-auto">
+                              <Button asChild className="w-full" size="sm">
+                                  <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
+                              </Button>
+                          </CardFooter>
+                        </Card>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
             </div>
         </div>
     );
@@ -146,7 +156,8 @@ export default function WalletPage() {
       const transQuery = query(
         collection(firestore, 'transactions'),
         where('userId', '==', user.uid),
-        where('type', 'in', ['Deposit', 'Withdrawal'])
+        where('type', 'in', ['Deposit', 'Withdrawal']),
+        orderBy('date', 'desc')
       );
       const transSnapshot = await getDocs(transQuery);
       const fetchedTransactions = transSnapshot.docs.map(
@@ -164,22 +175,14 @@ export default function WalletPage() {
     fetchData();
   }, [fetchData]);
 
-  // Sort transactions on the client-side, exactly like the dashboard
-  const sortedTransactions = useMemo(() => {
-    if (!transactions) return [];
-    return [...transactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  }, [transactions]);
-
   const totalBalance = useMemo(() => {
     if (!balance) return 0;
     return balance.deposit + balance.winning;
   }, [balance]);
 
   const recentTransactions = useMemo(
-    () => sortedTransactions.slice(0, 10),
-    [sortedTransactions]
+    () => transactions.slice(0, 10),
+    [transactions]
   );
 
   return (
