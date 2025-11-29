@@ -140,23 +140,23 @@ export default function CashLedgerPage() {
                 <TableBody>
                 {isLoading && Array.from({ length: 10 }).map((_, i) => (
                     <TableRow key={i}>
-                        <TableCell colSpan={5}><Skeleton className="h-6 w-full" /></TableCell>
+                        <TableCell colSpan={5} className="py-2"><Skeleton className="h-6 w-full" /></TableCell>
                     </TableRow>
                 ))}
                 {!isLoading && paginatedData.map((entry) => (
                     <TableRow key={entry.id}>
-                        <TableCell className="text-xs">{new Date(entry.date).toLocaleString('en-GB')}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-xs py-2">{new Date(entry.date).toLocaleString('en-GB')}</TableCell>
+                        <TableCell className="py-2">
                             <div className="font-medium text-sm">{entry.userName}</div>
                             <div className="text-xs text-muted-foreground">{entry.description}</div>
                         </TableCell>
-                        <TableCell className="text-right font-mono text-green-600">
+                        <TableCell className="text-right font-mono text-green-600 py-2">
                             {entry.deposit > 0 ? `+${entry.deposit.toLocaleString('en-IN')}` : ''}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-red-600">
+                        <TableCell className="text-right font-mono text-red-600 py-2">
                              {entry.withdrawal > 0 ? `-${entry.withdrawal.toLocaleString('en-IN')}` : ''}
                         </TableCell>
-                        <TableCell className="text-right font-mono font-semibold">
+                        <TableCell className="text-right font-mono font-semibold py-2">
                             ₹{entry.balance.toLocaleString('en-IN')}
                         </TableCell>
                     </TableRow>
@@ -168,7 +168,7 @@ export default function CashLedgerPage() {
             <div className="grid gap-4 md:hidden">
             {isLoading && <p className="text-center text-muted-foreground">Loading ledger...</p>}
             {!isLoading && paginatedData.map((entry) => (
-                <Card key={entry.id} className="p-4 text-sm">
+                <Card key={entry.id} className="p-3 text-sm">
                 <div className="flex justify-between items-start mb-3">
                     <div>
                         <p className="font-semibold">{entry.userName}</p>
