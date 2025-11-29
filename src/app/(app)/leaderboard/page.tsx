@@ -111,7 +111,7 @@ export default function LeaderboardPage() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
+                  Array.from({ length: 10 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell className="text-center">
                         <Skeleton className="h-5 w-5 rounded-full mx-auto" />
