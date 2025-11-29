@@ -12,7 +12,7 @@ import Link from "next/link";
 import { ArrowUpRight, ArrowDownLeft, DollarSign, PiggyBank, Trophy, Ticket, Flame } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 
 
@@ -48,6 +48,22 @@ const getStatusVariant = (status: Transaction['status']) => {
 }
 
 const FeaturedMarkets = () => {
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+
+    setCurrent(api.selectedScrollSnap())
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap())
+    })
+  }, [api])
+
+
   const markets = [
     {
       name: "Kalahandi Day",
@@ -73,17 +89,17 @@ const FeaturedMarkets = () => {
       <CardContent>
          {/* Carousel for Mobile */}
         <div className="sm:hidden">
-           <Carousel opts={{ loop: true }} className="w-full">
+           <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
             <CarouselContent>
               {markets.map((market) => (
                 <CarouselItem key={market.slug}>
                   <Card className="bg-accent/50 border-primary/50">
-                    <CardHeader>
-                      <CardTitle className="text-lg">{market.name}</CardTitle>
-                      <CardDescription>{market.description}</CardDescription>
+                    <CardHeader className="p-4">
+                      <CardTitle className="text-base">{market.name}</CardTitle>
+                      <CardDescription className="text-xs">{market.description}</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                       <Button asChild className="w-full">
+                    <CardContent className="p-4 pt-0">
+                       <Button asChild className="w-full" size="sm">
                         <Link href={`/play/${market.slug}`}>
                           <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
                         </Link>
@@ -93,6 +109,15 @@ const FeaturedMarkets = () => {
                 </CarouselItem>
               ))}
             </CarouselContent>
+             <div className="py-2 flex justify-center gap-2">
+                {markets.map((_, index) => (
+                    <button
+                    key={index}
+                    onClick={() => api?.scrollTo(index)}
+                    className={cn("h-2 w-2 rounded-full", current === index ? "bg-primary" : "bg-muted")}
+                    />
+                ))}
+            </div>
           </Carousel>
         </div>
 
@@ -100,12 +125,12 @@ const FeaturedMarkets = () => {
         <div className="hidden sm:grid sm:grid-cols-2 gap-4">
            {markets.map((market) => (
              <Card key={market.slug} className="bg-accent/50 border-primary/50">
-               <CardHeader>
-                 <CardTitle className="text-lg">{market.name}</CardTitle>
-                 <CardDescription>{market.description}</CardDescription>
+               <CardHeader className="p-4">
+                 <CardTitle className="text-base">{market.name}</CardTitle>
+                 <CardDescription className="text-xs">{market.description}</CardDescription>
                </CardHeader>
-               <CardContent>
-                  <Button asChild className="w-full">
+               <CardContent className="p-4 pt-0">
+                  <Button asChild className="w-full" size="sm">
                     <Link href={`/play/${market.slug}`}>
                       <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
                     </Link>
