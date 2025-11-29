@@ -4,6 +4,7 @@
 import {
   Card,
   CardContent,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -19,6 +20,8 @@ import { collection, query, where, orderBy } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
 
 type Result = { 
   id: string;
@@ -26,7 +29,10 @@ type Result = {
   marketName: string;
   openPanna?: string;
   closePanna?: string;
+  jodi?: string;
 };
+
+const RESULTS_PER_PAGE = 30;
 
 // Helper to get digit from panna
 const getDigit = (panna?: string) => {
@@ -63,6 +69,7 @@ const getFormattedDate = (dateString: string) => {
 export default function MarketResultsPage() {
   const params = useParams();
   const marketSlug = params.market as string;
+  const [currentPage, setCurrentPage] = useState(1);
   
   let marketName = "";
   if (marketSlug) {
@@ -87,6 +94,14 @@ export default function MarketResultsPage() {
   );
   
   const { data: results, isLoading } = useCollection<Result>(resultsQuery, { skip: !firestore || !marketName });
+
+  const { paginatedResults, totalPages } = useMemo(() => {
+    if (!results) return { paginatedResults: [], totalPages: 0 };
+    const totalPages = Math.ceil(results.length / RESULTS_PER_PAGE);
+    const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+    const endIndex = startIndex + RESULTS_PER_PAGE;
+    return { paginatedResults: results.slice(startIndex, endIndex), totalPages };
+  }, [results, currentPage]);
   
   if (!marketSlug) {
       return <div>Loading market...</div>
@@ -123,41 +138,32 @@ export default function MarketResultsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {results.map((result) => {
-                          const openDigit = getDigit(result.openPanna);
-                          const closeDigit = getDigit(result.closePanna);
-                          const jodi = result.openPanna && result.closePanna ? `${openDigit}${closeDigit}` : `**`;
-
-                          return (
+                        {paginatedResults.map((result) => (
                             <TableRow key={result.id}>
                               <TableCell className="font-medium">{getFormattedDate(result.date)}</TableCell>
                               <TableCell className="text-center font-mono tracking-widest">{result.openPanna || '***'}</TableCell>
                               <TableCell className="text-center">
                                 <div className="font-bold text-lg text-primary">
-                                  {jodi}
+                                  {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || `**`}
                                 </div>
                               </TableCell>
                               <TableCell className="text-center font-mono tracking-widest">{result.closePanna || '***'}</TableCell>
                             </TableRow>
                           )
-                        })}
+                        )}
                       </TableBody>
                     </Table>
                   </div>
 
                   {/* Mobile List */}
                    <div className="grid gap-0 md:hidden">
-                    {results.map((result, index) => {
-                      const openDigit = getDigit(result.openPanna);
-                      const closeDigit = getDigit(result.closePanna);
-                      const jodi = result.openPanna && result.closePanna ? `${openDigit}${closeDigit}` : `**`;
-
+                    {paginatedResults.map((result, index) => {
                       return (
                         <div
                           key={result.id}
                           className={cn(
                             "px-4 py-3",
-                            index < results.length - 1 && "border-b"
+                            index < paginatedResults.length - 1 && "border-b"
                           )}
                         >
                           <div className="flex justify-between items-center mb-2">
@@ -172,7 +178,7 @@ export default function MarketResultsPage() {
                                 <span className="text-xl font-bold tracking-widest">{result.openPanna || '***'}</span>
                               </div>
                               <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
-                                <span className="text-2xl font-bold tracking-wider">{jodi}</span>
+                                {result.jodi === 'L' ? <span className="text-sm font-bold">Holiday</span> : <span className="text-2xl font-bold tracking-wider">{result.jodi || '**'}</span>}
                               </div>
                               <div className="flex flex-col items-center">
                                 <span className="text-xs text-muted-foreground">Close</span>
@@ -186,6 +192,29 @@ export default function MarketResultsPage() {
                 </>
                 )}
             </CardContent>
+             {totalPages > 1 && (
+             <CardFooter className="flex justify-end items-center gap-4 border-t pt-4">
+                <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                >
+                    Next
+                </Button>
+            </CardFooter>
+          )}
         </Card>
     </div>
   );
