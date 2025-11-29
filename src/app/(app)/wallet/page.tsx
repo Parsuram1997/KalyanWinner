@@ -95,23 +95,21 @@ const FeaturedMarkets = () => {
                 <Flame className="text-destructive h-5 w-5" />
                 <span>Hamare Special Markets</span>
             </h3>
-            <ul className="flex overflow-x-auto gap-4 px-4 sm:px-6 snap-x snap-mandatory scrollbar-hide">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-6">
               {markets.map((market, index) => (
-                <li key={index} className="w-4/5 flex-shrink-0 snap-start">
-                    <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
-                      <CardHeader className="p-3 pb-2">
-                          <CardTitle className="text-base">{market.name}</CardTitle>
-                          <CardDescription className="text-xs h-8">{market.description}</CardDescription>
-                      </CardHeader>
-                      <CardFooter className="p-3 pt-0 mt-auto">
-                          <Button asChild className="w-full" size="sm">
-                              <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
-                          </Button>
-                      </CardFooter>
-                    </Card>
-                </li>
+                <Card key={index} className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                  <CardHeader className="p-3 pb-2">
+                      <CardTitle className="text-base">{market.name}</CardTitle>
+                      <CardDescription className="text-xs h-8">{market.description}</CardDescription>
+                  </CardHeader>
+                  <CardFooter className="p-3 pt-0 mt-auto">
+                      <Button asChild className="w-full" size="sm">
+                          <Link href={`/play/${market.slug}`}><Ticket className="mr-2 h-4 w-4" /> Abhi Khelein</Link>
+                      </Button>
+                  </CardFooter>
+                </Card>
               ))}
-            </ul>
+            </div>
         </div>
     );
 };
