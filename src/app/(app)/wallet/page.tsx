@@ -85,32 +85,27 @@ const FeaturedMarkets = () => {
         </CardTitle>
         <CardDescription className="hidden sm:block">In markets par bet lagayein aur bade inaam jeetein!</CardDescription>
       </CardHeader>
-      <CardContent className="p-0">
-         {/* Carousel for Mobile */}
-        <div className="p-6 sm:hidden">
-            <Carousel setApi={setApi} className="w-full" opts={{ loop: true }}>
-                <CarouselContent className="-ml-4">
-                    {markets.map((market, index) => (
-                        <CarouselItem key={index} className="pl-4">
-                            <div className="p-1">
-                                <Card className="bg-accent/50 border-primary/50">
-                                    <CardHeader className="p-3">
-                                        <CardTitle className="text-base">{market.name}</CardTitle>
-                                        <CardDescription className="text-[11px] h-8">{market.description}</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="p-3 pt-0">
-                                        <Button asChild className="w-full" size="sm">
-                                            <Link href={`/play/${market.slug}`}>
-                                                <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                                            </Link>
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </CarouselItem>
-                    ))}
-                </CarouselContent>
-            </Carousel>
+        {/* Carousel for Mobile */}
+        <Carousel setApi={setApi} className="p-6 sm:hidden" opts={{ loop: true }}>
+            <CarouselContent className="-ml-4">
+                {markets.map((market, index) => (
+                    <CarouselItem key={index} className="pl-4">
+                        <Card className="bg-accent/50 border-primary/50">
+                            <CardHeader className="p-3">
+                                <CardTitle className="text-base">{market.name}</CardTitle>
+                                <CardDescription className="text-[11px] h-8">{market.description}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-3 pt-0">
+                                <Button asChild className="w-full" size="sm">
+                                    <Link href={`/play/${market.slug}`}>
+                                        <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                                    </Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </CarouselItem>
+                ))}
+            </CarouselContent>
              <div className="py-2 flex justify-center gap-2">
                 {markets.map((_, index) => (
                     <button
@@ -120,7 +115,7 @@ const FeaturedMarkets = () => {
                     />
                 ))}
             </div>
-        </div>
+        </Carousel>
 
         {/* Grid for Desktop */}
         <div className="hidden sm:grid sm:grid-cols-2 gap-4 p-6">
@@ -140,7 +135,6 @@ const FeaturedMarkets = () => {
              </Card>
            ))}
         </div>
-      </CardContent>
     </Card>
   )
 }
@@ -322,5 +316,7 @@ export default function WalletPage() {
     </div>
   );
 }
+
+    
 
     
