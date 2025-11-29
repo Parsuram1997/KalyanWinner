@@ -35,11 +35,6 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from '@/components/ui/carousel';
 
 // Type for user balance data
 type UserBalance = {
@@ -105,11 +100,35 @@ const FeaturedMarkets = () => {
         </p>
       </div>
 
-      {/* Simplified Layout - No more carousel */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 sm:px-6">
-        {/* On mobile, only the first market is shown. On desktop, both are shown. */}
-        {markets.map((market, index) => (
-          <div key={index} className={index > 0 ? 'hidden md:block' : ''}>
+      {/* --- CUSTOM CSS-POWERED CAROUSEL FOR MOBILE --- */}
+      <div className="md:hidden overflow-x-auto pb-4 scrollbar-hide scroll-snap-x-mandatory">
+          <div className="flex gap-4 px-4 sm:px-6">
+            {markets.map((market, index) => (
+                <div key={index} className="flex-shrink-0 w-[80%] scroll-snap-start">
+                    <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
+                        <CardHeader className="p-3 pb-2">
+                            <CardTitle className="text-base">{market.name}</CardTitle>
+                            <CardDescription className="text-xs h-8 sm:h-auto">
+                            {market.description}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardFooter className="p-3 pt-0 mt-auto">
+                            <Button asChild className="w-full" size="sm">
+                            <Link href={`/play/${market.slug}`}>
+                                <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
+                            </Link>
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
+            ))}
+        </div>
+      </div>
+      
+      {/* --- DESKTOP GRID --- */}
+      <div className="hidden md:grid grid-cols-2 gap-4 px-4 sm:px-6">
+         {markets.map((market, index) => (
+          <div key={index}>
              <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
               <CardHeader className="p-3 pb-2">
                 <CardTitle className="text-base">{market.name}</CardTitle>
@@ -127,23 +146,6 @@ const FeaturedMarkets = () => {
             </Card>
           </div>
         ))}
-         <div className="block md:hidden">
-            <Card className="bg-accent/50 border-primary/50 h-full flex flex-col">
-              <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-base">{markets[1].name}</CardTitle>
-                <CardDescription className="text-xs h-8 sm:h-auto">
-                  {markets[1].description}
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="p-3 pt-0 mt-auto">
-                <Button asChild className="w-full" size="sm">
-                  <Link href={`/play/${markets[1].slug}`}>
-                    <Ticket className="mr-2 h-4 w-4" /> Abhi Khelein
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-        </div>
       </div>
     </div>
   );
