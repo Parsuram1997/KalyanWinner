@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -12,6 +13,7 @@ import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { collection, query, where, getDocs, limit, doc, getDoc } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader } from "lucide-react";
 
 type View = "login" | "forgot_password";
 
@@ -182,7 +184,12 @@ export default function LoginPage() {
                         />
                     </div>
                     <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
-                        {isLoading ? 'Logging in...' : 'Login'}
+                        {isLoading ? (
+                            <>
+                                <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                Logging in...
+                            </>
+                        ) : 'Login'}
                     </Button>
                 </form>
             )}
