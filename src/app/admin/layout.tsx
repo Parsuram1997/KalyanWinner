@@ -121,6 +121,14 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                     </Link>
                 </SidebarMenuButton>
                 </SidebarMenuItem>
+                 <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                    <Link href="/admin/bet-ledger">
+                    <Ticket />
+                    Bet Ledger
+                    </Link>
+                </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                     <Link href="/admin/cash-ledger">
