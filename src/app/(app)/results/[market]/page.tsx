@@ -108,16 +108,16 @@ export default function MarketResultsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">{marketName} Results</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold tracking-tight">{marketName} Results</h1>
+        <p className="text-sm text-muted-foreground">
           History of all declared results for this market.
         </p>
       </div>
       
        <Card>
-            <CardContent>
+            <CardContent className="p-0">
                 {isLoading ? (
                   <div className="space-y-4 p-4">
                     {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
@@ -140,14 +140,14 @@ export default function MarketResultsPage() {
                       <TableBody>
                         {paginatedResults.map((result) => (
                             <TableRow key={result.id}>
-                              <TableCell className="font-medium">{getFormattedDate(result.date)}</TableCell>
-                              <TableCell className="text-center font-mono tracking-widest">{result.openPanna || '***'}</TableCell>
-                              <TableCell className="text-center">
+                              <TableCell className="font-medium py-1.5">{getFormattedDate(result.date)}</TableCell>
+                              <TableCell className="text-center font-mono tracking-widest py-1.5">{result.openPanna || '***'}</TableCell>
+                              <TableCell className="text-center py-1.5">
                                 <div className="font-bold text-lg text-primary">
                                   {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || `**`}
                                 </div>
                               </TableCell>
-                              <TableCell className="text-center font-mono tracking-widest">{result.closePanna || '***'}</TableCell>
+                              <TableCell className="text-center font-mono tracking-widest py-1.5">{result.closePanna || '***'}</TableCell>
                             </TableRow>
                           )
                         )}
@@ -162,17 +162,16 @@ export default function MarketResultsPage() {
                         <div
                           key={result.id}
                           className={cn(
-                            "px-4 py-3",
+                            "px-4 py-2",
                             index < paginatedResults.length - 1 && "border-b"
                           )}
                         >
-                          <div className="flex justify-between items-center mb-2">
+                          <div className="flex justify-between items-center">
                              <div>
                               <p className="font-semibold text-base">{result.marketName}</p>
                               <p className="text-sm text-muted-foreground">{getFormattedDate(result.date)}</p>
                             </div>
-                          </div>
-                          <div className="flex items-center justify-center gap-2">
+                             <div className="flex items-center justify-center gap-2">
                               <div className="flex flex-col items-center">
                                 <span className="text-xs text-muted-foreground">Open</span>
                                 <span className="text-xl font-bold tracking-widest">{result.openPanna || '***'}</span>
@@ -184,6 +183,7 @@ export default function MarketResultsPage() {
                                 <span className="text-xs text-muted-foreground">Close</span>
                                 <span className="text-xl font-bold tracking-widest">{result.closePanna || '***'}</span>
                               </div>
+                          </div>
                           </div>
                         </div>
                       )

@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { User, Wallet, Phone, MapPin, Map, Lock, Unlock, CalendarDays } from "lucide-react";
+import { User, Wallet, Phone, MapPin, Map, Lock, Unlock, CalendarDays, TrendingUp, TrendingDown } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
 import { collection, query, where, doc, orderBy } from "firebase/firestore";
@@ -31,7 +31,7 @@ import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 50;
 
 
 const getStatusVariant = (status: string) => {
@@ -116,6 +116,18 @@ export default function UserDetailsPage() {
     const endIndex = startIndex + ITEMS_PER_PAGE;
     return { paginatedTxns: userTxns.slice(startIndex, endIndex), totalTxnPages: totalPages };
   }, [userTxns, txnCurrentPage]);
+  
+  const netProfitLoss = useMemo(() => {
+    if (!userBets) return 0;
+    
+    const totalWinnings = userBets
+      .filter(bet => bet.status === 'Won')
+      .reduce((sum, bet) => sum + (bet.winningAmount || 0), 0);
+
+    const totalBetAmount = userBets.reduce((sum, bet) => sum + bet.amount, 0);
+
+    return totalWinnings - totalBetAmount;
+  }, [userBets]);
 
 
   const isLoading = isUserQueryLoading || isUserLoading || areBetsLoading || areTxnsLoading;
@@ -234,6 +246,25 @@ export default function UserDetailsPage() {
               <p className="font-medium">₹{(user.winningBalance || 0).toFixed(2)}</p>
             </div>
           </div>
+         
+           {netProfitLoss >= 0 ? (
+            <div className="flex items-center gap-3">
+                <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                <div>
+                    <p className="text-sm text-muted-foreground">Total Profit</p>
+                    <p className="font-medium text-green-600">₹{netProfitLoss.toFixed(2)}</p>
+                </div>
+            </div>
+        ) : (
+            <div className="flex items-center gap-3">
+                <TrendingDown className="h-5 w-5 text-muted-foreground" />
+                <div>
+                    <p className="text-sm text-muted-foreground">Total Loss</p>
+                    <p className="font-medium text-red-600">-₹{Math.abs(netProfitLoss).toFixed(2)}</p>
+                </div>
+            </div>
+        )}
+
           <div className="flex items-center gap-3">
             <div className="w-5 h-5"></div>
             <div>

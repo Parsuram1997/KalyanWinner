@@ -34,7 +34,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
-import NotificationBell from "@/components/NotificationBell";
 
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
@@ -108,14 +107,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/analysis">
-                  <GanttChartSquare />
-                  Analysis
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
                 <Link href="/rates">
                   <Coins />
                   Rates
@@ -129,9 +120,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   FAQ
                 </Link>
               </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-               <NotificationBell />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>

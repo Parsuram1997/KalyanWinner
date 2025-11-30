@@ -19,7 +19,6 @@ import {
 import { Trophy } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
-import { format } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo } from "react";
 
@@ -45,7 +44,8 @@ export default function LeaderboardPage() {
 
   const leaderboardQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    
+
+    // Fetch all win transactions, filtering will happen on the client
     return query(
       collection(firestore, "transactions"),
       where("type", "==", "Win"),
@@ -62,12 +62,14 @@ export default function LeaderboardPage() {
     if (!transactions || transactions.length === 0) {
         return [];
     }
-    
-    const todayStr = new Date().toISOString().split('T')[0];
-    
-    // Filter transactions for today on the client-side
+
+    const today = new Date();
+    const todayDateString = today.toDateString(); // e.g., "Thu May 23 2024"
+
+    // Filter transactions for today in the user's local timezone
     const todaysTransactions = transactions.filter(txn => {
-        return txn.date.startsWith(todayStr);
+        const txnDate = new Date(txn.date); // The date from Firestore is a UTC ISO string
+        return txnDate.toDateString() === todayDateString;
     });
 
     const winnerMap: { [userId: string]: { userId: string, userName: string, customId?:string, totalWinnings: number } } = {};
@@ -88,7 +90,7 @@ export default function LeaderboardPage() {
 
     let lastAmount = -1;
     let currentRank = 0;
-    
+
     return sortedWinners.map((winner, index) => {
         if (winner.totalWinnings !== lastAmount) {
             currentRank = index + 1;
