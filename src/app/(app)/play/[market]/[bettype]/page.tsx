@@ -375,7 +375,10 @@ export default function PlaceBetPage() {
   }, [bets]);
 
   useEffect(() => {
-    if (!marketDetails) return;
+    if (!marketDetails) {
+        setButtonState({ text: 'Loading...', disabled: true, loading: true });
+        return;
+    }
 
     const parseTime = (timeStr: string) => {
         if (!timeStr) return new Date(0);
@@ -385,57 +388,53 @@ export default function PlaceBetPage() {
         return date;
     };
 
+    const now = new Date();
     const openBiddingTime = parseTime(marketDetails.openBiddingTime);
     const openResultTime = parseTime(marketDetails.openResultTime);
     const closeBiddingTime = parseTime(marketDetails.closeBiddingTime);
     const closeResultTime = parseTime(marketDetails.closeResultTime);
-    
-    const bettingOpenSessionTypes = ['Jodi', 'Open Sangam', 'Full Sangam', 'Open'];
-    const bettingCloseSessionTypes = ['Close', 'Close Sangam'];
 
-    const updateButtonState = () => {
-        const now = new Date();
-        let isDisabled = false;
-        let text = `Place Bets (Total: ₹${totalBetAmount})`;
+    const openSessionBetTypes = ['Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam', 'Open'];
+    const closeSessionBetTypes = ['Close'];
+    // Pannas can be for either session
+    const dualSessionBetTypes = ['Single Panna', 'Double Panna', 'Triple Panna'];
 
-        if (bettingOpenSessionTypes.includes(betTypeName)) {
+    let isDisabled = false;
+    let text = `Place Bets (Total: ₹${totalBetAmount})`;
+
+    const isOpenResultDeclared = !!todaysResult?.openPanna;
+
+    if (openSessionBetTypes.includes(betTypeName)) {
+        if (now >= openBiddingTime || isOpenResultDeclared) {
+            text = "Betting Closed";
+            isDisabled = true;
+        }
+    } else if (closeSessionBetTypes.includes(betTypeName)) {
+        if (!isOpenResultDeclared || now < openResultTime || now >= closeBiddingTime) {
+            text = "Betting Closed";
+            isDisabled = true;
+        }
+    } else if (dualSessionBetTypes.includes(betTypeName)) {
+        // For pannas, if open result is out, it's a "Close" panna. Otherwise, it's an "Open" panna.
+        if (isOpenResultDeclared) { // Acting as Close Panna
+            if (now < openResultTime || now >= closeBiddingTime) {
+                text = "Betting Closed";
+                isDisabled = true;
+            }
+        } else { // Acting as Open Panna
             if (now >= openBiddingTime) {
                 text = "Betting Closed";
                 isDisabled = true;
             }
-        } else if (bettingCloseSessionTypes.includes(betTypeName)) {
-             if (!todaysResult?.openPanna && now >= openBiddingTime) {
-                // Open result not out, but open bidding time has passed, so close session is also closed for now.
-                text = "Betting Closed";
-                isDisabled = true;
-             } else if (todaysResult?.openPanna && (now < openResultTime || now >= closeBiddingTime)) {
-                // Open result IS out, but we are outside the close betting window.
-                text = "Betting Closed";
-                isDisabled = true;
-            }
-        } else { // For Pannas (which can be open or close)
-            if (now >= openBiddingTime && now < openResultTime) {
-                 text = "Betting Closed";
-                 isDisabled = true;
-            }
-            if (todaysResult?.openPanna && now >= closeBiddingTime && now < closeResultTime) {
-                 text = "Betting Closed";
-                 isDisabled = true;
-            }
         }
-        
-        if (now > closeResultTime) {
-             text = "Betting Market Closed";
-             isDisabled = true;
-        }
-
-        setButtonState({ text, disabled: isDisabled, loading: false });
-    };
+    }
     
-    updateButtonState();
-    const intervalId = setInterval(updateButtonState, 30000); 
+    if (now > closeResultTime) {
+         text = "Market Closed For Today";
+         isDisabled = true;
+    }
 
-    return () => clearInterval(intervalId);
+    setButtonState({ text, disabled: isDisabled, loading: false });
 
   }, [marketDetails, betTypeName, totalBetAmount, todaysResult]);
 
@@ -521,16 +520,16 @@ export default function PlaceBetPage() {
         });
         
         let session: 'Open' | 'Close' | 'Jodi';
+        const openSessionBetTypes = ['Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam', 'Open'];
 
-        if (betTypeName === 'Jodi' || betTypeName === 'Full Sangam' || betTypeName === 'Open Sangam') {
-            session = 'Jodi';
-        } else if (betTypeName === 'Open') {
-            session = 'Open';
-        } else if (betTypeName === 'Close' || betTypeName === 'Close Sangam') {
-            session = 'Close';
+        if (openSessionBetTypes.includes(betTypeName)) {
+          session = 'Open'; // All these are considered "Open" session for betting purposes
+        } else if (betTypeName === 'Close') {
+          session = 'Close';
         } else { // Handles Pannas
             session = isOpenResultDeclared ? 'Close' : 'Open';
         }
+
 
         const gameTypeForDb = (betTypeName === 'Open' || betTypeName === 'Close') ? 'Single Digit' : betTypeName;
 

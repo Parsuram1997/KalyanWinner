@@ -170,12 +170,12 @@ export default function AggregatedBiddingDetailsPage() {
     };
 
     const openSessionBids = useMemo(() => {
-        const openBets = filteredBetsByDate?.filter(bet => bet.session === 'Open' || bet.session === 'Jodi');
+        const openBets = filteredBetsByDate?.filter(bet => bet.session === 'Open');
         return aggregateBids(openBets);
     }, [filteredBetsByDate]);
     
     const closeSessionBids = useMemo(() => {
-        const closeBets = filteredBetsByDate?.filter(bet => bet.session === 'Close' || bet.session === 'Jodi');
+        const closeBets = filteredBetsByDate?.filter(bet => bet.session === 'Close' || bet.session === 'Jodi' || bet.gameType === 'Open Sangam' || bet.gameType === 'Close Sangam' || bet.gameType === 'Full Sangam');
         return aggregateBids(closeBets);
     }, [filteredBetsByDate]);
 

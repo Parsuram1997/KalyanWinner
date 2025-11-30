@@ -91,12 +91,12 @@ export default function ChooseBetTypePage() {
   }
 
   const isDisabled = (betName: string) => {
-      if (!todaysResult || !todaysResult.openPanna) {
-          return false; // If open result is not out, nothing is disabled
+      // If open result has been declared, disable all "Open Session" bets
+      if (todaysResult && todaysResult.openPanna) {
+          const disabledAfterOpen = ['Jodi', 'Open Sangam', 'Full Sangam', 'Open', 'Close Sangam'];
+          return disabledAfterOpen.includes(betName);
       }
-      
-      const disabledAfterOpen = ['Jodi', 'Open Sangam', 'Full Sangam', 'Open'];
-      return disabledAfterOpen.includes(betName);
+      return false; // If open result is not out, nothing is disabled based on this logic
   };
   
   const isLoading = isLoadingBetTypes || isLoadingResult;
