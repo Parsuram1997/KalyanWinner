@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Copy, Phone, CreditCard, ChevronRight, Landmark } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -212,8 +213,13 @@ export default function DepositPage() {
                                 {!isMobile && (
                                     <>
                                         <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
-                                        <div className="p-4 bg-white rounded-md shadow-inner">
+                                        <div className="p-4 bg-white rounded-md shadow-inner relative">
                                             <QRCode value={upiUrl} size={180} />
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <div className="bg-white p-1.5 rounded-md">
+                                                    <Image src="/kalyanwinnerfavicon.png" alt="Logo" width={32} height={32} />
+                                                </div>
+                                            </div>
                                         </div>
                                     </>
                                 )}
@@ -340,7 +346,3 @@ export default function DepositPage() {
     </div>
   );
 }
-
-    
-
-    
