@@ -170,9 +170,11 @@ export async function deleteTransaction(transactionId: string) {
             const transactionData = transactionDoc.data()!;
             const { userId, type, amount, status } = transactionData as { userId: string, type: 'Deposit' | 'Withdrawal' | 'Referral Bonus', amount: number, status: string };
 
-            const userRef = firestore.collection("users").doc(userId);
+            const userRef = firestore.collection('users').doc(userId);
+            const userDoc = await t.get(userRef);
 
-            if (status === 'Completed') {
+            // Only attempt to revert balance if the transaction was completed AND the user exists
+            if (status === 'Completed' && userDoc.exists) {
                 if (type === 'Deposit') {
                     t.update(userRef, { 
                         depositBalance: FieldValue.increment(-amount),
