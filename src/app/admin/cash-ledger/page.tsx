@@ -22,6 +22,12 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { cn } from "@/lib/utils";
+
 
 type Transaction = {
     id: string;
@@ -50,6 +56,7 @@ const ITEMS_PER_PAGE = 50;
 export default function CashLedgerPage() {
   const firestore = useFirestore();
   const [currentPage, setCurrentPage] = useState(1);
+  const [date, setDate] = useState<Date>(new Date());
 
   // Query 1: Get all completed deposits
   const depositsQuery = useMemoFirebase(
@@ -80,6 +87,7 @@ export default function CashLedgerPage() {
   const isLoading = depositsLoading || withdrawalsLoading;
   
   const ledgerData = useMemo(() => {
+    // Combine all transactions first
     const allTransactions = [...(deposits || []), ...(withdrawals || [])];
 
     if (allTransactions.length === 0) return [];
@@ -87,8 +95,20 @@ export default function CashLedgerPage() {
     // Sort all transactions by date ascending to calculate running balance correctly
     allTransactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
+    // Filter by the selected date on the client side
+    const interval = { start: startOfDay(date), end: endOfDay(date) };
+    const transactionsForSelectedDate = allTransactions.filter(txn => 
+        isWithinInterval(new Date(txn.date), interval)
+    );
+
     let runningBalance = 0;
-    const entries = allTransactions.map(txn => {
+    // Calculate the starting balance for the selected day
+    const transactionsBeforeSelectedDate = allTransactions.filter(txn => new Date(txn.date) < startOfDay(date));
+    transactionsBeforeSelectedDate.forEach(txn => {
+        runningBalance += (txn.type === 'Deposit' ? txn.amount : -txn.amount);
+    });
+    
+    const entries = transactionsForSelectedDate.map(txn => {
         const deposit = txn.type === 'Deposit' ? txn.amount : 0;
         const withdrawal = txn.type === 'Withdrawal' ? txn.amount : 0; 
         runningBalance = runningBalance + deposit - withdrawal;
@@ -104,9 +124,9 @@ export default function CashLedgerPage() {
         };
     });
     
-    // Reverse the final array to show newest first in the UI
+    // Reverse the final array to show newest first in the UI for that day
     return entries.reverse();
-  }, [deposits, withdrawals]);
+  }, [deposits, withdrawals, date]);
 
 
   const totalPages = Math.ceil((ledgerData?.length || 0) / ITEMS_PER_PAGE);
@@ -120,9 +140,33 @@ export default function CashLedgerPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Cash Ledger</CardTitle>
-          <CardDescription>A complete ledger of all completed deposits and withdrawals.</CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <CardTitle>Cash Ledger</CardTitle>
+            <CardDescription>A complete ledger of all completed deposits and withdrawals for the selected date.</CardDescription>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full sm:w-[280px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(day) => setDate(day || new Date())}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </CardHeader>
         <CardContent>
             {/* Desktop Table */}
@@ -198,7 +242,7 @@ export default function CashLedgerPage() {
             ))}
             </div>
              {!isLoading && ledgerData.length === 0 && (
-                <p className="text-center py-8 text-muted-foreground">No completed transactions found.</p>
+                <p className="text-center py-8 text-muted-foreground">No completed transactions found for the selected date.</p>
             )}
         </CardContent>
          {totalPages > 1 && (
@@ -228,3 +272,5 @@ export default function CashLedgerPage() {
     </div>
   );
 }
+
+    
