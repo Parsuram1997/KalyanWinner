@@ -13,9 +13,8 @@ export async function createUser(userData: {
   state: string;
   district: string;
   password: any;
-  role?: 'User' | 'Enroller' | 'Admin';
-  enrollerId?: string; // This is now expected to be the enroller's custom ID
-  createdBy?: 'Admin' | 'Enroller' | 'Self';
+  role?: 'User' | 'Admin';
+  createdBy?: 'Admin' | 'Self';
 }) {
   
   const mobileQuery = await firestore.collection("users").where("mobile", "==", userData.mobile).get();
@@ -37,18 +36,6 @@ export async function createUser(userData: {
       // --- ALL READS FIRST ---
       const counterRef = firestore.collection('counters').doc('user_ids');
       const counterDoc = await transaction.get(counterRef);
-      
-      let enrollerDoc: FirebaseFirestore.DocumentSnapshot | null = null;
-      let enrollerCustomId: string | null = userData.enrollerId || null; // Use the passed enrollerId directly
-      
-      if (enrollerCustomId) {
-          // Find the enroller by their customId
-          const enrollerQuery = firestore.collection('users').where('customId', '==', enrollerCustomId);
-          const enrollerSnapshot = await transaction.get(enrollerQuery);
-          if (!enrollerSnapshot.empty) {
-              enrollerDoc = enrollerSnapshot.docs[0];
-          }
-      }
 
       // --- ALL WRITES AFTER READS ---
       const role = userData.role || 'User';
@@ -59,11 +46,7 @@ export async function createUser(userData: {
 
       const counterData = counterDoc.exists ? counterDoc.data() : {};
 
-      if (role === 'Enroller') {
-          nextNumber = (counterData?.lastEnrollerNumber || 0) + 1;
-          fieldToUpdate = 'lastEnrollerNumber';
-          prefix = 'KWENR';
-      } else if (role === 'Admin') {
+      if (role === 'Admin') {
           nextNumber = (counterData?.lastAdminNumber || 0) + 1;
           fieldToUpdate = 'lastAdminNumber';
           prefix = 'KWADM';
@@ -76,8 +59,8 @@ export async function createUser(userData: {
       if (counterDoc.exists) {
           transaction.update(counterRef, { [fieldToUpdate]: FieldValue.increment(1) });
       } else {
-          const initialCounters = { lastUserNumber: 0, lastEnrollerNumber: 0, lastAdminNumber: 0 };
-          initialCounters[fieldToUpdate as keyof typeof initialCounters] = 1;
+          const initialCounters: {[key: string]: any} = { lastUserNumber: 0, lastAdminNumber: 0 };
+          initialCounters[fieldToUpdate] = 1;
           transaction.set(counterRef, initialCounters);
       }
       
@@ -99,17 +82,14 @@ export async function createUser(userData: {
         status: "Active",
         role: role, 
         createdAt: new Date().toISOString(),
-        commissionPaid: false, 
-        enrollerId: enrollerCustomId, 
-        createdBy: enrollerDoc ? 'Enroller' : (userData.createdBy || 'Self'),
+        createdBy: userData.createdBy || 'Self',
       };
 
       transaction.set(firestore.collection("users").doc(userRecord.uid), userProfile);
     });
 
     revalidatePath('/admin/users');
-    revalidatePath('/admin/enrollers');
-    revalidatePath('/enroller/users'); // Revalidate enroller's user list
+    revalidatePath('/admin/admins');
     return { success: true, userId: userRecord.uid };
 
   } catch (error: any) {

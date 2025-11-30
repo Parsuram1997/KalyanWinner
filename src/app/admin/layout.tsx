@@ -75,14 +75,6 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                    <Link href="/admin/enrollers">
-                    <UserPlus />
-                    Enrollers
-                    </Link>
-                </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                <SidebarMenuButton asChild>
                     <Link href="/admin/manage-bidding">
                     <Ticket />
                     Manage Bidding

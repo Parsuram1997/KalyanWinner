@@ -226,8 +226,6 @@ export default function LoginPage() {
                 </div>
                  <div className="text-center text-xs text-muted-foreground">
                     <Link href="/admin" className="underline underline-offset-2 hover:text-primary">Admin Login</Link>
-                    <span className="mx-2">|</span>
-                    <Link href="/enroller" className="underline underline-offset-2 hover:text-primary">Enroller Login</Link>
                 </div>
             </CardFooter>
         </Card>

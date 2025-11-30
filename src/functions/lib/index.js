@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendResultNotification = exports.processReferralBonus = exports.cleanupuser = void 0;
+exports.sendResultNotification = exports.cleanupuser = void 0;
 const app_1 = require("firebase-admin/app");
 const firestore_1 = require("firebase-admin/firestore");
 const messaging_1 = require("firebase-admin/messaging");
-const tasks_1 = require("firebase-functions/v2/tasks");
 const logger = require("firebase-functions/logger");
 const functions = require("firebase-functions/v1");
 (0, app_1.initializeApp)();
@@ -23,80 +22,6 @@ exports.cleanupuser = functions.auth.user().onDelete(async (user) => {
     }
     catch (error) {
         logger.error(`Error cleaning up data for user ${user.uid}:`, error);
-    }
-});
-exports.processReferralBonus = (0, tasks_1.onTaskDispatched)(async (request) => {
-    const { userId, transactionId } = request.data;
-    if (!userId) {
-        logger.log("Function called without a userId. Exiting.");
-        return;
-    }
-    try {
-        // Fetch payment settings first to get bonus rules.
-        const settingsRef = db.collection('payment_settings').doc('main');
-        const settingsDoc = await settingsRef.get();
-        // Use settings from DB or fall back to defaults if not found.
-        const settingsData = settingsDoc.data();
-        const BONUS_AMOUNT = settingsData?.referralBonusAmount || 5;
-        const MIN_DEPOSIT_FOR_BONUS = settingsData?.minDepositForBonus || 500;
-        if (!settingsDoc.exists) {
-            logger.warn("Payment settings not found. Using default bonus rules.");
-        }
-        const userRef = db.collection('users').doc(userId);
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) {
-            logger.log(`User ${userId} not found. Cannot process referral bonus.`);
-            return;
-        }
-        const userData = userDoc.data();
-        const { enrollerId, commissionPaid, totalDeposits } = userData;
-        if (!enrollerId || commissionPaid) {
-            logger.log(`User ${userId}: No enroller or referral bonus already paid. Exiting.`);
-            return;
-        }
-        logger.log(`User ${userId}: Checking referral bonus criteria. Total Deposits: ${totalDeposits}, Min Required: ${MIN_DEPOSIT_FOR_BONUS}`);
-        if (typeof totalDeposits === 'number' && totalDeposits >= MIN_DEPOSIT_FOR_BONUS) {
-            logger.log(`User ${userId} has met the threshold! Paying referral bonus of ${BONUS_AMOUNT} to enroller ${enrollerId}.`);
-            const enrollerQuery = db.collection('users').where('customId', '==', enrollerId);
-            return db.runTransaction(async (t) => {
-                const enrollerSnapshot = await t.get(enrollerQuery);
-                if (enrollerSnapshot.empty) {
-                    throw new Error(`Enroller with customId ${enrollerId} not found.`);
-                }
-                const enrollerDoc = enrollerSnapshot.docs[0];
-                const enrollerRef = enrollerDoc.ref;
-                // Credit the enroller'''s COMMISSION BALANCE
-                t.update(enrollerRef, { commissionBalance: firestore_1.FieldValue.increment(BONUS_AMOUNT) });
-                // Mark commission as paid for the user
-                t.update(userRef, { commissionPaid: true });
-                const bonusTransactionRef = db.collection('transactions').doc();
-                t.set(bonusTransactionRef, {
-                    userId: enrollerDoc.id,
-                    userName: enrollerDoc.data()?.name || 'Enroller',
-                    customId: enrollerId,
-                    type: "Referral Bonus",
-                    amount: BONUS_AMOUNT,
-                    status: "Completed",
-                    date: new Date().toISOString(),
-                    description: `Referral bonus for user ${userData.name} (${userData.customId || userId}) reaching deposit goal.`,
-                    relatedUserId: userId,
-                    originalTransactionId: transactionId,
-                });
-            }).then(() => {
-                logger.log(`Successfully paid referral bonus to enroller ${enrollerId} for user ${userId}.`);
-            }).catch((err) => {
-                logger.error(`Referral bonus transaction failed for user ${userId}:`, err);
-                throw err;
-            });
-        }
-        else {
-            logger.log(`User ${userId}: Deposit amount has not yet reached the threshold.`);
-            return;
-        }
-    }
-    catch (error) {
-        logger.error(`Error in processReferralBonus for user ${userId}:`, error);
-        throw error;
     }
 });
 // Helper to calculate the single digit from a panna

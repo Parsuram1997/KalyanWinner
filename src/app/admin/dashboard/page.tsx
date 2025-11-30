@@ -27,9 +27,6 @@ export default function AdminDashboardPage() {
     const usersQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, "users"), where("role", "==", "User")) : null), [firestore]);
     const { data: users, isLoading: usersLoading } = useCollection<any>(usersQuery);
 
-    const enrollersQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, "users"), where("role", "==", "Enroller")) : null), [firestore]);
-    const { data: enrollers, isLoading: enrollersLoading } = useCollection<any>(enrollersQuery);
-
     const adminsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, "users"), where("role", "==", "Admin")) : null), [firestore]);
     const { data: admins, isLoading: adminsLoading } = useCollection<any>(adminsQuery);
     
@@ -44,7 +41,6 @@ export default function AdminDashboardPage() {
 
     const stats = useMemo(() => {
         const allUsers = users || [];
-        const allEnrollers = enrollers || [];
         const allAdmins = admins || [];
         const allTransactions = transactions || [];
         const allMarkets = markets || [];
@@ -58,13 +54,10 @@ export default function AdminDashboardPage() {
             totalAdmins: allAdmins.length.toString(),
             totalUsers: allUsers.length.toString(),
             usersByAdmin: allUsers.filter(u => u.createdBy === 'Admin').length.toString(),
-            usersByEnroller: allUsers.filter(u => !!u.enrollerId).length.toString(),
             usersBySelf: allUsers.filter(u => u.createdBy === 'Self' || !u.createdBy).length.toString(),
             activeUsers: allUsers.filter(u => u.status === 'Active').length.toString(),
             inactiveUsers: allUsers.filter(u => u.status === 'Inactive').length.toString(),
             suspendedUsers: allUsers.filter(u => u.status === 'Suspended').length.toString(),
-            totalEnrollers: allEnrollers.length.toString(),
-            totalReferralBonusesPaid: formatCurrency(allTransactions.filter(t => t.type === 'Referral Bonus' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
             totalBetsPlaced: "N/A", // Needs bets collection
             allUserWalletBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.balance || 0), 0)),
             totalDeposit: formatCurrency(allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
@@ -80,15 +73,14 @@ export default function AdminDashboardPage() {
             activeBetTypes: allBetTypes.filter(bt => bt.status === 'Active').length.toString(),
             inactiveBetTypes: allBetTypes.filter(bt => bt.status === 'Inactive').length.toString(),
         }
-    }, [users, enrollers, admins, transactions, markets, betTypes]);
+    }, [users, admins, transactions, markets, betTypes]);
 
-    const isLoading = usersLoading || enrollersLoading || adminsLoading || transactionsLoading || marketsLoading || betTypesLoading;
+    const isLoading = usersLoading || adminsLoading || transactionsLoading || marketsLoading || betTypesLoading;
 
     const statsCards = [
       { name: "Total Admins", value: stats.totalAdmins, icon: Shield },
       { name: "Total Users", value: stats.totalUsers, icon: Users },
       { name: "Users by Admin", value: stats.usersByAdmin, icon: UserPlus },
-      { name: "Users by Enroller", value: stats.usersByEnroller, icon: UserPlus },
       { name: "Self-Registered Users", value: stats.usersBySelf, icon: UserPlus },
       { name: "Active Users", value: stats.activeUsers, icon: UserCheck },
       { name: "Total Markets", value: stats.totalMarkets, icon: Store },
@@ -99,9 +91,7 @@ export default function AdminDashboardPage() {
       { name: "Inactive Bet Types", value: stats.inactiveBetTypes, icon: Ban },
       { name: "Inactive Users", value: stats.inactiveUsers, icon: UserX },
       { name: "Suspended Users", value: stats.suspendedUsers, icon: Ban },
-      { name: "Total Enrollers", value: stats.totalEnrollers, icon: UserPlus },
-      { name: "Total Referral Bonuses Paid", value: stats.totalReferralBonusesPaid, icon: Wallet },
-      { name: "Total Bets Placed", value: stats.totalBetsPlaced, icon: GanttChartSquare },
+      { name="Total Bets Placed", value: stats.totalBetsPlaced, icon: GanttChartSquare },
       { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
       { name: "Total Deposit", value: stats.totalDeposit, icon: ArrowUpCircle },
       { name: "Total Withdrawal", value: stats.totalWithdrawal, icon: ArrowDownCircle },

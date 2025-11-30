@@ -29,22 +29,13 @@ export async function approveDeposit(transactionId: string, userId: string, amou
 
     console.log(`Deposit transaction ${transactionId} for user ${userId} completed successfully.`);
 
-    // Enqueue a task to handle the referral bonus check asynchronously.
-    const functions = getFunctions(app);
-    const queue = functions.taskQueue("processReferralBonus");
-    await queue.enqueue({ userId, transactionId });
-    console.log(`Enqueued referral bonus check for user ${userId}.`);
-
-
     // Revalidation paths
     revalidatePath("/admin/transactions", 'page');
     revalidatePath("/admin/cash-ledger", 'page');
     revalidatePath("/admin/users/" + userId, 'page');
-    revalidatePath("/enroller/users", 'page');
-    revalidatePath("/enroller/wallet", 'page');
     revalidatePath("/wallet", 'page');
 
-    return { success: true, message: "Deposit approved and referral bonus check enqueued." };
+    return { success: true, message: "Deposit approved." };
 
   } catch (error: any) {
     console.error("FATAL: Error during core deposit approval transaction: ", error);
@@ -66,25 +57,15 @@ export async function approveWithdrawal(transactionId: string, userId: string, a
             }
 
             const userData = userDoc.data()!;
-            const { role, winningBalance, commissionBalance } = userData;
+            const { winningBalance } = userData;
 
-            if (role === 'Enroller') {
-                if ((commissionBalance || 0) < amount) {
-                    throw new Error(`Enroller has insufficient commission balance for this withdrawal. Current: ${commissionBalance || 0}, Required: ${amount}`);
-                }
-                t.update(userRef, {
-                    commissionBalance: FieldValue.increment(-amount),
-                    totalWithdrawals: FieldValue.increment(amount)
-                });
-            } else {
-                if ((winningBalance || 0) < amount) {
-                    throw new Error(`User has insufficient winning balance for this withdrawal. Current: ${winningBalance || 0}, Required: ${amount}`);
-                }
-                t.update(userRef, {
-                    winningBalance: FieldValue.increment(-amount),
-                    totalWithdrawals: FieldValue.increment(amount)
-                });
+            if ((winningBalance || 0) < amount) {
+                throw new Error(`User has insufficient winning balance for this withdrawal. Current: ${winningBalance || 0}, Required: ${amount}`);
             }
+            t.update(userRef, {
+                winningBalance: FieldValue.increment(-amount),
+                totalWithdrawals: FieldValue.increment(amount)
+            });
             
             const updateData: {status: string, utr?: string} = { status: "Completed" };
             if (utr) {
@@ -96,7 +77,6 @@ export async function approveWithdrawal(transactionId: string, userId: string, a
         revalidatePath("/admin/transactions", 'page');
         revalidatePath("/admin/cash-ledger", 'page');
         revalidatePath("/admin/users/" + userId, 'page');
-        revalidatePath("/enroller/wallet", 'page');
         revalidatePath("/wallet", 'page');
 
         return { success: true, message: "Withdrawal approved and balance updated." };
@@ -113,7 +93,6 @@ export async function rejectTransaction(transactionId: string) {
         await firestore.collection("transactions").doc(transactionId).set({ status: 'Rejected' }, { merge: true });
         revalidatePath('/admin/transactions', 'page');
         revalidatePath("/wallet", 'page');
-        revalidatePath("/enroller/wallet", 'page');
         return { success: true, message: "Transaction rejected." };
     } catch (error: any) {
         console.error("Error rejecting transaction: ", error);
@@ -168,7 +147,6 @@ export async function createTransaction(transactionData: {
     await firestore.collection("transactions").add(transaction);
     
     revalidatePath("/wallet", 'page');
-    revalidatePath("/enroller/wallet", 'page');
     revalidatePath("/admin/transactions", 'page');
 
     return { success: true, message: "Transaction created successfully." };
@@ -196,55 +174,15 @@ export async function deleteTransaction(transactionId: string) {
 
             if (status === 'Completed') {
                 if (type === 'Deposit') {
-                    const userDoc = await t.get(userRef);
-                    const userData = userDoc.data();
-                    
                     t.update(userRef, { 
                         depositBalance: FieldValue.increment(-amount),
                         totalDeposits: FieldValue.increment(-amount)
                     });
-
-                    // Check if this deposit had triggered a bonus that needs to be reverted
-                    if (userData?.commissionPaid && userData?.enrollerId) {
-                        const enrollerQuery = firestore.collection('users').where('customId', '==', userData.enrollerId).limit(1);
-                        const enrollerSnapshot = await t.get(enrollerQuery);
-
-                        if (!enrollerSnapshot.empty) {
-                            const enrollerDoc = enrollerSnapshot.docs[0];
-                            const bonusTransactionQuery = firestore.collection('transactions')
-                                .where('type', '==', 'Referral Bonus')
-                                .where('description', '>=', `Referral bonus for user ${userData.name} (${userData.customId || userId})`)
-                                .where('description', '<', `Referral bonus for user ${userData.name} (${userData.customId || userId})` + '\uf8ff')
-                                .limit(1);
-
-                            const bonusTxSnapshot = await t.get(bonusTransactionQuery);
-                            if(!bonusTxSnapshot.empty) {
-                                const bonusTxDoc = bonusTxSnapshot.docs[0];
-                                const bonusAmount = bonusTxDoc.data().amount;
-
-                                // Revert enroller's balance and delete bonus transaction
-                                t.update(enrollerDoc.ref, { commissionBalance: FieldValue.increment(-bonusAmount) });
-                                t.delete(bonusTxDoc.ref);
-                                
-                                // Reset user's commission status
-                                t.update(userRef, { commissionPaid: false });
-                            }
-                        }
-                    }
-
                 } else if (type === 'Withdrawal') {
-                    const userData = (await t.get(userRef)).data();
-                    if (userData?.role === 'Enroller') {
-                         t.update(userRef, { 
-                            commissionBalance: FieldValue.increment(amount),
-                            totalWithdrawals: FieldValue.increment(-amount)
-                        });
-                    } else {
-                         t.update(userRef, { 
-                            winningBalance: FieldValue.increment(amount),
-                            totalWithdrawals: FieldValue.increment(-amount)
-                        });
-                    }
+                    t.update(userRef, { 
+                        winningBalance: FieldValue.increment(amount),
+                        totalWithdrawals: FieldValue.increment(-amount)
+                    });
                 }
             }
             
@@ -254,8 +192,6 @@ export async function deleteTransaction(transactionId: string) {
         revalidatePath('/admin/transactions', 'page');
         revalidatePath('/admin/cash-ledger', 'page');
         revalidatePath('/wallet', 'page');
-        revalidatePath('/enroller/users', 'page');
-        revalidatePath('/enroller/wallet', 'page');
         
         return { success: true, message: "Transaction deleted and all associated balances reverted." };
 

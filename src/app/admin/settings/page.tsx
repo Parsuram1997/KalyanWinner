@@ -48,8 +48,6 @@ export default function SettingsPage() {
     const { data: betTypes, isLoading: betTypesLoading } = useCollection<BetType>(betTypesQuery, { skip: !firestore });
 
     const [rateValues, setRateValues] = useState<RateValues>({});
-    const [referralBonusAmount, setReferralBonusAmount] = useState<number | string>("");
-    const [minDepositForBonus, setMinDepositForBonus] = useState<number | string>("");
     const [minDeposit, setMinDeposit] = useState<number | string>("");
     const [minWithdrawal, setMinWithdrawal] = useState<number | string>("");
     const [settingsLoading, setSettingsLoading] = useState(true);
@@ -71,8 +69,6 @@ export default function SettingsPage() {
             setSettingsLoading(true);
             try {
                 const settings = await getPaymentSettings();
-                setReferralBonusAmount(settings?.referralBonusAmount || "");
-                setMinDepositForBonus(settings?.minDepositForBonus || "");
                 setMinDeposit(settings?.minDeposit || "");
                 setMinWithdrawal(settings?.minWithdrawal || "");
             } catch (error) {
@@ -146,8 +142,6 @@ export default function SettingsPage() {
         }
         
         const allSettings = {
-            referralBonusAmount: Number(referralBonusAmount) || undefined,
-            minDepositForBonus: Number(minDepositForBonus) || undefined,
             minDeposit: Number(minDeposit) || undefined,
             minWithdrawal: Number(minWithdrawal) || undefined,
         };
@@ -176,7 +170,7 @@ export default function SettingsPage() {
                 <Settings className="h-6 w-6" />
                 <span>App Settings</span>
             </CardTitle>
-            <CardDescription>Update various application settings like payout rates and referral bonuses.</CardDescription>
+            <CardDescription>Update various application settings like payout rates.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl mx-auto">
@@ -280,50 +274,6 @@ export default function SettingsPage() {
             </div>
 
             <Separator className="my-8" />
-            
-             {/* Referral Bonus Settings Section */}
-            <div>
-                 <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">Referral Bonus Settings</h3>
-                 <div className="space-y-4">
-                    {settingsLoading ? (
-                         <div className="space-y-4">
-                            <Skeleton className="h-20 w-full" />
-                            <Skeleton className="h-20 w-full" />
-                         </div>
-                    ) : (
-                        <>
-                           <Card className="p-4">
-                                <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                                    <Label htmlFor="referralBonusAmount" className="text-base font-semibold md:w-1/3">Referral Bonus Amount (₹)</Label>
-                                    <Input 
-                                        id="referralBonusAmount"
-                                        type="number"
-                                        placeholder="e.g., 50"
-                                        value={referralBonusAmount}
-                                        onChange={(e) => setReferralBonusAmount(e.target.value)}
-                                        className="flex-1"
-                                    />
-                                </div>
-                           </Card>
-                           <Card className="p-4">
-                               <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                                    <Label htmlFor="minDepositForBonus" className="text-base font-semibold md:w-1/3">Minimum Deposit for Bonus (₹)</Label>
-                                    <Input 
-                                        id="minDepositForBonus"
-                                        type="number"
-                                        placeholder="e.g., 200"
-                                        value={minDepositForBonus}
-                                        onChange={(e) => setMinDepositForBonus(e.target.value)}
-                                        className="flex-1"
-                                    />
-                                </div>
-                            </Card>
-                        </>
-                    )}
-                 </div>
-            </div>
-
-            <Separator className="my-8" />
 
             {/* General Wallet Settings */}
             <div>
@@ -377,5 +327,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

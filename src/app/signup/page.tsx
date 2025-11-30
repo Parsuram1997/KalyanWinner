@@ -23,17 +23,8 @@ import { states, districts } from "@/lib/locations";
 
 function SignupForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedState, setSelectedState] = useState<string | null>(null);
-  const [enrollerId, setEnrollerId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const enrollerIdFromQuery = searchParams.get("enrollerId");
-    if (enrollerIdFromQuery) {
-      setEnrollerId(enrollerIdFromQuery);
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,10 +54,6 @@ function SignupForm() {
       role: 'User' as 'User',
       createdBy: 'Self' as 'Self',
     };
-
-    if (enrollerId) {
-      userData.enrollerId = enrollerId;
-    }
 
     try {
       const result = await createUser(userData);
@@ -107,9 +94,6 @@ function SignupForm() {
           </CardHeader>
           <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4">
-            {enrollerId && (
-              <Input type="hidden" name="enrollerId" value={enrollerId} />
-            )}
             <div className="grid gap-2">
               <Label htmlFor="name">Full Name</Label>
               <Input id="name" name="name" required disabled={isLoading} />
