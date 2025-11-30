@@ -1,8 +1,11 @@
+
 "use client";
 
 import {
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -19,7 +22,7 @@ import { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Wallet, Ticket } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
@@ -169,16 +172,27 @@ export default function AggregatedBiddingDetailsPage() {
             .sort((a, b) => b.totalAmount - a.totalAmount);
     };
 
-    const openSessionBids = useMemo(() => {
-        const openBets = filteredBetsByDate?.filter(bet => bet.session === 'Open');
-        return aggregateBids(openBets);
+    const openSessionBets = useMemo(() => {
+        return filteredBetsByDate?.filter(bet => bet.session === 'Open') || [];
     }, [filteredBetsByDate]);
     
-    const closeSessionBids = useMemo(() => {
-        const closeBets = filteredBetsByDate?.filter(bet => bet.session === 'Close' || bet.session === 'Jodi' || bet.gameType === 'Open Sangam' || bet.gameType === 'Close Sangam' || bet.gameType === 'Full Sangam');
-        return aggregateBids(closeBets);
+    const closeSessionBets = useMemo(() => {
+        return filteredBetsByDate?.filter(bet => bet.session === 'Close' || bet.session === 'Jodi') || [];
     }, [filteredBetsByDate]);
 
+    const openSessionAggregated = useMemo(() => aggregateBids(openSessionBets), [openSessionBets]);
+    const closeSessionAggregated = useMemo(() => aggregateBids(closeSessionBets), [closeSessionBets]);
+
+    const calculateTotals = (aggregatedBids: AggregatedBid[]) => {
+        return aggregatedBids.reduce((acc, bid) => {
+            acc.totalAmount += bid.totalAmount;
+            acc.totalBids += bid.totalBids;
+            return acc;
+        }, { totalAmount: 0, totalBids: 0 });
+    };
+
+    const openSessionTotals = useMemo(() => calculateTotals(openSessionAggregated), [openSessionAggregated]);
+    const closeSessionTotals = useMemo(() => calculateTotals(closeSessionAggregated), [closeSessionAggregated]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -221,10 +235,50 @@ export default function AggregatedBiddingDetailsPage() {
                     <TabsTrigger value="close">Close Session View</TabsTrigger>
                 </TabsList>
                 <TabsContent value="open" className="mt-4">
-                    <AggregatedBidsTable bids={openSessionBids} isLoading={isLoading} />
+                    <div className="grid gap-4 md:grid-cols-2 mb-6">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Open Amount</CardTitle>
+                                <Wallet className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-2xl font-bold font-mono">₹{openSessionTotals.totalAmount.toLocaleString('en-IN')}</div>}
+                            </CardContent>
+                        </Card>
+                         <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Open Bids</CardTitle>
+                                <Ticket className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold font-mono">{openSessionTotals.totalBids.toLocaleString('en-IN')}</div>}
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <AggregatedBidsTable bids={openSessionAggregated} isLoading={isLoading} />
                 </TabsContent>
                 <TabsContent value="close" className="mt-4">
-                    <AggregatedBidsTable bids={closeSessionBids} isLoading={isLoading} />
+                    <div className="grid gap-4 md:grid-cols-2 mb-6">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Close Amount</CardTitle>
+                                <Wallet className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                {isLoading ? <Skeleton className="h-8 w-32" /> : <div className="text-2xl font-bold font-mono">₹{closeSessionTotals.totalAmount.toLocaleString('en-IN')}</div>}
+                            </CardContent>
+                        </Card>
+                         <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Close Bids</CardTitle>
+                                <Ticket className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                {isLoading ? <Skeleton className="h-8 w-24" /> : <div className="text-2xl font-bold font-mono">{closeSessionTotals.totalBids.toLocaleString('en-IN')}</div>}
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <AggregatedBidsTable bids={closeSessionAggregated} isLoading={isLoading} />
                 </TabsContent>
             </Tabs>
         </CardContent>
