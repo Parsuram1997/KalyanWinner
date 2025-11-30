@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/firebase";
 import { createTransaction } from "@/app/actions/transaction-actions";
 import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
-import QRCode from "react-qr-code";
+import { QRCodeSVG } from "qrcode.react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Copy, Phone, CreditCard, ChevronRight, Landmark } from "lucide-react";
@@ -213,13 +213,23 @@ export default function DepositPage() {
                                 {!isMobile && (
                                     <>
                                         <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
-                                        <div className="p-4 bg-white rounded-md shadow-inner relative">
-                                            <QRCode value={upiUrl} size={180} />
-                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                <div className="bg-white p-1.5 rounded-md">
-                                                    <Image src="/kalyanwinnerfavicon.png" alt="Logo" width={32} height={32} />
-                                                </div>
-                                            </div>
+                                        <div className="p-4 bg-white rounded-md shadow-inner">
+                                            <QRCodeSVG
+                                                value={upiUrl}
+                                                size={180}
+                                                bgColor={"#ffffff"}
+                                                fgColor={"#000000"}
+                                                level={"H"} // High error correction
+                                                includeMargin={false}
+                                                imageSettings={{
+                                                    src: "/kalyanwinnerfavicon.png",
+                                                    x: undefined,
+                                                    y: undefined,
+                                                    height: 32,
+                                                    width: 32,
+                                                    excavate: true,
+                                                }}
+                                            />
                                         </div>
                                     </>
                                 )}
