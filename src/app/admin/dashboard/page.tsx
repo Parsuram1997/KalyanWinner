@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Wallet, GanttChartSquare, ArrowUpCircle, ArrowDownCircle, Hourglass, UserPlus, Store, Settings } from "lucide-react";
+import { Users, Wallet, ArrowUpCircle, ArrowDownCircle, Hourglass, UserPlus, Store, Settings } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -41,15 +41,11 @@ export default function AdminDashboardPage() {
     const transactionsQuery = useMemoFirebase(() => firestore ? collection(firestore, "transactions") : null, [firestore]);
     const { data: transactions, isLoading: transactionsLoading } = useCollection<any>(transactionsQuery);
 
-    const betsQuery = useMemoFirebase(() => firestore ? collection(firestore, "bets") : null, [firestore]);
-    const { data: bets, isLoading: betsLoading } = useCollection<any>(betsQuery);
-
     const stats = useMemo(() => {
         const allUsers = users || [];
         const allTransactions = transactions || [];
         const allMarkets = markets || [];
         const allBetTypes = betTypes || [];
-        const allBets = bets || [];
 
         const formatCurrency = (amount: number) => {
              return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
@@ -62,7 +58,6 @@ export default function AdminDashboardPage() {
             totalUsers: allUsers.length.toString(),
             usersByAdmin: allUsers.filter(u => u.createdBy === 'Admin').length.toString(),
             usersBySelf: allUsers.filter(u => u.createdBy === 'Self' || !u.createdBy).length.toString(),
-            totalBetsPlaced: allBets.length.toString(),
             allUserWalletBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.depositBalance || 0) + (u.winningBalance || 0), 0)),
             totalDeposit: formatCurrency(allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
             totalWithdrawal: formatCurrency(allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
@@ -73,9 +68,9 @@ export default function AdminDashboardPage() {
             totalMarkets: allMarkets.length.toString(),
             totalBetTypes: allBetTypes.length.toString(),
         }
-    }, [users, transactions, markets, betTypes, bets]);
+    }, [users, transactions, markets, betTypes]);
 
-    const isLoading = usersLoading || transactionsLoading || marketsLoading || betTypesLoading || betsLoading;
+    const isLoading = usersLoading || transactionsLoading || marketsLoading || betTypesLoading;
 
     const statsCards = [
       { name: "Pending Deposit", value: stats.pendingDepositAmount, subValue: stats.pendingDepositUsers, icon: Hourglass },
@@ -85,7 +80,6 @@ export default function AdminDashboardPage() {
       { name: "Self-Registered Users", value: stats.usersBySelf, icon: UserPlus },
       { name: "Total Markets", value: stats.totalMarkets, icon: Store },
       { name: "Total Bet Types", value: stats.totalBetTypes, icon: Settings },
-      { name: "Total Bets Placed", value: stats.totalBetsPlaced, icon: GanttChartSquare },
       { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
       { name: "Total Deposit", value: stats.totalDeposit, icon: ArrowUpCircle },
       { name: "Total Withdrawal", value: stats.totalWithdrawal, icon: ArrowDownCircle },
