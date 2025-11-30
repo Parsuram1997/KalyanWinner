@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -22,12 +21,36 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, Timestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
+import { updateBet, deleteBet } from "@/app/actions/bet-actions";
 
 type Bet = {
     id: string;
@@ -59,6 +82,9 @@ export default function BetLedgerPage() {
   const firestore = useFirestore();
   const [currentPage, setCurrentPage] = useState(1);
   const [date, setDate] = useState<Date>(new Date());
+  
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
 
   const betsQuery = useMemoFirebase(
     () => firestore 
@@ -86,6 +112,36 @@ export default function BetLedgerPage() {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return betsForSelectedDate.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [betsForSelectedDate, currentPage]);
+
+  const handleEditClick = (bet: Bet) => {
+    setSelectedBet(bet);
+    setEditDialogOpen(true);
+  };
+  
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedBet) return;
+    const formData = new FormData(e.currentTarget);
+    const updatedNumber = formData.get("number") as string;
+    const updatedAmount = parseFloat(formData.get("amount") as string);
+
+    try {
+        await updateBet(selectedBet.id, { number: updatedNumber, amount: updatedAmount });
+        toast({ title: "Bet Updated Successfully" });
+        setEditDialogOpen(false);
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Update Failed", description: error.message });
+    }
+  };
+
+  const handleDeleteBet = async (betId: string) => {
+      try {
+          await deleteBet(betId);
+          toast({ title: "Bet Deleted Successfully" });
+      } catch (error: any) {
+          toast({ variant: "destructive", title: "Deletion Failed", description: error.message });
+      }
+  };
 
 
   return (
@@ -131,12 +187,13 @@ export default function BetLedgerPage() {
                     <TableHead className="py-1">Session</TableHead>
                     <TableHead className="py-1">Status</TableHead>
                     <TableHead className="py-1 text-right">Amount</TableHead>
+                    <TableHead className="py-1 text-center">Actions</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                 {isLoading && Array.from({ length: 10 }).map((_, i) => (
                     <TableRow key={i}>
-                        <TableCell colSpan={6} className="py-1"><Skeleton className="h-5 w-full" /></TableCell>
+                        <TableCell colSpan={7} className="py-1"><Skeleton className="h-5 w-full" /></TableCell>
                     </TableRow>
                 ))}
                 {!isLoading && paginatedData.map((bet) => (
@@ -153,6 +210,30 @@ export default function BetLedgerPage() {
                         </TableCell>
                         <TableCell className="text-right font-mono font-semibold py-1 text-xs">
                             ₹{bet.amount.toLocaleString('en-IN')}
+                        </TableCell>
+                        <TableCell className="py-1 text-center">
+                            <div className="flex gap-2 justify-center">
+                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => handleEditClick(bet)}>
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="icon" className="h-7 w-7">
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>This action cannot be undone. This will permanently delete this bet.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteBet(bet.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
                         </TableCell>
                     </TableRow>
                 ))}
@@ -193,6 +274,28 @@ export default function BetLedgerPage() {
                         <span className="font-mono font-bold">₹{bet.amount.toLocaleString('en-IN')}</span>
                      </div>
                 </div>
+                <CardFooter className="p-0 pt-3 mt-3 border-t flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEditClick(bet)}>
+                        <Edit className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4 mr-1" /> Delete
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>This action cannot be undone. This will permanently delete this bet.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteBet(bet.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </CardFooter>
                 </Card>
             ))}
             </div>
@@ -224,6 +327,30 @@ export default function BetLedgerPage() {
             </CardFooter>
           )}
       </Card>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Bet</DialogTitle>
+                    <DialogDescription>
+                        Modify the bet details. This action is final.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleEditSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="number">Number</Label>
+                        <Input id="number" name="number" defaultValue={selectedBet?.number} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="amount">Amount</Label>
+                        <Input id="amount" name="amount" type="number" defaultValue={selectedBet?.amount} />
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Save Changes</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
