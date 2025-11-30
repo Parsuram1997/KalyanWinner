@@ -102,7 +102,7 @@ const TransactionTable = ({
     isLoading: boolean, 
     userIdToCustomIdMap: { [key: string]: string },
     onShowDetails: (userId: string) => void,
-    onConfirmAction: (details: { txnId: string, userId: string, amount: number, newStatus: 'Approved' | 'Rejected', type: 'Deposit' | 'Withdrawal' }) => void,
+    onConfirmAction: (details: { txnId: string, newStatus: 'Approved' | 'Rejected', type: 'Deposit' | 'Withdrawal' }) => void,
     onDelete: (txn: Transaction) => void
 }) => {
     if (isLoading) {
@@ -171,8 +171,8 @@ const TransactionTable = ({
                             <TableCell className="flex gap-2 py-2">
                                 {txn.status === "Pending" && (
                                     <>
-                                        <Button variant="outline" size="xs" onClick={() => onConfirmAction({ txnId: txn.id, userId: txn.userId, amount: txn.amount, newStatus: 'Approved', type: txn.type })}>Approve</Button>
-                                        <Button variant="destructive" size="xs" onClick={() => onConfirmAction({ txnId: txn.id, userId: txn.userId, amount: txn.amount, newStatus: 'Rejected', type: txn.type })}>Reject</Button>
+                                        <Button variant="outline" size="xs" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Approved', type: txn.type })}>Approve</Button>
+                                        <Button variant="destructive" size="xs" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Rejected', type: txn.type })}>Reject</Button>
                                     </>
                                 )}
                                 <AlertDialog>
@@ -241,8 +241,8 @@ const TransactionTable = ({
                     <CardFooter className="flex justify-end gap-2 p-4 pt-2 border-t">
                        {txn.status === "Pending" && (
                             <>
-                                <Button variant="outline" size="sm" onClick={() => onConfirmAction({ txnId: txn.id, userId: txn.userId, amount: txn.amount, newStatus: 'Approved', type: txn.type })}>Approve</Button>
-                                <Button variant="destructive" size="sm" onClick={() => onConfirmAction({ txnId: txn.id, userId: txn.userId, amount: txn.amount, newStatus: 'Rejected', type: txn.type })}>Reject</Button>
+                                <Button variant="outline" size="sm" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Approved', type: txn.type })}>Approve</Button>
+                                <Button variant="destructive" size="sm" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Rejected', type: txn.type })}>Reject</Button>
                             </>
                         )}
                         <AlertDialog>
@@ -272,7 +272,7 @@ export default function TransactionsPage() {
   const firestore = useFirestore();
   const [key, setKey] = useState(0); 
   const [paymentDetails, setPaymentDetails] = useState<User | null>(null);
-  const [confirmation, setConfirmation] = useState<{ txnId: string, userId: string, amount: number, newStatus: 'Approved' | 'Rejected', type: 'Deposit' | 'Withdrawal' } | null>(null);
+  const [confirmation, setConfirmation] = useState<{ txnId: string, newStatus: 'Approved' | 'Rejected', type: 'Deposit' | 'Withdrawal' } | null>(null);
   const [utr, setUtr] = useState("");
 
   const transactionsQuery = useMemoFirebase(
@@ -309,9 +309,9 @@ export default function TransactionsPage() {
       }
   };
 
-  const handleAction = async (txnId: string, userId: string, amount: number, newStatus: 'Approved' | 'Rejected', utrValue?: string) => {
+  const handleAction = async (txnId: string, newStatus: 'Approved' | 'Rejected', utrValue?: string) => {
     try {
-        const result = await updateTransactionStatus({ txnId, userId, amount, status: newStatus, utr: utrValue });
+        const result = await updateTransactionStatus({ txnId, status: newStatus, utr: utrValue });
         if (result && result.success) {
             toast({
                 title: "Transaction Updated",
@@ -471,7 +471,7 @@ export default function TransactionsPage() {
                         onClick={() => {
                             if (confirmation) {
                                 const utrValue = confirmation.newStatus === 'Approved' && confirmation.type === 'Withdrawal' ? utr : undefined;
-                                handleAction(confirmation.txnId, confirmation.userId, confirmation.amount, confirmation.newStatus, utrValue);
+                                handleAction(confirmation.txnId, confirmation.newStatus, utrValue);
                                 setConfirmation(null);
                                 setUtr("");
                             }
@@ -485,5 +485,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
-    

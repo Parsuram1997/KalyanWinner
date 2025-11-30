@@ -1,10 +1,12 @@
 
+import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Transaction } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { onTaskDispatched, Request } from "firebase-functions/v2/tasks";
 import * as logger from "firebase-functions/logger";
 import * as functions from "firebase-functions/v1";
 
+initializeApp();
 const db = getFirestore();
 
 interface User {
@@ -85,7 +87,7 @@ export const processReferralBonus = onTaskDispatched(async (request: Request<{ u
         const enrollerDoc = enrollerSnapshot.docs[0];
         const enrollerRef = enrollerDoc.ref;
 
-        // Credit the enroller's COMMISSION BALANCE
+        // Credit the enroller'''s COMMISSION BALANCE
         t.update(enrollerRef, { commissionBalance: FieldValue.increment(BONUS_AMOUNT) });
 
         // Mark commission as paid for the user
@@ -147,7 +149,6 @@ export const sendResultNotification = functions.firestore
     let shouldSend = false;
     
     const isNewResult = !resultDataBefore; // Document was just created
-    const isOpenResultJustAdded = openPanna && !resultDataBefore?.openPanna;
     const isCloseResultJustAdded = closePanna && !resultDataBefore?.closePanna;
     const isHolidayJustMarked = jodi === 'L' && resultDataBefore?.jodi !== 'L';
 
@@ -198,7 +199,7 @@ export const sendResultNotification = functions.firestore
         icon: '/kalyanwinnerlogo.png',
       },
       webpush: {
-        fcm_options: {
+        fcmOptions: {
           link: '/results'
         }
       }

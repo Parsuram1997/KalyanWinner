@@ -314,6 +314,7 @@ export default function PlaceBetPage() {
   const [bets, setBets] = useState<Bet[]>([]);
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [marketDetails, setMarketDetails] = useState<any>(null);
+  const [todaysResult, setTodaysResult] = useState<any>(null);
   const [buttonState, setButtonState] = useState({ text: 'Place Bets', disabled: true, loading: true });
 
   const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -347,6 +348,29 @@ export default function PlaceBetPage() {
     fetchMarketDetails();
   }, [firestore, marketName]);
   
+    useEffect(() => {
+        if (!firestore || !marketName) return;
+        const today = new Date();
+        const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        const resultQuery = query(
+            collection(firestore, "kalyan_results"),
+            where("marketName", "==", marketName),
+            where("date", "==", dateString),
+            limit(1)
+        );
+
+        const unsubscribe = onSnapshot(resultQuery, (snapshot) => {
+            if (!snapshot.empty) {
+                setTodaysResult(snapshot.docs[0].data());
+            } else {
+                setTodaysResult(null);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [firestore, marketName]);
+
   const totalBetAmount = useMemo(() => {
     return bets.reduce((sum, bet) => sum + parseInt(bet.amount || "0"), 0);
   }, [bets]);
@@ -367,33 +391,42 @@ export default function PlaceBetPage() {
     const closeBiddingTime = parseTime(marketDetails.closeBiddingTime);
     const closeResultTime = parseTime(marketDetails.closeResultTime);
     
-    const bettingClosedTypes = ['Jodi', 'Open Sangam', 'Full Sangam', 'Open'];
-    const closeOnlyTypes = ['Close', 'Close Sangam'];
+    const bettingOpenSessionTypes = ['Jodi', 'Open Sangam', 'Full Sangam', 'Open'];
+    const bettingCloseSessionTypes = ['Close', 'Close Sangam'];
 
     const updateButtonState = () => {
         const now = new Date();
         let isDisabled = false;
         let text = `Place Bets (Total: ₹${totalBetAmount})`;
 
-        if (bettingClosedTypes.includes(betTypeName)) {
+        if (bettingOpenSessionTypes.includes(betTypeName)) {
             if (now >= openBiddingTime) {
                 text = "Betting Closed";
                 isDisabled = true;
             }
-        } else if (closeOnlyTypes.includes(betTypeName)) {
-             if (now < openResultTime || now >= closeBiddingTime) {
+        } else if (bettingCloseSessionTypes.includes(betTypeName)) {
+             if (!todaysResult?.openPanna && now >= openBiddingTime) {
+                // Open result not out, but open bidding time has passed, so close session is also closed for now.
+                text = "Betting Closed";
+                isDisabled = true;
+             } else if (todaysResult?.openPanna && (now < openResultTime || now >= closeBiddingTime)) {
+                // Open result IS out, but we are outside the close betting window.
                 text = "Betting Closed";
                 isDisabled = true;
             }
         } else { // For Pannas (which can be open or close)
-            if ((now >= openBiddingTime && now < openResultTime) || (now >= closeBiddingTime && now < closeResultTime)) {
-                text = "Betting Closed";
-                isDisabled = true;
+            if (now >= openBiddingTime && now < openResultTime) {
+                 text = "Betting Closed";
+                 isDisabled = true;
+            }
+            if (todaysResult?.openPanna && now >= closeBiddingTime && now < closeResultTime) {
+                 text = "Betting Closed";
+                 isDisabled = true;
             }
         }
         
         if (now > closeResultTime) {
-             text = "Betting Closed";
+             text = "Betting Market Closed";
              isDisabled = true;
         }
 
@@ -405,7 +438,7 @@ export default function PlaceBetPage() {
 
     return () => clearInterval(intervalId);
 
-  }, [marketDetails, betTypeName, totalBetAmount]);
+  }, [marketDetails, betTypeName, totalBetAmount, todaysResult]);
 
 
   const userDocRef = useMemoFirebase(() => (firestore && authUser ? doc(firestore, "users", authUser.uid) : null), [firestore, authUser]);
@@ -458,25 +491,7 @@ export default function PlaceBetPage() {
         return;
     }
     
-    const today = new Date();
-    const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    let isOpenResultDeclared = false;
-    try {
-        const resultQuery = query(
-            collection(firestore, "kalyan_results"),
-            where("marketName", "==", marketName),
-            where("date", "==", dateString),
-            limit(1)
-        );
-        const resultSnapshot = await getDocs(resultQuery);
-        const todaysResult = resultSnapshot.empty ? null : resultSnapshot.docs[0].data();
-        isOpenResultDeclared = !!todaysResult?.openPanna && todaysResult.openPanna !== 'H';
-    } catch(error) {
-        console.error("Could not fetch today's result for session determination:", error);
-        toast({ variant: "destructive", title: "Session Error", description: "Could not determine if open market has passed." });
-        setIsPlacingBet(false);
-        return;
-    }
+    const isOpenResultDeclared = !!todaysResult?.openPanna;
 
     try {
         const batch = writeBatch(firestore);
@@ -514,7 +529,7 @@ export default function PlaceBetPage() {
             session = 'Open';
         } else if (betTypeName === 'Close' || betTypeName === 'Close Sangam') {
             session = 'Close';
-        } else { // Handles Panna types
+        } else { // Handles Pannas
             session = isOpenResultDeclared ? 'Close' : 'Open';
         }
 
@@ -628,7 +643,7 @@ export default function PlaceBetPage() {
                   className="w-full"
                   onClick={handleSubmit}
                   disabled={bets.length === 0 || isPlacingBet || isLoading || buttonState.disabled}
-                  variant={buttonState.disabled && buttonState.text === "Betting Closed" ? "destructive" : "default"}
+                  variant={buttonState.disabled && buttonState.text !== "Place Bets (Total: ₹0)" ? "destructive" : "default"}
               >
                   {isPlacingBet ? (
                     <Loader className="mr-2 h-4 w-4 animate-spin" />

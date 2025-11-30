@@ -1,11 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendResultNotification = exports.processReferralBonus = exports.cleanupuser = void 0;
+const app_1 = require("firebase-admin/app");
 const firestore_1 = require("firebase-admin/firestore");
 const messaging_1 = require("firebase-admin/messaging");
 const tasks_1 = require("firebase-functions/v2/tasks");
 const logger = require("firebase-functions/logger");
 const functions = require("firebase-functions/v1");
+(0, app_1.initializeApp)();
 const db = (0, firestore_1.getFirestore)();
 // V1 onDelete function to clean up user data from Firestore when a user is deleted from Auth
 exports.cleanupuser = functions.auth.user().onDelete(async (user) => {
@@ -35,8 +37,8 @@ exports.processReferralBonus = (0, tasks_1.onTaskDispatched)(async (request) => 
         const settingsDoc = await settingsRef.get();
         // Use settings from DB or fall back to defaults if not found.
         const settingsData = settingsDoc.data();
-        const BONUS_AMOUNT = (settingsData === null || settingsData === void 0 ? void 0 : settingsData.referralBonusAmount) || 5;
-        const MIN_DEPOSIT_FOR_BONUS = (settingsData === null || settingsData === void 0 ? void 0 : settingsData.minDepositForBonus) || 500;
+        const BONUS_AMOUNT = settingsData?.referralBonusAmount || 5;
+        const MIN_DEPOSIT_FOR_BONUS = settingsData?.minDepositForBonus || 500;
         if (!settingsDoc.exists) {
             logger.warn("Payment settings not found. Using default bonus rules.");
         }
@@ -57,21 +59,20 @@ exports.processReferralBonus = (0, tasks_1.onTaskDispatched)(async (request) => 
             logger.log(`User ${userId} has met the threshold! Paying referral bonus of ${BONUS_AMOUNT} to enroller ${enrollerId}.`);
             const enrollerQuery = db.collection('users').where('customId', '==', enrollerId);
             return db.runTransaction(async (t) => {
-                var _a;
                 const enrollerSnapshot = await t.get(enrollerQuery);
                 if (enrollerSnapshot.empty) {
                     throw new Error(`Enroller with customId ${enrollerId} not found.`);
                 }
                 const enrollerDoc = enrollerSnapshot.docs[0];
                 const enrollerRef = enrollerDoc.ref;
-                // Credit the enroller's COMMISSION BALANCE
+                // Credit the enroller'''s COMMISSION BALANCE
                 t.update(enrollerRef, { commissionBalance: firestore_1.FieldValue.increment(BONUS_AMOUNT) });
                 // Mark commission as paid for the user
                 t.update(userRef, { commissionPaid: true });
                 const bonusTransactionRef = db.collection('transactions').doc();
                 t.set(bonusTransactionRef, {
                     userId: enrollerDoc.id,
-                    userName: ((_a = enrollerDoc.data()) === null || _a === void 0 ? void 0 : _a.name) || 'Enroller',
+                    userName: enrollerDoc.data()?.name || 'Enroller',
                     customId: enrollerId,
                     type: "Referral Bonus",
                     amount: BONUS_AMOUNT,
@@ -107,7 +108,6 @@ const getDigit = (panna) => {
 exports.sendResultNotification = functions.firestore
     .document('kalyan_results/{resultId}')
     .onWrite(async (change, context) => {
-    var _a, _b, _c;
     const resultDataAfter = change.after.data();
     const resultDataBefore = change.before.data();
     // If the document is deleted, do nothing.
@@ -120,9 +120,8 @@ exports.sendResultNotification = functions.firestore
     let body = '';
     let shouldSend = false;
     const isNewResult = !resultDataBefore; // Document was just created
-    const isOpenResultJustAdded = openPanna && !((_a = resultDataBefore) === null || _a === void 0 ? void 0 : _a.openPanna);
-    const isCloseResultJustAdded = closePanna && !((_b = resultDataBefore) === null || _b === void 0 ? void 0 : _b.closePanna);
-    const isHolidayJustMarked = jodi === 'L' && ((_c = resultDataBefore) === null || _c === void 0 ? void 0 : _c.jodi) !== 'L';
+    const isCloseResultJustAdded = closePanna && !resultDataBefore?.closePanna;
+    const isHolidayJustMarked = jodi === 'L' && resultDataBefore?.jodi !== 'L';
     if (isHolidayJustMarked) {
         title = `${marketName} is on Holiday`;
         body = `No game results will be declared today for ${marketName}.`;
@@ -163,7 +162,7 @@ exports.sendResultNotification = functions.firestore
             icon: '/kalyanwinnerlogo.png',
         },
         webpush: {
-            fcm_options: {
+            fcmOptions: {
                 link: '/results'
             }
         }
@@ -191,3 +190,4 @@ exports.sendResultNotification = functions.firestore
     }
     return null;
 });
+//# sourceMappingURL=index.js.map

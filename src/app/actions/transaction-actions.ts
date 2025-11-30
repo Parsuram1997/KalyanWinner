@@ -1,7 +1,7 @@
 
 'use server';
 
-import { firestore } from "@/lib/firebase-admin";
+import { firestore, app } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
 import { getFunctions } from "firebase-admin/functions";
@@ -30,7 +30,8 @@ export async function approveDeposit(transactionId: string, userId: string, amou
     console.log(`Deposit transaction ${transactionId} for user ${userId} completed successfully.`);
 
     // Enqueue a task to handle the referral bonus check asynchronously.
-    const queue = getFunctions().taskQueue("processReferralBonus");
+    const functions = getFunctions(app);
+    const queue = functions.taskQueue("processReferralBonus");
     await queue.enqueue({ userId, transactionId });
     console.log(`Enqueued referral bonus check for user ${userId}.`);
 
@@ -120,17 +121,19 @@ export async function rejectTransaction(transactionId: string) {
     }
 }
 
-export async function updateTransactionStatus(data: { txnId: string, userId: string, amount: number, status: 'Approved' | 'Rejected', utr?: string }) {
-  const { txnId, userId, amount, status, utr } = data;
+export async function updateTransactionStatus(data: { txnId: string, status: 'Approved' | 'Rejected', utr?: string }) {
+  const { txnId, status, utr } = data;
   const transactionDoc = await firestore.collection("transactions").doc(txnId).get();
   const transactionData = transactionDoc.data();
 
   if (!transactionData) {
     throw new Error("Transaction not found");
   }
+  
+  const { userId, amount, type } = transactionData;
 
   if (status === 'Approved') {
-    if (transactionData.type === 'Deposit') {
+    if (type === 'Deposit') {
       return await approveDeposit(txnId, userId, amount);
     } else {
       return await approveWithdrawal(txnId, userId, amount, utr);
@@ -261,6 +264,3 @@ export async function deleteTransaction(transactionId: string) {
         throw new Error(error.message || "Failed to delete transaction.");
     }
 }
-    
-
-    
