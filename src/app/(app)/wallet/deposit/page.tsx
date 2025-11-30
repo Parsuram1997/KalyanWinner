@@ -18,14 +18,19 @@ import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
 import QRCode from "react-qr-code";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, Copy, Phone, CreditCard, ChevronRight } from "lucide-react";
+import { Terminal, Copy, Phone, CreditCard, ChevronRight, Landmark } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type PaymentSettings = {
   upiId?: string;
   payeeName?: string;
   minDeposit?: number;
+  bankAccountHolder?: string;
+  bankAccountNumber?: string;
+  bankIfscCode?: string;
+  bankName?: string;
 };
 
 const WhatsAppIcon = () => (
@@ -69,7 +74,11 @@ export default function DepositPage() {
           setPaymentSettings({ 
             upiId: settings.upiId, 
             payeeName: settings.bankAccountHolder || 'Kalyan Winner',
-            minDeposit: settings.minDeposit
+            minDeposit: settings.minDeposit,
+            bankAccountHolder: settings.bankAccountHolder,
+            bankAccountNumber: settings.bankAccountNumber,
+            bankIfscCode: settings.bankIfscCode,
+            bankName: settings.bankName
           });
           if(settings.minDeposit) {
             form.setValue("amount", settings.minDeposit);
@@ -123,10 +132,10 @@ export default function DepositPage() {
     ? `upi://pay?pa=${paymentSettings.upiId}&am=${numericAmount.toFixed(2)}&cu=INR`
     : "";
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, fieldName: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
-        toast({ title: "Copied!", description: `${text} copied to your clipboard.` })
+        toast({ title: "Copied!", description: `${fieldName} copied to your clipboard.` })
     });
   }
 
@@ -162,6 +171,9 @@ export default function DepositPage() {
     );
   }
 
+  const hasUpiDetails = !!paymentSettings?.upiId;
+  const hasBankDetails = !!paymentSettings?.bankAccountNumber;
+
   return (
     <div className="space-y-6 max-w-md mx-auto">
       <Form {...form}>
@@ -170,7 +182,7 @@ export default function DepositPage() {
           <Card className={cn("transition-opacity duration-300", currentStep === 2 && "opacity-60")}>
             <CardHeader>
               <CardTitle>Step 1: Make Payment</CardTitle>
-              <CardDescription>Enter the amount and pay using the QR code or UPI ID.</CardDescription>
+              <CardDescription>Enter amount and choose a payment method below.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -188,35 +200,78 @@ export default function DepositPage() {
                   )}
                 />
 
-                {numericAmount >= minDepositAmount && paymentSettings?.upiId && (
-                  <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
-                    {!isMobile && (
-                      <>
-                        <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
-                        <div className="p-4 bg-white rounded-md shadow-inner">
-                          <QRCode value={upiUrl} size={180} />
-                        </div>
-                      </>
-                    )}
-                    <div className="text-center w-full">
-                      <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
-                      <div
-                        className="flex items-center justify-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground"
-                        onClick={() => copyToClipboard(paymentSettings.upiId!)}
-                      >
-                        <p className="text-xs">To: {paymentSettings.payeeName} ({paymentSettings.upiId})</p>
-                        <Copy className="h-3 w-3" />
-                      </div>
-                    </div>
-
-                    {isMobile && (
-                      <Button asChild className="w-full mt-2" type="button" disabled={currentStep > 1}>
-                        <a href={upiUrl}>
-                          <CreditCard /> Pay with UPI
-                        </a>
-                      </Button>
-                    )}
-                  </div>
+                {numericAmount >= minDepositAmount && (hasUpiDetails || hasBankDetails) && (
+                    <Tabs defaultValue={hasUpiDetails ? "upi" : "bank"} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                           {hasUpiDetails && <TabsTrigger value="upi">UPI / QR</TabsTrigger>}
+                           {hasBankDetails && <TabsTrigger value="bank">Bank Transfer</TabsTrigger>}
+                        </TabsList>
+                        {hasUpiDetails && (
+                            <TabsContent value="upi" className="mt-4">
+                                <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
+                                {!isMobile && (
+                                    <>
+                                        <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
+                                        <div className="p-4 bg-white rounded-md shadow-inner">
+                                            <QRCode value={upiUrl} size={180} />
+                                        </div>
+                                    </>
+                                )}
+                                <div className="text-center w-full">
+                                    <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
+                                    <div
+                                    className="flex items-center justify-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground"
+                                    onClick={() => copyToClipboard(paymentSettings.upiId!, 'UPI ID')}
+                                    >
+                                    <p className="text-xs">To: {paymentSettings.payeeName} ({paymentSettings.upiId})</p>
+                                    <Copy className="h-3 w-3" />
+                                    </div>
+                                </div>
+                                {isMobile && (
+                                    <Button asChild className="w-full mt-2" type="button" disabled={currentStep > 1}>
+                                        <a href={upiUrl}>
+                                            <CreditCard className="mr-2 h-4 w-4"/> Pay with UPI
+                                        </a>
+                                    </Button>
+                                )}
+                                </div>
+                            </TabsContent>
+                        )}
+                        {hasBankDetails && (
+                            <TabsContent value="bank" className="mt-4">
+                                 <div className="space-y-4 p-4 bg-muted rounded-lg text-sm">
+                                    <h3 className="font-semibold text-center mb-2">Bank Account Details</h3>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-muted-foreground">Account Name:</span>
+                                        <div className="flex items-center gap-2 font-medium">
+                                            <span>{paymentSettings.bankAccountHolder}</span>
+                                            <Copy className="h-4 w-4 cursor-pointer" onClick={() => copyToClipboard(paymentSettings.bankAccountHolder!, 'Account Name')} />
+                                        </div>
+                                    </div>
+                                     <div className="flex justify-between items-center">
+                                        <span className="text-muted-foreground">Account Number:</span>
+                                         <div className="flex items-center gap-2 font-medium">
+                                            <span>{paymentSettings.bankAccountNumber}</span>
+                                            <Copy className="h-4 w-4 cursor-pointer" onClick={() => copyToClipboard(paymentSettings.bankAccountNumber!, 'Account Number')} />
+                                        </div>
+                                    </div>
+                                     <div className="flex justify-between items-center">
+                                        <span className="text-muted-foreground">IFSC Code:</span>
+                                         <div className="flex items-center gap-2 font-medium">
+                                            <span>{paymentSettings.bankIfscCode}</span>
+                                            <Copy className="h-4 w-4 cursor-pointer" onClick={() => copyToClipboard(paymentSettings.bankIfscCode!, 'IFSC Code')} />
+                                        </div>
+                                    </div>
+                                     <div className="flex justify-between items-center">
+                                        <span className="text-muted-foreground">Bank Name:</span>
+                                         <div className="flex items-center gap-2 font-medium">
+                                            <span>{paymentSettings.bankName}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                        )}
+                    </Tabs>
                 )}
               </div>
             </CardContent>
@@ -285,3 +340,5 @@ export default function DepositPage() {
     </div>
   );
 }
+
+    
