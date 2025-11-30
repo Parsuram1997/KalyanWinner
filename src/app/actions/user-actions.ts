@@ -204,31 +204,63 @@ export async function updateUserPaymentDetails(paymentDetails: {
 
 export async function deleteUser(userId: string) {
     try {
-        const deletePromise = auth.deleteUser(userId);
-        const firestorePromise = firestore.collection("users").doc(userId).delete();
+        // Find all bets and transactions for the user
+        const betsQuery = firestore.collection('kalyan_bets').where('userId', '==', userId);
+        const transactionsQuery = firestore.collection('transactions').where('userId', '==', userId);
+        
+        const [betsSnapshot, transactionsSnapshot] = await Promise.all([
+            betsQuery.get(),
+            transactionsQuery.get()
+        ]);
 
-        await Promise.all([deletePromise, firestorePromise]);
+        const batch = firestore.batch();
+
+        // Queue all bets for deletion
+        betsSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // Queue all transactions for deletion
+        transactionsSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // Queue the user document for deletion
+        const userDocRef = firestore.collection("users").doc(userId);
+        batch.delete(userDocRef);
+
+        // Commit the batch to delete all documents
+        await batch.commit();
+
+        // After Firestore data is cleaned up, delete the user from Auth
+        await auth.deleteUser(userId);
 
         revalidatePath('/admin/users');
         revalidatePath('/admin/admins');
 
-        return { success: true };
+        return { success: true, message: "User and all associated data deleted successfully." };
+
     } catch (error: any) {
-        console.error("Error deleting user:", error);
+        console.error("Error deleting user and their data:", error);
+        
+        // Handle case where user is already deleted from auth but not from Firestore
         if (error.code === 'auth/user-not-found') {
             try {
-                await firestore.collection("users").doc(userId).delete();
+                const userDocRef = firestore.collection("users").doc(userId);
+                await userDocRef.delete(); // Attempt to delete just the firestore doc
                 revalidatePath('/admin/users');
                 revalidatePath('/admin/admins');
-                return { success: true, message: "User already deleted from Auth, cleaned up Firestore." };
+                return { success: true, message: "User already deleted from Auth, cleaned up remaining Firestore data." };
             } catch (firestoreError: any) {
-                console.error("Error deleting user from Firestore after Auth-not-found error:", firestoreError);
-                throw new Error(firestoreError.message || "Failed to delete user from Firestore.");
+                console.error("Error cleaning up Firestore user data after auth/user-not-found error:", firestoreError);
+                throw new Error(firestoreError.message || "Failed to clean up user data from Firestore.");
             }
         }
-        throw new Error(error.message || "Failed to delete user.");
+        
+        throw new Error(error.message || "Failed to delete user and associated data.");
     }
 }
+
 
 export async function saveFcmToken(userId: string, token: string) {
   try {
