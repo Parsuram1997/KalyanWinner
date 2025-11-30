@@ -34,6 +34,7 @@ type Bet = {
     amount: number;
     session: 'Open' | 'Close' | 'Jodi';
     createdAt: Timestamp;
+    status: 'Placed' | 'Won' | 'Lost';
 }
 
 type AggregatedBid = {
@@ -129,13 +130,14 @@ export default function AggregatedBiddingDetailsPage() {
 
     const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     
-    // Fetch all 'Placed' bets for the market, without a date filter in the query.
+    // Fetch all relevant bets for the market, without a date filter in the query.
+    // We now fetch Placed, Won, and Lost to ensure the report is complete even after results.
     const betsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(
             collection(firestore, "kalyan_bets"), 
             where("market", "==", marketName),
-            where("status", "==", "Placed")
+            where("status", "in", ["Placed", "Won", "Lost"])
         );
     }, [firestore, marketName]);
 
@@ -172,13 +174,19 @@ export default function AggregatedBiddingDetailsPage() {
     };
 
     const openSessionBets = useMemo(() => {
-        const openSessionGameTypes = ['Single Digit', 'Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam'];
-        return filteredBetsByDate?.filter(bet => 
-            (openSessionGameTypes.includes(bet.gameType) && bet.session === 'Open') ||
-            bet.session === 'Jodi' ||
-            // Also include panna bets from the open session
-            (bet.gameType.includes('Panna') && bet.session === 'Open')
-        ) || [];
+        const openSessionGameTypes = ['Single Digit', 'Jodi', 'Single Panna', 'Double Panna', 'Triple Panna', 'Open Sangam', 'Close Sangam', 'Full Sangam'];
+        const openSessionSessions = ['Open', 'Jodi'];
+
+        return filteredBetsByDate?.filter(bet => {
+            if (openSessionGameTypes.includes(bet.gameType) && openSessionSessions.includes(bet.session)) {
+                return true;
+            }
+            // All Sangam bets are part of the Open Session logic
+            if (bet.gameType.includes('Sangam')) {
+                return true;
+            }
+            return false;
+        }) || [];
     }, [filteredBetsByDate]);
     
     const closeSessionBets = useMemo(() => {
