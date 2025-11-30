@@ -156,7 +156,7 @@ export default function DepositPage() {
 
 
   if (isLoadingSettings) {
-    return <Skeleton className="max-w-md mx-auto h-96" />;
+    return <Skeleton className="w-full h-96" />;
   }
 
   if (errorSettings) {
@@ -175,7 +175,7 @@ export default function DepositPage() {
   const hasBankDetails = !!paymentSettings?.bankAccountNumber;
 
   return (
-    <div className="space-y-6 max-w-md mx-auto">
+    <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           
@@ -340,5 +340,7 @@ export default function DepositPage() {
     </div>
   );
 }
+
+    
 
     
