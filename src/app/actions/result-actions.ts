@@ -377,68 +377,77 @@ export async function deleteKalyanResult(resultId: string) {
     
     try {
         await firestore.runTransaction(async (t) => {
+            // 1. READ all necessary documents
             const resultDoc = await t.get(resultRef);
             if (!resultDoc.exists) {
                 throw new Error("Result to be deleted not found.");
             }
             const resultData = resultDoc.data() as KalyanResult;
 
-            // Find all 'Win' transactions associated with bets for this market and on this date.
-            // This is safer than just relying on betId, as it scopes the search.
+            // Find all bets that were won because of this result
+            const wonBetsQuery = firestore.collection('kalyan_bets')
+                .where('market', '==', resultData.marketName)
+                .where('status', '==', 'Won');
+            
+            const wonBetsSnapshot = await t.get(wonBetsQuery);
+            const wonBetsOnDate = wonBetsSnapshot.docs.filter(doc => {
+                const betDate = doc.data().createdAt.toDate();
+                const resultDate = new Date(resultData.date);
+                return betDate.getFullYear() === resultDate.getFullYear() &&
+                       betDate.getMonth() === resultDate.getMonth() &&
+                       betDate.getDate() === resultDate.getDate();
+            });
+
+            const wonBetIds = wonBetsOnDate.map(doc => doc.id);
+            if (wonBetIds.length === 0) {
+                 // No bets were won, so just delete the result and exit.
+                t.delete(resultRef);
+                return;
+            }
+
+            // Find all 'Win' transactions associated with these bets
             const winTransactionsQuery = firestore.collection('transactions')
                 .where('type', '==', 'Win')
-                .where('description', 'like', `%on ${resultData.marketName}%`); // A bit broad, but works
+                .where('betId', 'in', wonBetIds);
 
             const winTransactionsSnapshot = await t.get(winTransactionsQuery);
 
-            const userBalanceUpdates = new Map<string, number>();
+            // 2. PREPARE all updates and deletes
+            const userBalanceReverts = new Map<string, number>();
             const betsToUpdate: {ref: FirebaseFirestore.DocumentReference, data: any}[] = [];
             const transactionsToDelete: FirebaseFirestore.DocumentReference[] = [];
 
-            for (const doc of winTransactionsSnapshot.docs) {
-                 const winTx = doc.data();
-                 // Double check the date to be sure
-                 const winDate = new Date(winTx.date);
-                 const resultDate = new Date(resultData.date);
-                 
-                 // Compare only year, month, and day
-                 if (winDate.toDateString() === resultDate.toDateString() && winTx.betId) {
-                    const betRef = firestore.collection('kalyan_bets').doc(winTx.betId);
-                    
-                    // Add user's balance to be reverted
-                    const currentRevertAmount = userBalanceUpdates.get(winTx.userId) || 0;
-                    userBalanceUpdates.set(winTx.userId, currentRevertAmount + winTx.amount);
-
-                    // Queue the transaction for deletion
-                    transactionsToDelete.push(doc.ref);
-                    
-                    // Queue the corresponding bet to be reverted to 'Placed'
-                    betsToUpdate.push({ ref: betRef, data: { status: "Placed", winningAmount: FieldValue.delete() } });
-                 }
-            }
+            // Queue win transactions for deletion and calculate balance reversions
+            winTransactionsSnapshot.forEach(doc => {
+                const winTx = doc.data();
+                const currentRevert = userBalanceReverts.get(winTx.userId) || 0;
+                userBalanceReverts.set(winTx.userId, currentRevert + winTx.amount);
+                transactionsToDelete.push(doc.ref);
+            });
             
-            // Now, perform all writes atomically
-            // 1. Revert user balances
-            for (const [userId, amountToRevert] of userBalanceUpdates.entries()) {
+            // Queue won bets to be reverted to 'Placed'
+            wonBetsOnDate.forEach(doc => {
+                betsToUpdate.push({ ref: doc.ref, data: { status: "Placed", winningAmount: FieldValue.delete() } });
+            });
+
+            // 3. EXECUTE all writes
+            // Revert user balances
+            for (const [userId, amountToRevert] of userBalanceReverts.entries()) {
                 const userRef = firestore.collection('users').doc(userId);
-                // Check if user exists before attempting to update
-                const userDoc = await t.get(userRef);
-                if (userDoc.exists) {
-                    t.update(userRef, { winningBalance: FieldValue.increment(-amountToRevert) });
-                }
+                t.update(userRef, { winningBalance: FieldValue.increment(-amountToRevert) });
             }
 
-            // 2. Revert bet statuses
+            // Revert bet statuses
             for (const betUpdate of betsToUpdate) {
                 t.update(betUpdate.ref, betUpdate.data);
             }
 
-            // 3. Delete win transactions
+            // Delete win transactions
             for (const txDelete of transactionsToDelete) {
                 t.delete(txDelete);
             }
 
-            // 4. Finally, delete the result document itself
+            // Finally, delete the result document itself
             t.delete(resultRef);
         });
 
