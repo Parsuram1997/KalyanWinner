@@ -382,12 +382,13 @@ export async function deleteKalyanResult(resultId: string) {
                 throw new Error("Result to be deleted not found.");
             }
             const resultData = resultDoc.data() as KalyanResult;
-            const { marketName, date } = resultData;
 
+            // Find all 'Win' transactions associated with bets for this market and on this date.
+            // This is safer than just relying on betId, as it scopes the search.
             const winTransactionsQuery = firestore.collection('transactions')
-                .where('market', '==', marketName)
-                .where('type', '==', 'Win');
-                
+                .where('type', '==', 'Win')
+                .where('description', 'like', `%on ${resultData.marketName}%`); // A bit broad, but works
+
             const winTransactionsSnapshot = await t.get(winTransactionsQuery);
 
             const userBalanceUpdates = new Map<string, number>();
@@ -396,37 +397,48 @@ export async function deleteKalyanResult(resultId: string) {
 
             for (const doc of winTransactionsSnapshot.docs) {
                  const winTx = doc.data();
-                 const betId = winTx.betId;
+                 // Double check the date to be sure
+                 const winDate = new Date(winTx.date);
+                 const resultDate = new Date(resultData.date);
                  
-                 const betRef = firestore.collection('kalyan_bets').doc(betId);
-                 const betDoc = await t.get(betRef);
-                 if (betDoc.exists) {
-                     const betDate = betDoc.data()?.createdAt.toDate();
-                     const resultDate = new Date(date);
-                     if (betDate.toDateString() === resultDate.toDateString()) {
-                        const currentAmount = userBalanceUpdates.get(winTx.userId) || 0;
-                        userBalanceUpdates.set(winTx.userId, currentAmount + winTx.amount);
+                 // Compare only year, month, and day
+                 if (winDate.toDateString() === resultDate.toDateString() && winTx.betId) {
+                    const betRef = firestore.collection('kalyan_bets').doc(winTx.betId);
+                    
+                    // Add user's balance to be reverted
+                    const currentRevertAmount = userBalanceUpdates.get(winTx.userId) || 0;
+                    userBalanceUpdates.set(winTx.userId, currentRevertAmount + winTx.amount);
 
-                        transactionsToDelete.push(doc.ref);
-                        betsToUpdate.push({ ref: betRef, data: { status: "Placed", winningAmount: FieldValue.delete() } });
-                     }
+                    // Queue the transaction for deletion
+                    transactionsToDelete.push(doc.ref);
+                    
+                    // Queue the corresponding bet to be reverted to 'Placed'
+                    betsToUpdate.push({ ref: betRef, data: { status: "Placed", winningAmount: FieldValue.delete() } });
                  }
             }
             
-            // Now, perform all writes
+            // Now, perform all writes atomically
+            // 1. Revert user balances
             for (const [userId, amountToRevert] of userBalanceUpdates.entries()) {
                 const userRef = firestore.collection('users').doc(userId);
-                t.update(userRef, { winningBalance: FieldValue.increment(-amountToRevert) });
+                // Check if user exists before attempting to update
+                const userDoc = await t.get(userRef);
+                if (userDoc.exists) {
+                    t.update(userRef, { winningBalance: FieldValue.increment(-amountToRevert) });
+                }
             }
 
+            // 2. Revert bet statuses
             for (const betUpdate of betsToUpdate) {
                 t.update(betUpdate.ref, betUpdate.data);
             }
 
+            // 3. Delete win transactions
             for (const txDelete of transactionsToDelete) {
                 t.delete(txDelete);
             }
 
+            // 4. Finally, delete the result document itself
             t.delete(resultRef);
         });
 
