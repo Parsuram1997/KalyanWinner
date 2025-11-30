@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail, onIdTokenChanged } from "firebase/auth";
 import { collection, query, where, getDocs, limit, doc, getDoc } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader } from "lucide-react";
@@ -25,22 +25,32 @@ export default function LoginPage() {
   const [view, setView] = useState<View>("login");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState(""); // Used for both login and reset
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    if (!auth) return;
+
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
+      if (user) {
+        const idToken = await user.getIdToken();
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ idToken }),
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
 
   const handleForgotPassword = async () => {
     setIsLoading(true);
-    if (!auth) {
-      toast({ variant: "destructive", title: "Authentication service not ready." });
-      setIsLoading(false);
-      return;
-    }
-     if (!email) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address to reset your password.",
-      });
+    if (!auth || !email) {
+      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
       setIsLoading(false);
       return;
     }
@@ -49,12 +59,11 @@ export default function LoginPage() {
       await sendPasswordResetEmail(auth, email);
       toast({
         title: "Password Reset Email Sent",
-        description: `A link to reset your password has been sent to ${email}. Please also check your spam folder.`,
+        description: `A link to reset your password has been sent to ${email}. Please check your spam folder.`,
       });
       setView("login");
       setEmail("");
     } catch (error: any) {
-      console.error(error);
       toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the email is correct." });
     } finally {
       setIsLoading(false);
@@ -72,26 +81,19 @@ export default function LoginPage() {
     }
 
     let userEmail = identifier;
-
     if (!identifier.includes('@') && /^\d+$/.test(identifier)) {
         try {
             const usersRef = collection(firestore, "users");
             const q = query(usersRef, where("mobile", "==", identifier), limit(1));
             const querySnapshot = await getDocs(q);
 
-            if (querySnapshot.empty) {
-                throw new Error("No account found with this mobile number.");
-            }
+            if (querySnapshot.empty) throw new Error("No account found with this mobile number.");
             
-            const userData = querySnapshot.docs[0].data();
-            userEmail = userData.email;
-
-            if (!userEmail) {
-                throw new Error("Associated email not found for this mobile number.");
-            }
+            userEmail = querySnapshot.docs[0].data().email;
+            if (!userEmail) throw new Error("Associated email not found.");
 
         } catch (error: any) {
-            toast({ variant: "destructive", title: "Login Failed", description: error.message || "Could not find user with this mobile number." });
+            toast({ variant: "destructive", title: "Login Failed", description: error.message });
             setIsLoading(false);
             return;
         }
@@ -100,32 +102,28 @@ export default function LoginPage() {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
         const user = userCredential.user;
-
         const userDocRef = doc(firestore, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
-            const userRole = userDocSnap.data()?.role;
-            if (userRole === 'User') {
-            toast({ title: "Login Successful", description: "Welcome back!" });
-            router.push("/dashboard");
+            if (userDocSnap.data()?.role === 'User') {
+                toast({ title: "Login Successful", description: "Welcome back!" });
+                router.push("/dashboard");
             } else {
-            toast({ variant: "destructive", title: "Access Denied", description: "Please use the correct portal for your role." });
-            await auth.signOut();
+                toast({ variant: "destructive", title: "Access Denied", description: "Please use the correct portal." });
+                await auth.signOut();
             }
         } else {
-            toast({ variant: "destructive", title: "Profile Not Found", description: "Your user profile does not exist." });
+            toast({ variant: "destructive", title: "Profile Not Found" });
             await auth.signOut();
         }
 
     } catch (error: any) {
-        let description = "An unexpected error occurred during login.";
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-            description = "Invalid credentials. Please check your email/mobile and password.";
-        } else if (error.code === 'auth/missing-email') {
-            description = "Could not find an email associated with the provided mobile number.";
+        let description = "Invalid credentials. Please check your details.";
+        if (error.code === 'auth/missing-email') {
+            description = "Could not find an email for the provided mobile number.";
         }
-        toast({ variant: "destructive", title: "Login Failed", description: description });
+        toast({ variant: "destructive", title: "Login Failed", description });
     } finally {
         setIsLoading(false);
     }
@@ -136,97 +134,43 @@ export default function LoginPage() {
        <div className="relative hidden items-center justify-center bg-gradient-to-br from-primary/80 via-primary to-secondary p-10 text-white lg:flex">
          <div className="relative z-10 w-full max-w-md rounded-xl bg-black/20 p-8 text-center backdrop-blur-sm">
             <h2 className="text-4xl font-bold tracking-tight">Welcome Back!</h2>
-            <p className="mt-4 text-lg text-primary-foreground/90">Log in to access your dashboard, view live results, place your bets on various markets, and manage your wallet. Your exciting gaming journey awaits!</p>
+            <p className="mt-4 text-lg text-primary-foreground/90">Log in to access your dashboard, view live results, place your bets, and manage your wallet.</p>
         </div>
       </div>
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground p-4">
         <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-                <div className="flex justify-center mb-4">
-                   <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} />
-                </div>
-                <CardTitle className="text-3xl font-bold tracking-tight">
-                    {view === 'login' ? "Secure User Login" : "Reset Your Password"}
-                </CardTitle>
-                <CardDescription>
-                    {view === 'login' ? "Enter your credentials to access your account." : "We'll send a password reset link to your email."}
-                </CardDescription>
+                <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="mx-auto" />
+                <CardTitle className="text-3xl font-bold tracking-tight">{view === 'login' ? "Secure User Login" : "Reset Password"}</CardTitle>
+                <CardDescription>{view === 'login' ? "Enter your credentials to log in." : "We'll email you a reset link."}</CardDescription>
             </CardHeader>
             <CardContent>
-            {view === 'login' && (
+            {view === 'login' ? (
                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid gap-2">
                         <Label htmlFor="identifier">Email or Mobile Number</Label>
-                        <Input
-                            id="identifier"
-                            type="text"
-                            placeholder="Email or Mobile Number"
-                            required
-                            value={identifier}
-                            onChange={(e) => setIdentifier(e.target.value)}
-                            disabled={isLoading}
-                            className="h-12 text-base"
-                        />
+                        <Input id="identifier" placeholder="Email or Mobile" required value={identifier} onChange={(e) => setIdentifier(e.target.value)} disabled={isLoading} className="h-12" />
                     </div>
                     <div className="grid gap-2">
-                        <div className="flex items-center">
-                            <Label htmlFor="password">Password</Label>
-                            <Button variant="link" type="button" onClick={() => setView('forgot_password')} className="ml-auto px-0 h-auto text-sm text-primary hover:text-primary/90">
-                                Forgot password?
-                            </Button>
-                        </div>
-                        <Input
-                            id="password"
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            disabled={isLoading}
-                            className="h-12 text-base"
-                        />
+                         <div className="flex items-center"><Label htmlFor="password">Password</Label><Button variant="link" type="button" onClick={() => setView('forgot_password')} className="ml-auto px-0 h-auto text-sm">Forgot password?</Button></div>
+                        <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} className="h-12" />
                     </div>
-                    <Button type="submit" className="w-full h-12 text-base" disabled={isLoading}>
-                        {isLoading ? (
-                            <>
-                                <Loader className="mr-2 h-4 w-4 animate-spin" />
-                                Logging in...
-                            </>
-                        ) : 'Login'}
-                    </Button>
+                    <Button type="submit" className="w-full h-12" disabled={isLoading}>{isLoading ? <><Loader className="mr-2 h-4 w-4 animate-spin" />Logging in...</> : 'Login'}</Button>
                 </form>
-            )}
-
-            {view === 'forgot_password' && (
+            ) : (
                 <div className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Your Registered Email</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="m@example.com"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            disabled={isLoading}
-                             className="h-12 text-base"
-                        />
+                        <Label htmlFor="email">Registered Email</Label>
+                        <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} className="h-12" />
                     </div>
-                    <Button onClick={handleForgotPassword} className="w-full h-12 text-base" disabled={isLoading}>
-                    {isLoading ? 'Sending Link...' : 'Send Password Reset Link'}
-                    </Button>
-                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12">
-                        Back to Login
-                    </Button>
+                    <Button onClick={handleForgotPassword} className="w-full h-12" disabled={isLoading}>{isLoading ? 'Sending...' : 'Send Reset Link'}</Button>
+                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12">Back to Login</Button>
                 </div>
             )}
             </CardContent>
             <CardFooter className="flex-col gap-4">
-                <div className="text-center text-sm">
-                    <p className="text-muted-foreground">Don't have an account? <Link href="/signup" className="font-semibold text-primary underline-offset-4 hover:underline">Sign up</Link></p>
-                </div>
-                 <div className="text-center text-xs text-muted-foreground">
-                    <Link href="/admin" className="underline underline-offset-2 hover:text-primary">Admin Login</Link>
-                </div>
+                <p className="text-sm text-center w-full">Don't have an account? <Link href="/signup" className="font-semibold text-primary hover:underline">Sign up</Link></p>
+                 <Link href="/admin" className="text-xs underline hover:text-primary">Admin Login</Link>
             </CardFooter>
         </Card>
       </div>

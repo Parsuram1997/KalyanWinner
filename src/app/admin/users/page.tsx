@@ -186,10 +186,6 @@ export default function ManageUsersPage() {
     if (filter !== "All") {
       filtered = filtered.filter(user => user.status === filter);
     }
-    
-    if (filter === "Inactive") {
-       filtered = filtered.filter(user => user.status === "Inactive");
-    }
 
     if (searchTerm) {
       filtered = filtered.filter(
@@ -319,7 +315,6 @@ export default function ManageUsersPage() {
                 <TabsList className="w-full">
                     <TabsTrigger value="All" className="px-2">All</TabsTrigger>
                     <TabsTrigger value="Active" className="px-2">Active</TabsTrigger>
-                    <TabsTrigger value="Suspended" className="px-2">Suspended</TabsTrigger>
                     <TabsTrigger value="Inactive" className="px-2">Inactive</TabsTrigger>
                 </TabsList>
             </Tabs>
@@ -364,6 +359,8 @@ export default function ManageUsersPage() {
                         variant={
                           user.status === "Active"
                             ? "secondary"
+                            : user.status === "Inactive"
+                            ? "outline"
                             : "destructive"
                         }
                       >
@@ -411,7 +408,7 @@ export default function ManageUsersPage() {
                             <p className="font-semibold">{user.name}</p>
                             <p className="text-xs text-muted-foreground">{user.customId}</p>
                         </div>
-                        <Badge variant={user.status === "Active" ? "secondary" : "destructive"}>
+                        <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
                             {user.status}
                         </Badge>
                     </div>

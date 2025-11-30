@@ -57,7 +57,6 @@ export default function AdminDashboardPage() {
             usersBySelf: allUsers.filter(u => u.createdBy === 'Self' || !u.createdBy).length.toString(),
             activeUsers: allUsers.filter(u => u.status === 'Active').length.toString(),
             inactiveUsers: allUsers.filter(u => u.status === 'Inactive').length.toString(),
-            suspendedUsers: allUsers.filter(u => u.status === 'Suspended').length.toString(),
             totalBetsPlaced: "N/A", // Needs bets collection
             allUserWalletBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.balance || 0), 0)),
             totalDeposit: formatCurrency(allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
@@ -71,7 +70,7 @@ export default function AdminDashboardPage() {
             inactiveMarkets: allMarkets.filter(m => m.status === 'Inactive').length.toString(),
             totalBetTypes: allBetTypes.length.toString(),
             activeBetTypes: allBetTypes.filter(bt => bt.status === 'Active').length.toString(),
-            inactiveBetTypes: allBetTypes.filter(bt => bt.status === 'Inactive').length.toString(),
+            inactiveBetTypes: allBetTypes.filter(bt => bt.status === 'Inactive').length.toString()
         }
     }, [users, admins, transactions, markets, betTypes]);
 
@@ -90,15 +89,14 @@ export default function AdminDashboardPage() {
       { name: "Active Bet Types", value: stats.activeBetTypes, icon: CheckCircle },
       { name: "Inactive Bet Types", value: stats.inactiveBetTypes, icon: Ban },
       { name: "Inactive Users", value: stats.inactiveUsers, icon: UserX },
-      { name: "Suspended Users", value: stats.suspendedUsers, icon: Ban },
-      { name="Total Bets Placed", value: stats.totalBetsPlaced, icon: GanttChartSquare },
+      { name: "Total Bets Placed", value: stats.totalBetsPlaced, icon: GanttChartSquare },
       { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
       { name: "Total Deposit", value: stats.totalDeposit, icon: ArrowUpCircle },
       { name: "Total Withdrawal", value: stats.totalWithdrawal, icon: ArrowDownCircle },
       { name: "Total Winnings", value: stats.totalWinnings, icon: ClipboardList },
       { name: "Total Loss", value: stats.totalLoss, icon: TrendingDown },
       { name: "Pending Deposit", value: stats.pendingDeposit, icon: Hourglass },
-      { name: "Pending Withdrawals", value: stats.pendingWithdrawals, icon: Wallet },
+      { name: "Pending Withdrawals", value: stats.pendingWithdrawals, icon: Wallet }
     ];
 
 

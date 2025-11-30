@@ -140,6 +140,18 @@ export async function updateUser(userId: string, userData: {
   }
 }
 
+export async function updateUserStatus(userId: string, status: 'Active' | 'Inactive') {
+  try {
+    await firestore.collection("users").doc(userId).update({ status });
+    revalidatePath(`/admin/users`);
+    revalidatePath(`/admin/users/${userId}`); // Revalidate specific user page
+    return { success: true };
+  } catch (error: any) {
+    console.error(`Error updating user status to ${status}:`, error);
+    throw new Error(error.message || `Failed to update user status.`);
+  }
+}
+
 export async function updateUserPaymentDetails(paymentDetails: {
   userId: string;
   paymentMethod: 'bank' | 'upi';

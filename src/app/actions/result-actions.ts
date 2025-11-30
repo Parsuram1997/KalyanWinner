@@ -161,14 +161,18 @@ export async function createKalyanResult(resultData: KalyanResult) {
             const customId = userDoc?.data()?.customId;
             
             if (!userWinnings[bet.userId]) {
-                userWinnings[bet.userId] = { amount: 0, userName, customId };
+                userWinnings[bet.userId] = { amount: 0, userName: userName, customId: customId };
             }
             userWinnings[bet.userId].amount += winningAmount;
             
             const winTransactionRef = firestore.collection('transactions').doc();
             transaction.set(winTransactionRef, {
-                userId: bet.userId, userName, customId,
-                type: 'Win', amount: winningAmount, status: 'Completed',
+                userId: bet.userId,
+                userName: userName,
+                customId: customId,
+                type: 'Win',
+                amount: winningAmount,
+                status: 'Completed',
                 date: new Date().toISOString(),
                 description: `Won ${bet.gameType} on ${bet.market} with number ${bet.number}`,
                 betId: doc.id
@@ -331,14 +335,18 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
             const customId = userDoc?.data()?.customId;
             
             if (!userWinnings[bet.userId]) {
-                userWinnings[bet.userId] = { amount: 0, userName, customId };
+                userWinnings[bet.userId] = { amount: 0, userName: userName, customId: customId };
             }
             userWinnings[bet.userId].amount += winningAmount;
             
             const winTransactionRef = firestore.collection('transactions').doc();
             transaction.set(winTransactionRef, {
-                userId: bet.userId, userName, customId,
-                type: 'Win', amount: winningAmount, status: 'Completed',
+                userId: bet.userId,
+                userName: userName,
+                customId: customId,
+                type: 'Win',
+                amount: winningAmount,
+                status: 'Completed',
                 date: new Date().toISOString(),
                 description: `Won ${bet.gameType} on ${bet.market} with number ${bet.number}`,
                 betId: doc.id
@@ -432,6 +440,3 @@ export async function deleteKalyanResult(resultId: string) {
         throw new Error(error.message || "Failed to delete kalyan result.");
     }
 }
-    
-
-    

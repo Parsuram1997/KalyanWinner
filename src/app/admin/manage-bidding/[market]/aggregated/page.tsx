@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -51,7 +52,6 @@ const AggregatedBidsTable = ({ bids, isLoading }: { bids: AggregatedBid[], isLoa
                 acc[bid.gameType] = [];
             }
             acc[bid.gameType].push(bid);
-            // Sort bids within each game type by number
             acc[bid.gameType].sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
             return acc;
         }, {} as Record<string, AggregatedBid[]>);
@@ -130,8 +130,6 @@ export default function AggregatedBiddingDetailsPage() {
 
     const marketName = marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     
-    // Fetch all relevant bets for the market, without a date filter in the query.
-    // We now fetch Placed, Won, and Lost to ensure the report is complete even after results.
     const betsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(
@@ -143,7 +141,6 @@ export default function AggregatedBiddingDetailsPage() {
 
     const { data: allBets, isLoading } = useCollection<Bet>(betsQuery, { skip: !betsQuery });
     
-    // Filter bets by the selected date on the client-side.
     const filteredBetsByDate = useMemo(() => {
         if (!allBets || !date) return [];
         const interval = { start: startOfDay(date), end: endOfDay(date) };
@@ -168,7 +165,12 @@ export default function AggregatedBiddingDetailsPage() {
         return Object.entries(bidMap)
             .map(([key, data]) => {
                  const numberPart = key.substring(data.gameType.length + 1);
-                 return { number: numberPart, ...data };
+                 return {
+                    number: numberPart,
+                    gameType: data.gameType,
+                    totalAmount: data.totalAmount,
+                    totalBids: data.totalBids
+                 };
             })
             .sort((a, b) => b.totalAmount - a.totalAmount);
     };
@@ -181,7 +183,6 @@ export default function AggregatedBiddingDetailsPage() {
             if (openSessionGameTypes.includes(bet.gameType) && openSessionSessions.includes(bet.session)) {
                 return true;
             }
-            // All Sangam bets are part of the Open Session logic
             if (bet.gameType.includes('Sangam')) {
                 return true;
             }

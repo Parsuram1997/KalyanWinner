@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,11 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
-import { signInWithEmailAndPassword, sendPasswordResetEmail, UserCredential } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail, onIdTokenChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader } from "lucide-react";
-
 
 type View = "login" | "forgot_password";
 
@@ -27,19 +26,29 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState<View>("login");
 
+  useEffect(() => {
+    if (!auth) return;
+
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
+      if (user) {
+        const idToken = await user.getIdToken();
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ idToken }),
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
+
     const handleForgotPassword = async () => {
     setIsLoading(true);
-    if (!auth) {
-      toast({ variant: "destructive", title: "Authentication service not ready." });
-      setIsLoading(false);
-      return;
-    }
-     if (!email) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-      });
+    if (!auth || !email) {
+      toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
       setIsLoading(false);
       return;
     }
@@ -48,12 +57,11 @@ export default function AdminLoginPage() {
       await sendPasswordResetEmail(auth, email);
       toast({
         title: "Password Reset Email Sent",
-        description: `A link to reset your password has been sent to ${email}. Please also check your spam folder.`,
+        description: `A link to reset your password has been sent to ${email}.`,
       });
       setView("login");
       setEmail("");
     } catch (error: any) {
-      console.error(error);
       toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the email is correct." });
     } finally {
       setIsLoading(false);
@@ -65,11 +73,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     if (!auth || !firestore) {
-        toast({
-            variant: "destructive",
-            title: "Authentication not ready",
-            description: "Please wait a moment and try again.",
-        });
+        toast({ variant: "destructive", title: "Authentication not ready" });
         setIsLoading(false);
         return;
     }
@@ -77,7 +81,6 @@ export default function AdminLoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
       const userDocRef = doc(firestore, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
@@ -99,17 +102,9 @@ export default function AdminLoginPage() {
               createdAt: serverTimestamp(),
             });
             userRole = "Admin";
-            toast({
-              title: "Admin Profile Created",
-              description: "Your admin profile has been set up automatically.",
-            });
+            toast({ title: "Admin Profile Created" });
           } catch (error) {
-            console.error("Error creating admin profile in Firestore:", error);
-            toast({
-              variant: "destructive",
-              title: "Database Error",
-              description: "Could not create your admin profile in the database.",
-            });
+            toast({ variant: "destructive", title: "Database Error", description: "Could not create admin profile." });
             auth.signOut();
             setIsLoading(false);
             return;
@@ -117,17 +112,10 @@ export default function AdminLoginPage() {
       }
 
       if (userRole === 'Admin') {
-        toast({
-          title: "Login Successful",
-          description: "Welcome, Admin!",
-        });
+        toast({ title: "Login Successful", description: "Welcome, Admin!" });
         router.push("/admin/dashboard");
       } else {
-        toast({
-          variant: "destructive",
-          title: "Access Denied",
-          description: "You do not have permission to access the admin panel.",
-        });
+        toast({ variant: "destructive", title: "Access Denied", description: "You do not have permission." });
         await auth.signOut();
       }
 
@@ -136,8 +124,8 @@ export default function AdminLoginPage() {
         variant: "destructive",
         title: "Login Failed",
         description: error.code === 'auth/invalid-credential' 
-          ? "Invalid email or password. Please try again."
-          : error.message || "An unexpected error occurred during login.",
+          ? "Invalid email or password."
+          : "An unexpected error occurred.",
       });
     } finally {
       setIsLoading(false);
@@ -149,89 +137,45 @@ export default function AdminLoginPage() {
       <div className="relative hidden items-center justify-center bg-gradient-to-br from-primary/80 via-primary to-secondary p-10 text-white lg:flex">
         <div className="relative z-10 w-full max-w-md rounded-xl bg-black/20 p-8 text-center backdrop-blur-sm">
             <h2 className="text-4xl font-bold tracking-tight">Kalyan Winner Admin Panel</h2>
-            <p className="mt-4 text-lg text-primary-foreground/90">
-                This is your central hub for managing the entire Kalyan Winner platform. Access powerful tools for user management, transaction monitoring, result declaration, and application settings to ensure smooth and secure operations.
-            </p>
+            <p className="mt-4 text-lg text-primary-foreground/90">Manage users, transactions, results, and application settings.</p>
         </div>
       </div>
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
            <CardHeader className="text-center">
-             <div className="flex justify-center mb-4">
-               <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} />
-             </div>
+               <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="mx-auto mb-4" />
              <CardTitle className="text-3xl font-bold tracking-tight">{view === 'login' ? 'Admin Login' : 'Reset Password'}</CardTitle>
-             <CardDescription>{view === 'login' ? 'Enter your credentials to access your dashboard.' : 'Enter your email to receive a password reset link.'}</CardDescription>
+             <CardDescription>{view === 'login' ? 'Enter credentials to access your dashboard.' : 'Enter your email for a password reset link.'}</CardDescription>
            </CardHeader>
             <CardContent>
             {view === 'login' ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@example.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
-                    className="h-12 text-base"
-                    />
+                    <Input id="email" type="email" placeholder="admin@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} className="h-12" />
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-center">
                         <Label htmlFor="password">Password</Label>
-                         <Button variant="link" type="button" onClick={() => setView('forgot_password')} className="ml-auto px-0 h-auto text-sm">
-                            Forgot password?
-                        </Button>
+                         <Button variant="link" type="button" onClick={() => setView('forgot_password')} className="ml-auto px-0 h-auto text-sm">Forgot password?</Button>
                     </div>
-                    <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                    className="h-12 text-base"
-                    />
+                    <Input id="password" type="password" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} className="h-12" />
                 </div>
-                <Button type="submit" className="w-full !mt-8 h-12 text-base" disabled={isLoading}>
-                    {isLoading ? (
-                        <>
-                            <Loader className="mr-2 h-4 w-4 animate-spin" />
-                            Authenticating...
-                        </>
-                    ) : 'Login to Your Account'}
-                </Button>
+                <Button type="submit" className="w-full !mt-8 h-12" disabled={isLoading}>{isLoading ? <><Loader className="mr-2 h-4 w-4 animate-spin" />Authenticating...</> : 'Login'}</Button>
                 </form>
             ) : (
                 <div className="space-y-4">
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="m@example.com"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            disabled={isLoading}
-                            className="h-12 text-base"
-                        />
+                        <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} className="h-12" />
                     </div>
-                    <Button onClick={handleForgotPassword} className="w-full h-12 text-base" disabled={isLoading}>
-                    {isLoading ? 'Sending Link...' : 'Send Password Reset Link'}
-                    </Button>
-                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12">
-                        Back to Login
-                    </Button>
+                    <Button onClick={handleForgotPassword} className="w-full h-12" disabled={isLoading}>{isLoading ? 'Sending...' : 'Send Reset Link'}</Button>
+                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12">Back to Login</Button>
                 </div>
             )}
            </CardContent>
             <CardFooter className="text-center text-sm">
-             <Link href="/" className="w-full font-semibold text-primary underline-offset-4 hover:underline">Go to Home</Link>
+             <Link href="/" className="w-full font-semibold text-primary hover:underline">Go to Home</Link>
           </CardFooter>
         </Card>
       </div>
