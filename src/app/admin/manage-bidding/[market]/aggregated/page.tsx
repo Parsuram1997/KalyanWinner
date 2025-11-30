@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -176,7 +175,7 @@ export default function AggregatedBiddingDetailsPage() {
     }, [filteredBetsByDate]);
     
     const closeSessionBids = useMemo(() => {
-        const closeBets = filteredBetsByDate?.filter(bet => bet.session === 'Close');
+        const closeBets = filteredBetsByDate?.filter(bet => bet.session === 'Close' || bet.session === 'Jodi');
         return aggregateBids(closeBets);
     }, [filteredBetsByDate]);
 
@@ -218,8 +217,8 @@ export default function AggregatedBiddingDetailsPage() {
         <CardContent className="p-4 sm:p-6">
             <Tabs defaultValue="open">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="open">Open Session</TabsTrigger>
-                    <TabsTrigger value="close">Close Session</TabsTrigger>
+                    <TabsTrigger value="open">Open Session View</TabsTrigger>
+                    <TabsTrigger value="close">Close Session View</TabsTrigger>
                 </TabsList>
                 <TabsContent value="open" className="mt-4">
                     <AggregatedBidsTable bids={openSessionBids} isLoading={isLoading} />
