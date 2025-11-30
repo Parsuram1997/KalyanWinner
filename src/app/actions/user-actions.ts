@@ -76,7 +76,6 @@ export async function createUser(userData: {
         district: userData.district,
         depositBalance: 0,
         winningBalance: 0,
-        commissionBalance: 0,
         totalDeposits: 0,
         totalWithdrawals: 0,
         status: "Active",
@@ -126,6 +125,9 @@ export async function updateUser(userId: string, userData: {
     if (Object.keys(updateData).length > 0) {
       await firestore.collection("users").doc(userId).update(updateData);
     }
+
+    revalidatePath('/admin/users');
+    revalidatePath(`/admin/users/${userId}`);
 
     return { success: true };
   } catch (error: any) {
@@ -207,12 +209,17 @@ export async function deleteUser(userId: string) {
 
         await Promise.all([deletePromise, firestorePromise]);
 
+        revalidatePath('/admin/users');
+        revalidatePath('/admin/admins');
+
         return { success: true };
     } catch (error: any) {
         console.error("Error deleting user:", error);
         if (error.code === 'auth/user-not-found') {
             try {
                 await firestore.collection("users").doc(userId).delete();
+                revalidatePath('/admin/users');
+                revalidatePath('/admin/admins');
                 return { success: true, message: "User already deleted from Auth, cleaned up Firestore." };
             } catch (firestoreError: any) {
                 console.error("Error deleting user from Firestore after Auth-not-found error:", firestoreError);
