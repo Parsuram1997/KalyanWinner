@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ import { useParams } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, writeBatch, serverTimestamp, FieldValue, increment, collection, query, where, limit, getDocs, getDoc } from "firebase/firestore";
+import { doc, writeBatch, serverTimestamp, FieldValue, increment, collection, query, where, limit, getDocs, getDoc, onSnapshot } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
