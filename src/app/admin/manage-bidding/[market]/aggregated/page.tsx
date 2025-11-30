@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -173,11 +172,17 @@ export default function AggregatedBiddingDetailsPage() {
     };
 
     const openSessionBets = useMemo(() => {
-        return filteredBetsByDate?.filter(bet => bet.session === 'Open') || [];
+        const openSessionGameTypes = ['Single Digit', 'Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam'];
+        return filteredBetsByDate?.filter(bet => 
+            (openSessionGameTypes.includes(bet.gameType) && bet.session === 'Open') ||
+            bet.session === 'Jodi' ||
+            // Also include panna bets from the open session
+            (bet.gameType.includes('Panna') && bet.session === 'Open')
+        ) || [];
     }, [filteredBetsByDate]);
     
     const closeSessionBets = useMemo(() => {
-        return filteredBetsByDate?.filter(bet => bet.session === 'Close' || bet.session === 'Jodi') || [];
+        return filteredBetsByDate?.filter(bet => bet.session === 'Close') || [];
     }, [filteredBetsByDate]);
 
     const openSessionAggregated = useMemo(() => aggregateBids(openSessionBets), [openSessionBets]);
