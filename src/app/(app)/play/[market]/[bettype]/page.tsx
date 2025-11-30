@@ -390,48 +390,29 @@ export default function PlaceBetPage() {
 
     const now = new Date();
     const openBiddingTime = parseTime(marketDetails.openBiddingTime);
-    const openResultTime = parseTime(marketDetails.openResultTime);
     const closeBiddingTime = parseTime(marketDetails.closeBiddingTime);
     const closeResultTime = parseTime(marketDetails.closeResultTime);
 
-    const openSessionBetTypes = ['Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam', 'Open'];
+    const openSessionBetTypes = ['Open', 'Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam'];
     const closeSessionBetTypes = ['Close'];
-    // Pannas can be for either session
     const dualSessionBetTypes = ['Single Panna', 'Double Panna', 'Triple Panna'];
-
+    
     let isDisabled = false;
     let text = `Place Bets (Total: ₹${totalBetAmount})`;
 
-    const isOpenResultDeclared = !!todaysResult?.openPanna;
-
-    if (openSessionBetTypes.includes(betTypeName)) {
-        if (now >= openBiddingTime || isOpenResultDeclared) {
-            text = "Betting Closed";
-            isDisabled = true;
-        }
-    } else if (closeSessionBetTypes.includes(betTypeName)) {
-        if (!isOpenResultDeclared || now < openResultTime || now >= closeBiddingTime) {
-            text = "Betting Closed";
-            isDisabled = true;
-        }
-    } else if (dualSessionBetTypes.includes(betTypeName)) {
-        // For pannas, if open result is out, it's a "Close" panna. Otherwise, it's an "Open" panna.
-        if (isOpenResultDeclared) { // Acting as Close Panna
-            if (now < openResultTime || now >= closeBiddingTime) {
-                text = "Betting Closed";
-                isDisabled = true;
-            }
-        } else { // Acting as Open Panna
-            if (now >= openBiddingTime) {
-                text = "Betting Closed";
-                isDisabled = true;
-            }
-        }
-    }
-    
     if (now > closeResultTime) {
          text = "Market Closed For Today";
          isDisabled = true;
+    } else if (closeSessionBetTypes.includes(betTypeName)) {
+        if (now >= closeBiddingTime) {
+            text = "Betting Closed";
+            isDisabled = true;
+        }
+    } else { // For Open, Jodi, Sangams, and Pannas (when treated as Open)
+        if (now >= openBiddingTime) {
+            text = "Betting Closed";
+            isDisabled = true;
+        }
     }
 
     setButtonState({ text, disabled: isDisabled, loading: false });
@@ -520,14 +501,17 @@ export default function PlaceBetPage() {
         });
         
         let session: 'Open' | 'Close' | 'Jodi';
-        const openSessionBetTypes = ['Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam', 'Open'];
+        const openSessionBetTypes = ['Open', 'Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam'];
+        const dualSessionBetTypes = ['Single Panna', 'Double Panna', 'Triple Panna'];
 
-        if (openSessionBetTypes.includes(betTypeName)) {
-          session = 'Open'; // All these are considered "Open" session for betting purposes
-        } else if (betTypeName === 'Close') {
-          session = 'Close';
-        } else { // Handles Pannas
+        if (betTypeName === 'Close') {
+            session = 'Close';
+        } else if (openSessionBetTypes.includes(betTypeName)) {
+            session = 'Open';
+        } else if (dualSessionBetTypes.includes(betTypeName)) {
             session = isOpenResultDeclared ? 'Close' : 'Open';
+        } else {
+             session = 'Open'; // Default fallback
         }
 
 

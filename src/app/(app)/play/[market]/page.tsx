@@ -31,6 +31,11 @@ type Result = {
     openPanna: string;
 };
 
+type Market = {
+  id: string;
+  closeBiddingTime: string;
+};
+
 export default function ChooseBetTypePage() {
   const params = useParams();
   const marketSlug = params.market as string;
@@ -39,9 +44,26 @@ export default function ChooseBetTypePage() {
 
   const [todaysResult, setTodaysResult] = useState<Result | null | undefined>(undefined); // undefined means not yet fetched
   const [isLoadingResult, setIsLoadingResult] = useState(true);
+  const [marketDetails, setMarketDetails] = useState<Market | null>(null);
+  const [isLoadingMarket, setIsLoadingMarket] = useState(true);
 
   useEffect(() => {
     if (!firestore) return;
+
+    const fetchMarketDetails = async () => {
+        setIsLoadingMarket(true);
+        const marketQuery = query(collection(firestore, "markets"), where("name", "==", marketName), limit(1));
+        try {
+            const snapshot = await getDocs(marketQuery);
+            if (!snapshot.empty) {
+                setMarketDetails({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Market);
+            }
+        } catch (error) {
+            console.error("Error fetching market details:", error);
+        } finally {
+            setIsLoadingMarket(false);
+        }
+    };
 
     const fetchTodaysResult = async () => {
         setIsLoadingResult(true);
@@ -71,6 +93,7 @@ export default function ChooseBetTypePage() {
         }
     };
 
+    fetchMarketDetails();
     fetchTodaysResult();
   }, [firestore, marketName]);
 
@@ -91,15 +114,30 @@ export default function ChooseBetTypePage() {
   }
 
   const isDisabled = (betName: string) => {
+      // If market is closed for the day, disable all
+      if (marketDetails?.closeBiddingTime) {
+          const now = new Date();
+          const [hours, minutes] = marketDetails.closeBiddingTime.split(':').map(Number);
+          const closeTime = new Date();
+          closeTime.setHours(hours, minutes, 0, 0);
+          if (now >= closeTime) return true;
+      }
+      
       // If open result has been declared, disable all "Open Session" bets
       if (todaysResult && todaysResult.openPanna) {
           const disabledAfterOpen = ['Jodi', 'Open Sangam', 'Full Sangam', 'Open', 'Close Sangam'];
           return disabledAfterOpen.includes(betName);
       }
-      return false; // If open result is not out, nothing is disabled based on this logic
+
+      // "Close" bet should NOT be disabled if open result is not out
+      if (betName === 'Close') {
+          return false;
+      }
+
+      return false; 
   };
   
-  const isLoading = isLoadingBetTypes || isLoadingResult;
+  const isLoading = isLoadingBetTypes || isLoadingResult || isLoadingMarket;
 
   return (
     <div className="flex flex-col gap-6">
