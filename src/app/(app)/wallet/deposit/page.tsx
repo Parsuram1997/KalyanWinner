@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/firebase";
 import { createTransaction } from "@/app/actions/transaction-actions";
 import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
-import { QRCodeSVG } from "qrcode.react";
+import QRCode from "react-qr-code";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Copy, Phone, CreditCard, ChevronRight, Landmark } from "lucide-react";
@@ -99,7 +99,7 @@ export default function DepositPage() {
   const watchedAmount = form.watch("amount");
   const numericAmount = Number(watchedAmount) || 0;
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
     if (!user) {
       toast({ variant: "destructive", title: "Not Authenticated" });
       return;
@@ -162,7 +162,7 @@ export default function DepositPage() {
 
   if (errorSettings) {
     return (
-      <Alert variant="destructive" className="max-w-md mx-auto">
+      <Alert variant="destructive">
         <Terminal className="h-4 w-4" />
         <AlertTitle>Configuration Error</AlertTitle>
         <AlertDescription>
@@ -210,26 +210,11 @@ export default function DepositPage() {
                         {hasUpiDetails && (
                             <TabsContent value="upi" className="mt-4">
                                 <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
-                                {!isMobile && (
+                                {!isMobile && upiUrl && (
                                     <>
                                         <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
                                         <div className="p-4 bg-white rounded-md shadow-inner">
-                                            <QRCodeSVG
-                                                value={upiUrl}
-                                                size={180}
-                                                bgColor={"#ffffff"}
-                                                fgColor={"#000000"}
-                                                level={"H"} // High error correction
-                                                includeMargin={false}
-                                                imageSettings={{
-                                                    src: "/kalyanwinnerfavicon.png",
-                                                    x: undefined,
-                                                    y: undefined,
-                                                    height: 32,
-                                                    width: 32,
-                                                    excavate: true,
-                                                }}
-                                            />
+                                            <QRCode value={upiUrl} size={180} />
                                         </div>
                                     </>
                                 )}
