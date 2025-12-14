@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/firebase";
 import { createTransaction } from "@/app/actions/transaction-actions";
 import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
-import { QRCodeSVG } from 'react-qr-code';
+import QRCodeSVG from 'react-qr-code';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Copy, Phone, CreditCard, ChevronRight, Landmark } from "lucide-react";
