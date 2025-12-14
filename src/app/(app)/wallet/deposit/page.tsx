@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/firebase";
 import { createTransaction } from "@/app/actions/transaction-actions";
 import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG } from 'react-qr-code';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Copy, Phone, CreditCard, ChevronRight, Landmark } from "lucide-react";
@@ -56,7 +56,9 @@ export default function DepositPage() {
     utr: z.string().min(12, "UTR/Transaction ID must be at least 12 characters").max(22, "UTR is too long"),
   });
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  type FormSchemaType = z.infer<typeof formSchema>;
+
+  const form = useForm<FormSchemaType>({
     resolver: zodResolver(formSchema),
     defaultValues: { amount: minDepositAmount, utr: "" },
     mode: "onChange",
@@ -99,7 +101,7 @@ export default function DepositPage() {
   const watchedAmount = form.watch("amount");
   const numericAmount = Number(watchedAmount) || 0;
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormSchemaType) => {
     if (!user) {
       toast({ variant: "destructive", title: "Not Authenticated" });
       return;
@@ -213,17 +215,10 @@ export default function DepositPage() {
                                 {!isMobile && upiUrl && (
                                     <>
                                         <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
-                                        <div className="p-4 bg-white rounded-md shadow-inner">
+                                        <div className="p-2 bg-white rounded-md shadow-inner">
                                             <QRCodeSVG
                                                 value={upiUrl}
                                                 size={180}
-                                                level={'H'}
-                                                imageSettings={{
-                                                    src: "/kalyanwinnerlogo.png",
-                                                    height: 30,
-                                                    width: 30,
-                                                    excavate: true,
-                                                }}
                                             />
                                         </div>
                                     </>
@@ -351,5 +346,3 @@ export default function DepositPage() {
     </div>
   );
 }
-
-    
