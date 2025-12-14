@@ -5,9 +5,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
   images: {
     remotePatterns: [
       {
@@ -46,3 +43,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+    

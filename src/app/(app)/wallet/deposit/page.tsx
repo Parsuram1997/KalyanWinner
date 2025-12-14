@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/firebase";
 import { createTransaction } from "@/app/actions/transaction-actions";
 import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
-import QRCode from "react-qr-code";
+import { QRCodeSVG } from 'qrcode.react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Copy, Phone, CreditCard, ChevronRight, Landmark } from "lucide-react";
@@ -99,7 +99,7 @@ export default function DepositPage() {
   const watchedAmount = form.watch("amount");
   const numericAmount = Number(watchedAmount) || 0;
 
-  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) {
       toast({ variant: "destructive", title: "Not Authenticated" });
       return;
@@ -214,7 +214,17 @@ export default function DepositPage() {
                                     <>
                                         <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
                                         <div className="p-4 bg-white rounded-md shadow-inner">
-                                            <QRCode value={upiUrl} size={180} />
+                                            <QRCodeSVG
+                                                value={upiUrl}
+                                                size={180}
+                                                level={'H'}
+                                                imageSettings={{
+                                                    src: "/kalyanwinnerlogo.png",
+                                                    height: 30,
+                                                    width: 30,
+                                                    excavate: true,
+                                                }}
+                                            />
                                         </div>
                                     </>
                                 )}
@@ -341,3 +351,5 @@ export default function DepositPage() {
     </div>
   );
 }
+
+    
