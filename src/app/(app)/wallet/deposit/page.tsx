@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { useUser } from "@/firebase";
 import { createTransaction } from "@/app/actions/transaction-actions";
 import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
-import QRCodeSVG from 'react-qr-code';
+import QRCode from 'react-qr-code';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Copy, Phone, CreditCard, ChevronRight, Landmark } from "lucide-react";
@@ -205,24 +205,14 @@ export default function DepositPage() {
 
                 {numericAmount >= minDepositAmount && (hasUpiDetails || hasBankDetails) && (
                     <Tabs defaultValue={hasUpiDetails ? "upi" : "bank"} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                           {hasUpiDetails && <TabsTrigger value="upi">UPI / QR</TabsTrigger>}
-                           {hasBankDetails && <TabsTrigger value="bank">Bank Transfer</TabsTrigger>}
+                        <TabsList className="grid w-full grid-cols-3">
+                           {hasUpiDetails && <TabsTrigger value="upi">UPI</TabsTrigger>}
+                           {hasUpiDetails && <TabsTrigger value="qr">QR</TabsTrigger>}
+                           {hasBankDetails && <TabsTrigger value="bank">Bank</TabsTrigger>}
                         </TabsList>
                         {hasUpiDetails && (
                             <TabsContent value="upi" className="mt-4">
-                                <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
-                                {!isMobile && upiUrl && (
-                                    <>
-                                        <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
-                                        <div className="p-2 bg-white rounded-md shadow-inner">
-                                            <QRCodeSVG
-                                                value={upiUrl}
-                                                size={180}
-                                            />
-                                        </div>
-                                    </>
-                                )}
+                               <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
                                 <div className="text-center w-full">
                                     <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
                                     <div
@@ -233,13 +223,29 @@ export default function DepositPage() {
                                     <Copy className="h-3 w-3" />
                                     </div>
                                 </div>
-                                {isMobile && (
-                                    <Button asChild className="w-full mt-2" type="button" disabled={currentStep > 1}>
-                                        <a href={upiUrl}>
-                                            <CreditCard className="mr-2 h-4 w-4"/> Pay with UPI
-                                        </a>
-                                    </Button>
-                                )}
+                                <Button asChild className="w-full mt-2" type="button" disabled={currentStep > 1}>
+                                    <a href={upiUrl}>
+                                        <CreditCard className="mr-2 h-4 w-4"/> Pay with UPI
+                                    </a>
+                                </Button>
+                                </div>
+                            </TabsContent>
+                        )}
+                        {hasUpiDetails && (
+                            <TabsContent value="qr" className="mt-4">
+                                <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
+                                  <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
+                                  <div className="p-2 bg-white rounded-md shadow-inner">
+                                    <QRCode
+                                      value={upiUrl}
+                                      size={180}
+                                      level={'H'}
+                                    />
+                                  </div>
+                                  <div className="text-center w-full">
+                                      <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
+                                      <p className="text-xs text-muted-foreground">To: {paymentSettings.payeeName}</p>
+                                  </div>
                                 </div>
                             </TabsContent>
                         )}
