@@ -130,9 +130,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col h-dvh">
-          <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-14 sm:px-6">
+          <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 bg-gradient-to-r from-blue-500 to-purple-600 px-4 sm:h-14 sm:px-6">
             <div className="flex items-center gap-2">
-              <SidebarTrigger />
+              <SidebarTrigger className="text-white" />
             </div>
             <div className="flex flex-1 items-center justify-end gap-2">
               <ThemeToggle />

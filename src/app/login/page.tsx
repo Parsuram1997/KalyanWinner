@@ -47,6 +47,23 @@ export default function LoginPage() {
     return () => unsubscribe();
   }, [auth]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (view === 'login') {
+        e.preventDefault();
+        const message = "Kya aap वाकई वापस जाना चाहते हैं?";
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [view]);
+
   const handleForgotPassword = async () => {
     setIsLoading(true);
     if (!auth || !email) {

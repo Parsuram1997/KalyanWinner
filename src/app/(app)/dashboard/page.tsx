@@ -86,74 +86,74 @@ const WalletCard = ({ isLoading, depositBalance, winningBalance, totalBalance }:
 );
 
 const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current }: { isLoading: boolean, latestResults: any[], api: CarouselApi | undefined, onCarouselApiSet: (api: CarouselApi) => void, current: number }) => (
-    <Card className="bg-gradient-to-tl from-secondary/20 to-background hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
+    <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
         <CardHeader>
-        <CardTitle className="text-base">Latest Results</CardTitle>
-        <CardDescription>Swipe to see results for all markets.</CardDescription>
+            <CardTitle className="text-base">Latest Results</CardTitle>
+            <CardDescription className="text-white/80">Swipe to see results for all markets.</CardDescription>
         </CardHeader>
         {isLoading ? (
-        <CardContent className="p-6 pt-0 flex-1 flex items-center justify-center">
-            <Skeleton className="h-24 w-full" />
-        </CardContent>
+            <CardContent className="p-6 pt-0 flex-1 flex items-center justify-center">
+                <Skeleton className="h-24 w-full bg-white/20" />
+            </CardContent>
         ) : latestResults.length > 0 ? (
-        <Carousel setApi={onCarouselApiSet} className="w-full">
-            <CarouselContent>
-            {latestResults.map((result) => (
-                <CarouselItem key={result.id}>
-                <CardContent className="p-6 pt-0 flex items-center justify-center">
-                    {result.jodi === 'L' ? (
-                        <div className="flex flex-col items-center gap-2 text-center">
-                            <p className="text-base font-semibold">{result.marketName}</p>
-                            <Badge variant="destructive" className="text-sm">HOLIDAY</Badge>
-                            <p className="text-xs text-muted-foreground">{new Date(result.date).toLocaleDateString('en-GB')}</p>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center gap-2 w-full">
-                        <div className="text-center">
-                            <p className="text-xs text-muted-foreground">{new Date(result.date).toLocaleDateString('en-GB')}</p>
-                        </div>
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="flex flex-col items-center text-center">
-                                <span className="text-xs text-muted-foreground">Open</span>
-                                <span className="text-xl font-bold tracking-tight">{result.openPanna}</span>
-                            </div>
-                            <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground text-center">
-                                <span className="text-2xl font-bold tracking-tight">{result.jodi}</span>
-                                <span className="text-[10px] font-medium leading-tight">{result.marketName}</span>
-                            </div>
-                            <div className="flex flex-col items-center text-center">
-                                <span className="text-xs text-muted-foreground">Close</span>
-                                <span className="text-xl font-bold tracking-tight">{result.closePanna}</span>
-                            </div>
-                        </div>
-                        </div>
-                    )}
-                </CardContent>
-                </CarouselItem>
-            ))}
-            </CarouselContent>
-            <div className="flex justify-center gap-2 mt-2">
-            {latestResults.map((_, index) => (
-                <button
-                key={index}
-                onClick={() => api?.scrollTo(index)}
-                className={cn(
-                    "h-2 w-2 rounded-full transition-colors",
-                    current === index ? "bg-primary" : "bg-muted"
-                )}
-                />
-            ))}
-            </div>
-        </Carousel>
+            <Carousel setApi={onCarouselApiSet} className="w-full">
+                <CarouselContent>
+                    {latestResults.map((result) => (
+                        <CarouselItem key={result.id}>
+                            <CardContent className="p-6 pt-0 flex items-center justify-center">
+                                {result.jodi === 'L' ? (
+                                    <div className="flex flex-col items-center gap-2 text-center">
+                                        <p className="text-base font-semibold">{result.marketName}</p>
+                                        <Badge variant="destructive" className="text-sm">HOLIDAY</Badge>
+                                        <p className="text-xs text-white/70">{new Date(result.date).toLocaleDateString('en-GB')}</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-2 w-full">
+                                        <div className="text-center">
+                                            <p className="text-xs text-white/70">{new Date(result.date).toLocaleDateString('en-GB')}</p>
+                                        </div>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="flex flex-col items-center text-center">
+                                                <span className="text-xs text-white/70">Open</span>
+                                                <span className="text-xl font-bold tracking-tight">{result.openPanna}</span>
+                                            </div>
+                                            <div className="flex flex-col items-center rounded-md bg-black/20 px-3 py-1 text-white text-center">
+                                                <span className="text-2xl font-bold tracking-tight">{result.jodi}</span>
+                                                <span className="text-[10px] font-medium leading-tight">{result.marketName}</span>
+                                            </div>
+                                            <div className="flex flex-col items-center text-center">
+                                                <span className="text-xs text-white/70">Close</span>
+                                                <span className="text-xl font-bold tracking-tight">{result.closePanna}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <div className="flex justify-center gap-2 mt-2">
+                    {latestResults.map((_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => api?.scrollTo(index)}
+                            className={cn(
+                                "h-2 w-2 rounded-full transition-colors",
+                                current === index ? "bg-white" : "bg-white/50"
+                            )}
+                        />
+                    ))}
+                </div>
+            </Carousel>
         ) : (
             <CardContent className="p-6 pt-0 flex-1 flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">No recent results found.</p>
+                <p className="text-sm text-white/80">No recent results found.</p>
             </CardContent>
         )}
         <CardFooter className="mt-auto pt-4">
-        <Button variant="outline" size="sm" className="w-full" asChild>
-            <Link href="/results">View All Results</Link>
-        </Button>
+            <Button variant="secondary" size="sm" className="w-full" asChild>
+                <Link href="/results">View All Results</Link>
+            </Button>
         </CardFooter>
     </Card>
 );

@@ -68,16 +68,16 @@ export function UserNav() {
   }
 
   return (
-    <div className="flex w-full flex-col gap-2 rounded-md border p-2">
+    <div className="flex w-full flex-col gap-2 rounded-md border border-white/20 p-2">
         <div className="flex items-center gap-3">
             <div className="text-xs">
-                <p className="font-semibold text-foreground truncate">{userData?.name || 'User'}</p>
-                <p className="text-muted-foreground">{userData?.customId}</p>
-                 <p className="text-muted-foreground truncate">{userData?.email}</p>
-                <p className="text-muted-foreground">{userData?.mobile}</p>
+                <p className="font-semibold text-white truncate">{userData?.name || 'User'}</p>
+                <p className="text-white/80">{userData?.customId}</p>
+                 <p className="text-white/80 truncate">{userData?.email}</p>
+                <p className="text-white/80">{userData?.mobile}</p>
             </div>
         </div>
-        <Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
+        <Button size="sm" onClick={handleLogout} className="w-full bg-transparent text-white border border-white/20 hover:bg-white/10 hover:text-white">
             <LogOut className="mr-2 h-4 w-4"/>
             Log out
         </Button>
