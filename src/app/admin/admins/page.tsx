@@ -44,7 +44,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { createUser, deleteUser, updateUser } from "@/app/actions/user-actions";
@@ -65,7 +64,6 @@ export default function ManageAdminsPage() {
   const { data: admins, isLoading: isAdminsLoading } = useCollection<any>(adminsQuery, { skip: !firestore });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState("All");
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<any | null>(null);
@@ -134,7 +132,6 @@ export default function ManageAdminsPage() {
 
   const filteredAdmins = useMemo(() => {
     let filtered = admins || [];
-    if (filter !== "All") filtered = filtered.filter(admin => admin.status === filter);
     if (searchTerm) {
       filtered = filtered.filter(admin =>
           admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -142,7 +139,7 @@ export default function ManageAdminsPage() {
       );
     }
     return filtered;
-  }, [admins, searchTerm, filter]);
+  }, [admins, searchTerm]);
   
   const totalPages = Math.ceil(filteredAdmins.length / ADMINS_PER_PAGE);
 
@@ -233,13 +230,6 @@ export default function ManageAdminsPage() {
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
             </div>
-            <Tabs defaultValue="All" onValueChange={(value) => { setFilter(value); setCurrentPage(1); }} className="w-full sm:w-auto">
-                <TabsList className="w-full bg-black/20">
-                    {["All", "Active", "Suspended", "Inactive"].map(tab => (
-                         <TabsTrigger key={tab} value={tab} className="px-2 text-white/80 data-[state=active]:bg-white data-[state=active]:text-black">{tab}</TabsTrigger>
-                    ))}
-                </TabsList>
-            </Tabs>
           </div>
           
           <div className="hidden md:block rounded-md border border-white/20">
