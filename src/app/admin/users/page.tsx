@@ -20,7 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, Eye, Trash, Edit } from "lucide-react";
+import { PlusCircle, Search, Eye, Trash, Edit, CircleDollarSign } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +50,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { createUser, deleteUser, updateUser } from "@/app/actions/user-actions";
+import { manualDeposit } from "@/app/actions/transaction-actions";
 import { states, districts } from "@/lib/locations";
 import { cn } from "@/lib/utils";
 
@@ -69,11 +70,12 @@ export default function ManageUsersPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("All");
-  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isAddUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [isDepositDialogOpen, setDepositDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   
   const [editName, setEditName] = useState('');
@@ -114,7 +116,7 @@ export default function ManageUsersPage() {
 
     try {
       await createUser(newUser);
-      setDialogOpen(false);
+      setAddUserDialogOpen(false);
       toast({ title: "User Added", description: `${newUser.name} has been added.` });
       form.reset();
       setSelectedState(null);
@@ -154,6 +156,30 @@ export default function ManageUsersPage() {
     }
   };
 
+  const handleManualDeposit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    const formData = new FormData(e.currentTarget);
+    const amount = parseFloat(formData.get('amount') as string);
+    const remarks = formData.get('remarks') as string;
+
+    if (isNaN(amount) || amount <= 0) {
+        toast({ variant: "destructive", title: "Invalid Amount", description: "Please enter a valid positive amount." });
+        return;
+    }
+
+    try {
+        const result = await manualDeposit(selectedUser.id, amount, remarks);
+        if (result.success) {
+            toast({ title: "Deposit Successful", description: result.message });
+            setDepositDialogOpen(false);
+        }
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Deposit Failed", description: error.message });
+    }
+  };
+
   const filteredUsers = useMemo(() => {
     let filtered = users || [];
     if (filter !== "All") filtered = filtered.filter(user => user.status === filter);
@@ -179,6 +205,11 @@ export default function ManageUsersPage() {
     setEditDialogOpen(true);
   }
 
+  const openDepositDialog = (user: any) => {
+    setSelectedUser(user);
+    setDepositDialogOpen(true);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
@@ -189,7 +220,7 @@ export default function ManageUsersPage() {
                     Manage all registered users in the application.
                 </CardDescription>
             </div>
-             <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+             <Dialog open={isAddUserDialogOpen} onOpenChange={setAddUserDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full sm:w-auto shrink-0 bg-white text-primary hover:bg-white/90">
                     <PlusCircle className="h-4 w-4 mr-2" />
@@ -245,10 +276,11 @@ export default function ManageUsersPage() {
                     <TableCell className="py-1"><div className="text-xs">{user.state}</div><div className="text-white/70 text-xs">{user.district}</div></TableCell>
                     <TableCell className="text-xs py-1 font-mono">₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(0)}</TableCell>
                     <TableCell className="py-1"><Badge className={cn("text-xs", user.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>{user.status}</Badge></TableCell>
-                    <TableCell className="flex gap-2 py-1">
-                       <Button variant="outline" size="icon" asChild className="bg-transparent text-white hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link></Button>
-                       <Button variant="outline" size="icon" onClick={() => openEditDialog(user)} className="bg-transparent text-white hover:bg-white/10"><Edit className="h-4 w-4" /></Button>
-                       <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+                    <TableCell className="flex gap-1 py-1">
+                       <Button variant="outline" size="icon" asChild className="bg-transparent text-white hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-3 w-3" /></Link></Button>
+                       <Button variant="outline" size="icon" onClick={() => openDepositDialog(user)} className="bg-transparent text-white hover:bg-white/10"><CircleDollarSign className="h-3 w-3" /></Button>
+                       <Button variant="outline" size="icon" onClick={() => openEditDialog(user)} className="bg-transparent text-white hover:bg-white/10"><Edit className="h-3 w-3" /></Button>
+                       <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash className="h-3 w-3" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -272,9 +304,10 @@ export default function ManageUsersPage() {
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2 p-4 pt-2 border-t border-white/20">
-                    <Button variant="outline" size="icon" asChild className="bg-transparent hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link></Button>
-                    <Button variant="outline" size="icon" onClick={() => openEditDialog(user)} className="bg-transparent hover:bg-white/10"><Edit className="h-4 w-4" /></Button>
-                    <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+                    <Button variant="outline" size="sm" asChild className="bg-transparent hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4 mr-1" />View</Link></Button>
+                    <Button variant="outline" size="sm" onClick={() => openDepositDialog(user)} className="bg-transparent hover:bg-white/10"><CircleDollarSign className="h-4 w-4 mr-1" />Deposit</Button>
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(user)} className="bg-transparent hover:bg-white/10"><Edit className="h-4 w-4 mr-1" />Edit</Button>
+                    <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-1" />Delete</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
                 </CardFooter>
               </Card>
             ))}
@@ -310,6 +343,30 @@ export default function ManageUsersPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isDepositDialogOpen} onOpenChange={setDepositDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Manual Deposit for {selectedUser?.name}</DialogTitle>
+                <DialogDescription>Manually add funds to this user's deposit balance.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleManualDeposit} className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="amount" className="text-right">Amount (₹)</Label>
+                    <Input id="amount" name="amount" type="number" className="col-span-3" required min="1" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="remarks" className="text-right">Remarks</Label>
+                    <Input id="remarks" name="remarks" className="col-span-3" placeholder="e.g., Cash received" />
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
+                    <Button type="submit">Confirm Deposit</Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

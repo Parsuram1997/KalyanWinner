@@ -32,7 +32,6 @@ import { UserNav } from "@/components/user-nav";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 
@@ -162,15 +161,15 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         </Sidebar>
         <SidebarInset>
             <div className="flex flex-col h-dvh">
-            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 border-b bg-gradient-to-r from-blue-600 to-purple-700 px-4 text-white backdrop-blur-sm sm:h-14 sm:px-6">
+            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 bg-gradient-to-r from-blue-600 to-purple-700 px-4 sm:h-14 sm:px-6">
                 <div className="flex items-center gap-2">
-                <SidebarTrigger className="text-white"/>
+                    <SidebarTrigger className="text-white"/>
                 </div>
-                <div className="flex flex-1 items-center justify-end gap-2">
-                <ThemeToggle />
+                 <div className="flex flex-1 items-center justify-end gap-2">
+                    {/* <ThemeToggle /> */}
                 </div>
             </header>
-            <main className="flex-1 overflow-auto p-4 sm:p-6 min-w-0">{children}</main>
+            <main className="flex-1 overflow-auto p-4 sm:p-6 min-w-0 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
             </div>
         </SidebarInset>
         </SidebarProvider>
@@ -199,8 +198,8 @@ function AdminAuthLayout({ children }: { children: React.ReactNode }) {
 
   if (isUserLoading || isUserDataLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Skeleton className="h-20 w-20 rounded-full" />
+      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
+        <Skeleton className="h-20 w-20 rounded-full bg-white/10" />
       </div>
     );
   }
