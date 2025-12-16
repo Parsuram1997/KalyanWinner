@@ -43,69 +43,69 @@ export default function GameTimingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-white">
             <Clock className="h-6 w-6" />
             <span>Market Schedule</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-white/80">
             All timings are in Indian Standard Time (IST).
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          <div className="rounded-md border overflow-x-auto">
+          <div className="rounded-md border border-white/20 overflow-x-auto">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead rowSpan={2} className="text-sm align-middle h-auto py-0 px-2">Market Name</TableHead>
-                  <TableHead colSpan={2} className="text-center text-sm border-b border-l h-auto py-0 px-2">Bidding Time</TableHead>
-                  <TableHead colSpan={2} className="text-center text-sm border-b border-l h-auto py-0 px-2">Result Time</TableHead>
+              <TableHeader className="border-b-0">
+                <TableRow className="border-b-white/20">
+                  <TableHead rowSpan={2} className="text-sm align-middle h-auto py-2 px-3 text-white">Market Name</TableHead>
+                  <TableHead colSpan={2} className="text-center text-sm border-b border-l border-white/20 h-auto py-2 px-3 text-white">Bidding Time</TableHead>
+                  <TableHead colSpan={2} className="text-center text-sm border-b border-l border-white/20 h-auto py-2 px-3 text-white">Result Time</TableHead>
                 </TableRow>
-                 <TableRow>
-                  <TableHead className="text-center text-sm border-l h-auto py-0 px-2">Open</TableHead>
-                  <TableHead className="text-center text-sm border-l h-auto py-0 px-2">Close</TableHead>
-                  <TableHead className="text-center text-sm border-l h-auto py-0 px-2">Open</TableHead>
-                  <TableHead className="text-center text-sm border-l h-auto py-0 px-2">Close</TableHead>
+                 <TableRow className="border-b-white/20">
+                  <TableHead className="text-center text-sm border-l border-white/20 h-auto py-2 px-3 text-white">Open</TableHead>
+                  <TableHead className="text-center text-sm border-l border-white/20 h-auto py-2 px-3 text-white">Close</TableHead>
+                  <TableHead className="text-center text-sm border-l border-white/20 h-auto py-2 px-3 text-white">Open</TableHead>
+                  <TableHead className="text-center text-sm border-l border-white/20 h-auto py-2 px-3 text-white">Close</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading
                   ? Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="py-0 px-2">
-                          <Skeleton className="h-5 w-24" />
+                      <TableRow key={i} className="border-0">
+                        <TableCell className="py-3 px-3">
+                          <Skeleton className="h-5 w-24 bg-white/20" />
                         </TableCell>
-                        <TableCell className="text-center py-0 px-2"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
-                        <TableCell className="text-center py-0 px-2"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
-                        <TableCell className="text-center py-0 px-2"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
-                         <TableCell className="text-center py-0 px-2"><Skeleton className="h-5 w-20 mx-auto" /></TableCell>
+                        <TableCell className="text-center py-3 px-3 border-l border-white/20"><Skeleton className="h-5 w-16 mx-auto bg-white/20" /></TableCell>
+                        <TableCell className="text-center py-3 px-3 border-l border-white/20"><Skeleton className="h-5 w-16 mx-auto bg-white/20" /></TableCell>
+                        <TableCell className="text-center py-3 px-3 border-l border-white/20"><Skeleton className="h-5 w-16 mx-auto bg-white/20" /></TableCell>
+                        <TableCell className="text-center py-3 px-3 border-l border-white/20"><Skeleton className="h-5 w-16 mx-auto bg-white/20" /></TableCell>
                       </TableRow>
                     ))
                   : markets?.map((market) => (
-                      <TableRow key={market.id}>
-                        <TableCell className="font-medium text-sm py-0 px-2">
+                      <TableRow key={market.id} className="border-0">
+                        <TableCell className="font-medium text-sm py-3 px-3 text-white/90">
                           {market.name}
                         </TableCell>
-                        <TableCell className="text-center font-semibold text-primary text-sm border-l py-0 px-2">
+                        <TableCell className="text-center font-semibold text-sm border-l border-white/20 py-3 px-3 text-green-300">
                           {market.openBiddingTime}
                         </TableCell>
-                        <TableCell className="text-center font-semibold text-destructive text-sm border-l py-0 px-2">
+                        <TableCell className="text-center font-semibold text-sm border-l border-white/20 py-3 px-3 text-orange-300">
                           {market.closeBiddingTime}
                         </TableCell>
-                         <TableCell className="text-center font-semibold text-primary text-sm border-l py-0 px-2">
+                         <TableCell className="text-center font-semibold text-sm border-l border-white/20 py-3 px-3 text-green-300">
                           {market.openResultTime}
                         </TableCell>
-                        <TableCell className="text-center font-semibold text-destructive text-sm border-l py-0 px-2">
+                        <TableCell className="text-center font-semibold text-sm border-l border-white/20 py-3 px-3 text-orange-300">
                           {market.closeResultTime}
                         </TableCell>
                       </TableRow>
                     ))}
                 {!isLoading && markets?.length === 0 && (
-                  <TableRow>
+                  <TableRow className="border-0">
                     <TableCell
                       colSpan={5}
-                      className="text-center text-muted-foreground py-0 px-2"
+                      className="text-center py-8 text-white/70"
                     >
                       No active markets found.
                     </TableCell>

@@ -28,10 +28,9 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 
@@ -130,15 +129,15 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col h-dvh">
-          <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 bg-gradient-to-r from-blue-500 to-purple-600 px-4 sm:h-14 sm:px-6">
+          <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 bg-gradient-to-r from-blue-600 to-purple-700 px-4 sm:h-14 sm:px-6">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="text-white" />
             </div>
             <div className="flex flex-1 items-center justify-end gap-2">
-              <ThemeToggle />
+              {/* <ThemeToggle /> */}
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-4 sm:p-6 min-w-0">{children}</main>
+          <main className="flex-1 overflow-auto p-4 sm:p-6 min-w-0 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
         </div>
       </SidebarInset>
     </SidebarProvider>
@@ -157,30 +156,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    // If auth state is determined and there's no user, redirect to login
     if (!isUserLoading && !user) {
       router.replace("/login");
     }
-    // If user data is loaded and the user doesn't have the 'User' role, redirect
     if (!isUserDataLoading && userData && userData.role !== 'User') {
         router.replace('/login');
     }
   }, [user, isUserLoading, userData, isUserDataLoading, router]);
 
-  // While checking auth or user data, show a loading state
   if (isUserLoading || isUserDataLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Skeleton className="h-20 w-20 rounded-full" />
+      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
+        <Skeleton className="h-20 w-20 rounded-full bg-white/10" />
       </div>
     );
   }
 
-  // If user is logged in and has the correct role, render the layout
   if (user && userData?.role === 'User') {
     return <AppLayoutContent>{children}</AppLayoutContent>;
   }
 
-  // In all other cases (e.g., redirecting), render nothing
   return null;
 }

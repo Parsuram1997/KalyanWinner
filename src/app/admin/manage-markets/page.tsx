@@ -48,6 +48,7 @@ import {
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { createMarket, deleteMarket, updateMarket } from "@/app/actions/market-actions";
+import { cn } from "@/lib/utils";
 
 type Market = {
     id: string;
@@ -126,21 +127,20 @@ export default function ManageMarketsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Store className="h-6 w-6" />
               <span>Manage Markets</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-white/80">
               Add, edit, or remove game markets. Timings are managed on the 'Manage Timings' page.
             </CardDescription>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
            <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto shrink-0 bg-white text-primary hover:bg-white/90">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Add Market
                   </Button>
@@ -163,41 +163,40 @@ export default function ManageMarketsPage() {
                   </form>
                 </DialogContent>
               </Dialog>
-            </div>
         </CardHeader>
         <CardContent>
           {/* Desktop Table */}
-          <div className="hidden md:block rounded-md border">
+          <div className="hidden md:block rounded-md border border-white/20 text-sm">
             <Table>
-              <TableHeader>
+              <TableHeader className="border-b border-white/20">
                 <TableRow>
-                  <TableHead>Market Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-white">Market Name</TableHead>
+                  <TableHead className="text-white">Status</TableHead>
+                  <TableHead className="text-right text-white">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                     <TableRow>
-                        <TableCell colSpan={3} className="text-center">Loading markets...</TableCell>
+                        <TableCell colSpan={3} className="text-center py-4 text-white/80">Loading markets...</TableCell>
                     </TableRow>
                 ) : markets?.map((market) => (
-                  <TableRow key={market.id}>
-                    <TableCell className="font-medium py-1">{market.name}</TableCell>
-                    <TableCell className="py-1">
+                  <TableRow key={market.id} className="border-white/20">
+                    <TableCell className="font-medium py-2">{market.name}</TableCell>
+                    <TableCell className="py-2">
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={market.status === "Active"}
                           onCheckedChange={() => toggleMarketStatus(market)}
                           aria-label={`Toggle ${market.name} status`}
                         />
-                        <Badge variant={market.status === "Active" ? "secondary" : "outline"}>
+                        <Badge className={cn("text-xs", market.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
                           {market.status}
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="flex gap-2 justify-end py-1">
-                       <Button variant="outline" size="icon" onClick={() => openEditDialog(market)}><Edit className="h-4 w-4" /></Button>
+                    <TableCell className="flex gap-2 justify-end py-2">
+                       <Button variant="outline" size="icon" onClick={() => openEditDialog(market)} className="bg-transparent text-white hover:bg-white/10"><Edit className="h-4 w-4" /></Button>
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
@@ -224,20 +223,20 @@ export default function ManageMarketsPage() {
           
            {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
-            {isLoading ? <p className="text-center text-muted-foreground">Loading markets...</p> : 
+            {isLoading ? <p className="text-center text-white/80 py-8">Loading markets...</p> : 
               markets?.map((market) => (
-                <Card key={market.id}>
+                <Card key={market.id} className="bg-black/20 border-white/20 text-white">
                   <CardHeader>
                       <div className="flex justify-between items-start">
                           <CardTitle>{market.name}</CardTitle>
-                          <Badge variant={market.status === "Active" ? "secondary" : "outline"}>
+                          <Badge className={cn("text-xs", market.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
                               {market.status}
                           </Badge>
                       </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="border-t border-white/20 pt-4">
                       <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status:</span>
+                          <span className="text-sm text-white/80">Toggle Status:</span>
                           <Switch
                             checked={market.status === "Active"}
                             onCheckedChange={() => toggleMarketStatus(market)}
@@ -245,8 +244,8 @@ export default function ManageMarketsPage() {
                           />
                       </div>
                   </CardContent>
-                  <CardFooter className="flex justify-end gap-2">
-                       <Button variant="outline" size="sm" onClick={() => openEditDialog(market)}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                  <CardFooter className="flex justify-end gap-2 border-t border-white/20 pt-4">
+                       <Button variant="outline" size="sm" onClick={() => openEditDialog(market)} className="bg-transparent text-white hover:bg-white/10"><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-2"/>Delete</Button>

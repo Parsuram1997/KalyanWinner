@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 
 type GameRate = {
@@ -25,6 +26,7 @@ type GameRate = {
   betAmount: number;
   payoutAmount: number;
 };
+
 
 type BetType = {
     id: string;
@@ -78,7 +80,7 @@ export default function SettingsPage() {
             }
         };
         fetchAllSettings();
-    }, [toast]);
+    }, []);
 
 
     const handleInputChange = (id: string, field: 'betAmount' | 'payoutAmount', value: string) => {
@@ -127,7 +129,6 @@ export default function SettingsPage() {
         e.preventDefault();
         toast({
             title: "Saving Settings...",
-            description: "Please wait while settings are being updated.",
         });
 
         const updatePromises = [];
@@ -164,22 +165,23 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
                 <Settings className="h-6 w-6" />
                 <span>App Settings</span>
             </CardTitle>
-            <CardDescription>Update various application settings like payout rates.</CardDescription>
+            <CardDescription className="text-white/80">Update various application settings like payout rates.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl mx-auto">
+          <form onSubmit={handleSubmit} className="space-y-8 max-w-3xl mx-auto">
             {/* Game Rates Section */}
             <div>
-                <div className="mb-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">Game Payout Rates</h3>
                     <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button type="button" variant="outline" className="w-full">
+                            <Button type="button" variant="outline" className="bg-white/10 text-white hover:bg-white/20 hover:text-white border-white/30">
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Add New Rate
                             </Button>
@@ -221,32 +223,32 @@ export default function SettingsPage() {
 
                 <div className="space-y-4">
                     {ratesLoading && Array.from({ length: 4 }).map((_, index) => (
-                        <Card key={index} className="p-4"><Skeleton className="h-10 w-full" /></Card>
+                        <Card key={index} className="p-4 bg-black/20 border-white/20"><Skeleton className="h-10 w-full bg-white/20" /></Card>
                     ))}
                     {rates?.map((rate) => (
-                    <Card key={rate.id} className="p-4">
+                    <Card key={rate.id} className="p-4 bg-black/20 border-white/20">
                         <div className="flex flex-col md:flex-row md:items-center md:gap-4">
-                            <Label htmlFor={`rate-${rate.id}`} className="text-base font-semibold mb-2 md:mb-0 md:w-1/3">{rate.name}</Label>
+                            <Label htmlFor={`rate-${rate.id}`} className="text-base font-semibold mb-2 md:mb-0 md:w-1/3 text-white">{rate.name}</Label>
                             <div className="flex flex-1 items-center gap-2">
                                 <Input 
                                     id={`betAmount-${rate.id}`} 
                                     type="number"
                                     value={rateValues[rate.id]?.betAmount || ''}
                                     onChange={(e) => handleInputChange(rate.id, 'betAmount', e.target.value)}
-                                    className="text-base" 
+                                    className="bg-black/30 border-white/20 text-white" 
                                     disabled
                                 />
-                                <span className="text-muted-foreground">ka</span>
+                                <span className="text-white/80">ka</span>
                                 <Input 
                                     id={`payoutAmount-${rate.id}`} 
                                     type="number"
                                     value={rateValues[rate.id]?.payoutAmount || ''}
                                     onChange={(e) => handleInputChange(rate.id, 'payoutAmount', e.target.value)}
-                                    className="text-base" 
+                                    className="bg-black/30 border-white/20 text-white" 
                                 />
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                                        <Button variant="ghost" size="icon" className="text-white/70 hover:text-red-500 hover:bg-red-500/10">
                                             <Trash className="h-4 w-4" />
                                         </Button>
                                     </AlertDialogTrigger>
@@ -268,47 +270,47 @@ export default function SettingsPage() {
                     </Card>
                     ))}
                      {!ratesLoading && rates?.length === 0 && (
-                        <p className="text-center text-muted-foreground pt-4">No game rates found. Click "Add New Rate" to get started.</p>
+                        <p className="text-center text-white/80 pt-4">No game rates found. Click "Add New Rate" to get started.</p>
                     )}
                 </div>
             </div>
 
-            <Separator className="my-8" />
+            <Separator className="my-8 bg-white/20" />
 
             {/* General Wallet Settings */}
             <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">General Wallet Settings</h3>
+                <h3 className="text-xl font-semibold flex items-center gap-2 mb-4">General Wallet Settings</h3>
                 <div className="space-y-4">
                     {settingsLoading ? (
                         <div className="space-y-4">
-                            <Skeleton className="h-20 w-full" />
-                            <Skeleton className="h-20 w-full" />
+                            <Skeleton className="h-20 w-full bg-white/20" />
+                            <Skeleton className="h-20 w-full bg-white/20" />
                         </div>
                     ) : (
                         <>
-                           <Card className="p-4">
+                           <Card className="p-4 bg-black/20 border-white/20">
                                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                                    <Label htmlFor="minDeposit" className="text-base font-semibold md:w-1/3">Minimum Deposit Amount (₹)</Label>
+                                    <Label htmlFor="minDeposit" className="text-base font-semibold md:w-2/5 text-white">Minimum Deposit (₹)</Label>
                                     <Input 
                                         id="minDeposit"
                                         type="number"
                                         placeholder="e.g., 100"
                                         value={minDeposit}
                                         onChange={(e) => setMinDeposit(e.target.value)}
-                                        className="flex-1"
+                                        className="flex-1 bg-black/30 border-white/20 text-white"
                                     />
                                 </div>
                            </Card>
-                           <Card className="p-4">
+                           <Card className="p-4 bg-black/20 border-white/20">
                                <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                                    <Label htmlFor="minWithdrawal" className="text-base font-semibold md:w-1/3">Minimum Withdrawal Amount (₹)</Label>
+                                    <Label htmlFor="minWithdrawal" className="text-base font-semibold md:w-2/5 text-white">Minimum Withdrawal (₹)</Label>
                                     <Input 
                                         id="minWithdrawal"
                                         type="number"
                                         placeholder="e.g., 500"
                                         value={minWithdrawal}
                                         onChange={(e) => setMinWithdrawal(e.target.value)}
-                                        className="flex-1"
+                                        className="flex-1 bg-black/30 border-white/20 text-white"
                                     />
                                 </div>
                             </Card>
@@ -319,7 +321,9 @@ export default function SettingsPage() {
 
 
             <div className="flex justify-center pt-8">
-                <Button type="submit" size="lg">Save All Settings</Button>
+                <Button type="submit" size="lg" className="bg-white text-primary hover:bg-white/90 font-bold">
+                   Save All Settings
+                </Button>
             </div>
           </form>
         </CardContent>

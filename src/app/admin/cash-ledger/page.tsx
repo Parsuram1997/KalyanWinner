@@ -87,22 +87,17 @@ export default function CashLedgerPage() {
   const isLoading = depositsLoading || withdrawalsLoading;
   
   const ledgerData = useMemo(() => {
-    // Combine all transactions first
     const allTransactions = [...(deposits || []), ...(withdrawals || [])];
-
     if (allTransactions.length === 0) return [];
     
-    // Sort all transactions by date ascending to calculate running balance correctly
     allTransactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    // Filter by the selected date on the client side
     const interval = { start: startOfDay(date), end: endOfDay(date) };
     const transactionsForSelectedDate = allTransactions.filter(txn => 
         isWithinInterval(new Date(txn.date), interval)
     );
 
     let runningBalance = 0;
-    // Calculate the starting balance for the selected day
     const transactionsBeforeSelectedDate = allTransactions.filter(txn => new Date(txn.date) < startOfDay(date));
     transactionsBeforeSelectedDate.forEach(txn => {
         runningBalance += (txn.type === 'Deposit' ? txn.amount : -txn.amount);
@@ -124,7 +119,6 @@ export default function CashLedgerPage() {
         };
     });
     
-    // Reverse the final array to show newest first in the UI for that day
     return entries.reverse();
   }, [deposits, withdrawals, date]);
 
@@ -139,19 +133,19 @@ export default function CashLedgerPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle>Cash Ledger</CardTitle>
-            <CardDescription>A complete ledger of all completed deposits and withdrawals for the selected date.</CardDescription>
+            <CardDescription className="text-white/80">A complete ledger of all completed deposits and withdrawals for the selected date.</CardDescription>
           </div>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-full sm:w-[280px] justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
+                  "w-full sm:w-[280px] justify-start text-left font-normal bg-black/20 border-white/20 hover:bg-black/30 text-white hover:text-white",
+                  !date && "text-white/80"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -170,34 +164,34 @@ export default function CashLedgerPage() {
         </CardHeader>
         <CardContent>
             {/* Desktop Table */}
-            <div className="hidden md:block rounded-md border">
+            <div className="hidden md:block rounded-md border border-white/20 text-sm">
             <Table>
-                <TableHeader>
+                <TableHeader className="border-b border-white/20">
                 <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>User & Description</TableHead>
-                    <TableHead className="text-right">Deposit</TableHead>
-                    <TableHead className="text-right">Withdrawal</TableHead>
-                    <TableHead className="text-right">Running Balance</TableHead>
+                    <TableHead className="py-2 text-white">Date</TableHead>
+                    <TableHead className="py-2 text-white">User & Description</TableHead>
+                    <TableHead className="text-right py-2 text-white">Deposit</TableHead>
+                    <TableHead className="text-right py-2 text-white">Withdrawal</TableHead>
+                    <TableHead className="text-right py-2 text-white">Running Balance</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                 {isLoading && Array.from({ length: 10 }).map((_, i) => (
-                    <TableRow key={i}>
-                        <TableCell colSpan={5} className="py-2"><Skeleton className="h-6 w-full" /></TableCell>
+                    <TableRow key={i} className="border-white/20">
+                        <TableCell colSpan={5} className="py-2"><Skeleton className="h-6 w-full bg-white/20" /></TableCell>
                     </TableRow>
                 ))}
                 {!isLoading && paginatedData.map((entry) => (
-                    <TableRow key={entry.id}>
-                        <TableCell className="text-xs py-2">{new Date(entry.date).toLocaleString('en-GB')}</TableCell>
+                    <TableRow key={entry.id} className="border-white/20">
+                        <TableCell className="py-2">{new Date(entry.date).toLocaleString('en-GB')}</TableCell>
                         <TableCell className="py-2">
-                            <div className="font-medium text-sm">{entry.userName}</div>
-                            <div className="text-xs text-muted-foreground">{entry.description}</div>
+                            <div className="font-medium">{entry.userName}</div>
+                            <div className="text-xs text-white/80">{entry.description}</div>
                         </TableCell>
-                        <TableCell className="text-right font-mono text-green-600 py-2">
+                        <TableCell className="text-right font-mono text-green-300 py-2">
                             {entry.deposit > 0 ? `+${entry.deposit.toLocaleString('en-IN')}` : ''}
                         </TableCell>
-                        <TableCell className="text-right font-mono text-red-600 py-2">
+                        <TableCell className="text-right font-mono text-orange-300 py-2">
                              {entry.withdrawal > 0 ? `-${entry.withdrawal.toLocaleString('en-IN')}` : ''}
                         </TableCell>
                         <TableCell className="text-right font-mono font-semibold py-2">
@@ -210,29 +204,29 @@ export default function CashLedgerPage() {
             </div>
              {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
-            {isLoading && <p className="text-center text-muted-foreground">Loading ledger...</p>}
+            {isLoading && <p className="text-center text-white/80 py-8">Loading ledger...</p>}
             {!isLoading && paginatedData.map((entry) => (
-                <Card key={entry.id} className="p-3 text-sm">
+                <Card key={entry.id} className="p-3 text-sm bg-black/20 border-white/20">
                 <div className="flex justify-between items-start mb-3">
                     <div>
                         <p className="font-semibold">{entry.userName}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(entry.date).toLocaleString()}</p>
+                        <p className="text-xs text-white/80">{new Date(entry.date).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                         <p className="font-mono font-bold">₹{entry.balance.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">Balance</p>
+                        <p className="text-xs text-white/80">Balance</p>
                     </div>
                 </div>
-                <div className="space-y-2 border-t pt-3 text-xs">
-                     <p className="text-muted-foreground">{entry.description}</p>
+                <div className="space-y-2 border-t border-white/20 pt-3 text-xs">
+                     <p className="text-white/80">{entry.description}</p>
                      {entry.deposit > 0 && (
-                        <div className="flex justify-between items-center text-green-600">
+                        <div className="flex justify-between items-center text-green-300">
                             <span>Deposit:</span>
                             <span className="font-mono font-semibold">+₹{entry.deposit.toLocaleString()}</span>
                         </div>
                      )}
                      {entry.withdrawal > 0 && (
-                        <div className="flex justify-between items-center text-red-600">
+                        <div className="flex justify-between items-center text-orange-300">
                             <span>Withdrawal:</span>
                             <span className="font-mono font-semibold">-₹{entry.withdrawal.toLocaleString()}</span>
                         </div>
@@ -242,17 +236,18 @@ export default function CashLedgerPage() {
             ))}
             </div>
              {!isLoading && ledgerData.length === 0 && (
-                <p className="text-center py-8 text-muted-foreground">No completed transactions found for the selected date.</p>
+                <p className="text-center py-8 text-white/80">No completed transactions found for the selected date.</p>
             )}
         </CardContent>
          {totalPages > 1 && (
-             <CardFooter className="flex justify-end items-center gap-4 border-t pt-4">
-                <span className="text-sm text-muted-foreground">
+             <CardFooter className="flex justify-end items-center gap-4 border-t border-white/20 pt-4">
+                <span className="text-sm text-white/80">
                     Page {currentPage} of {totalPages}
                 </span>
                 <Button
                     variant="outline"
                     size="sm"
+                    className="bg-transparent text-white hover:bg-white/10 hover:text-white"
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                 >
@@ -261,6 +256,7 @@ export default function CashLedgerPage() {
                 <Button
                     variant="outline"
                     size="sm"
+                    className="bg-transparent text-white hover:bg-white/10 hover:text-white"
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                 >
@@ -272,5 +268,3 @@ export default function CashLedgerPage() {
     </div>
   );
 }
-
-    

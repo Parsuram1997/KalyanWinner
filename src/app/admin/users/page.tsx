@@ -51,7 +51,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebas
 import { collection, query, where } from "firebase/firestore";
 import { createUser, deleteUser, updateUser } from "@/app/actions/user-actions";
 import { states, districts } from "@/lib/locations";
-
+import { cn } from "@/lib/utils";
 
 const USERS_PER_PAGE = 10;
 
@@ -76,12 +76,10 @@ export default function ManageUsersPage() {
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   
-  // State for the edit form
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editState, setEditState] = useState<string | null>(null);
   const [editDistrict, setEditDistrict] = useState<string | null>(null);
-
 
   useEffect(() => {
     if (selectedUser) {
@@ -97,7 +95,6 @@ export default function ManageUsersPage() {
       }
     }
   }, [selectedUser]);
-
 
   const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -118,18 +115,11 @@ export default function ManageUsersPage() {
     try {
       await createUser(newUser);
       setDialogOpen(false);
-      toast({
-        title: "User Added",
-        description: `${newUser.name} has been added to the user list.`,
-      });
+      toast({ title: "User Added", description: `${newUser.name} has been added.` });
       form.reset();
       setSelectedState(null);
     } catch (error: any) {
-       toast({
-        variant: "destructive",
-        title: "Failed to Add User",
-        description: error.message || "An unexpected error occurred.",
-      });
+       toast({ variant: "destructive", title: "Failed to Add User", description: error.message });
     }
   };
   
@@ -149,44 +139,24 @@ export default function ManageUsersPage() {
     try {
       await updateUser(selectedUser.id, updatedData);
       setEditDialogOpen(false);
-      toast({
-        title: "User Updated",
-        description: `${updatedData.name}'s details have been updated.`,
-      });
+      toast({ title: "User Updated", description: `${updatedData.name}'s details have been updated.` });
     } catch (error: any) {
-       toast({
-        variant: "destructive",
-        title: "Failed to Update User",
-        description: error.message || "An unexpected error occurred.",
-      });
+       toast({ variant: "destructive", title: "Failed to Update User", description: error.message });
     }
   };
-
 
   const handleDeleteUser = async (userId: string) => {
     try {
       await deleteUser(userId);
-      toast({
-        title: "User Deleted",
-        description: `User has been successfully deleted.`,
-      });
+      toast({ title: "User Deleted", description: `User has been successfully deleted.` });
     } catch (error: any) {
-       toast({
-        variant: "destructive",
-        title: "Failed to Delete User",
-        description: error.message || "An unexpected error occurred.",
-      });
+       toast({ variant: "destructive", title: "Failed to Delete User", description: error.message });
     }
   };
 
-
   const filteredUsers = useMemo(() => {
     let filtered = users || [];
-
-    if (filter !== "All") {
-      filtered = filtered.filter(user => user.status === filter);
-    }
-
+    if (filter !== "All") filtered = filtered.filter(user => user.status === filter);
     if (searchTerm) {
       filtered = filtered.filter(
         (user) =>
@@ -194,7 +164,6 @@ export default function ManageUsersPage() {
           user.mobile.includes(searchTerm)
       );
     }
-
     return filtered;
   }, [users, searchTerm, filter]);
   
@@ -202,8 +171,7 @@ export default function ManageUsersPage() {
 
   const paginatedUsers = useMemo(() => {
     const startIndex = (currentPage - 1) * USERS_PER_PAGE;
-    const endIndex = startIndex + USERS_PER_PAGE;
-    return filteredUsers.slice(startIndex, endIndex);
+    return filteredUsers.slice(startIndex, startIndex + USERS_PER_PAGE);
   }, [filteredUsers, currentPage]);
 
   const openEditDialog = (user: any) => {
@@ -211,20 +179,19 @@ export default function ManageUsersPage() {
     setEditDialogOpen(true);
   }
 
-
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
         <CardHeader className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div className="w-full">
                 <CardTitle>Manage Users</CardTitle>
-                <CardDescription>
+                <CardDescription className="text-white/80">
                     Manage all registered users in the application.
                 </CardDescription>
             </div>
              <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto shrink-0">
+                  <Button className="w-full sm:w-auto shrink-0 bg-white text-primary hover:bg-white/90">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Add User
                   </Button>
@@ -232,64 +199,22 @@ export default function ManageUsersPage() {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Add New User</DialogTitle>
-                    <DialogDescription>
-                      Fill in the details to add a new user.
-                    </DialogDescription>
+                    <DialogDescription>Fill in the details to add a new user.</DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleAddUser} className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="name" className="text-right">
-                        Name
-                      </Label>
-                      <Input id="name" name="name" className="col-span-3" required />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="mobile" className="text-right">
-                        Mobile
-                      </Label>
-                      <Input id="mobile" name="mobile" className="col-span-3" required />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="email" className="text-right">
-                        Email
-                      </Label>
-                      <Input id="email" name="email" type="email" className="col-span-3" required />
-                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="name" className="text-right">Name</Label><Input id="name" name="name" className="col-span-3" required /></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="mobile" className="text-right">Mobile</Label><Input id="mobile" name="mobile" className="col-span-3" required /></div>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="email" className="text-right">Email</Label><Input id="email" name="email" type="email" className="col-span-3" required /></div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="state" className="text-right">State</Label>
-                        <Select name="state" onValueChange={setSelectedState}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select a state" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {states.map(state => (
-                                    <SelectItem key={state.value} value={state.value}>{state.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Select name="state" onValueChange={setSelectedState}><SelectTrigger className="col-span-3"><SelectValue placeholder="Select a state" /></SelectTrigger><SelectContent>{states.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="district" className="text-right">District</Label>
-                        <Select name="district" disabled={!selectedState}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select a district" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {selectedState && districts[selectedState] && districts[selectedState].map(district => (
-                                    <SelectItem key={district.value} value={district.value}>{district.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Select name="district" disabled={!selectedState}><SelectTrigger className="col-span-3"><SelectValue placeholder="Select a district" /></SelectTrigger><SelectContent>{selectedState && districts[selectedState] && districts[selectedState].map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent></Select>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="password" className="text-right">
-                        Password
-                      </Label>
-                      <Input id="password" name="password" type="text" className="col-span-3" required />
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit">Create User</Button>
-                    </DialogFooter>
+                    <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="password" className="text-right">Password</Label><Input id="password" name="password" type="text" className="col-span-3" required /></div>
+                    <DialogFooter><Button type="submit">Create User</Button></DialogFooter>
                   </form>
                 </DialogContent>
               </Dialog>
@@ -297,98 +222,33 @@ export default function ManageUsersPage() {
         <CardContent>
           <div className="flex flex-col sm:flex-row justify-start items-center gap-4 mb-4">
             <div className="relative w-full sm:max-w-xs">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or mobile..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                }}
-              />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+              <Input placeholder="Search by name or mobile..." className="pl-8 bg-black/20 border-white/20 text-white" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} />
             </div>
-            <Tabs defaultValue="All" onValueChange={(value) => {
-                setFilter(value);
-                setCurrentPage(1);
-            }} className="w-full sm:w-auto">
-                <TabsList className="w-full">
-                    <TabsTrigger value="All" className="px-2">All</TabsTrigger>
-                    <TabsTrigger value="Active" className="px-2">Active</TabsTrigger>
-                    <TabsTrigger value="Inactive" className="px-2">Inactive</TabsTrigger>
+            <Tabs defaultValue="All" onValueChange={(value) => { setFilter(value); setCurrentPage(1); }} className="w-full sm:w-auto">
+                <TabsList className="w-full bg-black/20">
+                    {["All", "Active", "Inactive"].map(tab => <TabsTrigger key={tab} value={tab} className="px-2 text-white/80 data-[state=active]:bg-white data-[state=active]:text-black">{tab}</TabsTrigger>)}
                 </TabsList>
             </Tabs>
           </div>
           
-           {/* Desktop Table */}
-          <div className="hidden md:block rounded-md border text-xs">
+          <div className="hidden md:block rounded-md border border-white/20 text-xs">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
+              <TableHeader className="border-b border-white/20">
+                <TableRow>{["User", "Contact", "Location", "Balance", "Status", "Actions"].map(h => <TableHead key={h} className="text-white py-2">{h}</TableHead>)}</TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-1">Loading users...</TableCell>
-                  </TableRow>
-                )}
-                {!isLoading && paginatedUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="py-1">
-                      <div className="font-medium text-xs">{user.name}</div>
-                      <div className="text-muted-foreground text-xs">{user.customId}</div>
-                    </TableCell>
-                    <TableCell className="py-1">
-                      <div className="text-xs">{user.email}</div>
-                      <div className="text-muted-foreground text-xs">{user.mobile}</div>
-                    </TableCell>
-                    <TableCell className="py-1">
-                      <div className="text-xs">{user.state}</div>
-                      <div className="text-muted-foreground text-xs">{user.district}</div>
-                    </TableCell>
-                    <TableCell className="text-xs py-1">₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(2)}</TableCell>
-                    <TableCell className="py-1">
-                      <Badge
-                        variant={
-                          user.status === "Active"
-                            ? "secondary"
-                            : user.status === "Inactive"
-                            ? "outline"
-                            : "destructive"
-                        }
-                      >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
+                {isLoading ? <TableRow><TableCell colSpan={6} className="text-center py-4">Loading users...</TableCell></TableRow> : paginatedUsers.map((user) => (
+                  <TableRow key={user.id} className="border-white/20">
+                    <TableCell className="py-1"><div className="font-medium text-xs">{user.name}</div><div className="text-white/70 text-xs">{user.customId}</div></TableCell>
+                    <TableCell className="py-1"><div className="text-xs">{user.email}</div><div className="text-white/70 text-xs">{user.mobile}</div></TableCell>
+                    <TableCell className="py-1"><div className="text-xs">{user.state}</div><div className="text-white/70 text-xs">{user.district}</div></TableCell>
+                    <TableCell className="text-xs py-1 font-mono">₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(0)}</TableCell>
+                    <TableCell className="py-1"><Badge className={cn("text-xs", user.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>{user.status}</Badge></TableCell>
                     <TableCell className="flex gap-2 py-1">
-                       <Button variant="outline" size="icon" asChild>
-                        <Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link>
-                       </Button>
-                       <Button variant="outline" size="icon" onClick={() => openEditDialog(user)}><Edit className="h-4 w-4" /></Button>
-                       <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the user '{user.name}' and all associated data.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                       <Button variant="outline" size="icon" asChild className="bg-transparent text-white hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link></Button>
+                       <Button variant="outline" size="icon" onClick={() => openEditDialog(user)} className="bg-transparent text-white hover:bg-white/10"><Edit className="h-4 w-4" /></Button>
+                       <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -396,153 +256,60 @@ export default function ManageUsersPage() {
             </Table>
           </div>
 
-          {/* Mobile Cards */}
            <div className="grid gap-4 md:hidden">
-            {isLoading && <p className="text-center text-muted-foreground">Loading users...</p>}
+            {isLoading && <p className="text-center text-white/80 py-8">Loading users...</p>}
             {!isLoading && paginatedUsers.map((user) => (
-              <Card key={user.id}>
-                <CardContent className="p-0">
-                  <div className="p-4">
+              <Card key={user.id} className="bg-black/20 border-white/20">
+                <CardContent className="p-4">
                     <div className="flex justify-between items-start">
-                        <div>
-                            <p className="font-semibold">{user.name}</p>
-                            <p className="text-xs text-muted-foreground">{user.customId}</p>
-                        </div>
-                        <Badge variant={user.status === "Active" ? "secondary" : user.status === "Inactive" ? "outline" : "destructive"}>
-                            {user.status}
-                        </Badge>
+                        <div><p className="font-semibold">{user.name}</p><p className="text-xs text-white/70">{user.customId}</p></div>
+                        <Badge className={cn("text-xs", user.status === "Active" ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>{user.status}</Badge>
                     </div>
-                    <div className="mt-4 space-y-2 text-xs">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Contact:</span>
-                            <div className="text-right">
-                                <p>{user.email}</p>
-                                <p className="text-muted-foreground">{user.mobile}</p>
-                            </div>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Location:</span>
-                            <div className="text-right">
-                              <p>{user.state}</p>
-                              <p className="text-xs text-muted-foreground">{user.district}</p>
-                            </div>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Balance:</span>
-                            <span>₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(2)}</span>
-                        </div>
+                    <div className="mt-4 space-y-2 text-xs border-t border-white/20 pt-3">
+                        <div className="flex justify-between"><span className="text-white/70">Contact:</span><div className="text-right"><p>{user.email}</p><p>{user.mobile}</p></div></div>
+                        <div className="flex justify-between"><span className="text-white/70">Location:</span><div className="text-right"><p>{user.state}</p><p className="text-xs">{user.district}</p></div></div>
+                        <div className="flex justify-between"><span className="text-white/70">Balance:</span><span className="font-mono">₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(0)}</span></div>
                     </div>
-                  </div>
-                  <CardFooter className="flex justify-end gap-2 p-4 pt-2 border-t">
-                      <Button variant="outline" size="icon" asChild>
-                          <Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link>
-                      </Button>
-                      <Button variant="outline" size="icon" onClick={() => openEditDialog(user)}><Edit className="h-4 w-4" /></Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the user '{user.name}' and all associated data.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                  </CardFooter>
                 </CardContent>
+                <CardFooter className="flex justify-end gap-2 p-4 pt-2 border-t border-white/20">
+                    <Button variant="outline" size="icon" asChild className="bg-transparent hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link></Button>
+                    <Button variant="outline" size="icon" onClick={() => openEditDialog(user)} className="bg-transparent hover:bg-white/10"><Edit className="h-4 w-4" /></Button>
+                    <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+                </CardFooter>
               </Card>
             ))}
            </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="border-t border-white/20 pt-4">
            <div className="flex items-center justify-between w-full">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+            <Button variant="outline" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="bg-transparent hover:bg-white/10">Previous</Button>
+            <span className="text-sm text-white/80">Page {currentPage} of {totalPages}</span>
+            <Button variant="outline" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className="bg-transparent hover:bg-white/10">Next</Button>
           </div>
         </CardFooter>
       </Card>
       
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update the details for {selectedUser?.name}.
-            </DialogDescription>
+            <DialogDescription>Update the details for {selectedUser?.name}.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditUser} className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">
-                Name
-              </Label>
-              <Input id="edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} className="col-span-3" required />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-email" className="text-right">
-                Email
-              </Label>
-              <Input id="edit-email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} type="email" className="col-span-3" required />
-            </div>
+            <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-name" className="text-right">Name</Label><Input id="edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} className="col-span-3" required /></div>
+            <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-email" className="text-right">Email</Label><Input id="edit-email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} type="email" className="col-span-3" required /></div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-state" className="text-right">State</Label>
-              <Select name="edit-state" value={editState || ""} onValueChange={setEditState} required>
-                  <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select a state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                      {states.map(state => (
-                          <SelectItem key={state.value} value={state.value}>{state.label}</SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
+              <Select name="edit-state" value={editState || ""} onValueChange={setEditState} required><SelectTrigger className="col-span-3"><SelectValue placeholder="Select a state" /></SelectTrigger><SelectContent>{states.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-district" className="text-right">District</Label>
-                <Select name="edit-district" value={editDistrict || ""} onValueChange={setEditDistrict} disabled={!editState} required>
-                    <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select a district" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {editState && districts[editState] && districts[editState].map(district => (
-                            <SelectItem key={district.value} value={district.value}>{district.label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                <Select name="edit-district" value={editDistrict || ""} onValueChange={setEditDistrict} disabled={!editState} required><SelectTrigger className="col-span-3"><SelectValue placeholder="Select a district" /></SelectTrigger><SelectContent>{editState && districts[editState] && districts[editState].map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent></Select>
             </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">Cancel</Button>
-              </DialogClose>
-              <Button type="submit">Save Changes</Button>
-            </DialogFooter>
+            <DialogFooter><DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose><Button type="submit">Save Changes</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
-
-    

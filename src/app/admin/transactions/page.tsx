@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type Transaction = {
     id: string;
@@ -75,20 +76,19 @@ type User = {
     upiId?: string;
 }
 
-const getStatusVariant = (status: Transaction['status']) => {
+const getStatusClasses = (status: Transaction['status']) => {
     switch (status) {
         case 'Completed':
         case 'Approved':
-            return 'secondary';
+            return 'bg-green-400/20 text-green-300 border border-green-400';
         case 'Pending':
-            return 'default';
+            return 'bg-blue-400/20 text-blue-300 border border-blue-400';
         case 'Rejected':
-            return 'warning';
+            return 'bg-yellow-400/20 text-yellow-300 border border-yellow-400';
         default:
-            return 'destructive';
+            return 'bg-red-400/20 text-red-300 border border-red-400';
     }
 }
-
 
 const TransactionTable = ({ 
     items, 
@@ -108,15 +108,15 @@ const TransactionTable = ({
     if (isLoading) {
         return (
             <div className="space-y-2 p-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full bg-white/20" />
+                <Skeleton className="h-12 w-full bg-white/20" />
+                <Skeleton className="h-12 w-full bg-white/20" />
             </div>
         )
     }
     
     if (items.length === 0) {
-        return <p className="text-center text-muted-foreground p-8">No transactions found in this category.</p>
+        return <p className="text-center text-white/80 p-8">No transactions found in this category.</p>
     }
     
     const getCustomId = (txn: Transaction) => {
@@ -126,35 +126,35 @@ const TransactionTable = ({
   return (
     <div>
         {/* Desktop View */}
-        <div className="hidden md:block border rounded-md">
+        <div className="hidden md:block border border-white/20 rounded-md">
             <Table>
-                <TableHeader>
+                <TableHeader className="border-b border-white/20">
                     <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Amount & Type</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Details (UTR)</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="text-white">User</TableHead>
+                        <TableHead className="text-white">Amount & Type</TableHead>
+                        <TableHead className="text-white">Date</TableHead>
+                        <TableHead className="text-white">Details (UTR)</TableHead>
+                        <TableHead className="text-white">Status</TableHead>
+                        <TableHead className="text-right text-white">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {items.map((txn) => (
-                        <TableRow key={txn.id}>
+                        <TableRow key={txn.id} className="border-white/20">
                             <TableCell className="py-2 font-medium">
                                 <div>{txn.userName || 'N/A'}</div>
-                                <div className="text-xs text-muted-foreground">{getCustomId(txn)}</div>
+                                <div className="text-xs text-white/80">{getCustomId(txn)}</div>
                             </TableCell>
                              <TableCell className="py-2">
-                                <div className={`font-mono ${txn.status === 'Rejected' ? 'text-yellow-600' : ''}`}>₹{txn.amount.toLocaleString('en-IN')}</div>
-                                <Badge variant={txn.type === "Deposit" ? "default" : "outline"} className="text-xs">
+                                <div className={cn('font-mono', txn.status === 'Rejected' ? 'text-yellow-400' : 'text-white')}>₹{txn.amount.toLocaleString('en-IN')}</div>
+                                <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"} className="text-xs mt-1">
                                     {txn.type}
                                 </Badge>
                             </TableCell>
                             <TableCell className="py-2 text-xs">{new Date(txn.date).toLocaleString()}</TableCell>
                             <TableCell className="py-2 text-xs max-w-[150px]">
                                 {txn.type === 'Withdrawal' ? (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onShowDetails(txn.userId)}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10 hover:text-white" onClick={() => onShowDetails(txn.userId)}>
                                         <Eye className="h-4 w-4" />
                                     </Button>
                                 ) : (
@@ -164,14 +164,15 @@ const TransactionTable = ({
                                 )}
                             </TableCell>
                            <TableCell className="py-2">
-                                <Badge variant={getStatusVariant(txn.status)}>
+                                <Badge className={cn('text-xs', getStatusClasses(txn.status))}>
                                     {txn.status}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="flex gap-2 py-2">
+                            <TableCell className="py-2">
+                                <div className="flex gap-2 justify-end">
                                 {txn.status === "Pending" && (
                                     <>
-                                        <Button variant="outline" size="xs" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Approved', type: txn.type })}>Approve</Button>
+                                        <Button variant="outline" size="xs" className="bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Approved', type: txn.type })}>Approve</Button>
                                         <Button variant="destructive" size="xs" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Rejected', type: txn.type })}>Reject</Button>
                                     </>
                                 )}
@@ -190,6 +191,7 @@ const TransactionTable = ({
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>
+                                </div>
                             </TableCell>
                         </TableRow>
                     ))}
@@ -200,33 +202,33 @@ const TransactionTable = ({
         {/* Mobile View */}
         <div className="grid gap-4 md:hidden">
             {items.map((txn) => (
-                <Card key={txn.id}>
+                <Card key={txn.id} className="bg-black/20 border-white/20 text-white">
                     <CardContent className="p-4">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-semibold text-sm">{txn.userName || 'N/A'}</p>
-                                <p className="text-xs text-muted-foreground">{getCustomId(txn)}</p>
-                                <p className="text-xs text-muted-foreground mt-1">{new Date(txn.date).toLocaleString()}</p>
+                                <p className="text-xs text-white/80">{getCustomId(txn)}</p>
+                                <p className="text-xs text-white/80 mt-1">{new Date(txn.date).toLocaleString()}</p>
                             </div>
-                            <Badge variant={getStatusVariant(txn.status)}>
+                            <Badge className={cn('text-xs', getStatusClasses(txn.status))}>
                                 {txn.status}
                             </Badge>
                         </div>
-                        <div className="mt-4 space-y-3">
+                        <div className="mt-4 pt-4 border-t border-white/20 space-y-3">
                             <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Type:</span>
-                                <Badge variant={txn.type === "Deposit" ? "default" : "outline"} className="font-medium text-xs">
+                                <span className="text-white/80">Type:</span>
+                                <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"} className="font-medium text-xs">
                                     {txn.type}
                                 </Badge>
                             </div>
                             <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Amount:</span>
-                                <span className={`font-medium font-mono ${txn.status === 'Rejected' ? 'text-yellow-600' : ''}`}>₹{txn.amount.toLocaleString('en-IN')}</span>
+                                <span className="text-white/80">Amount:</span>
+                                <span className={cn('font-medium font-mono', txn.status === 'Rejected' ? 'text-yellow-400' : 'text-white')}>₹{txn.amount.toLocaleString('en-IN')}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Details:</span>
+                                <span className="text-white/80">Details:</span>
                                 {txn.type === 'Withdrawal' ? (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onShowDetails(txn.userId)}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10 hover:text-white" onClick={() => onShowDetails(txn.userId)}>
                                         <Eye className="h-4 w-4" />
                                     </Button>
                                 ) : (
@@ -238,10 +240,10 @@ const TransactionTable = ({
                         </div>
                     </CardContent>
 
-                    <CardFooter className="flex justify-end gap-2 p-4 pt-2 border-t">
+                    <CardFooter className="flex justify-end gap-2 p-4 pt-2 border-t border-white/20">
                        {txn.status === "Pending" && (
                             <>
-                                <Button variant="outline" size="sm" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Approved', type: txn.type })}>Approve</Button>
+                                <Button variant="outline" size="sm" className="bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Approved', type: txn.type })}>Approve</Button>
                                 <Button variant="destructive" size="sm" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Rejected', type: txn.type })}>Reject</Button>
                             </>
                         )}
@@ -266,7 +268,6 @@ const TransactionTable = ({
         </div>
     </div>
 )}
-
 
 export default function TransactionsPage() {
   const firestore = useFirestore();
@@ -365,18 +366,18 @@ export default function TransactionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
         <CardHeader>
           <CardTitle>Manage Transactions</CardTitle>
-          <CardDescription>Approve or reject deposits and withdrawals.</CardDescription>
+          <CardDescription className="text-white/80">Approve or reject deposits and withdrawals.</CardDescription>
         </CardHeader>
         <CardContent>
             <Tabs defaultValue="pending-deposits">
-                <div className="mb-4 rounded-lg border bg-background p-1 sm:p-2">
-                  <TabsList className="grid h-auto w-full grid-cols-1 sm:grid-cols-3">
-                      <TabsTrigger value="pending-deposits">Deposits ({pendingDeposits.length})</TabsTrigger>
-                      <TabsTrigger value="pending-withdrawals">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
-                      <TabsTrigger value="processed">Processed ({processedTransactions.length})</TabsTrigger>
+                <div className="mb-4">
+                  <TabsList className="grid h-auto w-full grid-cols-1 sm:grid-cols-3 bg-black/20 p-1 sm:p-2">
+                      <TabsTrigger value="pending-deposits" className="text-white/80 data-[state=active]:bg-white data-[state=active]:text-primary">Deposits ({pendingDeposits.length})</TabsTrigger>
+                      <TabsTrigger value="pending-withdrawals" className="text-white/80 data-[state=active]:bg-white data-[state=active]:text-primary">Withdrawals ({pendingWithdrawals.length})</TabsTrigger>
+                      <TabsTrigger value="processed" className="text-white/80 data-[state=active]:bg-white data-[state=active]:text-primary">Processed ({processedTransactions.length})</TabsTrigger>
                   </TabsList>
                 </div>
                 <TabsContent value="pending-deposits" className="mt-0">
@@ -433,7 +434,7 @@ export default function TransactionsPage() {
                                         <span className="text-muted-foreground">IFSC Code</span>
                                         <span className="font-medium">{paymentDetails.ifscCode}</span>
                                     </div>
-                                </>
+                                </> 
                             )}
                             {paymentDetails.paymentMethod === 'upi' && (
                                 <div className="grid grid-cols-2 items-center gap-4">

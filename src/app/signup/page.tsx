@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { createUser } from "@/app/actions/user-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { states, districts } from "@/lib/locations";
+import { Loader } from "lucide-react";
 
 function SignupForm() {
   const router = useRouter();
@@ -76,105 +77,109 @@ function SignupForm() {
   };
 
   return (
-     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="relative hidden items-center justify-center bg-gradient-to-br from-primary/80 via-primary to-secondary p-10 text-white lg:flex">
-        <div className="relative z-10 w-full max-w-md rounded-xl bg-black/20 p-8 text-center backdrop-blur-sm">
-            <h2 className="text-4xl font-bold tracking-tight">Join the Excitement!</h2>
-            <p className="mt-4 text-lg text-primary-foreground/90">Create your account to experience the thrill of Kalyan Matka. Get instant access to playing, checking live results, and winning big. Your journey into the world of numbers starts here!</p>
+     <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-gradient-to-br from-blue-600 to-purple-700">
+        <div className="relative hidden items-center justify-center p-10 text-white lg:flex">
+            <div className="relative z-10 w-full max-w-md rounded-xl bg-black/20 p-8 text-center backdrop-blur-sm border border-white/20">
+                <h2 className="text-4xl font-bold tracking-tight">Join the Excitement!</h2>
+                <p className="mt-4 text-lg text-white/90">Create your account to experience the thrill of Kalyan Matka. Get instant access to playing, checking live results, and winning big. Your journey into the world of numbers starts here!</p>
+            </div>
         </div>
-      </div>
-       <div className="flex min-h-screen items-center justify-center bg-background p-4 py-12">
-        <Card className="mx-auto w-full max-w-md">
-            <CardHeader className="text-center">
-             <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={60} height={60} className="object-contain mx-auto mb-4" />
-            <CardTitle className="text-3xl font-bold tracking-tight">Create an Account</CardTitle>
-            <CardDescription>
-              Enter your details below to join the fun.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-          <form onSubmit={handleSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" name="name" required disabled={isLoading} />
-            </div>
-             <div className="grid gap-2">
-              <Label htmlFor="mobile">Mobile Number</Label>
-               <div className="flex items-center">
-                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-sm h-10">+91</span>
-                  <Input
-                    id="mobile"
-                    name="mobile"
-                    type="tel"
-                    placeholder="9876543210"
-                    required
-                    onChange={(e) => e.target.value = e.target.value.replace(/\\D/g, '').slice(0,10)}
-                    disabled={isLoading}
-                    className="rounded-l-none"
-                  />
-               </div>
-            </div>
-             <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" required disabled={isLoading} />
-            </div>
-             <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="state">State</Label>
-                    <Select name="state" onValueChange={setSelectedState} required>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select state" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {states.map(state => (
-                                <SelectItem key={state.value} value={state.value}>{state.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="district">District</Label>
-                    <Select name="district" disabled={!selectedState} required>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select district" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {selectedState && districts[selectedState] && districts[selectedState].map(district => (
-                                <SelectItem key={district.value} value={district.value}>{district.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required disabled={isLoading} />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input id="confirmPassword" name="confirmPassword" type="password" required disabled={isLoading} />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
-            </Button>
-          </form>
-          </CardContent>
-          <CardFooter className="text-center text-sm">
-            <p className="w-full">Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
-              Login
-            </Link>
-            </p>
-          </CardFooter>
-        </Card>
-      </div>
+        <div className="flex min-h-screen items-center justify-center p-4 py-12">
+            <Card className="w-full max-w-md bg-black/20 border-white/20 text-white backdrop-blur-md">
+                <CardHeader className="text-center">
+                    <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={60} height={60} className="object-contain mx-auto mb-4" />
+                    <CardTitle className="text-3xl font-bold tracking-tight text-white">Create an Account</CardTitle>
+                    <CardDescription className="text-white/80">
+                    Enter your details below to join the fun.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name" className="text-white">Full Name</Label>
+                            <Input id="name" name="name" required disabled={isLoading} className="bg-black/20 border-white/20 text-white placeholder:text-white/50"/>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="mobile" className="text-white">Mobile Number</Label>
+                            <div className="flex items-center">
+                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-white/20 bg-white/10 text-sm h-10">+91</span>
+                                <Input
+                                    id="mobile"
+                                    name="mobile"
+                                    type="tel"
+                                    placeholder="9876543210"
+                                    required
+                                    onChange={(e) => e.target.value = e.target.value.replace(/\\D/g, '').slice(0,10)}
+                                    disabled={isLoading}
+                                    className="rounded-l-none bg-black/20 border-white/20 text-white placeholder:text-white/50 h-10"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="email" className="text-white">Email</Label>
+                            <Input id="email" name="email" type="email" required disabled={isLoading} className="bg-black/20 border-white/20 text-white placeholder:text-white/50" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="state" className="text-white">State</Label>
+                                <Select name="state" onValueChange={setSelectedState} required>
+                                    <SelectTrigger className="bg-black/20 border-white/20 text-white">
+                                        <SelectValue placeholder="Select state" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-black/80 border-white/20 text-white backdrop-blur-lg">
+                                        {states.map(state => (
+                                            <SelectItem key={state.value} value={state.value} className="cursor-pointer hover:bg-white/20">{state.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="district" className="text-white">District</Label>
+                                <Select name="district" disabled={!selectedState} required>
+                                    <SelectTrigger className="bg-black/20 border-white/20 text-white">
+                                        <SelectValue placeholder="Select district" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-black/80 border-white/20 text-white backdrop-blur-lg">
+                                        {selectedState && districts[selectedState] && districts[selectedState].map(district => (
+                                            <SelectItem key={district.value} value={district.value} className="cursor-pointer hover:bg-white/20">{district.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="password" className="text-white">Password</Label>
+                            <Input id="password" name="password" type="password" required disabled={isLoading} className="bg-black/20 border-white/20 text-white"/>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
+                            <Input id="confirmPassword" name="confirmPassword" type="password" required disabled={isLoading} className="bg-black/20 border-white/20 text-white"/>
+                        </div>
+                        <Button type="submit" className="w-full bg-white text-primary font-bold hover:bg-white/90" disabled={isLoading}>
+                        {isLoading ? <><Loader className="mr-2 h-4 w-4 animate-spin" />Creating Account...</> : 'Create Account'}
+                        </Button>
+                    </form>
+                </CardContent>
+                <CardFooter className="text-center text-sm">
+                    <p className="w-full text-white/80">Already have an account?{" "}
+                    <Link href="/login" className="font-semibold text-yellow-300 hover:underline">
+                    Login
+                    </Link>
+                    </p>
+                </CardFooter>
+            </Card>
+        </div>
     </div>
   );
 }
 
 export default function SignupPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={
+          <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
+            <Loader className="h-12 w-12 text-white animate-spin" />
+          </div>
+        }>
             <SignupForm />
         </Suspense>
     );

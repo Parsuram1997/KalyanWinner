@@ -49,6 +49,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { createBetType, deleteBetType, updateBetType } from "@/app/actions/bet-type-actions";
+import { cn } from "@/lib/utils";
 
 type BetType = { 
   id: string;
@@ -156,20 +157,20 @@ export default function ManageBetTypesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between">
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
+        <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-6 w-6" />
               <span>Manage Bet Types</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-white/80">
               Add, edit, or disable game types for users.
             </CardDescription>
           </div>
            <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="w-full sm:w-auto shrink-0 bg-white text-primary hover:bg-white/90">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Add Bet Type
                   </Button>
@@ -199,25 +200,25 @@ export default function ManageBetTypesPage() {
         </CardHeader>
         <CardContent>
           {/* Desktop Table */}
-          <div className="hidden md:block rounded-md border">
+          <div className="hidden md:block rounded-md border border-white/20 text-sm">
             <Table>
-              <TableHeader>
+              <TableHeader className="border-b border-white/20">
                 <TableRow>
-                  <TableHead>Bet Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-white">Bet Type</TableHead>
+                  <TableHead className="text-white">Description</TableHead>
+                  <TableHead className="text-white">Status</TableHead>
+                  <TableHead className="text-right text-white">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">Loading bet types...</TableCell>
+                    <TableCell colSpan={4} className="text-center py-4 text-white/80">Loading bet types...</TableCell>
                   </TableRow>
                 ) : sortedBetTypes.map((betType) => (
-                  <TableRow key={betType.id}>
+                  <TableRow key={betType.id} className="border-white/20">
                     <TableCell className="font-medium">{betType.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{betType.description}</TableCell>
+                    <TableCell className="text-white/70">{betType.description}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch
@@ -225,13 +226,13 @@ export default function ManageBetTypesPage() {
                           onCheckedChange={() => toggleBetTypeStatus(betType)}
                           aria-label={`Toggle ${betType.name} status`}
                         />
-                        <Badge variant={betType.status === "Active" ? "secondary" : "outline"}>
+                        <Badge className={cn("text-xs", betType.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
                           {betType.status}
                         </Badge>
                       </div>
                     </TableCell>
                     <TableCell className="flex gap-2 justify-end">
-                       <Button variant="outline" size="icon" onClick={() => openEditDialog(betType)}><Edit className="h-4 w-4" /></Button>
+                       <Button variant="outline" size="icon" onClick={() => openEditDialog(betType)} className="bg-transparent text-white hover:bg-white/10"><Edit className="h-4 w-4" /></Button>
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
@@ -240,7 +241,7 @@ export default function ManageBetTypesPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the '{betType.name}' bet type.
+                                This will permanently delete the '{betType.name}' bet type.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -258,20 +259,20 @@ export default function ManageBetTypesPage() {
           
            {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
-              {isLoading ? <p className="text-center">Loading...</p> : sortedBetTypes.map((betType) => (
-                <Card key={betType.id}>
+              {isLoading ? <p className="text-center text-white/80 py-8">Loading...</p> : sortedBetTypes.map((betType) => (
+                <Card key={betType.id} className="bg-black/20 border-white/20 text-white">
                   <CardHeader>
                       <div className="flex justify-between items-start">
                           <CardTitle>{betType.name}</CardTitle>
-                          <Badge variant={betType.status === "Active" ? "secondary" : "outline"}>
+                           <Badge className={cn("text-xs", betType.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
                               {betType.status}
                           </Badge>
                       </div>
-                      <CardDescription>{betType.description}</CardDescription>
+                      <CardDescription className="text-white/80 pt-2">{betType.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                      <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status:</span>
+                      <div className="flex items-center justify-between border-t border-white/20 pt-4">
+                          <span className="text-sm text-white/80">Toggle Status</span>
                           <Switch
                             checked={betType.status === "Active"}
                             onCheckedChange={() => toggleBetTypeStatus(betType)}
@@ -279,8 +280,8 @@ export default function ManageBetTypesPage() {
                           />
                       </div>
                   </CardContent>
-                  <CardFooter className="flex justify-end gap-2">
-                       <Button variant="outline" size="sm" onClick={() => openEditDialog(betType)}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                  <CardFooter className="flex justify-end gap-2 border-t border-white/20 pt-4">
+                       <Button variant="outline" size="sm" onClick={() => openEditDialog(betType)} className="bg-transparent text-white hover:bg-white/10"><Edit className="h-4 w-4 mr-2"/>Edit</Button>
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-2"/>Delete</Button>
@@ -289,7 +290,7 @@ export default function ManageBetTypesPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the '{betType.name}' bet type.
+                                This will permanently delete the '{betType.name}' bet type.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -333,5 +334,3 @@ export default function ManageBetTypesPage() {
     </div>
   );
 }
-
-    

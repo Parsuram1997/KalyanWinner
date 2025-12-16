@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -30,11 +31,6 @@ type Bet = {
   amount: string;
 };
 
-// ====================================================================\
-// START: Specialized Form Components
-// ====================================================================\
-
-// Form for Single Digit, Jodi, Single/Double/Triple Panna
 const SingleInputForm = ({
   label,
   maxLength,
@@ -71,7 +67,7 @@ const SingleInputForm = ({
   return (
     <>
       <div className="space-y-2">
-        <Label>{label}</Label>
+        <Label className="text-white">{label}</Label>
         <Input
           ref={numberRef}
           value={number}
@@ -80,10 +76,11 @@ const SingleInputForm = ({
           type="text"
           inputMode="numeric"
           autoFocus
+          className="bg-black/20 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="bet-amount-single">Amount</Label>
+        <Label htmlFor="bet-amount-single" className="text-white">Amount</Label>
         <Input
           id="bet-amount-single"
           ref={amountRef}
@@ -91,16 +88,16 @@ const SingleInputForm = ({
           placeholder="e.g., 10"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          className="bg-black/20 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
-      <Button type="button" className="w-full" onClick={handleAdd}>
+      <Button type="button" className="w-full bg-white text-primary hover:bg-white/90" onClick={handleAdd}>
         <PlusCircle className="mr-2 h-4 w-4" /> Add Bet
       </Button>
     </>
   );
 };
 
-// Form for Close Sangam and Full Sangam
 const TwoPartInputForm = ({
   label1,
   len1,
@@ -153,7 +150,7 @@ const TwoPartInputForm = ({
     <>
       <div className="flex items-end gap-2">
         <div className="flex-1">
-          <Label>{label1}</Label>
+          <Label className="text-white">{label1}</Label>
           <Input
             ref={number1Ref}
             value={number1}
@@ -162,11 +159,12 @@ const TwoPartInputForm = ({
             type="text"
             inputMode="numeric"
             autoFocus
+            className="bg-black/20 border-white/20 text-white placeholder:text-white/50"
           />
         </div>
-        <span className="pb-2 font-bold text-muted-foreground">x</span>
+        <span className="pb-2 font-bold text-white/70">x</span>
         <div className="flex-1">
-          <Label>{label2}</Label>
+          <Label className="text-white">{label2}</Label>
           <Input
             ref={number2Ref}
             value={number2}
@@ -174,11 +172,12 @@ const TwoPartInputForm = ({
             maxLength={len2}
             type="text"
             inputMode="numeric"
+            className="bg-black/20 border-white/20 text-white placeholder:text-white/50"
           />
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="bet-amount-multi">Amount</Label>
+        <Label htmlFor="bet-amount-multi" className="text-white">Amount</Label>
         <Input
           id="bet-amount-multi"
           ref={amountRef}
@@ -186,19 +185,15 @@ const TwoPartInputForm = ({
           placeholder="e.g., 10"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          className="bg-black/20 border-white/20 text-white placeholder:text-white/50"
         />
       </div>
-      <Button type="button" className="w-full" onClick={handleAdd}>
+      <Button type="button" className="w-full bg-white text-primary hover:bg-white/90" onClick={handleAdd}>
         <PlusCircle className="mr-2 h-4 w-4" /> Add Bet
       </Button>
     </>
   );
 };
-
-// ====================================================================\
-// END: Specialized Form Components
-// ====================================================================\
-
 
 function BetForm({
   betTypeName,
@@ -239,18 +234,17 @@ function BetForm({
       case 'Open':
       case 'Close':
         return <SingleInputForm label="Enter Digit" maxLength={1} onAddBet={handleAddBet} />;
-      default: // Fallback for any other type, assuming single digit
+      default:
         return <SingleInputForm label="Enter Digit" maxLength={1} onAddBet={handleAddBet} />;
     }
   };
 
-
   return (
-    <Card className="w-full h-full flex flex-col">
+    <Card className="w-full h-full flex flex-col bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
       <CardHeader>
-        <CardTitle>{betTypeName}</CardTitle>
-        <CardDescription>
-          Add bets for the <span className="font-bold text-lg text-primary">{market}</span> market.
+        <CardTitle className="text-white">{betTypeName}</CardTitle>
+        <CardDescription className="text-white/80">
+          Add bets for the <span className="font-bold text-lg text-yellow-300">{market}</span> market.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 flex-grow">
@@ -261,40 +255,40 @@ function BetForm({
 }
 
 const WalletCard = ({ depositBalance, winningBalance, isLoading }: { depositBalance: number, winningBalance: number, isLoading: boolean }) => (
-    <Card className="bg-gradient-to-br from-primary/20 to-accent/20 h-full flex flex-col">
+    <Card className="bg-gradient-to-br from-gray-800 to-gray-900 text-white border-white/20 h-full flex flex-col">
         <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center justify-between text-white">
                 <span>Wallet Balance</span>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <DollarSign className="h-4 w-4 text-white/70" />
             </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-2 text-xs space-y-2 flex-grow">
             {isLoading ? 
             <>
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-5 w-28" />
-                <Skeleton className="h-6 w-32 mt-1" />
+                <Skeleton className="h-5 w-24 bg-white/20" />
+                <Skeleton className="h-5 w-28 bg-white/20" />
+                <Skeleton className="h-6 w-32 mt-1 bg-white/20" />
             </>
              : 
             <>
                 <div className="flex justify-between">
-                    <span className="text-muted-foreground">Deposit:</span>
+                    <span className="text-white/70">Deposit:</span>
                     <span className="font-semibold">₹{depositBalance.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                    <span className="text-muted-foreground">Winnings:</span>
+                    <span className="text-white/70">Winnings:</span>
                     <span className="font-semibold">₹{winningBalance.toFixed(2)}</span>
                 </div>
-                <Separator />
+                <Separator className="bg-white/20" />
                 <div className="flex justify-between text-sm">
                     <span className="font-bold">Total:</span>
-                    <span className="font-bold text-base">₹{(depositBalance + winningBalance).toFixed(2)}</span>
+                    <span className="font-bold text-base text-green-300">₹{(depositBalance + winningBalance).toFixed(2)}</span>
                 </div>
             </>
             }
         </CardContent>
         <CardFooter className="p-4 pt-0">
-            <Button size="sm" asChild>
+            <Button size="sm" asChild className="bg-white/10 text-white hover:bg-white/20 border border-white/20">
                 <Link href="/wallet">
                     <Wallet className="mr-1.5 h-4 w-4" /> Manage Funds
                 </Link>
@@ -408,7 +402,7 @@ export default function PlaceBetPage() {
             text = "Betting Closed";
             isDisabled = true;
         }
-    } else { // For Open, Jodi, Sangams, and Pannas (when treated as Open)
+    } else { 
         if (now >= openBiddingTime) {
             text = "Betting Closed";
             isDisabled = true;
@@ -511,7 +505,7 @@ export default function PlaceBetPage() {
         } else if (dualSessionBetTypes.includes(betTypeName)) {
             session = isOpenResultDeclared ? 'Close' : 'Open';
         } else {
-             session = 'Open'; // Default fallback
+             session = 'Open';
         }
 
 
@@ -559,48 +553,48 @@ export default function PlaceBetPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="bg-black/20 border-white/20 text-white">
           <CardHeader>
               <div className="flex justify-between items-start">
-                  <CardTitle>Your Bets</CardTitle>
-                  {isLoading ? <Skeleton className="h-10 w-32" /> : (
+                  <CardTitle className="text-white">Your Bets</CardTitle>
+                  {isLoading ? <Skeleton className="h-10 w-32 bg-white/20" /> : (
                       <div className="text-right text-sm">
-                          <p className="font-mono">Total: <span className="font-semibold">₹{totalBetAmount}</span></p>
-                          <p className="font-mono text-muted-foreground">Remaining: <span className="font-semibold">₹{totalBalance - totalBetAmount}</span></p>
+                          <p className="font-mono">Total: <span className="font-semibold text-yellow-300">₹{totalBetAmount}</span></p>
+                          <p className="font-mono text-white/70">Remaining: <span className="font-semibold text-green-300">₹{totalBalance - totalBetAmount}</span></p>
                       </div>
                   )}
               </div>
-               <CardDescription>
+               <CardDescription className="text-white/80">
                   A summary of the bets you are about to place.
               </CardDescription>
           </CardHeader>
           <CardContent>
               {bets.length > 0 ? (
-                  <div className="rounded-lg border">
+                  <div className="rounded-lg border border-white/20">
                        <div className="w-full">
                           <Table>
-                              <TableHeader>
-                                  <TableRow>
-                                      <TableHead>Number</TableHead>
-                                      <TableHead>Amount</TableHead>
-                                      <TableHead className="text-right">Action</TableHead>
+                              <TableHeader className="border-b-white/20">
+                                  <TableRow className="border-b-0">
+                                      <TableHead className="text-white">Number</TableHead>
+                                      <TableHead className="text-white">Amount</TableHead>
+                                      <TableHead className="text-right text-white">Action</TableHead>
                                   </TableRow>
                               </TableHeader>
                               <TableBody>
                                   {bets.map((bet, index) => (
-                                  <TableRow key={index}>
+                                  <TableRow key={index} className="border-0">
                                       <TableCell className="font-medium py-2">
-                                          <Badge variant="secondary" className="font-mono">
+                                          <Badge variant="secondary" className="bg-white/10 text-white font-mono">
                                               {bet.number}
                                           </Badge>
                                       </TableCell>
-                                      <TableCell className="py-2">₹{bet.amount}</TableCell>
+                                      <TableCell className="py-2 text-white/90">₹{bet.amount}</TableCell>
                                       <TableCell className="text-right py-2">
                                       <Button
                                           type="button"
                                           variant="ghost"
                                           size="icon"
-                                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                          className="h-7 w-7 text-white/70 hover:text-destructive hover:bg-red-500/10"
                                           onClick={() => handleRemoveBet(index)}
                                       >
                                           <Trash2 className="h-4 w-4" />
@@ -614,18 +608,19 @@ export default function PlaceBetPage() {
                       </div>
                   </div>
               ) : (
-                  <div className="text-center text-sm text-muted-foreground py-8">
+                  <div className="text-center text-sm text-white/70 py-8">
                       Add bets using the form to see them here.
                   </div>
               )}
           </CardContent>
-           <CardFooter>
+           <CardFooter className="bg-black/30 py-3 rounded-b-lg">
               <Button
                   type="button"
-                  className="w-full"
+                  className="w-full font-bold text-lg"
                   onClick={handleSubmit}
                   disabled={bets.length === 0 || isPlacingBet || isLoading || buttonState.disabled}
-                  variant={buttonState.disabled && buttonState.text !== "Place Bets (Total: ₹0)" ? "destructive" : "default"}
+                  variant={buttonState.disabled && buttonState.text !== `Place Bets (Total: ₹${totalBetAmount})` ? "destructive" : "default"}
+                  size="lg"
               >
                   {isPlacingBet ? (
                     <Loader className="mr-2 h-4 w-4 animate-spin" />

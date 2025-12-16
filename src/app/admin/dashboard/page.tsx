@@ -8,18 +8,17 @@ import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-
 const StatCard = ({ name, value, subValue, icon: Icon, isLoading }: { name: string; value: string; subValue?:string; icon: React.ElementType; isLoading: boolean }) => (
-    <Card>
+    <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{name}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-sm font-medium text-white">{name}</CardTitle>
+        <Icon className="h-4 w-4 text-white/80" />
       </CardHeader>
       <CardContent>
-        {isLoading ? <Skeleton className="h-6 w-24" /> : 
+        {isLoading ? <Skeleton className="h-6 w-24 bg-white/20" /> : 
         <div>
-          <div className="text-xl font-bold">{value}</div>
-          {subValue && <p className="text-xs text-muted-foreground">{subValue}</p>}
+          <div className="text-xl font-bold text-white">{value}</div>
+          {subValue && <p className="text-xs text-white/80">{subValue}</p>}
         </div>
         }
       </CardContent>

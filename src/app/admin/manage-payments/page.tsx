@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WalletCards } from 'lucide-react';
 
 interface PaymentSettings {
   upiId?: string;
@@ -62,46 +63,51 @@ export default function ManagePaymentsPage() {
         setSettings(prev => ({ ...prev, [name]: value }));
     };
 
+    const renderInput = (id: keyof PaymentSettings, label: string) => (
+         <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 sm:gap-4">
+            <Label htmlFor={id} className="sm:text-right text-white/80">{label}</Label>
+            <Input
+                id={id}
+                name={id}
+                value={settings[id] as string || ''}
+                onChange={handleChange}
+                className="col-span-1 sm:col-span-2 bg-black/20 border-white/20 text-white placeholder:text-white/60 focus:border-white"
+            />
+        </div>
+    )
+
     return (
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
             <CardHeader>
-                <CardTitle>Manage Payments</CardTitle>
-                <CardDescription>Update payment settings for UPI and bank transfers.</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                    <WalletCards className="h-6 w-6" />
+                    Manage Payments
+                </CardTitle>
+                <CardDescription className="text-white/80">Update payment settings for UPI and bank transfers.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
-                    <div className="space-y-4">
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
+                    <div className="space-y-6">
+                        <Skeleton className="h-10 w-full bg-white/20" />
+                        <Skeleton className="h-10 w-full bg-white/20" />
+                        <Skeleton className="h-10 w-full bg-white/20" />
+                        <Skeleton className="h-10 w-full bg-white/20" />
+                        <Skeleton className="h-10 w-full bg-white/20" />
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <Label htmlFor="upiId">UPI ID</Label>
-                            <Input id="upiId" name="upiId" value={settings.upiId || ''} onChange={handleChange} />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-4">
+                            {renderInput("upiId", "UPI ID")}
+                            {renderInput("bankName", "Bank Name")}
+                            {renderInput("bankAccountNumber", "Account Number")}
+                            {renderInput("bankAccountHolder", "Account Holder Name")}
+                            {renderInput("bankIfscCode", "IFSC Code")}
                         </div>
-                        <div>
-                            <Label htmlFor="bankName">Bank Name</Label>
-                            <Input id="bankName" name="bankName" value={settings.bankName || ''} onChange={handleChange} />
+                        <div className="flex justify-end pt-4">
+                            <Button type="submit" disabled={isSubmitting} className="bg-white text-primary hover:bg-white/90">
+                                {isSubmitting ? 'Saving...' : 'Save Settings'}
+                            </Button>
                         </div>
-                        <div>
-                            <Label htmlFor="accountNumber">Account Number</Label>
-                            <Input id="accountNumber" name="bankAccountNumber" value={settings.bankAccountNumber || ''} onChange={handleChange} />
-                        </div>
-                        <div>
-                            <Label htmlFor="accountHolderName">Account Holder Name</Label>
-                            <Input id="accountHolderName" name="bankAccountHolder" value={settings.bankAccountHolder || ''} onChange={handleChange} />
-                        </div>
-                        <div>
-                            <Label htmlFor="ifscCode">IFSC Code</Label>
-                            <Input id="ifscCode" name="bankIfscCode" value={settings.bankIfscCode || ''} onChange={handleChange} />
-                        </div>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving...' : 'Save Settings'}
-                        </Button>
                     </form>
                 )}
             </CardContent>

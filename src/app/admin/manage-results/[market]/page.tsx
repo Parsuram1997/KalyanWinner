@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Edit, Trash, CalendarOff } from "lucide-react";
+import { Edit, Trash, CalendarOff, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
 import { createKalyanResult, deleteKalyanResult, updateKalyanResult } from "@/app/actions/result-actions";
+import Link from "next/link";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -206,17 +207,26 @@ export default function EnterResultsPage() {
 
   return (
     <div className="flex flex-col gap-6">
+        <Button asChild variant="ghost" className="text-black dark:text-white hover:bg-gray-200 dark:hover:bg-white/10 dark:hover:text-white w-fit">
+             <Link href="/admin/manage-results">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Markets
+            </Link>
+        </Button>
       
-      <div className="grid gap-6">
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
           <CardHeader className="flex flex-col gap-4">
             <div>
                 <CardTitle>Results for {marketName}</CardTitle>
-                <CardDescription>View and manage game results for the last year.</CardDescription>
+                <CardDescription className="text-white/80">View and manage game results for the last year.</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
                 <Dialog open={isHolidayDialogOpen} onOpenChange={setHolidayDialogOpen}>
-                    <DialogTrigger asChild><Button variant="outline" className="w-full sm:w-auto"><CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday</Button></DialogTrigger>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full sm:w-auto bg-black/20 border-white/20 hover:bg-black/30 text-white hover:text-white">
+                            <CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday
+                        </Button>
+                    </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Mark Holiday for {marketName}</DialogTitle>
@@ -234,7 +244,7 @@ export default function EnterResultsPage() {
                 </Dialog>
                 <Dialog open={isAddOpenResultDialogOpen} onOpenChange={setAddOpenResultDialogOpen}>
                 <DialogTrigger asChild>
-                    <Button className="w-full sm:w-auto">Add Open Result</Button>
+                    <Button className="w-full sm:w-auto bg-white text-primary hover:bg-white/90">Add Open Result</Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
@@ -257,47 +267,48 @@ export default function EnterResultsPage() {
                 </Dialog>
             </div>
           </CardHeader>
-          <CardContent className="p-0 sm:p-6">
+          <CardContent>
              {/* Desktop Table */}
-             <div className="hidden md:block rounded-md border">
+             <div className="hidden md:block rounded-md border border-white/20 text-sm">
                 <Table>
-                <TableHeader>
+                <TableHeader className="border-b border-white/20">
                     <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-center">Open Panna</TableHead>
-                    <TableHead className="text-center">Jodi</TableHead>
-                    <TableHead className="text-center">Close Panna</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
+                    <TableHead className="text-white">Date</TableHead>
+                    <TableHead className="text-center text-white">Open Panna</TableHead>
+                    <TableHead className="text-center text-white">Jodi</TableHead>
+                    <TableHead className="text-center text-white">Close Panna</TableHead>
+                    <TableHead className="text-center text-white">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {isLoading ? (
                          <TableRow>
-                            <TableCell colSpan={5} className="text-center p-4">
-                               <Skeleton className="h-24 w-full" />
+                            <TableCell colSpan={5} className="p-4">
+                               <Skeleton className="h-24 w-full bg-white/20" />
                             </TableCell>
                          </TableRow>
                     ) : error ? (
                         <TableRow>
-                            <TableCell colSpan={5} className="text-center text-red-500 py-4">{error.message}</TableCell>
+                            <TableCell colSpan={5} className="text-center text-red-300 py-4">{error.message}</TableCell>
                         </TableRow>
                     ) : paginatedResults && paginatedResults.length > 0 ? paginatedResults.map((result) => (
-                    <TableRow key={result.id}>
-                        <TableCell className="py-1">{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
-                        <TableCell className="font-mono text-center py-1">{result.openPanna}</TableCell>
-                        <TableCell className="font-bold text-primary font-mono text-center py-1">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
-                        <TableCell className="font-mono text-center py-1">{result.closePanna || '--'}</TableCell>
-                        <TableCell className="py-1">
+                    <TableRow key={result.id} className="border-white/20">
+                        <TableCell className="py-2">{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
+                        <TableCell className="font-mono text-center py-2">{result.openPanna}</TableCell>
+                        <TableCell className="font-bold text-lg text-white font-mono text-center py-2">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
+                        <TableCell className="font-mono text-center py-2">{result.closePanna || '--'}</TableCell>
+                        <TableCell className="py-2">
                           <div className="flex gap-2 justify-center">
                           {result.jodi === 'L' ? (
-                              <Button variant="outline" size="xs" disabled><Edit className="h-4 w-4" /></Button>
+                              <Button variant="outline" size="icon" disabled className="bg-transparent cursor-not-allowed"><Edit className="h-4 w-4" /></Button>
                           ) : (
                               <Button 
                                   variant="outline" 
-                                  size="xs" 
+                                  size="icon" 
+                                  className="bg-transparent text-white hover:bg-white/10 hover:text-white"
                                   onClick={() => {
                                       setSelectedResult(result);
-                                      setUpdateClosePanna(result.closePanna || ""); // Pre-fill
+                                      setUpdateClosePanna(result.closePanna || "");
                                       setUpdateResultDialogOpen(true);
                                   }}
                               >
@@ -306,7 +317,7 @@ export default function EnterResultsPage() {
                           )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="xs"><Trash className="h-4 w-4" /></Button>
+                            <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
@@ -326,7 +337,7 @@ export default function EnterResultsPage() {
                     </TableRow>
                     )) : (
                         <TableRow>
-                           <TableCell colSpan={5} className="text-center py-4">No results found for this market.</TableCell>
+                           <TableCell colSpan={5} className="text-center py-8 text-white/80">No results found for this market.</TableCell>
                         </TableRow>
                     )}
                 </TableBody>
@@ -335,40 +346,41 @@ export default function EnterResultsPage() {
              {/* Mobile List */}
              <div className="grid gap-4 md:hidden">
               {isLoading ? (
-                <div className="p-4"><Skeleton className="h-24 w-full" /></div>
+                <div className="p-4"><Skeleton className="h-24 w-full bg-white/20" /></div>
               ) : error ? (
-                <div className="p-4 text-center text-red-500">{error.message}</div>
+                <div className="p-4 text-center text-red-300">{error.message}</div>
               ) : paginatedResults && paginatedResults.length > 0 ? (
                 paginatedResults.map((result) => (
-                  <Card key={result.id} className="p-4">
+                  <Card key={result.id} className="p-4 bg-black/20 border-white/20">
                      <div className="flex justify-between items-start">
                           <div>
                               <p className="font-semibold">{new Date(result.date).toLocaleDateString('en-GB')}</p>
-                              <p className="text-xs text-muted-foreground">{marketName}</p>
+                              <p className="text-xs text-white/80">{marketName}</p>
                           </div>
                           {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : (
                             <div className="text-right">
-                                <p className="font-bold text-lg text-primary">{result.jodi || '--'}</p>
+                                <p className="font-bold text-lg text-white">{result.jodi || '--'}</p>
                             </div>
                           )}
                       </div>
-                      <div className={cn("grid grid-cols-2 gap-2 mt-2 pt-2 border-t", result.jodi === 'L' && 'hidden')}>
+                      <div className={cn("grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/20", result.jodi === 'L' && 'hidden')}>
                           <div className="text-xs">
-                              <p className="text-muted-foreground">Open</p>
+                              <p className="text-white/80">Open</p>
                               <p className="font-mono font-medium">{result.openPanna || '---'}</p>
                           </div>
                            <div className="text-xs text-right">
-                              <p className="text-muted-foreground">Close</p>
+                              <p className="text-white/80">Close</p>
                               <p className="font-mono font-medium">{result.closePanna || '---'}</p>
                           </div>
                       </div>
-                       <div className="flex gap-2 justify-end mt-4 pt-2 border-t">
+                       <div className="flex gap-2 justify-end mt-4 pt-2 border-t border-white/20">
                           {result.jodi === 'L' ? (
-                               <Button variant="outline" size="xs" disabled><Edit className="h-4 w-4 mr-1"/> Edit</Button>
+                               <Button variant="outline" size="sm" disabled className="bg-transparent"><Edit className="h-4 w-4 mr-1"/> Edit</Button>
                           ) : (
                                <Button 
                                   variant="outline" 
-                                  size="xs" 
+                                  size="sm" 
+                                  className="bg-transparent text-white hover:bg-white/10 hover:text-white"
                                   onClick={() => {
                                       setSelectedResult(result);
                                       setUpdateClosePanna(result.closePanna || "");
@@ -380,7 +392,7 @@ export default function EnterResultsPage() {
                           )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="xs"><Trash className="h-4 w-4 mr-1" /> Delete</Button>
+                            <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-1" /> Delete</Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
@@ -399,20 +411,21 @@ export default function EnterResultsPage() {
                   </Card>
                 ))
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-white/80">
                   No results found for this market.
                 </div>
               )}
             </div>
           </CardContent>
            {totalPages > 1 && (
-             <CardFooter className="flex justify-end items-center gap-4 border-t pt-4">
-                <span className="text-sm text-muted-foreground">
+             <CardFooter className="flex justify-end items-center gap-4 border-t border-white/20 pt-4">
+                <span className="text-sm text-white/80">
                     Page {currentPage} of {totalPages}
                 </span>
                 <Button
                     variant="outline"
                     size="sm"
+                    className="bg-transparent text-white hover:bg-white/10 hover:text-white"
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                 >
@@ -421,6 +434,7 @@ export default function EnterResultsPage() {
                 <Button
                     variant="outline"
                     size="sm"
+                     className="bg-transparent text-white hover:bg-white/10 hover:text-white"
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                 >
@@ -429,7 +443,6 @@ export default function EnterResultsPage() {
             </CardFooter>
           )}
         </Card>
-      </div>
 
        <Dialog open={isUpdateResultDialogOpen} onOpenChange={setUpdateResultDialogOpen}>
         <DialogContent>

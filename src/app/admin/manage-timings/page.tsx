@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().optional(),
@@ -54,7 +54,6 @@ const formSchema = z.object({
   message: "Market name is required. Please select one or enter a new name.",
   path: ["name"],
 });
-
 
 type Market = {
   id: string;
@@ -166,18 +165,18 @@ export default function ManageTimingsPage() {
   
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
           <div>
               <CardTitle className="flex items-center gap-2">
               <Clock className="h-6 w-6" />
               <span>Market Schedule</span>
               </CardTitle>
-              <CardDescription>All timings are in 24-hour format (IST).</CardDescription>
+              <CardDescription className="text-white/80">All timings are in 24-hour format (IST).</CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-                <Button onClick={handleAddNew} className="w-full sm:w-auto">
+                <Button onClick={handleAddNew} className="w-full sm:w-auto shrink-0 bg-white text-primary hover:bg-white/90">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add/Edit Timings
                 </Button>
@@ -243,68 +242,70 @@ export default function ManageTimingsPage() {
             </DialogContent>
           </Dialog>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <div className="rounded-md border">
+        <CardContent>
+          <div className="rounded-md border border-white/20 text-sm">
             <Table>
-              <TableHeader>
+              <TableHeader className="border-b border-white/20">
                 <TableRow>
-                  <TableHead className="text-xs h-auto px-1 py-0">Market Name</TableHead>
-                  <TableHead className="text-center text-xs h-auto px-1 py-0">Open Bidding</TableHead>
-                  <TableHead className="text-center text-xs h-auto px-1 py-0">Open Result</TableHead>
-                  <TableHead className="text-center text-xs h-auto px-1 py-0">Close Bidding</TableHead>
-                  <TableHead className="text-center text-xs h-auto px-1 py-0">Close Result</TableHead>
-                  <TableHead className="text-right text-xs h-auto px-1 py-0">Actions</TableHead>
+                  <TableHead className="text-white py-2">Market</TableHead>
+                  <TableHead className="text-center text-white py-2">Open Bidding</TableHead>
+                  <TableHead className="text-center text-white py-2">Open Result</TableHead>
+                  <TableHead className="text-center text-white py-2">Close Bidding</TableHead>
+                  <TableHead className="text-center text-white py-2">Close Result</TableHead>
+                  <TableHead className="text-right text-white py-2">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                     <TableCell colSpan={6} className="text-center py-4">
-                        <div className="space-y-2">
-                            <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-6 w-full" />
+                     <TableCell colSpan={6} className="py-4">
+                        <div className="space-y-2 px-4">
+                            <Skeleton className="h-8 w-full bg-white/20" />
+                            <Skeleton className="h-8 w-full bg-white/20" />
+                            <Skeleton className="h-8 w-full bg-white/20" />
                         </div>
                      </TableCell>
                   </TableRow>
                 ) : markets?.map((market) => (
-                  <TableRow key={market.id}>
-                    <TableCell className="font-medium text-xs px-1 py-0">{market.name}</TableCell>
-                    <TableCell className="text-center font-semibold text-primary text-xs px-1 py-0">{market.openBiddingTime}</TableCell>
-                    <TableCell className="text-center font-semibold text-primary text-xs px-1 py-0">{market.openResultTime}</TableCell>
-                    <TableCell className="text-center font-semibold text-destructive text-xs px-1 py-0">{market.closeBiddingTime}</TableCell>
-                    <TableCell className="text-center font-semibold text-destructive text-xs px-1 py-0">{market.closeResultTime}</TableCell>
-                    <TableCell className="text-right px-1 py-0">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(market)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the <strong>{market.name}</strong> market.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(market.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                  <TableRow key={market.id} className="border-white/20">
+                    <TableCell className="font-medium py-2">{market.name}</TableCell>
+                    <TableCell className="text-center font-semibold text-green-300 py-2">{market.openBiddingTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-green-300 py-2">{market.openResultTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-orange-300 py-2">{market.closeBiddingTime}</TableCell>
+                    <TableCell className="text-center font-semibold text-orange-300 py-2">{market.closeResultTime}</TableCell>
+                    <TableCell className="text-right py-2">
+                        <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(market)} className="text-white hover:bg-white/10 hover:text-white">
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-red-400 hover:bg-red-400/10 hover:text-red-400">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the <strong>{market.name}</strong> market.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(market.id)}>
+                                    Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
                     </TableCell>
                   </TableRow>
                 ))}
                 {!isLoading && markets?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground px-1 py-4">No active markets found.</TableCell>
+                    <TableCell colSpan={6} className="text-center text-white/80 py-8">No active markets found.</TableCell>
                   </TableRow>
                 )}
               </TableBody>

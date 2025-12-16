@@ -47,23 +47,6 @@ export default function LoginPage() {
     return () => unsubscribe();
   }, [auth]);
 
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (view === 'login') {
-        e.preventDefault();
-        const message = "Kya aap वाकई वापस जाना चाहते हैं?";
-        e.returnValue = message;
-        return message;
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [view]);
-
   const handleForgotPassword = async () => {
     setIsLoading(true);
     if (!auth || !email) {
@@ -147,47 +130,47 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-       <div className="relative hidden items-center justify-center bg-gradient-to-br from-primary/80 via-primary to-secondary p-10 text-white lg:flex">
-         <div className="relative z-10 w-full max-w-md rounded-xl bg-black/20 p-8 text-center backdrop-blur-sm">
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-gradient-to-br from-blue-600 to-purple-700">
+       <div className="relative hidden items-center justify-center p-10 text-white lg:flex">
+         <div className="relative z-10 w-full max-w-md rounded-xl bg-black/20 p-8 text-center backdrop-blur-sm border border-white/20">
             <h2 className="text-4xl font-bold tracking-tight">Welcome Back!</h2>
-            <p className="mt-4 text-lg text-primary-foreground/90">Log in to access your dashboard, view live results, place your bets, and manage your wallet.</p>
+            <p className="mt-4 text-lg text-white/90">Log in to access your dashboard, view live results, place your bets, and manage your wallet.</p>
         </div>
       </div>
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground p-4">
-        <Card className="w-full max-w-md">
+      <div className="flex min-h-screen items-center justify-center text-white p-4">
+        <Card className="w-full max-w-md bg-black/20 border-white/20 text-white backdrop-blur-md">
             <CardHeader className="text-center">
                 <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="mx-auto" />
-                <CardTitle className="text-3xl font-bold tracking-tight">{view === 'login' ? "Secure User Login" : "Reset Password"}</CardTitle>
-                <CardDescription>{view === 'login' ? "Enter your credentials to log in." : "We'll email you a reset link."}</CardDescription>
+                <CardTitle className="text-3xl font-bold tracking-tight text-white">{view === 'login' ? "Secure User Login" : "Reset Password"}</CardTitle>
+                <CardDescription className="text-white/80">{view === 'login' ? "Enter your credentials to log in." : "We'll email you a reset link."}</CardDescription>
             </CardHeader>
             <CardContent>
             {view === 'login' ? (
                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="identifier">Email or Mobile Number</Label>
-                        <Input id="identifier" placeholder="Email or Mobile" required value={identifier} onChange={(e) => setIdentifier(e.target.value)} disabled={isLoading} className="h-12" />
+                        <Label htmlFor="identifier" className="text-white">Email or Mobile Number</Label>
+                        <Input id="identifier" placeholder="Email or Mobile" required value={identifier} onChange={(e) => setIdentifier(e.target.value)} disabled={isLoading} className="h-12 bg-black/20 border-white/20 text-white placeholder:text-white/50" />
                     </div>
                     <div className="grid gap-2">
-                         <div className="flex items-center"><Label htmlFor="password">Password</Label><Button variant="link" type="button" onClick={() => setView('forgot_password')} className="ml-auto px-0 h-auto text-sm">Forgot password?</Button></div>
-                        <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} className="h-12" />
+                         <div className="flex items-center"><Label htmlFor="password" className="text-white">Password</Label><Button variant="link" type="button" onClick={() => setView('forgot_password')} className="ml-auto px-0 h-auto text-sm text-white/70 hover:text-white">Forgot password?</Button></div>
+                        <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} className="h-12 bg-black/20 border-white/20 text-white placeholder:text-white/50" />
                     </div>
-                    <Button type="submit" className="w-full h-12" disabled={isLoading}>{isLoading ? <><Loader className="mr-2 h-4 w-4 animate-spin" />Logging in...</> : 'Login'}</Button>
+                    <Button type="submit" className="w-full h-12 bg-white text-primary font-bold hover:bg-white/90" disabled={isLoading}>{isLoading ? <><Loader className="mr-2 h-4 w-4 animate-spin" />Logging in...</> : 'Login'}</Button>
                 </form>
             ) : (
                 <div className="space-y-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Registered Email</Label>
-                        <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} className="h-12" />
+                        <Label htmlFor="email" className="text-white">Registered Email</Label>
+                        <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} className="h-12 bg-black/20 border-white/20 text-white placeholder:text-white/50" />
                     </div>
-                    <Button onClick={handleForgotPassword} className="w-full h-12" disabled={isLoading}>{isLoading ? 'Sending...' : 'Send Reset Link'}</Button>
-                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12">Back to Login</Button>
+                    <Button onClick={handleForgotPassword} className="w-full h-12 bg-white text-primary font-bold hover:bg-white/90" disabled={isLoading}>{isLoading ? 'Sending...' : 'Send Reset Link'}</Button>
+                    <Button variant="outline" onClick={() => setView('login')} className="w-full h-12 border-white/50 text-white hover:bg-white/10 hover:text-white">Back to Login</Button>
                 </div>
             )}
             </CardContent>
             <CardFooter className="flex-col gap-4">
-                <p className="text-sm text-center w-full">Don't have an account? <Link href="/signup" className="font-semibold text-primary hover:underline">Sign up</Link></p>
-                 <Link href="/admin" className="text-xs underline hover:text-primary">Admin Login</Link>
+                <p className="text-sm text-center w-full text-white/80">Don't have an account? <Link href="/signup" className="font-semibold text-yellow-300 hover:underline">Sign up</Link></p>
+                 <Link href="/admin" className="text-xs underline hover:text-yellow-300 text-white/70">Admin Login</Link>
             </CardFooter>
         </Card>
       </div>

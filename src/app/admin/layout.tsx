@@ -162,9 +162,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         </Sidebar>
         <SidebarInset>
             <div className="flex flex-col h-dvh">
-            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-14 sm:px-6">
+            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-4 border-b bg-gradient-to-r from-blue-600 to-purple-700 px-4 text-white backdrop-blur-sm sm:h-14 sm:px-6">
                 <div className="flex items-center gap-2">
-                <SidebarTrigger />
+                <SidebarTrigger className="text-white"/>
                 </div>
                 <div className="flex flex-1 items-center justify-end gap-2">
                 <ThemeToggle />
@@ -216,11 +216,9 @@ function AdminAuthLayout({ children }: { children: React.ReactNode }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // If we are on the admin login page, don't apply the layout or auth checks.
   if (pathname === '/admin') {
     return <>{children}</>;
   }
 
-  // For all other admin pages, apply the authentication and layout wrapper.
   return <AdminAuthLayout>{children}</AdminAuthLayout>;
 }

@@ -37,46 +37,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const ACTIVITY_PER_PAGE = 25;
 
 const WalletCard = ({ isLoading, depositBalance, winningBalance, totalBalance }: { isLoading: boolean, depositBalance: number, winningBalance: number, totalBalance: number }) => (
-    <Card className="bg-gradient-to-br from-primary/20 to-accent/20 hover:shadow-lg transition-shadow">
+    <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0 hover:shadow-lg transition-shadow">
         <CardHeader className="p-4">
-            <CardTitle className="text-base">Wallet Balance</CardTitle>
-            <CardDescription>Your available funds.</CardDescription>
+            <CardTitle className="text-base text-white">Wallet Balance</CardTitle>
+            <CardDescription className="text-white/80">Your available funds.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 p-4 pt-0">
             {isLoading ? (
                 <div className="space-y-2">
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-8 w-1/2" />
+                    <Skeleton className="h-8 w-3/4 bg-white/20" />
+                    <Skeleton className="h-8 w-3/4 bg-white/20" />
+                    <Skeleton className="h-8 w-1/2 bg-white/20" />
                 </div>
             ) : (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="flex items-center gap-2 text-white/70">
                             <PiggyBank className="h-5 w-5" />
                             <span className="text-sm font-medium">Deposit</span>
                         </div>
                         <span className="font-semibold text-lg">₹{depositBalance.toFixed(0)}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="flex items-center gap-2 text-white/70">
                             <Trophy className="h-5 w-5" />
                             <span className="text-sm font-medium">Winnings</span>
                         </div>
                         <span className="font-semibold text-lg">₹{winningBalance.toFixed(0)}</span>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t mt-2">
+                    <div className="flex items-center justify-between pt-2 border-t border-white/20 mt-2">
                         <div className="flex items-center gap-2 font-bold">
                             <DollarSign className="h-5 w-5" />
                             <span className="text-sm">Total</span>
                         </div>
-                        <span className="font-bold text-xl text-primary">₹{totalBalance.toFixed(0)}</span>
+                        <span className="font-bold text-xl text-yellow-300">₹{totalBalance.toFixed(0)}</span>
                     </div>
                 </div>
             )}
         </CardContent>
         <CardFooter className="p-4 pt-0">
-            <Button size="sm" asChild className="w-full">
+            <Button size="sm" asChild className="w-full bg-white text-primary hover:bg-white/90">
             <Link href="/wallet">
                 <Wallet className="mr-1.5 h-4 w-4" /> Manage Funds
             </Link>
@@ -151,7 +151,7 @@ const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current 
             </CardContent>
         )}
         <CardFooter className="mt-auto pt-4">
-            <Button variant="secondary" size="sm" className="w-full" asChild>
+            <Button variant="secondary" size="sm" className="w-full bg-white/10 text-white hover:bg-white/20 border-white/20" asChild>
                 <Link href="/results">View All Results</Link>
             </Button>
         </CardFooter>
@@ -188,7 +188,7 @@ const ActivityCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivi
                         className={cn(
                             "text-xs",
                             activity.status === "Won" || activity.status === "Completed" ? "bg-white/20 text-white" :
-                            activity.status === "Pending" ? "bg-white text-primary" :
+                            activity.status === "Pending" ? "bg-yellow-300 text-black" :
                             "bg-transparent border border-white/50 text-white/80"
                         )}
                         >
@@ -220,7 +220,7 @@ const ActivityCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivi
                         className={cn(
                             "text-xs mt-1",
                             activity.status === "Won" || activity.status === "Completed" ? "bg-white/20 text-white" :
-                            activity.status === "Pending" ? "bg-white text-primary" :
+                            activity.status === "Pending" ? "bg-yellow-300 text-black" :
                             "bg-transparent border border-white/50 text-white/80"
                         )}
                         >
@@ -409,9 +409,9 @@ export default function DashboardPage() {
       {/* Mobile Layout */}
       <div className="md:hidden">
         <Tabs defaultValue="dashboard" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-black/20 border-white/20 border">
+                <TabsTrigger value="dashboard" className="text-white/80 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Dashboard</TabsTrigger>
+                <TabsTrigger value="activity" className="text-white/80 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Activity</TabsTrigger>
             </TabsList>
             <TabsContent value="dashboard" className="mt-4">
                 <div className="grid gap-6">
