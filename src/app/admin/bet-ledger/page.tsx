@@ -59,6 +59,7 @@ type Bet = {
     market: string;
     gameType: string;
     number: string;
+    amount: number;
     session: 'Open' | 'Close' | 'Jodi';
     status: "Placed" | "Won" | "Lost";
     createdAt: Timestamp;
