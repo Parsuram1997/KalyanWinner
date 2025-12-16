@@ -61,7 +61,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton asChild>
                 <Link href="/play">
                   <Ticket />
-                  Play
+                  Play Games
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -157,9 +157,8 @@ export default function DepositPage() {
     ? `https://web.whatsapp.com/send?phone=919406453098&text=${encodeURIComponent(defaultWhatsappMessage)}`
     : `https://wa.me/919406453098?text=${encodeURIComponent(defaultWhatsappMessage)}`;
 
-
   if (isLoadingSettings) {
-    return <Skeleton className="w-full h-96" />;
+    return <Skeleton className="w-full h-96 bg-slate-800" />;
   }
 
   if (errorSettings) {
@@ -182,10 +181,10 @@ export default function DepositPage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           
-          <Card className={cn("transition-opacity duration-300", currentStep === 2 && "opacity-60")}>
+          <Card className={cn("bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0 transition-opacity duration-300", currentStep === 2 && "opacity-60")}>
             <CardHeader>
               <CardTitle>Step 1: Make Payment</CardTitle>
-              <CardDescription>Enter amount and choose a payment method below.</CardDescription>
+              <CardDescription className="text-white/80">Enter amount and choose a payment method below.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -196,7 +195,7 @@ export default function DepositPage() {
                     <FormItem>
                       <FormLabel>Amount to Deposit</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder={`Minimum ₹${minDepositAmount}`} {...field} disabled={currentStep > 1} />
+                        <Input type="number" placeholder={`Minimum ₹${minDepositAmount}`} {...field} disabled={currentStep > 1} className="bg-transparent text-white"/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -205,18 +204,18 @@ export default function DepositPage() {
 
                 {numericAmount >= minDepositAmount && (hasUpiDetails || hasBankDetails) && (
                     <Tabs defaultValue={hasUpiDetails ? "upi" : "bank"} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
-                           {hasUpiDetails && <TabsTrigger value="upi">UPI</TabsTrigger>}
-                           {hasUpiDetails && <TabsTrigger value="qr">QR</TabsTrigger>}
-                           {hasBankDetails && <TabsTrigger value="bank">Bank</TabsTrigger>}
+                        <TabsList className="grid w-full grid-cols-3 bg-black/20">
+                           {hasUpiDetails && <TabsTrigger value="upi" className="data-[state=active]:bg-white data-[state=active]:text-black">UPI</TabsTrigger>}
+                           {hasUpiDetails && <TabsTrigger value="qr" className="data-[state=active]:bg-white data-[state=active]:text-black">QR</TabsTrigger>}
+                           {hasBankDetails && <TabsTrigger value="bank" className="data-[state=active]:bg-white data-[state=active]:text-black">Bank</TabsTrigger>}
                         </TabsList>
                         {hasUpiDetails && (
                             <TabsContent value="upi" className="mt-4">
-                               <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
+                               <div className="flex flex-col items-center gap-4 p-4 bg-black/20 rounded-lg">
                                 <div className="text-center w-full">
                                     <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
                                     <div
-                                    className="flex items-center justify-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground"
+                                    className="flex items-center justify-center gap-2 cursor-pointer text-white/80 hover:text-white"
                                     onClick={() => copyToClipboard(paymentSettings.upiId!, 'UPI ID')}
                                     >
                                     <p className="text-xs">To: {paymentSettings.payeeName} ({paymentSettings.upiId})</p>
@@ -233,8 +232,8 @@ export default function DepositPage() {
                         )}
                         {hasUpiDetails && (
                             <TabsContent value="qr" className="mt-4">
-                                <div className="flex flex-col items-center gap-4 p-4 bg-muted rounded-lg">
-                                  <p className="text-sm text-muted-foreground">Scan with any UPI app</p>
+                                <div className="flex flex-col items-center gap-4 p-4 bg-black/20 rounded-lg">
+                                  <p className="text-sm text-white/80">Scan with any UPI app</p>
                                   <div className="p-2 bg-white rounded-md shadow-inner">
                                     <QRCode
                                       value={upiUrl}
@@ -244,38 +243,38 @@ export default function DepositPage() {
                                   </div>
                                   <div className="text-center w-full">
                                       <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
-                                      <p className="text-xs text-muted-foreground">To: {paymentSettings.payeeName}</p>
+                                      <p className="text-xs text-white/80">To: {paymentSettings.payeeName}</p>
                                   </div>
                                 </div>
                             </TabsContent>
                         )}
                         {hasBankDetails && (
                             <TabsContent value="bank" className="mt-4">
-                                 <div className="space-y-4 p-4 bg-muted rounded-lg text-sm">
+                                 <div className="space-y-4 p-4 bg-black/20 rounded-lg text-sm">
                                     <h3 className="font-semibold text-center mb-2">Bank Account Details</h3>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-muted-foreground">Account Name:</span>
+                                        <span className="text-white/80">Account Name:</span>
                                         <div className="flex items-center gap-2 font-medium">
                                             <span>{paymentSettings.bankAccountHolder}</span>
                                             <Copy className="h-4 w-4 cursor-pointer" onClick={() => copyToClipboard(paymentSettings.bankAccountHolder!, 'Account Name')} />
                                         </div>
                                     </div>
                                      <div className="flex justify-between items-center">
-                                        <span className="text-muted-foreground">Account Number:</span>
+                                        <span className="text-white/80">Account Number:</span>
                                          <div className="flex items-center gap-2 font-medium">
                                             <span>{paymentSettings.bankAccountNumber}</span>
                                             <Copy className="h-4 w-4 cursor-pointer" onClick={() => copyToClipboard(paymentSettings.bankAccountNumber!, 'Account Number')} />
                                         </div>
                                     </div>
                                      <div className="flex justify-between items-center">
-                                        <span className="text-muted-foreground">IFSC Code:</span>
+                                        <span className="text-white/80">IFSC Code:</span>
                                          <div className="flex items-center gap-2 font-medium">
                                             <span>{paymentSettings.bankIfscCode}</span>
                                             <Copy className="h-4 w-4 cursor-pointer" onClick={() => copyToClipboard(paymentSettings.bankIfscCode!, 'IFSC Code')} />
                                         </div>
                                     </div>
                                      <div className="flex justify-between items-center">
-                                        <span className="text-muted-foreground">Bank Name:</span>
+                                        <span className="text-white/80">Bank Name:</span>
                                          <div className="flex items-center gap-2 font-medium">
                                             <span>{paymentSettings.bankName}</span>
                                         </div>
@@ -298,10 +297,10 @@ export default function DepositPage() {
           )}
 
           {currentStep === 2 && (
-            <Card className="animate-in fade-in-0 duration-500">
+            <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0 animate-in fade-in-0 duration-500">
                 <CardHeader>
                 <CardTitle>Step 2: Confirm Deposit</CardTitle>
-                <CardDescription>Enter the UTR/Transaction ID from your payment app to confirm.</CardDescription>
+                <CardDescription className="text-white/80">Enter the UTR/Transaction ID from your payment app to confirm.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                 <FormField
@@ -311,7 +310,7 @@ export default function DepositPage() {
                     <FormItem>
                         <FormLabel>UTR / Transaction ID</FormLabel>
                         <FormControl>
-                        <Input placeholder="Enter 12-digit UTR" {...field} autoFocus />
+                        <Input placeholder="Enter 12-digit UTR" {...field} autoFocus className="bg-transparent text-white"/>
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -331,18 +330,18 @@ export default function DepositPage() {
         </form>
       </Form>
 
-      <Card>
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
         <CardHeader>
           <CardTitle>Need Help?</CardTitle>
-          <CardDescription>If you have any issues with your deposit, please contact us.</CardDescription>
+          <CardDescription className="text-white/80">If you have any issues with your deposit, please contact us.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-row justify-center gap-4">
-            <Button asChild size="sm" variant="outline">
+            <Button asChild size="sm" variant="outline" className="bg-transparent text-white hover:bg-white/10">
               <Link href="tel:9406453098">
                   <Phone className="mr-2 h-4 w-4" /> Call Us
               </Link>
             </Button>
-            <Button asChild size="sm" variant="outline">
+            <Button asChild size="sm" variant="outline" className="bg-transparent text-white hover:bg-white/10">
               <Link href={whatsappUrl} target="_blank">
                   <WhatsAppIcon /> <span className="ml-2">WhatsApp Us</span>
               </Link>

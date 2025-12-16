@@ -86,7 +86,7 @@ const WalletCard = ({ isLoading, depositBalance, winningBalance, totalBalance }:
 );
 
 const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current }: { isLoading: boolean, latestResults: any[], api: CarouselApi | undefined, onCarouselApiSet: (api: CarouselApi) => void, current: number }) => (
-    <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
+    <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
         <CardHeader>
             <CardTitle className="text-base">Latest Results</CardTitle>
             <CardDescription className="text-white/80">Swipe to see results for all markets.</CardDescription>
@@ -159,42 +159,44 @@ const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current 
 );
 
 const ActivityCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivity, currentPage, totalPages, setCurrentPage }: { isActivityLoading: boolean, sortedRecentActivity: any[], paginatedActivity: any[], currentPage: number, totalPages: number, setCurrentPage: (page: number | ((prev: number) => number)) => void }) => (
-    <Card className="bg-gradient-to-tr from-accent/10 to-background hover:shadow-lg transition-shadow">
+    <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0 hover:shadow-lg transition-shadow">
     <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
     </CardHeader>
     <CardContent className="p-0 sm:p-6">
-        {isActivityLoading ? <Skeleton className="h-40 w-full" /> : sortedRecentActivity && sortedRecentActivity.length > 0 ? (
+        {isActivityLoading ? <Skeleton className="h-40 w-full bg-white/20" /> : sortedRecentActivity && sortedRecentActivity.length > 0 ? (
         <>
             <div className="hidden md:block">
             <Table>
                 <TableHeader>
-                <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                <TableRow className="border-b-white/20">
+                    <TableHead className="text-white">Description</TableHead>
+                    <TableHead className="text-white">Status</TableHead>
+                    <TableHead className="text-white">Date</TableHead>
+                    <TableHead className="text-right text-white">Amount</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                 {paginatedActivity.map((activity) => (
-                    <TableRow key={activity.id}>
+                    <TableRow key={activity.id} className="border-white/20">
                     <TableCell className="py-2">
                         <div className="font-medium">{activity.description}</div>
                     </TableCell>
                     <TableCell className="py-2">
                         <Badge
-                        variant={
-                            activity.status === "Won" || activity.status === "Completed" ? "secondary" :
-                            activity.status === "Pending" ? "default" :
-                            "outline"
-                        }
+                        variant={null}
+                        className={cn(
+                            "text-xs",
+                            activity.status === "Won" || activity.status === "Completed" ? "bg-white/20 text-white" :
+                            activity.status === "Pending" ? "bg-white text-primary" :
+                            "bg-transparent border border-white/50 text-white/80"
+                        )}
                         >
                         {activity.status}
                         </Badge>
                     </TableCell>
                     <TableCell className="py-2">{new Date(activity.date).toLocaleDateString()}</TableCell>
-                    <TableCell className={`text-right font-semibold py-2 ${activity.amount > 0 ? 'text-green-600' : ''}`}>
+                    <TableCell className={cn("text-right font-semibold py-2", activity.amount > 0 ? 'text-green-400' : 'text-red-400')}>
                         ₹{activity.amount.toFixed(0)}
                     </TableCell>
                     </TableRow>
@@ -204,51 +206,56 @@ const ActivityCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivi
             </div>
             <div className="md:hidden">
             {paginatedActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between border-b px-4 py-3 last:border-b-0">
+                <div key={activity.id} className="flex items-center justify-between border-b border-b-white/20 px-4 py-3 last:border-b-0">
                 <div>
                     <div className="font-medium text-xs">{activity.description}</div>
-                    <div className="text-xs text-muted-foreground">{new Date(activity.date).toLocaleDateString()}</div>
+                    <div className="text-xs text-white/80">{new Date(activity.date).toLocaleDateString()}</div>
                 </div>
                 <div className="text-right">
-                    <div className={`text-xs font-semibold ${activity.amount > 0 ? 'text-green-600' : ''}`}>
+                    <div className={cn("text-xs font-semibold", activity.amount > 0 ? 'text-green-400' : 'text-red-400')}>
                         ₹{activity.amount.toFixed(0)}
                     </div>
-                    <Badge
-                    variant={
-                        activity.status === "Won" || activity.status === "Completed" ? "secondary" :
-                        activity.status === "Pending" ? "default" :
-                        "outline"
-                    }
-                    className="text-xs"
-                    >
-                    {activity.status}
-                    </Badge>
+                     <Badge
+                        variant={null}
+                        className={cn(
+                            "text-xs mt-1",
+                            activity.status === "Won" || activity.status === "Completed" ? "bg-white/20 text-white" :
+                            activity.status === "Pending" ? "bg-white text-primary" :
+                            "bg-transparent border border-white/50 text-white/80"
+                        )}
+                        >
+                        {activity.status}
+                        </Badge>
                 </div>
                 </div>
             ))}
             </div>
-            <div className="flex items-center justify-between mt-4 px-4 sm:px-0">
-            <Button
-                variant="outline"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-            >
-                Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-            </span>
-            <Button
-                variant="outline"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-            >
-                Next
-            </Button>
+             <div className="flex justify-end items-center gap-4 pt-4 px-4 sm:px-0">
+                <span className="text-sm text-white/80">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="bg-transparent text-white hover:bg-white/10"
+                >
+                    Previous
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="bg-transparent text-white hover:bg-white/10"
+                >
+                    Next
+                </Button>
             </div>
         </>
         ) : (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-center py-8 text-white/80">
             <p>No recent activity found.</p>
         </div>
         )}

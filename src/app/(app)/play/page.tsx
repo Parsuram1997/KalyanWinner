@@ -68,7 +68,7 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
     const result = results?.[0];
     
     if (isLoading) {
-        return <Skeleton className="h-12 w-full mt-2" />;
+        return <Skeleton className="h-12 w-full mt-2 bg-white/20" />;
     }
 
     const isOpenResult = result && result.openPanna && !result.closePanna && result.jodi !== 'L';
@@ -79,15 +79,15 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
     return (
         <div className="mt-2 text-center font-mono text-sm flex items-center justify-center">
             {isHoliday ? (
-                 <div className="flex items-center justify-center gap-2 text-destructive font-bold">
+                 <div className="flex items-center justify-center gap-2 text-white font-bold bg-red-600/90 rounded-md px-3 py-1">
                     <span>HOLIDAY</span>
                 </div>
             ) : isFullResult ? (
-                 <div className="flex items-center justify-center gap-2">
+                 <div className="flex items-center justify-center gap-2 text-white">
                     <div className="flex flex-col items-center">
                         <span className="text-xl font-bold tracking-widest">{result.openPanna}</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                    <div className="flex flex-col items-center rounded-md bg-white px-3 py-1 text-slate-900">
                         <span className="text-2xl font-bold tracking-wider">{result.jodi}</span>
                     </div>
                     <div className="flex flex-col items-center">
@@ -95,23 +95,23 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
                     </div>
                 </div>
             ) : isOpenResult ? (
-                 <div className="flex items-center justify-center gap-2">
+                 <div className="flex items-center justify-center gap-2 text-white">
                     <div className="flex flex-col items-center">
                         <span className="text-xl font-bold tracking-widest">{result.openPanna}</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                    <div className="flex flex-col items-center rounded-md bg-white px-3 py-1 text-slate-900">
                         <span className="text-2xl font-bold tracking-wider">{openDigit}</span>
                     </div>
                     <div className="flex flex-col items-center">
-                        <span className="text-xl font-bold tracking-widest">---</span>
+                        <span className="text-xl font-bold tracking-widest text-white/80">---</span>
                     </div>
                 </div>
             ) : (
-                <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <div className="flex items-center justify-center gap-2 text-white/70">
                     <div className="flex flex-col items-center">
                         <span className="text-lg font-bold tracking-widest">***</span>
                     </div>
-                    <div className="flex flex-col items-center rounded-md bg-muted px-2 py-1 text-muted-foreground">
+                    <div className="flex flex-col items-center rounded-md bg-black/20 px-2 py-1 text-white/70">
                         <span className="text-xl font-bold tracking-wider">**</span>
                     </div>
                     <div className="flex flex-col items-center">
@@ -167,29 +167,29 @@ const MarketCard = ({ market }: { market: Market }) => {
     }, [market.openBiddingTime, market.openResultTime, market.closeBiddingTime, market.closeResultTime]);
     
     return (
-         <Card className={cn("flex flex-col justify-between", buttonState.disabled && buttonState.text === "Betting Closed" && "opacity-70 bg-muted/50")}>
+         <Card className={cn("flex flex-col justify-between bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0", buttonState.disabled && buttonState.text === "Betting Closed" && "opacity-60")}>
             <div>
                 <CardHeader className="p-4 pb-2 flex-row justify-between items-start">
                   <CardTitle className="text-base">{market.name}</CardTitle>
                    <div className="text-right">
                       <p className="text-xs font-semibold">{new Date().toLocaleDateString('en-GB')}</p>
-                      <p className="text-xs text-muted-foreground">{new Date().toLocaleDateString('en-US', { weekday: 'long' })}</p>
+                      <p className="text-xs text-white/80">{new Date().toLocaleDateString('en-US', { weekday: 'long' })}</p>
                   </div>
                 </CardHeader>
-                <CardContent className="px-4 pb-2 text-xs text-muted-foreground">
+                <CardContent className="px-4 pb-2 text-xs text-white/80">
                     <div className="flex items-center gap-1.5">
                         <Clock className="h-3 w-3 shrink-0" />
                         <span className="font-medium w-12">Bidding:</span>
-                        <span className="font-semibold text-primary">{market.openBiddingTime}</span>
+                        <span className="font-semibold text-white">{market.openBiddingTime}</span>
                         <span className="mx-1">to</span>
-                        <span className="font-semibold text-destructive">{market.closeBiddingTime}</span>
+                        <span className="font-semibold text-white">{market.closeBiddingTime}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-1">
                         <Clock className="h-3 w-3 shrink-0" />
                         <span className="font-medium w-12">Result:</span>
-                        <span className="font-semibold text-primary">{market.openResultTime}</span>
+                        <span className="font-semibold text-white">{market.openResultTime}</span>
                         <span className="mx-1">to</span>
-                        <span className="font-semibold text-destructive">{market.closeResultTime}</span>
+                        <span className="font-semibold text-white">{market.closeResultTime}</span>
                     </div>
                     <MarketResult marketName={market.name} />
                 </CardContent>
@@ -238,17 +238,17 @@ export default function MarketSelectionPage() {
       <div className="flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-4 gap-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i}>
+              <Card key={i} className="bg-gradient-to-br from-blue-600 to-purple-700 border-0">
                 <CardHeader className="p-4 pb-2">
-                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-5 w-3/4 bg-white/20" />
                 </CardHeader>
                 <CardContent className="p-4 pt-2 pb-2">
-                   <Skeleton className="h-3 w-full" />
-                   <Skeleton className="h-3 w-full mt-1" />
-                   <Skeleton className="h-12 w-full mt-2" />
+                   <Skeleton className="h-3 w-full bg-white/20" />
+                   <Skeleton className="h-3 w-full mt-1 bg-white/20" />
+                   <Skeleton className="h-12 w-full mt-2 bg-white/20" />
                 </CardContent>
                 <CardFooter className="p-4 pt-2">
-                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full bg-white/20" />
                 </CardFooter>
               </Card>
             ))

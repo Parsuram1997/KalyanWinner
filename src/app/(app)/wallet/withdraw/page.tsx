@@ -20,13 +20,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Banknote, Landmark, Wallet, Terminal, AlertTriangle, Phone } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const WhatsAppIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <path d="M16.75 13.96c.25.13.43.2.5.33.07.13.07.55.02.68-.05.13-.3.35-.6.5-.3.15-.68.2-1.13.1-1.1-.23-2.13-.6-3.3-1.23-1.45-.78-2.5-1.8-3.25-3.03-.24-.4-.38-.8-.38-1.23s.12-.8.36-1.04c.24-.24.5-.3.7-.3.07 0 .13.02.2.02.13.02.2.02.3.07.1.05.15.2.2.33.05.13.07.28.07.4 0 .13-.02.28-.07.4-.05.13-.1.2-.15.25l-.2.25c-.05.05-.07.1-.07.13s.02.13.07.2c.05.07.28.48.7.93.7.73 1.28 1.02 1.5.96.05-.02.1-.05.13-.07l.2-.2c.05-.05.1-.1.15-.15s.13-.07.2-.07a.3.3 0 0 1 .28.07c.1.07.48.24.58.28.1.04.18.07.2.1.04.05.04.1.02.15-.02.05-.02.1-.07.13-.05.05-.1.1-.15.15zM12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z" />
     </svg>
 );
-
 
 export default function WithdrawPage() {
   const router = useRouter();
@@ -45,7 +45,6 @@ export default function WithdrawPage() {
   });
   
   useEffect(() => {
-    // This check ensures window is defined, preventing SSR errors.
     setIsMobile(window.innerWidth < 768);
   }, []);
 
@@ -70,13 +69,11 @@ export default function WithdrawPage() {
     fetchSettings();
   }, [form]);
 
-
   useEffect(() => {
     if (winningBalance > 0) {
       form.setValue("amount", winningBalance);
     }
   }, [winningBalance, form]);
-
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !userData) {
@@ -87,19 +84,6 @@ export default function WithdrawPage() {
     if (values.amount > winningBalance) {
         form.setError("amount", { type: "manual", message: "Withdrawal amount cannot exceed your winning balance." });
         return;
-    }
-
-    let paymentInfo = {};
-    if (userData.paymentMethod === 'bank') {
-        paymentInfo = {
-            method: 'Bank Transfer',
-            details: `${userData.accountHolderName}, Acc: ${userData.accountNumber}, IFSC: ${userData.ifscCode}`
-        };
-    } else if (userData.paymentMethod === 'upi') {
-        paymentInfo = {
-            method: 'UPI',
-            details: userData.upiId
-        };
     }
 
     try {
@@ -134,18 +118,18 @@ export default function WithdrawPage() {
     
     if (userData.paymentMethod === 'bank') {
       return (
-        <div className="space-y-1 text-sm">
+        <div className="space-y-1 text-sm text-white">
           <p className="font-semibold">{userData.accountHolderName}</p>
-          <p className="text-muted-foreground">{`A/C: ${userData.accountNumber}`}</p>
-          <p className="text-muted-foreground">{`IFSC: ${userData.ifscCode}`}</p>
+          <p className="text-white/80">{`A/C: ${userData.accountNumber}`}</p>
+          <p className="text-white/80">{`IFSC: ${userData.ifscCode}`}</p>
         </div>
       );
     }
     if (userData.paymentMethod === 'upi') {
       return (
-        <div className="space-y-1 text-sm">
+        <div className="space-y-1 text-sm text-white">
           <p className="font-semibold">UPI ID</p>
-          <p className="text-muted-foreground">{userData.upiId}</p>
+          <p className="text-white/80">{userData.upiId}</p>
         </div>
       );
     }
@@ -159,21 +143,21 @@ export default function WithdrawPage() {
 
 
   return (
-    <Card>
+    <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
       <CardHeader>
         <CardTitle className="text-xl">Request Withdrawal</CardTitle>
-        <CardDescription>You can withdraw funds from your winning balance.</CardDescription>
+        <CardDescription className="text-white/80">You can withdraw funds from your winning balance.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="p-4 rounded-lg bg-muted text-center">
-            <p className="text-sm text-muted-foreground">Available to Withdraw</p>
+        <div className="p-4 rounded-lg bg-black/20 text-center">
+            <p className="text-sm text-white/80">Available to Withdraw</p>
             {isLoading ? 
-                <Skeleton className="h-8 w-32 mx-auto mt-1"/> :
+                <Skeleton className="h-8 w-32 mx-auto mt-1 bg-white/20"/> :
                 <p className="text-2xl font-bold font-mono">₹{winningBalance.toFixed(0)}</p>
             }
         </div>
         
-        {isLoading ? <Skeleton className="h-24 w-full" /> : !hasPaymentDetails ? (
+        {isLoading ? <Skeleton className="h-24 w-full bg-white/20" /> : !hasPaymentDetails ? (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>No Payment Method Found</AlertTitle>
@@ -186,10 +170,10 @@ export default function WithdrawPage() {
             </Alert>
         ) : (
           <div className="mb-4">
-             <Card>
+             <Card className="bg-black/20 border border-white/20">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-base">Withdraw To:</CardTitle>
-                    <Button variant="outline" size="sm" asChild>
+                    <CardTitle className="text-base text-white">Withdraw To:</CardTitle>
+                    <Button variant="outline" size="sm" asChild className="bg-transparent text-white hover:bg-white/10">
                        <Link href="/wallet/account">Change</Link>
                     </Button>
                 </CardHeader>
@@ -209,7 +193,7 @@ export default function WithdrawPage() {
                 <FormItem>
                   <FormLabel>Amount to Withdraw (INR)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder={`e.g., ${minWithdrawalAmount}`} {...field} />
+                    <Input type="number" placeholder={`e.g., ${minWithdrawalAmount}`} {...field} className="bg-transparent text-white"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -221,18 +205,18 @@ export default function WithdrawPage() {
             </Button>
           </form>
         </Form>
-        <Separator className="my-4" />
-        <div className="text-center space-y-4 bg-muted p-4 rounded-lg">
+        <Separator className="my-4 bg-white/20" />
+        <div className="text-center space-y-4 bg-black/20 p-4 rounded-lg">
           <p className="text-sm font-medium">Need help? Contact us.</p>
           <div className="flex justify-center gap-4">
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="bg-transparent text-white hover:bg-white/10">
               <Link href="tel:9406453098">
-                <Phone /> Call
+                <Phone className="mr-2" /> Call
               </Link>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="bg-transparent text-white hover:bg-white/10">
               <Link href={whatsappUrl} target="_blank">
-                <WhatsAppIcon /> WhatsApp
+                <WhatsAppIcon /> <span className="ml-2">WhatsApp</span>
               </Link>
             </Button>
           </div>

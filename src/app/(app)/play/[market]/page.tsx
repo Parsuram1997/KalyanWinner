@@ -144,26 +144,26 @@ export default function ChooseBetTypePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
-               <Card key={i}>
+               <Card key={i} className="bg-gradient-to-br from-blue-600 to-purple-700 border-0">
                 <CardHeader className="p-4 pb-2">
-                  <Skeleton className="h-5 w-3/4" />
-                   <Skeleton className="h-3 w-full mt-1" />
+                  <Skeleton className="h-5 w-3/4 bg-white/20" />
+                   <Skeleton className="h-3 w-full mt-1 bg-white/20" />
                 </CardHeader>
                 <CardFooter className="p-4 pt-2">
-                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full bg-white/20" />
                 </CardFooter>
               </Card>
             ))
           : betTypes?.map((bet) => {
               const disabled = isDisabled(bet.name);
               return (
-              <Card key={bet.id} className={cn("flex flex-col justify-between", disabled && "bg-muted/50 opacity-60")}>
+              <Card key={bet.id} className={cn("flex flex-col justify-between bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0", disabled && "opacity-60")}>
                 <CardHeader className="p-4 pb-2">
                   <CardTitle className="text-base">{bet.name}</CardTitle>
-                  <CardDescription className="text-xs">{bet.description}</CardDescription>
+                  <CardDescription className="text-xs text-white/80">{bet.description}</CardDescription>
                 </CardHeader>
                 <CardFooter className="p-4 pt-2">
-                  <Button asChild className="w-full" size="sm" disabled={disabled}>
+                  <Button asChild className="w-full" size="sm" disabled={disabled} variant={disabled ? "destructive" : "default"}>
                     <Link 
                         href={disabled ? '#' : `/play/${marketSlug}/${generateSlug(bet.name)}`} 
                         aria-disabled={disabled} 
@@ -180,8 +180,8 @@ export default function ChooseBetTypePage() {
           })}
       </div>
        {!isLoading && betTypes?.length === 0 && (
-        <Card className="col-span-full">
-            <CardContent className="p-8 text-center text-muted-foreground">
+        <Card className="col-span-full bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
+            <CardContent className="p-8 text-center text-white/80">
                 No active bet types found.
             </CardContent>
         </Card>

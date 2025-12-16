@@ -116,35 +116,35 @@ export default function MarketResultsPage() {
         </p>
       </div>
       
-       <Card>
+       <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
             <CardContent className="p-0">
                 {isLoading ? (
-                  <div className="space-y-4 p-4">
-                    {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+                  <div className="space-y-2 p-4">
+                    {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full bg-white/20" />)}
                   </div>
                 ) : !results || results.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No results found for this market.</p>
+                  <p className="text-center text-white/80 py-8">No results found for this market.</p>
                 ) : (
                 <>
                   {/* Desktop Table */}
-                  <div className="hidden md:block rounded-md border">
+                  <div className="hidden md:block rounded-md border border-white/20">
                     <Table>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead className="text-center">Open Panna</TableHead>
-                          <TableHead className="text-center">Jodi</TableHead>
-                          <TableHead className="text-center">Close Panna</TableHead>
+                        <TableRow className="border-b-white/20">
+                          <TableHead className="text-white">Date</TableHead>
+                          <TableHead className="text-center text-white">Open Panna</TableHead>
+                          <TableHead className="text-center text-white">Jodi</TableHead>
+                          <TableHead className="text-center text-white">Close Panna</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {paginatedResults.map((result) => (
-                            <TableRow key={result.id}>
+                            <TableRow key={result.id} className="border-white/20">
                               <TableCell className="font-medium py-1.5">{getFormattedDate(result.date)}</TableCell>
                               <TableCell className="text-center font-mono tracking-widest py-1.5">{result.openPanna || '***'}</TableCell>
                               <TableCell className="text-center py-1.5">
-                                <div className="font-bold text-lg text-primary">
-                                  {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || `**`}
+                                <div className="font-bold text-lg">
+                                  {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : <span className="text-white">{result.jodi || `**`}</span>}
                                 </div>
                               </TableCell>
                               <TableCell className="text-center font-mono tracking-widest py-1.5">{result.closePanna || '***'}</TableCell>
@@ -162,25 +162,25 @@ export default function MarketResultsPage() {
                         <div
                           key={result.id}
                           className={cn(
-                            "px-4 py-2",
-                            index < paginatedResults.length - 1 && "border-b"
+                            "px-4 py-3 bg-gradient-to-br from-blue-600 to-purple-700 text-white",
+                            index < paginatedResults.length - 1 && "border-b border-white/20"
                           )}
                         >
                           <div className="flex justify-between items-center">
                              <div>
                               <p className="font-semibold text-base">{result.marketName}</p>
-                              <p className="text-sm text-muted-foreground">{getFormattedDate(result.date)}</p>
+                              <p className="text-sm text-white/80">{getFormattedDate(result.date)}</p>
                             </div>
                              <div className="flex items-center justify-center gap-2">
                               <div className="flex flex-col items-center">
-                                <span className="text-xs text-muted-foreground">Open</span>
+                                <span className="text-xs text-white/80">Open</span>
                                 <span className="text-xl font-bold tracking-widest">{result.openPanna || '***'}</span>
                               </div>
-                              <div className="flex flex-col items-center rounded-md bg-primary px-3 py-1 text-primary-foreground">
+                              <div className="flex flex-col items-center rounded-md bg-white px-3 py-1 text-slate-900">
                                 {result.jodi === 'L' ? <span className="text-sm font-bold">Holiday</span> : <span className="text-2xl font-bold tracking-wider">{result.jodi || '**'}</span>}
                               </div>
                               <div className="flex flex-col items-center">
-                                <span className="text-xs text-muted-foreground">Close</span>
+                                <span className="text-xs text-white/80">Close</span>
                                 <span className="text-xl font-bold tracking-widest">{result.closePanna || '***'}</span>
                               </div>
                           </div>
@@ -193,8 +193,8 @@ export default function MarketResultsPage() {
                 )}
             </CardContent>
              {totalPages > 1 && (
-             <CardFooter className="flex justify-end items-center gap-4 border-t pt-4">
-                <span className="text-sm text-muted-foreground">
+             <CardFooter className="flex justify-end items-center gap-4 border-t border-white/20 pt-4">
+                <span className="text-sm text-white/80">
                     Page {currentPage} of {totalPages}
                 </span>
                 <Button
@@ -202,6 +202,7 @@ export default function MarketResultsPage() {
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
+                    className="bg-transparent text-white hover:bg-white/10"
                 >
                     Previous
                 </Button>
@@ -210,6 +211,7 @@ export default function MarketResultsPage() {
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
+                    className="bg-transparent text-white hover:bg-white/10"
                 >
                     Next
                 </Button>

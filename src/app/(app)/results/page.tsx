@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 type Market = {
   id: string;
@@ -41,17 +42,17 @@ export default function SelectMarketForResultsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
+              <Card key={i} className="bg-gradient-to-br from-blue-600 to-purple-700 border-0">
                 <CardHeader className="p-4">
-                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-5 w-3/4 bg-white/20" />
                 </CardHeader>
                 <CardFooter className="p-4 pt-0">
-                  <Skeleton className="h-9 w-full" />
+                  <Skeleton className="h-9 w-full bg-white/20" />
                 </CardFooter>
               </Card>
             ))
           : markets?.map((market) => (
-              <Card key={market.id}>
+              <Card key={market.id} className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
                 <CardHeader className="p-4">
                   <CardTitle className="text-base">{market.name}</CardTitle>
                 </CardHeader>

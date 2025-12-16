@@ -32,10 +32,10 @@ import {
   Trophy,
   Ticket,
   Flame,
-  ArrowRight,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 // Type for user balance data
 type UserBalance = {
@@ -60,21 +60,6 @@ type Transaction = {
   date: string; // Date is stored as an ISO string
 };
 
-const getStatusVariant = (status: Transaction['status']) => {
-  switch (status) {
-    case 'Completed':
-    case 'Won':
-    case 'Approved':
-      return 'secondary';
-    case 'Pending':
-      return 'default';
-    case 'Rejected':
-      return 'destructive';
-    default:
-      return 'outline';
-  }
-};
-
 const FeaturedMarkets = () => {
     const markets = [
       {
@@ -90,20 +75,20 @@ const FeaturedMarkets = () => {
     ];
 
     return (
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
             <CardHeader>
                 <h3 className="flex items-center gap-2 text-lg font-semibold">
-                    <Flame className="text-destructive h-5 w-5" />
+                    <Flame className="text-red-400 h-5 w-5" />
                     <span>Hamare Special Markets</span>
                 </h3>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {markets.map((market, index) => (
-                    <Card key={index} className="bg-accent/50 border-primary/50 h-full flex flex-col justify-between">
+                    <Card key={index} className="bg-black/20 border-white/20 h-full flex flex-col justify-between">
                       <CardHeader className="p-2 pb-0">
-                          <CardTitle className="text-base">{market.name}</CardTitle>
-                          <CardDescription className="text-xs h-8">{market.description}</CardDescription>
+                          <CardTitle className="text-base text-white">{market.name}</CardTitle>
+                          <CardDescription className="text-xs h-8 text-white/80">{market.description}</CardDescription>
                       </CardHeader>
                       <CardFooter className="p-2 pt-2 mt-auto">
                           <Button asChild className="w-full" size="sm">
@@ -130,7 +115,6 @@ export default function WalletPage() {
     if (!user || !firestore) return;
     setIsLoading(true);
     try {
-      // Fetch balance
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
@@ -141,7 +125,6 @@ export default function WalletPage() {
         });
       }
 
-      // Fetch only deposit and withdrawal transactions
       const transQuery = query(
         collection(firestore, 'transactions'),
         where('userId', '==', user.uid),
@@ -182,57 +165,56 @@ export default function WalletPage() {
           <TabsTrigger value="activity">Recent Activity</TabsTrigger>
         </TabsList>
         <TabsContent value="wallet" className="mt-4 space-y-6">
-          <Card>
+          <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
             <CardHeader>
               <CardTitle>My Wallet</CardTitle>
-              <CardDescription>
+              <CardDescription className="text-white/80">
                 View your account balance and manage your funds.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Unified Balance Card */}
-              <Card className="bg-gradient-to-br from-primary/10 to-accent/10">
+              <Card className="bg-black/20 border border-white/20">
                 <CardContent className="p-4 sm:p-6 space-y-4">
                   {isLoading ? (
                     <div className="space-y-4">
-                      <Skeleton className="h-8 w-3/4" />
-                      <Skeleton className="h-8 w-3/4" />
-                      <Separator />
-                      <Skeleton className="h-8 w-1/2" />
+                      <Skeleton className="h-8 w-3/4 bg-white/20" />
+                      <Skeleton className="h-8 w-3/4 bg-white/20" />
+                      <Separator className="bg-white/20"/>
+                      <Skeleton className="h-8 w-1/2 bg-white/20" />
                     </div>
                   ) : (
                     <>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="flex items-center gap-2 text-white/80">
                             <PiggyBank className="h-5 w-5" />
                             <span className="text-sm font-medium">
                               Deposit Balance
                             </span>
                           </div>
-                          <span className="font-semibold text-base font-mono">
+                          <span className="font-semibold text-base font-mono text-white">
                             ₹{(balance?.deposit ?? 0).toFixed(0)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="flex items-center gap-2 text-white/80">
                             <Trophy className="h-5 w-5" />
                             <span className="text-sm font-medium">
                               Winning Balance
                             </span>
                           </div>
-                          <span className="font-semibold text-base font-mono">
+                          <span className="font-semibold text-base font-mono text-white">
                             ₹{(balance?.winning ?? 0).toFixed(0)}
                           </span>
                         </div>
                       </div>
-                      <Separator />
+                      <Separator className="bg-white/20"/>
                       <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-2 font-bold">
+                        <div className="flex items-center gap-2 font-bold text-white">
                           <DollarSign className="h-5 w-5" />
                           <span className="text-sm">Total Balance</span>
                         </div>
-                        <span className="font-bold text-xl font-mono text-primary">
+                        <span className="font-bold text-xl font-mono text-white">
                           ₹{totalBalance.toFixed(0)}
                         </span>
                       </div>
@@ -241,8 +223,7 @@ export default function WalletPage() {
                 </CardContent>
               </Card>
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/20">
                 <Button asChild size="lg">
                   <Link href="/wallet/deposit">Make a Deposit</Link>
                 </Button>
@@ -258,51 +239,60 @@ export default function WalletPage() {
 
         </TabsContent>
         <TabsContent value="activity" className="mt-4">
-          <Card>
+          <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
             <CardHeader>
               <h3 className="text-lg font-semibold">Recent Activity</h3>
             </CardHeader>
             <CardContent className="p-0 sm:p-6">
               {isLoading ? (
                 <div className="space-y-2 p-4">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full bg-white/20" />
+                  <Skeleton className="h-12 w-full bg-white/20" />
+                  <Skeleton className="h-12 w-full bg-white/20" />
                 </div>
               ) : recentTransactions.length > 0 ? (
-                <div className="border-t sm:border rounded-md">
+                <div className="sm:border border-white/20 rounded-md">
                   {recentTransactions.map((tx) => (
                     <div
                       key={tx.id}
-                      className="flex items-center justify-between px-4 py-2 border-b last:border-b-0"
+                      className="flex items-center justify-between px-4 py-2 border-b border-b-white/20 last:border-b-0"
                     >
                       <div className="flex items-center gap-3">
                         {tx.type === 'Deposit' ? (
-                          <ArrowDownLeft className="h-4 w-4 text-green-500" />
+                          <ArrowDownLeft className="h-4 w-4 text-green-400" />
                         ) : (
-                          <ArrowUpRight className="h-4 w-4 text-red-500" />
+                          <ArrowUpRight className="h-4 w-4 text-red-400" />
                         )}
                         <div className="flex flex-col">
                           <p className="text-xs font-medium">
                             {tx.description}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-white/80">
                             {new Date(tx.date).toLocaleString()}
                           </p>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <p
-                          className={`font-mono text-xs font-semibold ${
+                          className={cn('font-mono text-xs font-semibold', 
                             tx.type === 'Deposit'
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`}
+                              ? 'text-green-400'
+                              : 'text-red-400'
+                          )}
                         >
                           {tx.type === 'Deposit' ? '+' : '-'}
                           {`₹${tx.amount.toFixed(0)}`}
                         </p>
-                        <Badge variant={getStatusVariant(tx.status)}>
+                        <Badge
+                            variant={null}
+                            className={cn(
+                                "text-xs",
+                                tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
+                                tx.status === 'Pending' ? "bg-white text-primary" :
+                                tx.status === 'Rejected' ? "bg-red-400 text-white" :
+                                "bg-transparent border border-white/50 text-white/80"
+                            )}
+                        >
                           {tx.status}
                         </Badge>
                       </div>
@@ -310,7 +300,7 @@ export default function WalletPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-sm text-muted-foreground p-4">
+                <p className="text-center text-sm text-white/80 p-4">
                   You have no recent activity.
                 </p>
               )}
