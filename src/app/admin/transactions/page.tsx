@@ -311,12 +311,13 @@ export default function TransactionsPage() {
   };
 
   const handleAction = async (txnId: string, newStatus: 'Approved' | 'Rejected', utrValue?: string) => {
+    const finalStatus = newStatus === 'Approved' ? 'Completed' : 'Rejected';
     try {
-        const result = await updateTransactionStatus({ txnId, status: newStatus, utr: utrValue });
+        const result = await updateTransactionStatus(txnId, finalStatus);
         if (result && result.success) {
             toast({
                 title: "Transaction Updated",
-                description: `Transaction has been ${newStatus.toLowerCase()}.`,
+                description: `Transaction has been ${finalStatus.toLowerCase()}.`,
             });
         } else {
             throw new Error(result?.message || "An unknown error occurred.");
