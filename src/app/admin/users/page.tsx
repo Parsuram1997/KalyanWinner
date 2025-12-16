@@ -256,7 +256,7 @@ export default function ManageUsersPage() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
               <Input placeholder="Search by name or mobile..." className="pl-8 bg-black/20 border-white/20 text-white" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} />
             </div>
-            <Tabs defaultValue="All" onValueChange={(value) => { setFilter(value); setCurrentPage(1); }} className="w-full sm:w-auto">
+            <Tabs defaultValue="All" onValueChange={(value) => { setFilter(value); setCurrentPage(1); }} className="w-full sm:w-full">
                 <TabsList className="w-full bg-black/20">
                     {["All", "Active", "Inactive"].map(tab => <TabsTrigger key={tab} value={tab} className="px-2 text-white/80 data-[state=active]:bg-white data-[state=active]:text-black">{tab}</TabsTrigger>)}
                 </TabsList>
