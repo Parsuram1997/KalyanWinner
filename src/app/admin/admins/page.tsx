@@ -156,8 +156,8 @@ export default function ManageAdminsPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
-        <CardHeader className="flex flex-col items-center">
-            <div className="text-center">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
                 <CardTitle>Manage Admins</CardTitle>
                 <CardDescription className="text-white/80">
                     Add, edit, or remove admins in the application.
@@ -165,7 +165,7 @@ export default function ManageAdminsPage() {
             </div>
              <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="shrink-0 mt-4 bg-white text-primary hover:bg-white/90">
+                  <Button className="w-full sm:w-auto shrink-0 bg-white text-primary hover:bg-white/90">
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Add Admin
                   </Button>
