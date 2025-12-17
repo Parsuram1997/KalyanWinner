@@ -37,6 +37,9 @@ import {
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 
 
 type KalyanResult = {
@@ -87,6 +90,8 @@ export default function EnterResultsPage() {
     const [selectedResult, setSelectedResult] = useState<KalyanResult | null>(null);
     const [updateClosePanna, setUpdateClosePanna] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [date, setDate] = useState<Date>(new Date());
+    const [holidayDate, setHolidayDate] = useState<Date>(new Date());
 
     const { paginatedResults, totalPages } = useMemo(() => {
       if (!results) return { paginatedResults: [], totalPages: 0 };
@@ -101,17 +106,16 @@ export default function EnterResultsPage() {
     const handleSubmitOpenResult = async (e: React.FormEvent) => {
         e.preventDefault();
         const form = e.currentTarget as HTMLFormElement;
-        const formData = new FormData(form);
-        const date = formData.get("date") as string;
+        const formattedDate = format(date, "yyyy-MM-dd");
         
-        if (!date || !openPanna) {
+        if (!formattedDate || !openPanna) {
             toast({ variant: "destructive", title: "Missing Fields", description: "Please fill in all result fields." });
             return;
         }
 
         try {
             await createKalyanResult({
-                date,
+                date: formattedDate,
                 marketName: marketName.trim(),
                 openPanna,
             });
@@ -154,17 +158,16 @@ export default function EnterResultsPage() {
      const handleMarkAsHoliday = async (e: React.FormEvent) => {
         e.preventDefault();
         const form = e.currentTarget as HTMLFormElement;
-        const formData = new FormData(form);
-        const date = formData.get("holiday-date") as string;
+        const formattedDate = format(holidayDate, "yyyy-MM-dd");
         
-        if (!date) {
+        if (!formattedDate) {
             toast({ variant: "destructive", title: "Missing Date", description: "Please select a date." });
             return;
         }
 
         try {
             await createKalyanResult({
-                date,
+                date: formattedDate,
                 marketName: marketName.trim(),
                 openPanna: "H",
                 closePanna: "O",
@@ -172,7 +175,7 @@ export default function EnterResultsPage() {
             });
             toast({
                 title: "Holiday Marked",
-                description: `${new Date(date).toLocaleDateString('en-GB')} has been marked as a holiday for ${marketName}.`,
+                description: `${format(holidayDate, "PPP")} has been marked as a holiday for ${marketName}.`,
             });
             form.reset();
             setHolidayDialogOpen(false);
@@ -232,9 +235,29 @@ export default function EnterResultsPage() {
                             <DialogTitle>Mark Holiday for {marketName}</DialogTitle>
                         </DialogHeader>
                         <form className="space-y-4" onSubmit={handleMarkAsHoliday}>
-                            <div>
-                                <Label htmlFor="holiday-date">Date</Label>
-                                <Input name="holiday-date" id="holiday-date" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
+                             <div>
+                                <Label>Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !holidayDate && "text-muted-foreground"
+                                            )}
+                                        >
+                                            {holidayDate ? format(holidayDate, "PPP") : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={holidayDate}
+                                            onSelect={(d) => setHolidayDate(d || new Date())}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <DialogFooter>
                                 <Button type="submit" className="w-full">Mark as Holiday</Button>
@@ -251,9 +274,29 @@ export default function EnterResultsPage() {
                         <DialogTitle>Add Open Result for {marketName}</DialogTitle>
                     </DialogHeader>
                     <form className="space-y-4" onSubmit={handleSubmitOpenResult}>
-                        <div>
-                            <Label htmlFor="date">Date</Label>
-                            <Input name="date" id="date" type="date" defaultValue={new Date().toISOString().split("T")[0]} />
+                         <div>
+                            <Label>Date</Label>
+                             <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !date && "text-muted-foreground"
+                                        )}
+                                    >
+                                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={date}
+                                        onSelect={(d) => setDate(d || new Date())}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div>
                             <Label htmlFor="open-panna">Open Panna</Label>
@@ -474,3 +517,5 @@ export default function EnterResultsPage() {
     </div>
   );
 }
+
+    
