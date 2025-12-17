@@ -256,7 +256,7 @@ export default function ManageUsersPage() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
               <Input placeholder="Search by name or mobile..." className="pl-8 bg-black/20 border-white/20 text-white" value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} />
             </div>
-            <Tabs defaultValue="All" onValueChange={(value) => { setFilter(value); setCurrentPage(1); }} className="w-full">
+            <Tabs defaultValue="All" onValueChange={(value) => { setFilter(value); setCurrentPage(1); }} className="w-full sm:w-full">
                 <TabsList className="grid w-full grid-cols-3 bg-black/20">
                     {["All", "Active", "Inactive"].map(tab => <TabsTrigger key={tab} value={tab} className="px-2 text-white/80 data-[state=active]:bg-white data-[state=active]:text-black">{tab}</TabsTrigger>)}
                 </TabsList>
@@ -304,10 +304,10 @@ export default function ManageUsersPage() {
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2 p-4 pt-2 border-t border-white/20">
-                    <Button variant="outline" size="sm" asChild className="bg-transparent hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4 mr-1" />View</Link></Button>
-                    <Button variant="outline" size="sm" onClick={() => openDepositDialog(user)} className="bg-transparent hover:bg-white/10"><CircleDollarSign className="h-4 w-4 mr-1" />Deposit</Button>
-                    <Button variant="outline" size="sm" onClick={() => openEditDialog(user)} className="bg-transparent hover:bg-white/10"><Edit className="h-4 w-4 mr-1" />Edit</Button>
-                    <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-1" />Delete</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+                    <Button variant="outline" size="icon" asChild className="bg-transparent hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4" /></Link></Button>
+                    <Button variant="outline" size="icon" onClick={() => openDepositDialog(user)} className="bg-transparent hover:bg-white/10"><CircleDollarSign className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" onClick={() => openEditDialog(user)} className="bg-transparent hover:bg-white/10"><Edit className="h-4 w-4" /></Button>
+                    <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
                 </CardFooter>
               </Card>
             ))}
