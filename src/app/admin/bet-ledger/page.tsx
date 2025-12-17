@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState } from "react";
@@ -21,7 +22,7 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, Timestamp, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Edit, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, Edit, Trash2, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
@@ -45,7 +46,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,6 +91,7 @@ export default function BetLedgerPage() {
   const firestore = useFirestore();
   const [currentPage, setCurrentPage] = useState(1);
   const [date, setDate] = useState<Date>(new Date());
+  const [searchTerm, setSearchTerm] = useState("");
   
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
@@ -132,13 +133,26 @@ export default function BetLedgerPage() {
     );
   }, [allBets, date]);
 
-
-  const totalPages = Math.ceil((betsForSelectedDate?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedData = useMemo(() => {
+  const filteredBets = useMemo(() => {
     if (!betsForSelectedDate) return [];
+    if (!searchTerm) return betsForSelectedDate;
+
+    const lowercasedTerm = searchTerm.toLowerCase();
+    return betsForSelectedDate.filter(bet =>
+        bet.userName.toLowerCase().includes(lowercasedTerm) ||
+        bet.number.toLowerCase().includes(lowercasedTerm) ||
+        bet.market.toLowerCase().includes(lowercasedTerm) ||
+        bet.gameType.toLowerCase().includes(lowercasedTerm)
+    );
+  }, [betsForSelectedDate, searchTerm]);
+
+
+  const totalPages = Math.ceil((filteredBets?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedData = useMemo(() => {
+    if (!filteredBets) return [];
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return betsForSelectedDate.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [betsForSelectedDate, currentPage]);
+    return filteredBets.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredBets, currentPage]);
 
   const handleEditClick = (bet: Bet) => {
     setSelectedBet(bet);
@@ -198,28 +212,42 @@ export default function BetLedgerPage() {
             <CardTitle>Bet Ledger</CardTitle>
             <CardDescription className="text-white/80">A complete ledger of all bets placed for the selected date.</CardDescription>
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full sm:w-[280px] justify-start text-left font-normal bg-black/20 border-white/20 hover:bg-black/30 text-white hover:text-white",
-                  !date && "text-white/80"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(day) => setDate(day || new Date())}
-                initialFocus
+          <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+              <Input
+                placeholder="Search..."
+                className="pl-8 bg-black/20 border-white/20 text-white sm:w-[200px]"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
-            </PopoverContent>
-          </Popover>
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full sm:w-[280px] justify-start text-left font-normal bg-black/20 border-white/20 hover:bg-black/30 text-white hover:text-white",
+                    !date && "text-white/80"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(day) => { setDate(day || new Date()); setCurrentPage(1); }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </CardHeader>
         <CardContent>
             {/* Desktop Table */}
@@ -352,7 +380,7 @@ export default function BetLedgerPage() {
             )}
             </div>
              {!isLoading && paginatedData.length === 0 && (
-                <p className="text-center py-8 text-white/80">No bets found for the selected date.</p>
+                <p className="text-center py-8 text-white/80">No bets found for the selected date and filter.</p>
             )}
         </CardContent>
          {totalPages > 1 && (
