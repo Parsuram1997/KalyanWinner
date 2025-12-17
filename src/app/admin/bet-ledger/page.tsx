@@ -18,7 +18,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, Timestamp } from "firebase/firestore";
+import { collection, query, orderBy, Timestamp, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon, Edit, Trash2 } from "lucide-react";
@@ -65,6 +65,15 @@ type Bet = {
     createdAt: Timestamp;
 };
 
+type Result = {
+    id: string;
+    marketName: string;
+    date: string;
+    openPanna?: string;
+    closePanna?: string;
+    jodi?: string;
+};
+
 const ITEMS_PER_PAGE = 50;
 
 const getStatusClasses = (status: Bet['status']) => {
@@ -95,8 +104,26 @@ export default function BetLedgerPage() {
             : null,
     [firestore]
   );
-  const { data: allBets, isLoading } = useCollection<Bet>(betsQuery, { skip: !firestore });
+  const { data: allBets, isLoading: isBetsLoading } = useCollection<Bet>(betsQuery, { skip: !firestore });
   
+  const formattedDate = format(date, "yyyy-MM-dd");
+  const resultsQuery = useMemoFirebase(
+    () => firestore 
+            ? query(
+                collection(firestore, 'kalyan_results'),
+                where('date', '==', formattedDate)
+              )
+            : null,
+    [firestore, formattedDate]
+  );
+  const { data: resultsForSelectedDate, isLoading: isResultsLoading } = useCollection<Result>(resultsQuery, { skip: !firestore });
+
+  const resultsMap = useMemo(() => {
+    if (!resultsForSelectedDate) return new Map<string, Result>();
+    return new Map(resultsForSelectedDate.map(r => [r.marketName, r]));
+  }, [resultsForSelectedDate]);
+
+
   const betsForSelectedDate = useMemo(() => {
     if (!allBets) return [];
     const interval = { start: startOfDay(date), end: endOfDay(date) };
@@ -142,6 +169,25 @@ export default function BetLedgerPage() {
           toast({ variant: "destructive", title: "Deletion Failed", description: error.message });
       }
   };
+
+  const isBetEditable = (bet: Bet) => {
+      const result = resultsMap.get(bet.market);
+      if (!result) return true; // No result for this market today, so editable.
+
+      if (bet.session === 'Open') {
+          return !result.openPanna; // Editable if open panna is not declared.
+      }
+      if (bet.session === 'Close') {
+          return !result.closePanna; // Editable if close panna is not declared.
+      }
+      if (bet.session === 'Jodi') {
+          // Jodi, Full Sangam etc. depend on the final result.
+          return !result.closePanna;
+      }
+      return true; // Default to editable if session is not matched
+  };
+
+  const isLoading = isBetsLoading || isResultsLoading;
 
 
   return (
@@ -196,108 +242,114 @@ export default function BetLedgerPage() {
                         <TableCell colSpan={7} className="py-2"><Skeleton className="h-6 w-full bg-white/20" /></TableCell>
                     </TableRow>
                 ))}
-                {!isLoading && paginatedData.map((bet) => (
-                    <TableRow key={bet.id} className="border-white/20">
-                        <TableCell className="py-2 font-medium">{bet.userName}</TableCell>
-                        <TableCell className="py-2">
-                            <div>{bet.market}</div>
-                            <div className="text-white/80">{bet.gameType}</div>
-                        </TableCell>
-                        <TableCell className="font-mono py-2">{bet.number}</TableCell>
-                        <TableCell className="py-2">{bet.session}</TableCell>
-                        <TableCell className="py-2">
-                            <Badge className={cn('text-xs', getStatusClasses(bet.status))}>{bet.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-mono font-semibold py-2">
-                            ₹{bet.amount.toLocaleString('en-IN')}
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                            <div className="flex gap-2 justify-center">
-                                <Button variant="outline" size="icon" className="h-7 w-7 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => handleEditClick(bet)}>
-                                    <Edit className="h-4 w-4" />
-                                </Button>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" size="icon" className="h-7 w-7">
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                            <AlertDialogDescription>This action cannot be undone. This will permanently delete this bet.</AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDeleteBet(bet.id)}>Delete</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </div>
-                        </TableCell>
-                    </TableRow>
-                ))}
+                {!isLoading && paginatedData.map((bet) => {
+                    const editable = isBetEditable(bet);
+                    return (
+                        <TableRow key={bet.id} className="border-white/20">
+                            <TableCell className="py-2 font-medium">{bet.userName}</TableCell>
+                            <TableCell className="py-2">
+                                <div>{bet.market}</div>
+                                <div className="text-white/80">{bet.gameType}</div>
+                            </TableCell>
+                            <TableCell className="font-mono py-2">{bet.number}</TableCell>
+                            <TableCell className="py-2">{bet.session}</TableCell>
+                            <TableCell className="py-2">
+                                <Badge className={cn('text-xs', getStatusClasses(bet.status))}>{bet.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-semibold py-2">
+                                ₹{bet.amount.toLocaleString('en-IN')}
+                            </TableCell>
+                            <TableCell className="py-2 text-center">
+                                <div className="flex gap-2 justify-center">
+                                    <Button variant="outline" size="icon" className="h-7 w-7 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => handleEditClick(bet)} disabled={!editable}>
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="icon" className="h-7 w-7">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>This action cannot be undone. This will permanently delete this bet.</AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteBet(bet.id)}>Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    )}
+                )}
                 </TableBody>
             </Table>
             </div>
              {/* Mobile Cards */}
             <div className="grid gap-4 md:hidden">
             {isLoading && <p className="text-center text-white/80 py-8">Loading bets...</p>}
-            {!isLoading && paginatedData.map((bet) => (
-                <Card key={bet.id} className="p-3 text-sm bg-black/20 border-white/20">
-                <div className="flex justify-between items-start mb-3">
-                    <div>
-                        <p className="font-semibold">{bet.userName}</p>
-                        <p className="text-xs text-white/80">{bet.createdAt.toDate().toLocaleString()}</p>
+            {!isLoading && paginatedData.map((bet) => {
+                 const editable = isBetEditable(bet);
+                 return (
+                    <Card key={bet.id} className="p-3 text-sm bg-black/20 border-white/20">
+                    <div className="flex justify-between items-start mb-3">
+                        <div>
+                            <p className="font-semibold">{bet.userName}</p>
+                            <p className="text-xs text-white/80">{bet.createdAt.toDate().toLocaleString()}</p>
+                        </div>
+                        <Badge className={cn('text-xs', getStatusClasses(bet.status))}>{bet.status}</Badge>
                     </div>
-                     <Badge className={cn('text-xs', getStatusClasses(bet.status))}>{bet.status}</Badge>
-                </div>
-                <div className="space-y-2 border-t border-white/20 pt-3 text-xs">
-                     <div className="flex justify-between">
-                        <span className="text-white/80">Market:</span>
-                        <span className="font-medium">{bet.market}</span>
-                     </div>
-                     <div className="flex justify-between">
-                        <span className="text-white/80">Game:</span>
-                        <span className="font-medium">{bet.gameType}</span>
-                     </div>
-                     <div className="flex justify-between">
-                        <span className="text-white/80">Number:</span>
-                        <span className="font-mono font-bold">{bet.number}</span>
-                     </div>
-                     <div className="flex justify-between">
-                        <span className="text-white/80">Session:</span>
-                        <span className="font-medium">{bet.session}</span>
-                     </div>
-                     <div className="flex justify-between">
-                        <span className="text-white/80">Amount:</span>
-                        <span className="font-mono font-bold">₹{bet.amount.toLocaleString('en-IN')}</span>
-                     </div>
-                </div>
-                <CardFooter className="p-0 pt-3 mt-3 border-t border-white/20 flex justify-end gap-2">
-                    <Button variant="outline" size="sm" className="bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => handleEditClick(bet)}>
-                        <Edit className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4 mr-1" /> Delete
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>This action cannot be undone. This will permanently delete this bet.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteBet(bet.id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </CardFooter>
-                </Card>
-            ))}
+                    <div className="space-y-2 border-t border-white/20 pt-3 text-xs">
+                        <div className="flex justify-between">
+                            <span className="text-white/80">Market:</span>
+                            <span className="font-medium">{bet.market}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-white/80">Game:</span>
+                            <span className="font-medium">{bet.gameType}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-white/80">Number:</span>
+                            <span className="font-mono font-bold">{bet.number}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-white/80">Session:</span>
+                            <span className="font-medium">{bet.session}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-white/80">Amount:</span>
+                            <span className="font-mono font-bold">₹{bet.amount.toLocaleString('en-IN')}</span>
+                        </div>
+                    </div>
+                    <CardFooter className="p-0 pt-3 mt-3 border-t border-white/20 flex justify-end gap-2">
+                        <Button variant="outline" size="sm" className="bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => handleEditClick(bet)} disabled={!editable}>
+                            <Edit className="h-4 w-4 mr-1" /> Edit
+                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                    <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>This action cannot be undone. This will permanently delete this bet.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteBet(bet.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </CardFooter>
+                    </Card>
+                 )}
+            )}
             </div>
              {!isLoading && paginatedData.length === 0 && (
                 <p className="text-center py-8 text-white/80">No bets found for the selected date.</p>
