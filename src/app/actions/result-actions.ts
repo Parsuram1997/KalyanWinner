@@ -19,36 +19,65 @@ const getDigit = (panna: string) => {
   return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
 };
 
+// Helper to get today's date in YYYY-MM-DD format, adjusted for IST
+const getISTDateString = (dateInput: string): string => {
+    // The date from the frontend is already in YYYY-MM-DD, no timezone conversion needed
+    return dateInput;
+};
+
+
 export async function createKalyanResult(resultData: KalyanResult) {
   try {
-    resultData.marketName = resultData.marketName.trim();
-    if (resultData.openPanna && resultData.openPanna.length !== 3 && resultData.openPanna !== 'H') {
+    const istDate = getISTDateString(resultData.date);
+    const finalResultData = { ...resultData, date: istDate };
+
+    finalResultData.marketName = finalResultData.marketName.trim();
+    if (finalResultData.openPanna && finalResultData.openPanna.length !== 3 && finalResultData.openPanna !== 'H') {
         throw new Error("Open Panna must be exactly 3 digits.");
     }
-    if (resultData.closePanna && resultData.closePanna.length !== 3 && resultData.closePanna !== 'O') {
+    if (finalResultData.closePanna && finalResultData.closePanna.length !== 3 && finalResultData.closePanna !== 'O') {
         throw new Error("Close Panna must be exactly 3 digits.");
     }
 
     await firestore.runTransaction(async (transaction) => {
       const resultsRef = firestore.collection("kalyan_results");
       const existingResultQuery = resultsRef
-          .where("marketName", "==", resultData.marketName)
-          .where("date", "==", resultData.date);
+          .where("marketName", "==", finalResultData.marketName)
+          .where("date", "==", finalResultData.date);
 
       // --- (1) ALL READS FIRST ---
       const existingResultSnapshot = await transaction.get(existingResultQuery);
       if (!existingResultSnapshot.empty) {
-          throw new Error(`A result for ${resultData.marketName} on ${resultData.date} already exists.`);
+          throw new Error(`A result for ${finalResultData.marketName} on ${finalResultData.date} already exists.`);
       }
+      
+      const marketBetsQuery = firestore.collection('kalyan_bets')
+          .where('market', '==', finalResultData.marketName)
+          .where('status', '==', 'Placed');
 
-      // Read all game rates and relevant bets
+      // Read all relevant bets for the market
+      const betsSnapshot = await transaction.get(marketBetsQuery);
+      
+      // Filter bets for the specific date on the server-side
+       const serverDate = new Date(finalResultData.date);
+       const startOfDay = new Date(serverDate.getFullYear(), serverDate.getMonth(), serverDate.getDate());
+       const endOfDay = new Date(serverDate.getFullYear(), serverDate.getMonth(), serverDate.getDate() + 1);
+
+      const todaysBets = betsSnapshot.docs.filter(doc => {
+          const betTimestamp = doc.data().createdAt;
+          if (betTimestamp) {
+              const betDate = betTimestamp.toDate();
+              return betDate >= startOfDay && betDate < endOfDay;
+          }
+          return false;
+      });
+
+
+      // Read all game rates
       const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
-      const betsSnapshot = await transaction.get(firestore.collection('kalyan_bets')
-          .where('market', '==', resultData.marketName)
-          .where('status', '==', 'Placed'));
-
+      
       // Read all unique user documents involved in the bets
-      const userIds = [...new Set(betsSnapshot.docs.map(doc => doc.data().userId))];
+      const userIds = [...new Set(todaysBets.map(doc => doc.data().userId))];
       const userRefs = userIds.map(id => firestore.collection('users').doc(id));
       const userDocs = userIds.length > 0 ? await transaction.getAll(...userRefs) : [];
       
@@ -66,8 +95,8 @@ export async function createKalyanResult(resultData: KalyanResult) {
           }
       });
 
-      const openDigit = getDigit(resultData.openPanna);
-      const closeDigit = resultData.closePanna ? getDigit(resultData.closePanna) : null;
+      const openDigit = getDigit(finalResultData.openPanna);
+      const closeDigit = finalResultData.closePanna ? getDigit(finalResultData.closePanna) : null;
       const jodi = openDigit && closeDigit ? openDigit + closeDigit : null;
 
       const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
@@ -76,10 +105,10 @@ export async function createKalyanResult(resultData: KalyanResult) {
 
       // Write 1: Create the new result document
       const newResultRef = resultsRef.doc();
-      transaction.set(newResultRef, { ...resultData, jodi: jodi || '--' });
+      transaction.set(newResultRef, { ...finalResultData, jodi: jodi || '--' });
       
       // Writes 2: Update bets and create win transactions
-      betsSnapshot.forEach(doc => {
+      todaysBets.forEach(doc => {
         const bet = doc.data();
         const betNumberAsString = String(bet.number);
         let winningAmount = 0;
@@ -105,8 +134,8 @@ export async function createKalyanResult(resultData: KalyanResult) {
                 if (bet.gameType === 'Double Panna') pannaMultiplier = payoutMultipliers.get('Double Panna') || 280;
                 if (bet.gameType === 'Triple Panna') pannaMultiplier = payoutMultipliers.get('Triple Panna') || 700;
 
-                if ((bet.session === 'Open' && resultData.openPanna && betNumberAsString === resultData.openPanna) ||
-                    (bet.session === 'Close' && resultData.closePanna && betNumberAsString === resultData.closePanna)) {
+                if ((bet.session === 'Open' && finalResultData.openPanna && betNumberAsString === finalResultData.openPanna) ||
+                    (bet.session === 'Close' && finalResultData.closePanna && betNumberAsString === finalResultData.closePanna)) {
                     isWinner = true;
                     winningAmount = bet.amount * pannaMultiplier;
                 }
@@ -124,7 +153,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
             case 'Open Sangam':
                  if (jodi) { 
                     const [panna, digit] = betNumberAsString.split('x');
-                    if (panna === resultData.openPanna && digit === closeDigit) {
+                    if (panna === finalResultData.openPanna && digit === closeDigit) {
                        isWinner = true;
                        winningAmount = bet.amount * (payoutMultipliers.get('Open Sangam') || 1200);
                     }
@@ -135,7 +164,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
             case 'Close Sangam':
                  if (jodi) {
                     const [digit, panna] = betNumberAsString.split('x');
-                    if (digit === openDigit && panna === resultData.closePanna) {
+                    if (digit === openDigit && panna === finalResultData.closePanna) {
                       isWinner = true;
                       winningAmount = bet.amount * (payoutMultipliers.get('Close Sangam') || 1200);
                     }
@@ -146,7 +175,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
             case 'Full Sangam':
                  if (jodi) { 
                     const [openPannaSangam, closePannaSangam] = betNumberAsString.split('x');
-                    if (openPannaSangam === resultData.openPanna && closePannaSangam === resultData.closePanna) {
+                    if (openPannaSangam === finalResultData.openPanna && closePannaSangam === finalResultData.closePanna) {
                        isWinner = true;
                        winningAmount = bet.amount * (payoutMultipliers.get('Full Sangam') || 12000);
                     }
@@ -191,6 +220,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
     revalidatePath("/dashboard", 'page');
     revalidatePath("/results", 'page');
     revalidatePath("/leaderboard", 'page');
+    revalidatePath("/play", 'page');
     return { success: true };
   } catch (error: any) {
     console.error("Error creating kalyan result:", error);
@@ -216,14 +246,32 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
           throw new Error("Result to update not found.");
       }
       const originalData = fullResultDoc.data() as KalyanResult;
-      const mergedData: KalyanResult = { ...originalData, ...resultData };
+      
+      const finalDate = resultData.date ? getISTDateString(resultData.date) : originalData.date;
+      const mergedData: KalyanResult = { ...originalData, ...resultData, date: finalDate };
 
       const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
-      const betsSnapshot = await transaction.get(firestore.collection('kalyan_bets')
+      
+      const marketBetsQuery = firestore.collection('kalyan_bets')
           .where('market', '==', mergedData.marketName)
-          .where('status', '==', 'Placed'));
+          .where('status', '==', 'Placed');
+
+      const betsSnapshot = await transaction.get(marketBetsQuery);
+      
+       const serverDate = new Date(mergedData.date);
+       const startOfDay = new Date(serverDate.getFullYear(), serverDate.getMonth(), serverDate.getDate());
+       const endOfDay = new Date(serverDate.getFullYear(), serverDate.getMonth(), serverDate.getDate() + 1);
+
+       const todaysBets = betsSnapshot.docs.filter(doc => {
+          const betTimestamp = doc.data().createdAt;
+          if (betTimestamp) {
+              const betDate = betTimestamp.toDate();
+              return betDate >= startOfDay && betDate < endOfDay;
+          }
+          return false;
+      });
           
-      const userIds = [...new Set(betsSnapshot.docs.map(doc => doc.data().userId))];
+      const userIds = [...new Set(todaysBets.map(doc => doc.data().userId))];
       const userRefs = userIds.map(id => firestore.collection('users').doc(id));
       const userDocs = userIds.length > 0 ? await transaction.getAll(...userRefs) : [];
 
@@ -253,7 +301,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
       transaction.update(resultRef, { ...resultData, jodi: jodi || '--' });
 
       // Writes 2: Update bets and create win transactions
-      betsSnapshot.forEach(doc => {
+      todaysBets.forEach(doc => {
         const bet = doc.data();
         const betNumberAsString = String(bet.number);
         let winningAmount = 0;
@@ -365,6 +413,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
     revalidatePath("/dashboard", 'page');
     revalidatePath("/results", 'page');
     revalidatePath("/leaderboard", 'page');
+    revalidatePath("/play", 'page');
     return { success: true };
   } catch (error: any) {
     console.error("Error updating kalyan result:", error);
@@ -384,40 +433,37 @@ export async function deleteKalyanResult(resultId: string) {
             }
             const resultData = resultDoc.data() as KalyanResult;
 
-            // Find all bets that were won because of this result
-            const wonBetsQuery = firestore.collection('kalyan_bets')
+            const marketBetsQuery = firestore.collection('kalyan_bets')
                 .where('market', '==', resultData.marketName)
                 .where('status', '==', 'Won');
             
-            const wonBetsSnapshot = await t.get(wonBetsQuery);
+            const wonBetsSnapshot = await t.get(marketBetsQuery);
+            
+            const resultDate = new Date(resultData.date);
+            const startOfDay = new Date(resultDate.getFullYear(), resultDate.getMonth(), resultDate.getDate());
+            const endOfDay = new Date(resultDate.getFullYear(), resultDate.getMonth(), resultDate.getDate() + 1);
+
             const wonBetsOnDate = wonBetsSnapshot.docs.filter(doc => {
                 const betDate = doc.data().createdAt.toDate();
-                const resultDate = new Date(resultData.date);
-                return betDate.getFullYear() === resultDate.getFullYear() &&
-                       betDate.getMonth() === resultDate.getMonth() &&
-                       betDate.getDate() === resultDate.getDate();
+                return betDate >= startOfDay && betDate < endOfDay;
             });
 
             const wonBetIds = wonBetsOnDate.map(doc => doc.id);
             if (wonBetIds.length === 0) {
-                 // No bets were won, so just delete the result and exit.
-                t.delete(resultRef);
-                return;
+                 t.delete(resultRef);
+                 return;
             }
 
-            // Find all 'Win' transactions associated with these bets
             const winTransactionsQuery = firestore.collection('transactions')
                 .where('type', '==', 'Win')
                 .where('betId', 'in', wonBetIds);
 
             const winTransactionsSnapshot = await t.get(winTransactionsQuery);
 
-            // 2. PREPARE all updates and deletes
             const userBalanceReverts = new Map<string, number>();
             const betsToUpdate: {ref: FirebaseFirestore.DocumentReference, data: any}[] = [];
             const transactionsToDelete: FirebaseFirestore.DocumentReference[] = [];
 
-            // Queue win transactions for deletion and calculate balance reversions
             winTransactionsSnapshot.forEach(doc => {
                 const winTx = doc.data();
                 const currentRevert = userBalanceReverts.get(winTx.userId) || 0;
@@ -425,29 +471,23 @@ export async function deleteKalyanResult(resultId: string) {
                 transactionsToDelete.push(doc.ref);
             });
             
-            // Queue won bets to be reverted to 'Placed'
             wonBetsOnDate.forEach(doc => {
                 betsToUpdate.push({ ref: doc.ref, data: { status: "Placed", winningAmount: FieldValue.delete() } });
             });
 
-            // 3. EXECUTE all writes
-            // Revert user balances
             for (const [userId, amountToRevert] of userBalanceReverts.entries()) {
                 const userRef = firestore.collection('users').doc(userId);
                 t.update(userRef, { winningBalance: FieldValue.increment(-amountToRevert) });
             }
 
-            // Revert bet statuses
             for (const betUpdate of betsToUpdate) {
                 t.update(betUpdate.ref, betUpdate.data);
             }
 
-            // Delete win transactions
             for (const txDelete of transactionsToDelete) {
                 t.delete(txDelete);
             }
 
-            // Finally, delete the result document itself
             t.delete(resultRef);
         });
 
@@ -455,6 +495,7 @@ export async function deleteKalyanResult(resultId: string) {
         revalidatePath("/dashboard", 'page');
         revalidatePath("/results", 'page');
         revalidatePath("/leaderboard", 'page');
+        revalidatePath("/play", 'page');
         return { success: true, message: "Result deleted and all winnings have been reverted." };
     } catch (error: any) {
         console.error("Error deleting kalyan result and reverting winnings:", error);

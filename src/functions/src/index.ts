@@ -48,6 +48,17 @@ export const sendResultNotification = functions.firestore
       return null;
     }
     
+    // The date is already in YYYY-MM-DD format, no conversion needed.
+    const resultDate = resultDataAfter.date;
+    const today = new Date();
+    const todayDateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    // Only send notifications for today's results.
+    if(resultDate !== todayDateString) {
+        logger.log(`Result date ${resultDate} is not today (${todayDateString}). No notification sent.`);
+        return null;
+    }
+
     const { marketName, openPanna, jodi, closePanna } = resultDataAfter;
     let title = '';
     let body = '';
