@@ -108,7 +108,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton asChild>
                 <Link href="/rates">
                   <Coins />
-                  Rates
+                  Game Rates
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
