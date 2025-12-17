@@ -36,12 +36,6 @@ type Result = {
   closePanna: string;
 };
 
-const getPannaSum = (panna: string) => {
-    if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '-';
-    return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
-};
-
-
 const MarketResult = ({ marketName }: { marketName: string }) => {
     const firestore = useFirestore();
     const [today, setToday] = useState('');
@@ -71,10 +65,9 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
         return <Skeleton className="h-12 w-full mt-2 bg-white/20" />;
     }
 
-    const isOpenResult = result && result.openPanna && !result.closePanna && result.jodi !== 'L';
     const isFullResult = result && result.openPanna && result.closePanna && result.jodi !== 'L';
     const isHoliday = result && result.jodi === 'L';
-    const openDigit = getPannaSum(result?.openPanna || '');
+    const jodiToShow = result?.jodi || '**';
 
     return (
         <div className="mt-2 text-center font-mono text-sm flex items-center justify-center">
@@ -88,34 +81,22 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
                         <span className="text-xl font-bold tracking-widest">{result.openPanna}</span>
                     </div>
                     <div className="flex flex-col items-center rounded-md bg-white px-3 py-1 text-slate-900">
-                        <span className="text-2xl font-bold tracking-wider">{result.jodi}</span>
+                        <span className="text-2xl font-bold tracking-wider">{jodiToShow}</span>
                     </div>
                     <div className="flex flex-col items-center">
                         <span className="text-xl font-bold tracking-widest">{result.closePanna}</span>
                     </div>
                 </div>
-            ) : isOpenResult ? (
+            ) : (
                  <div className="flex items-center justify-center gap-2 text-white">
                     <div className="flex flex-col items-center">
-                        <span className="text-xl font-bold tracking-widest">{result.openPanna}</span>
+                        <span className="text-xl font-bold tracking-widest">{result?.openPanna || '***'}</span>
                     </div>
                     <div className="flex flex-col items-center rounded-md bg-white px-3 py-1 text-slate-900">
-                        <span className="text-2xl font-bold tracking-wider">{openDigit}</span>
+                        <span className="text-2xl font-bold tracking-wider">{jodiToShow}</span>
                     </div>
                     <div className="flex flex-col items-center">
-                        <span className="text-xl font-bold tracking-widest text-white/80">---</span>
-                    </div>
-                </div>
-            ) : (
-                <div className="flex items-center justify-center gap-2 text-white/70">
-                    <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold tracking-widest">***</span>
-                    </div>
-                    <div className="flex flex-col items-center rounded-md bg-black/20 px-2 py-1 text-white/70">
-                        <span className="text-xl font-bold tracking-wider">**</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold tracking-widest">***</span>
+                        <span className="text-xl font-bold tracking-widest text-white/80">{result?.closePanna || '***'}</span>
                     </div>
                 </div>
             )}

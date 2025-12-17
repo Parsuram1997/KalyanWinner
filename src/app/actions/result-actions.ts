@@ -97,7 +97,11 @@ export async function createKalyanResult(resultData: KalyanResult) {
 
       const openDigit = getDigit(finalResultData.openPanna);
       const closeDigit = finalResultData.closePanna ? getDigit(finalResultData.closePanna) : null;
-      const jodi = openDigit && closeDigit ? openDigit + closeDigit : null;
+      let jodi: string | null = null;
+      if (openDigit) {
+          jodi = closeDigit ? openDigit + closeDigit : `${openDigit}*`;
+      }
+
 
       const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
 
@@ -143,7 +147,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
                 break;
 
             case 'Jodi':
-                if (jodi && betNumberAsString === jodi) {
+                if (jodi && jodi.length === 2 && betNumberAsString === jodi) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
                 }
@@ -151,7 +155,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
                 break;
             
             case 'Open Sangam':
-                 if (jodi) { 
+                 if (jodi && jodi.length === 2) { 
                     const [panna, digit] = betNumberAsString.split('x');
                     if (panna === finalResultData.openPanna && digit === closeDigit) {
                        isWinner = true;
@@ -162,7 +166,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
                 break;
 
             case 'Close Sangam':
-                 if (jodi) {
+                 if (jodi && jodi.length === 2) {
                     const [digit, panna] = betNumberAsString.split('x');
                     if (digit === openDigit && panna === finalResultData.closePanna) {
                       isWinner = true;
@@ -173,7 +177,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
                 break;
 
             case 'Full Sangam':
-                 if (jodi) { 
+                 if (jodi && jodi.length === 2) { 
                     const [openPannaSangam, closePannaSangam] = betNumberAsString.split('x');
                     if (openPannaSangam === finalResultData.openPanna && closePannaSangam === finalResultData.closePanna) {
                        isWinner = true;
@@ -291,7 +295,10 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
       
       const openDigit = getDigit(mergedData.openPanna);
       const closeDigit = mergedData.closePanna ? getDigit(mergedData.closePanna) : null;
-      const jodi = openDigit && closeDigit ? openDigit + closeDigit : null;
+      let jodi: string | null = null;
+      if (openDigit) {
+          jodi = closeDigit ? openDigit + closeDigit : `${openDigit}*`;
+      }
 
       const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
 
@@ -336,7 +343,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
 
             case 'Jodi':
-                if (jodi && betNumberAsString === jodi) {
+                if (jodi && jodi.length === 2 && betNumberAsString === jodi) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
                 }
@@ -344,7 +351,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
 
             case 'Open Sangam':
-                 if (jodi) { 
+                 if (jodi && jodi.length === 2) { 
                     const [panna, digit] = betNumberAsString.split('x');
                     if (panna === mergedData.openPanna && digit === closeDigit) {
                        isWinner = true;
@@ -355,7 +362,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
 
             case 'Close Sangam':
-                 if (jodi) {
+                 if (jodi && jodi.length === 2) {
                     const [digit, panna] = betNumberAsString.split('x');
                     if (digit === openDigit && panna === mergedData.closePanna) {
                       isWinner = true;
@@ -366,7 +373,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
 
             case 'Full Sangam':
-                 if (jodi) { 
+                 if (jodi && jodi.length === 2) { 
                     const [openPannaSangam, closePannaSangam] = betNumberAsString.split('x');
                     if (openPannaSangam === mergedData.openPanna && closePannaSangam === mergedData.closePanna) {
                        isWinner = true;

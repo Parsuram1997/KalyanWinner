@@ -115,15 +115,15 @@ const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current 
                                         <div className="flex items-center justify-center gap-2">
                                             <div className="flex flex-col items-center text-center">
                                                 <span className="text-xs text-white/70">Open</span>
-                                                <span className="text-xl font-bold tracking-tight">{result.openPanna}</span>
+                                                <span className="text-xl font-bold tracking-tight">{result.openPanna || '***'}</span>
                                             </div>
                                             <div className="flex flex-col items-center rounded-md bg-black/20 px-3 py-1 text-white text-center">
-                                                <span className="text-2xl font-bold tracking-tight">{result.jodi}</span>
+                                                <span className="text-2xl font-bold tracking-tight">{result.jodi || '**'}</span>
                                                 <span className="text-[10px] font-medium leading-tight">{result.marketName}</span>
                                             </div>
                                             <div className="flex flex-col items-center text-center">
                                                 <span className="text-xs text-white/70">Close</span>
-                                                <span className="text-xl font-bold tracking-tight">{result.closePanna}</span>
+                                                <span className="text-xl font-bold tracking-tight">{result.closePanna || '***'}</span>
                                             </div>
                                         </div>
                                     </div>
