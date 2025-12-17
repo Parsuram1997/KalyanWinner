@@ -160,9 +160,9 @@ export default function WalletPage() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="wallet" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="wallet">Wallet</TabsTrigger>
-          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-black/20 p-1">
+          <TabsTrigger value="wallet" className="text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-700 data-[state=active]:text-white">Wallet</TabsTrigger>
+          <TabsTrigger value="activity" className="text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-700 data-[state=active]:text-white">Recent Activity</TabsTrigger>
         </TabsList>
         <TabsContent value="wallet" className="mt-4 space-y-6">
           <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
