@@ -7,7 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const faqs = [
     {
@@ -52,16 +52,19 @@ const faqs = [
 
 export default function FAQPage() {
   return (
-    <Card>
+    <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
       <CardHeader>
         <CardTitle>Frequently Asked Questions</CardTitle>
+        <CardDescription className="text-white/80">
+          Answers to common questions about the game.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Accordion type="single" collapsible className="w-full">
           {faqs.map((faq, index) => (
-            <AccordionItem value={`item-${index}`} key={index}>
-              <AccordionTrigger>{faq.question}</AccordionTrigger>
-              <AccordionContent>{faq.answer}</AccordionContent>
+            <AccordionItem value={`item-${index}`} key={index} className="border-b-white/20">
+              <AccordionTrigger className="text-white hover:no-underline">{faq.question}</AccordionTrigger>
+              <AccordionContent className="text-white/80">{faq.answer}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
