@@ -115,12 +115,12 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
                  if (status === 'Completed') {
                     const feePercentage = settings?.withdrawalFeePercentage || 0;
                     const feeAmount = transactionData.amount * (feePercentage / 100);
-                    const totalDeduction = transactionData.amount + feeAmount;
+                    const totalDeduction = transactionData.amount; // User gets full amount, fee is deducted extra
 
-                    if (userData.winningBalance < totalDeduction) {
+                    if (userData.winningBalance < totalDeduction + feeAmount) {
                         throw new Error("User has insufficient winning balance for this withdrawal including fees.");
                     }
-                    t.update(userRef, { winningBalance: FieldValue.increment(-totalDeduction) });
+                    t.update(userRef, { winningBalance: FieldValue.increment(-(totalDeduction + feeAmount)) });
                 }
             } else if (transactionData.type === 'Deposit') {
                 if (status === 'Completed') {
@@ -238,3 +238,5 @@ export async function createTransaction(data: {
         throw new Error(error.message || 'An unexpected error occurred while creating the transaction.');
     }
 }
+
+    

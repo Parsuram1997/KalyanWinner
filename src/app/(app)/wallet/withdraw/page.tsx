@@ -22,6 +22,11 @@ import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
+type PaymentSettings = {
+    minWithdrawal?: number;
+    withdrawalFeePercentage?: number;
+};
+
 const WhatsAppIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <path d="M16.75 13.96c.25.13.43.2.5.33.07.13.07.55.02.68-.05.13-.3.35-.6.5-.3.15-.68.2-1.13.1-1.1-.23-2.13-.6-3.3-1.23-1.45-.78-2.5-1.8-3.25-3.03-.24-.4-.38-.8-.38-1.23s.12-.8.36-1.04c.24-.24.5-.3.7-.3.07 0 .13.02.2.02.13.02.2.02.3.07.1.05.15.2.2.33.05.13.07.28.07.4 0 .13-.02.28-.07.4-.05.13-.1.2-.15.25l-.2.25c-.05.05-.07.1-.07.13s.02.13.07.2c.05.07.28.48.7.93.7.73 1.28 1.02 1.5.96.05-.02.1-.05.13-.07l.2-.2c.05-.05.1-.1.15-.15s.13-.07.2-.07a.3.3 0 0 1 .28.07c.1.07.48.24.58.28.1.04.18.07.2.1.04.05.04.1.02.15-.02.05-.02.1-.07.13-.05.05-.1.1-.15.15zM12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z" />
@@ -33,17 +38,22 @@ export default function WithdrawPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [isMobile, setIsMobile] = useState(false);
-  const [minWithdrawalAmount, setMinWithdrawalAmount] = useState(100);
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>({});
 
+  const minWithdrawalAmount = paymentSettings.minWithdrawal || 500;
+  
   const formSchema = z.object({
     amount: z.coerce.number().min(minWithdrawalAmount, `Minimum withdrawal is ₹${minWithdrawalAmount}`),
   });
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { amount: minWithdrawalAmount },
   });
   
+  const watchedAmount = form.watch("amount");
+  const numericAmount = Number(watchedAmount) || 0;
+
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
   }, []);
@@ -53,14 +63,19 @@ export default function WithdrawPage() {
 
   const winningBalance = userData?.winningBalance || 0;
   const hasPaymentDetails = userData?.paymentMethod;
+  const withdrawalFee = paymentSettings?.withdrawalFeePercentage ? (numericAmount * paymentSettings.withdrawalFeePercentage) / 100 : 0;
+  const totalDeducted = numericAmount + withdrawalFee;
 
   useEffect(() => {
     const fetchSettings = async () => {
         try {
             const settings = await getPaymentSettings();
+            setPaymentSettings({
+              minWithdrawal: settings?.minWithdrawal,
+              withdrawalFeePercentage: settings?.withdrawalFeePercentage
+            });
             if(settings && settings.minWithdrawal) {
-                setMinWithdrawalAmount(settings.minWithdrawal);
-                form.reset({ amount: settings.minWithdrawal }); 
+                form.setValue("amount", settings.minWithdrawal); 
             }
         } catch (error: any) {
             toast({
@@ -75,9 +90,9 @@ export default function WithdrawPage() {
 
   useEffect(() => {
     if (winningBalance > 0) {
-      form.setValue("amount", winningBalance);
+      form.setValue("amount", Math.max(minWithdrawalAmount, winningBalance));
     }
-  }, [winningBalance, form]);
+  }, [winningBalance, form, minWithdrawalAmount]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !userData) {
@@ -85,19 +100,20 @@ export default function WithdrawPage() {
       return;
     }
 
-    if (values.amount > winningBalance) {
-        form.setError("amount", { type: "manual", message: "Withdrawal amount cannot exceed your winning balance." });
+    if (totalDeducted > winningBalance) {
+        form.setError("amount", { type: "manual", message: "Withdrawal amount plus fee cannot exceed your winning balance." });
         return;
     }
 
     try {
+      const description = `Withdrawal of ₹${values.amount} with a ₹${withdrawalFee.toFixed(2)} fee.`;
       const result = await createTransaction({
         userId: user.uid,
         userName: user.displayName || 'Unknown',
         amount: values.amount,
         type: "Withdrawal",
         status: "Pending",
-        description: `Withdrawal request to ${userData.paymentMethod === 'bank' ? userData.accountNumber : userData.upiId}`,
+        description: description,
       });
 
       if (result.success) {
@@ -204,6 +220,20 @@ export default function WithdrawPage() {
               )}
             />
 
+            {numericAmount >= minWithdrawalAmount && (
+              <div className="text-xs space-y-2 rounded-lg bg-black/20 p-3">
+                  <div className="flex justify-between">
+                      <span className="text-white/80">Withdrawal Fee ({paymentSettings?.withdrawalFeePercentage || 0}%):</span>
+                      <span className="font-medium">₹{withdrawalFee.toFixed(2)}</span>
+                  </div>
+                  <Separator className="bg-white/30" />
+                  <div className="flex justify-between font-bold">
+                      <span>Total To Be Deducted:</span>
+                      <span className="text-red-400">₹{totalDeducted.toFixed(2)}</span>
+                  </div>
+              </div>
+            )}
+
             <Button type="submit" className="w-full" disabled={isLoading || form.formState.isSubmitting || !hasPaymentDetails}>
               {form.formState.isSubmitting ? "Submitting..." : "Submit Withdrawal Request"}
             </Button>
@@ -229,3 +259,5 @@ export default function WithdrawPage() {
     </Card>
   );
 }
+
+    

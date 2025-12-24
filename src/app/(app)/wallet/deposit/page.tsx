@@ -23,11 +23,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 
 type PaymentSettings = {
   upiId?: string;
   payeeName?: string;
   minDeposit?: number;
+  depositFeePercentage?: number;
   bankAccountHolder?: string;
   bankAccountNumber?: string;
   bankIfscCode?: string;
@@ -78,6 +80,7 @@ export default function DepositPage() {
             upiId: settings.upiId, 
             payeeName: settings.bankAccountHolder || 'Kalyan Winner',
             minDeposit: settings.minDeposit,
+            depositFeePercentage: settings.depositFeePercentage,
             bankAccountHolder: settings.bankAccountHolder,
             bankAccountNumber: settings.bankAccountNumber,
             bankIfscCode: settings.bankIfscCode,
@@ -100,6 +103,8 @@ export default function DepositPage() {
 
   const watchedAmount = form.watch("amount");
   const numericAmount = Number(watchedAmount) || 0;
+  const depositFee = paymentSettings?.depositFeePercentage ? (numericAmount * paymentSettings.depositFeePercentage) / 100 : 0;
+  const netDepositAmount = numericAmount - depositFee;
 
   const onSubmit = async (values: FormSchemaType) => {
     if (!user) {
@@ -107,13 +112,14 @@ export default function DepositPage() {
       return;
     }
     try {
+      const description = `Deposit of ₹${values.amount} with a ₹${depositFee.toFixed(2)} fee.`;
       const result = await createTransaction({
         userId: user.uid,
         userName: user.displayName || 'Unknown',
         amount: values.amount,
         type: 'Deposit',
         status: "Pending",
-        description: `Deposit via UPI`,
+        description: description,
         utr: values.utr,
       });
 
@@ -201,6 +207,21 @@ export default function DepositPage() {
                     </FormItem>
                   )}
                 />
+
+                {numericAmount >= minDepositAmount && (
+                    <div className="text-xs space-y-2 rounded-lg bg-black/20 p-3">
+                        <div className="flex justify-between">
+                            <span className="text-white/80">Deposit Fee ({paymentSettings?.depositFeePercentage || 0}%):</span>
+                            <span className="font-medium">₹{depositFee.toFixed(2)}</span>
+                        </div>
+                        <Separator className="bg-white/30" />
+                        <div className="flex justify-between font-bold">
+                            <span>You Will Get:</span>
+                            <span className="text-green-300">₹{netDepositAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+                )}
+
 
                 {numericAmount >= minDepositAmount && (hasUpiDetails || hasBankDetails) && (
                     <Tabs defaultValue={hasUpiDetails ? "upi" : "bank"} className="w-full">
@@ -351,3 +372,5 @@ export default function DepositPage() {
     </div>
   );
 }
+
+    
