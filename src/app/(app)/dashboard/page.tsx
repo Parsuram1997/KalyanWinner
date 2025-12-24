@@ -283,7 +283,8 @@ export default function DashboardPage() {
   const transactionsQuery = useMemoFirebase(
     () => (firestore && authUser ? query(
       collection(firestore, "transactions"),
-      where("userId", "==", authUser.uid)
+      where("userId", "==", authUser.uid),
+      where("type", "in", ["Deposit", "Withdrawal", "Bet", "Win"])
     ) : null),
     [firestore, authUser]
   );
@@ -445,3 +446,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
