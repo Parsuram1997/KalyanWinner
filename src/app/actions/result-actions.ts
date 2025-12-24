@@ -320,10 +320,10 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
 
         switch (bet.gameType) {
             case 'Single Digit':
-                if (bet.session === 'Open' && openDigit && betNumberAsString === openDigit) {
+                 if ((bet.session === 'Open' || bet.gameType === 'Open') && openDigit && betNumberAsString === openDigit) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
-                } else if (bet.session === 'Close' && closeDigit && betNumberAsString === closeDigit) {
+                } else if ((bet.session === 'Close' || bet.gameType === 'Close') && closeDigit && betNumberAsString === closeDigit) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
                 }
