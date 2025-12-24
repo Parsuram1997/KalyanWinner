@@ -117,13 +117,19 @@ export async function createKalyanResult(resultData: KalyanResult) {
         const betNumberAsString = String(bet.number);
         let winningAmount = 0;
         let isWinner = false;
+        
+        // ** IMPORTANT **
+        // Do not process Jodi or Full Sangam bets here. They can only be determined
+        // when the CLOSE result is in. Only process Open session bets.
+        const finalGameTypes = ['Jodi', 'Full Sangam'];
+        if(finalGameTypes.includes(bet.gameType)) {
+            return; // Skip this bet, it will be processed by updateKalyanResult
+        }
+
 
         switch (bet.gameType) {
              case 'Single Digit':
                 if (bet.session === 'Open' && openDigit && betNumberAsString === openDigit) {
-                    isWinner = true;
-                    winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
-                } else if (bet.session === 'Close' && closeDigit && betNumberAsString === closeDigit) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
                 }
@@ -137,17 +143,9 @@ export async function createKalyanResult(resultData: KalyanResult) {
                 if (bet.gameType === 'Double Panna') pannaMultiplier = payoutMultipliers.get('Double Panna') || 280;
                 if (bet.gameType === 'Triple Panna') pannaMultiplier = payoutMultipliers.get('Triple Panna') || 700;
 
-                if ((bet.session === 'Open' && finalResultData.openPanna && betNumberAsString === finalResultData.openPanna) ||
-                    (bet.session === 'Close' && finalResultData.closePanna && betNumberAsString === finalResultData.closePanna)) {
+                if (bet.session === 'Open' && finalResultData.openPanna && betNumberAsString === finalResultData.openPanna) {
                     isWinner = true;
                     winningAmount = bet.amount * pannaMultiplier;
-                }
-                break;
-
-            case 'Jodi':
-                if (jodi && jodi.length === 2 && betNumberAsString === jodi) {
-                    isWinner = true;
-                    winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
                 }
                 break;
             
@@ -167,16 +165,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
                     if (digit === openDigit && panna === finalResultData.closePanna) {
                       isWinner = true;
                       winningAmount = bet.amount * (payoutMultipliers.get('Close Sangam') || 1200);
-                    }
-                }
-                break;
-
-            case 'Full Sangam':
-                 if (jodi && jodi.length === 2) { 
-                    const [openPannaSangam, closePannaSangam] = betNumberAsString.split('x');
-                    if (openPannaSangam === finalResultData.openPanna && closePannaSangam === finalResultData.closePanna) {
-                       isWinner = true;
-                       winningAmount = bet.amount * (payoutMultipliers.get('Full Sangam') || 12000);
                     }
                 }
                 break;
@@ -262,7 +250,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
       
       const marketBetsQuery = firestore.collection('kalyan_bets')
           .where('market', '==', mergedData.marketName)
-          .where('status', '==', 'Placed');
+          .where('status', 'in', ['Placed', 'Lost']);
 
       const betsSnapshot = await transaction.get(marketBetsQuery);
       
@@ -320,10 +308,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
 
         switch (bet.gameType) {
             case 'Single Digit':
-                 if ((bet.session === 'Open' || bet.gameType === 'Open') && openDigit && betNumberAsString === openDigit) {
-                    isWinner = true;
-                    winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
-                } else if ((bet.session === 'Close' || bet.gameType === 'Close') && closeDigit && betNumberAsString === closeDigit) {
+                 if (bet.session === 'Close' && closeDigit && betNumberAsString === closeDigit) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
                 }
@@ -337,8 +322,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 if (bet.gameType === 'Double Panna') pannaMultiplier = payoutMultipliers.get('Double Panna') || 280;
                 if (bet.gameType === 'Triple Panna') pannaMultiplier = payoutMultipliers.get('Triple Panna') || 700;
 
-                if ((bet.session === 'Open' && mergedData.openPanna && betNumberAsString === mergedData.openPanna) ||
-                    (bet.session === 'Close' && mergedData.closePanna && betNumberAsString === mergedData.closePanna)) {
+                if (bet.session === 'Close' && mergedData.closePanna && betNumberAsString === mergedData.closePanna) {
                     isWinner = true;
                     winningAmount = bet.amount * pannaMultiplier;
                 }
@@ -383,12 +367,15 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
         }
 
         const newStatus = isWinner ? 'Won' : 'Lost';
-        transaction.update(doc.ref, { status: newStatus, winningAmount });
-        
-        // Also update the original 'Bet' transaction status
-        if (bet.transactionId) {
-            const betTransactionRef = firestore.collection('transactions').doc(bet.transactionId);
-            transaction.update(betTransactionRef, { status: newStatus });
+        // Only update if the status is changing. Avoids re-processing bets that are already won/lost correctly.
+        if (bet.status !== newStatus) {
+            transaction.update(doc.ref, { status: newStatus, winningAmount });
+            
+            // Also update the original 'Bet' transaction status
+            if (bet.transactionId) {
+                const betTransactionRef = firestore.collection('transactions').doc(bet.transactionId);
+                transaction.update(betTransactionRef, { status: newStatus });
+            }
         }
 
 
