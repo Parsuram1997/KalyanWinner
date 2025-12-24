@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -22,7 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
 import { updateTransactionStatus, deleteTransaction } from "@/app/actions/transaction-actions";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,6 +77,11 @@ type User = {
     upiId?: string;
 }
 
+type PaymentSettings = {
+    depositFeePercentage?: number;
+    withdrawalFeePercentage?: number;
+};
+
 const getStatusClasses = (status: Transaction['status']) => {
     switch (status) {
         case 'Completed':
@@ -93,7 +99,8 @@ const getStatusClasses = (status: Transaction['status']) => {
 const TransactionTable = ({ 
     items, 
     isLoading, 
-    userIdToCustomIdMap, 
+    userIdToCustomIdMap,
+    settings,
     onShowDetails,
     onConfirmAction,
     onDelete
@@ -101,6 +108,7 @@ const TransactionTable = ({
     items: Transaction[], 
     isLoading: boolean, 
     userIdToCustomIdMap: { [key: string]: string },
+    settings: PaymentSettings | null,
     onShowDetails: (userId: string) => void,
     onConfirmAction: (details: { txnId: string, newStatus: 'Approved' | 'Rejected', type: 'Deposit' | 'Withdrawal' }) => void,
     onDelete: (txn: Transaction) => void
@@ -123,6 +131,23 @@ const TransactionTable = ({
         return txn.customId || userIdToCustomIdMap[txn.userId] || txn.userId;
     }
 
+    const calculateFee = (txn: Transaction) => {
+        if (txn.type === 'Deposit') {
+            const feePercent = settings?.depositFeePercentage || 0;
+            const fee = (txn.amount * feePercent) / 100;
+            const totalPaid = txn.amount + fee;
+            return { fee, total: totalPaid, net: txn.amount, type: 'Deposit' };
+        }
+        if (txn.type === 'Withdrawal') {
+            const feePercent = settings?.withdrawalFeePercentage || 0;
+            const fee = (txn.amount * feePercent) / 100;
+            const userReceives = txn.amount - fee;
+            return { fee, total: txn.amount, net: userReceives, type: 'Withdrawal' };
+        }
+        return { fee: 0, total: txn.amount, net: txn.amount, type: txn.type };
+    };
+
+
   return (
     <div>
         {/* Desktop View */}
@@ -131,7 +156,7 @@ const TransactionTable = ({
                 <TableHeader className="border-b border-white/20">
                     <TableRow>
                         <TableHead className="text-white">User</TableHead>
-                        <TableHead className="text-white">Amount & Type</TableHead>
+                        <TableHead className="text-white">Amount Details</TableHead>
                         <TableHead className="text-white">Date</TableHead>
                         <TableHead className="text-white">Details (UTR)</TableHead>
                         <TableHead className="text-white">Status</TableHead>
@@ -139,17 +164,28 @@ const TransactionTable = ({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {items.map((txn) => (
+                    {items.map((txn) => {
+                        const feeDetails = calculateFee(txn);
+                        return (
                         <TableRow key={txn.id} className="border-white/20">
                             <TableCell className="py-2 font-medium">
                                 <div>{txn.userName || 'N/A'}</div>
                                 <div className="text-xs text-white/80">{getCustomId(txn)}</div>
                             </TableCell>
-                             <TableCell className="py-2">
-                                <div className={cn('font-mono', txn.status === 'Rejected' ? 'text-yellow-400' : 'text-white')}>₹{txn.amount.toLocaleString('en-IN')}</div>
-                                <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"} className="text-xs mt-1">
-                                    {txn.type}
-                                </Badge>
+                             <TableCell className="py-2 text-xs">
+                                {txn.type === 'Deposit' ? (
+                                    <div className="font-mono">
+                                        <div>Net: <span className="font-semibold text-white">₹{feeDetails.net.toLocaleString('en-IN')}</span></div>
+                                        <div>Fee: <span className="font-semibold text-white">₹{feeDetails.fee.toLocaleString('en-IN')}</span></div>
+                                        <div className="text-green-300">Total Paid: <span className="font-bold">₹{feeDetails.total.toLocaleString('en-IN')}</span></div>
+                                    </div>
+                                ) : (
+                                     <div className="font-mono">
+                                        <div>Withdraw: <span className="font-semibold text-white">₹{feeDetails.total.toLocaleString('en-IN')}</span></div>
+                                        <div>Fee: <span className="font-semibold text-white">- ₹{feeDetails.fee.toLocaleString('en-IN')}</span></div>
+                                        <div className="text-green-300">Receives: <span className="font-bold">₹{feeDetails.net.toLocaleString('en-IN')}</span></div>
+                                    </div>
+                                )}
                             </TableCell>
                             <TableCell className="py-2 text-xs">{new Date(txn.date).toLocaleString()}</TableCell>
                             <TableCell className="py-2 text-xs max-w-[150px]">
@@ -194,14 +230,16 @@ const TransactionTable = ({
                                 </div>
                             </TableCell>
                         </TableRow>
-                    ))}
+                    )})}
                 </TableBody>
             </Table>
         </div>
 
         {/* Mobile View */}
         <div className="grid gap-4 md:hidden">
-            {items.map((txn) => (
+            {items.map((txn) => {
+                const feeDetails = calculateFee(txn);
+                return (
                 <Card key={txn.id} className="bg-black/20 border-white/20 text-white">
                     <CardContent className="p-4">
                         <div className="flex justify-between items-start">
@@ -221,10 +259,21 @@ const TransactionTable = ({
                                     {txn.type}
                                 </Badge>
                             </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-white/80">Amount:</span>
-                                <span className={cn('font-medium font-mono', txn.status === 'Rejected' ? 'text-yellow-400' : 'text-white')}>₹{txn.amount.toLocaleString('en-IN')}</span>
-                            </div>
+
+                             {txn.type === 'Deposit' ? (
+                                <div className="text-xs font-mono">
+                                    <div className="flex justify-between"><span>Net:</span><span className="font-semibold">₹{feeDetails.net.toLocaleString('en-IN')}</span></div>
+                                    <div className="flex justify-between"><span>Fee:</span><span className="font-semibold">₹{feeDetails.fee.toLocaleString('en-IN')}</span></div>
+                                    <div className="flex justify-between text-green-300"><span>Total Paid:</span><span className="font-bold">₹{feeDetails.total.toLocaleString('en-IN')}</span></div>
+                                </div>
+                            ) : (
+                                <div className="text-xs font-mono">
+                                    <div className="flex justify-between"><span>Withdraw:</span><span className="font-semibold">₹{feeDetails.total.toLocaleString('en-IN')}</span></div>
+                                    <div className="flex justify-between"><span>Fee:</span><span className="font-semibold">- ₹{feeDetails.fee.toLocaleString('en-IN')}</span></div>
+                                    <div className="flex justify-between text-green-300"><span>Receives:</span><span className="font-bold">₹{feeDetails.net.toLocaleString('en-IN')}</span></div>
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-center text-xs">
                                 <span className="text-white/80">Details:</span>
                                 {txn.type === 'Withdrawal' ? (
@@ -264,7 +313,7 @@ const TransactionTable = ({
                         </AlertDialog>
                     </CardFooter>
                 </Card>
-            ))}
+            )})}
         </div>
     </div>
 )}
@@ -275,6 +324,25 @@ export default function TransactionsPage() {
   const [paymentDetails, setPaymentDetails] = useState<User | null>(null);
   const [confirmation, setConfirmation] = useState<{ txnId: string, newStatus: 'Approved' | 'Rejected', type: 'Deposit' | 'Withdrawal' } | null>(null);
   const [utr, setUtr] = useState("");
+  const [settings, setSettings] = useState<PaymentSettings | null>(null);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+        setIsSettingsLoading(true);
+        try {
+            const fetchedSettings = await getPaymentSettings();
+            setSettings({
+                depositFeePercentage: fetchedSettings?.depositFeePercentage || 0,
+                withdrawalFeePercentage: fetchedSettings?.withdrawalFeePercentage || 0,
+            });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Could not load payment settings for fee calculation."});
+        }
+        setIsSettingsLoading(false);
+    };
+    fetchSettings();
+  }, []);
 
   const transactionsQuery = useMemoFirebase(
     () => firestore 
@@ -358,7 +426,7 @@ export default function TransactionsPage() {
   const pendingWithdrawals = useMemo(() => transactions?.filter(t => t.type === 'Withdrawal' && t.status === 'Pending') || [], [transactions]);
   const processedTransactions = useMemo(() => transactions?.filter(t => t.status !== 'Pending') || [], [transactions]);
 
-  const isLoading = isTransactionsLoading || isUsersLoading;
+  const isLoading = isTransactionsLoading || isUsersLoading || isSettingsLoading;
   const error = transactionsError || usersError;
 
   if (error) {
@@ -382,13 +450,13 @@ export default function TransactionsPage() {
                   </TabsList>
                 </div>
                 <TabsContent value="pending-deposits" className="mt-0">
-                    <TransactionTable items={pendingDeposits} isLoading={isLoading} userIdToCustomIdMap={userIdToCustomIdMap} onShowDetails={handleShowDetails} onConfirmAction={setConfirmation} onDelete={handleDelete} />
+                    <TransactionTable items={pendingDeposits} isLoading={isLoading} userIdToCustomIdMap={userIdToCustomIdMap} settings={settings} onShowDetails={handleShowDetails} onConfirmAction={setConfirmation} onDelete={handleDelete} />
                 </TabsContent>
                 <TabsContent value="pending-withdrawals" className="mt-0">
-                    <TransactionTable items={pendingWithdrawals} isLoading={isLoading} userIdToCustomIdMap={userIdToCustomIdMap} onShowDetails={handleShowDetails} onConfirmAction={setConfirmation} onDelete={handleDelete} />
+                    <TransactionTable items={pendingWithdrawals} isLoading={isLoading} userIdToCustomIdMap={userIdToCustomIdMap} settings={settings} onShowDetails={handleShowDetails} onConfirmAction={setConfirmation} onDelete={handleDelete} />
                 </TabsContent>
                 <TabsContent value="processed" className="mt-0">
-                    <TransactionTable items={processedTransactions} isLoading={isLoading} userIdToCustomIdMap={userIdToCustomIdMap} onShowDetails={handleShowDetails} onConfirmAction={setConfirmation} onDelete={handleDelete} />
+                    <TransactionTable items={processedTransactions} isLoading={isLoading} userIdToCustomIdMap={userIdToCustomIdMap} settings={settings} onShowDetails={handleShowDetails} onConfirmAction={setConfirmation} onDelete={handleDelete} />
                 </TabsContent>
             </Tabs>
         </CardContent>
