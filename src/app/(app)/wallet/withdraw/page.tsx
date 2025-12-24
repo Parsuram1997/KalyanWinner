@@ -62,8 +62,12 @@ export default function WithdrawPage() {
                 setMinWithdrawalAmount(settings.minWithdrawal);
                 form.reset({ amount: settings.minWithdrawal }); 
             }
-        } catch (error) {
-            console.error("Could not fetch withdrawal settings");
+        } catch (error: any) {
+            toast({
+              variant: "destructive",
+              title: "Error fetching settings",
+              description: error.message || "Could not fetch withdrawal settings."
+            })
         }
     };
     fetchSettings();
