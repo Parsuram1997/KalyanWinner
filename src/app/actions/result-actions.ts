@@ -300,8 +300,8 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
       const openDigit = getDigit(mergedData.openPanna);
       const closeDigit = mergedData.closePanna ? getDigit(mergedData.closePanna) : null;
       let jodi: string | null = null;
-      if (openDigit) {
-          jodi = closeDigit ? openDigit + closeDigit : `${openDigit}*`;
+      if (openDigit && closeDigit) {
+          jodi = openDigit + closeDigit;
       }
 
       const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
