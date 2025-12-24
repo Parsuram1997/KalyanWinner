@@ -13,6 +13,7 @@ import {
   Coins,
   Clock,
   Trophy,
+  ScrollText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -61,6 +62,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <Link href="/play">
                   <Ticket />
                   Play Games
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/bet-ledger">
+                  <ScrollText />
+                  Bet Ledger
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
