@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Wallet, ArrowUpCircle, ArrowDownCircle, Hourglass, UserPlus, Store, Settings } from "lucide-react";
+import { Users, Wallet, ArrowUpCircle, ArrowDownCircle, Hourglass, UserPlus, Store, Settings, TrendingUp, TrendingDown } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -40,6 +40,11 @@ export default function AdminDashboardPage() {
     const transactionsQuery = useMemoFirebase(() => firestore ? collection(firestore, "transactions") : null, [firestore]);
     const { data: transactions, isLoading: transactionsLoading } = useCollection<any>(transactionsQuery);
 
+    const paymentSettingsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'payment_settings') : null, [firestore]);
+    const { data: paymentSettingsData, isLoading: paymentSettingsLoading } = useCollection<any>(paymentSettingsQuery);
+    const paymentSettings = paymentSettingsData?.[0] || {};
+
+
     const stats = useMemo(() => {
         const allUsers = users || [];
         const allTransactions = transactions || [];
@@ -52,24 +57,43 @@ export default function AdminDashboardPage() {
 
         const pendingDeposits = allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Pending');
         const pendingWithdrawals = allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Pending');
+        
+        const completedDeposits = allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Completed');
+        const completedWithdrawals = allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Completed');
+
+        const depositFeePercentage = paymentSettings?.depositFeePercentage || 0;
+        const withdrawalFeePercentage = paymentSettings?.withdrawalFeePercentage || 0;
+
+        const totalDepositFee = completedDeposits.reduce((sum, t) => {
+            const fee = (t.amount * depositFeePercentage) / 100;
+            return sum + fee;
+        }, 0);
+
+        const totalWithdrawalFee = completedWithdrawals.reduce((sum, t) => {
+            const fee = (t.amount * withdrawalFeePercentage) / 100;
+            return sum + fee;
+        }, 0);
+
 
         return {
             totalUsers: allUsers.length.toString(),
             usersByAdmin: allUsers.filter(u => u.createdBy === 'Admin').length.toString(),
             usersBySelf: allUsers.filter(u => u.createdBy === 'Self' || !u.createdBy).length.toString(),
             allUserWalletBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.depositBalance || 0) + (u.winningBalance || 0), 0)),
-            totalDeposit: formatCurrency(allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
-            totalWithdrawal: formatCurrency(allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Completed').reduce((sum, t) => sum + t.amount, 0)),
+            totalDeposit: formatCurrency(completedDeposits.reduce((sum, t) => sum + t.amount, 0)),
+            totalWithdrawal: formatCurrency(completedWithdrawals.reduce((sum, t) => sum + t.amount, 0)),
             pendingDepositAmount: formatCurrency(pendingDeposits.reduce((sum, t) => sum + t.amount, 0)),
             pendingDepositUsers: `${new Set(pendingDeposits.map(t => t.userId)).size} Users`,
             pendingWithdrawalAmount: formatCurrency(pendingWithdrawals.reduce((sum, t) => sum + t.amount, 0)),
             pendingWithdrawalUsers: `${new Set(pendingWithdrawals.map(t => t.userId)).size} Users`,
             totalMarkets: allMarkets.length.toString(),
             totalBetTypes: allBetTypes.length.toString(),
+            totalDepositFee: formatCurrency(totalDepositFee),
+            totalWithdrawalFee: formatCurrency(totalWithdrawalFee),
         }
-    }, [users, transactions, markets, betTypes]);
+    }, [users, transactions, markets, betTypes, paymentSettings]);
 
-    const isLoading = usersLoading || transactionsLoading || marketsLoading || betTypesLoading;
+    const isLoading = usersLoading || transactionsLoading || marketsLoading || betTypesLoading || paymentSettingsLoading;
 
     const statsCards = [
       { name: "Pending Deposit", value: stats.pendingDepositAmount, subValue: stats.pendingDepositUsers, icon: Hourglass },
@@ -82,6 +106,8 @@ export default function AdminDashboardPage() {
       { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
       { name: "Total Deposit", value: stats.totalDeposit, icon: ArrowUpCircle },
       { name: "Total Withdrawal", value: stats.totalWithdrawal, icon: ArrowDownCircle },
+      { name: "Total Deposit Fee", value: stats.totalDepositFee, icon: TrendingUp },
+      { name: "Total Withdrawal Fee", value: stats.totalWithdrawalFee, icon: TrendingDown },
     ];
 
 
@@ -96,3 +122,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+ 
