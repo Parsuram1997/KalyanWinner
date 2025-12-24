@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { firestore } from "@/lib/firebase-admin";
@@ -107,17 +108,22 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
             if (!userData) {
                 throw new Error("Could not retrieve user data.");
             }
+            
+            const settings = await getPaymentSettings();
 
             if (transactionData.type === 'Withdrawal') {
                  if (status === 'Completed') {
-                    if (userData.winningBalance < transactionData.amount) {
-                        throw new Error("User has insufficient winning balance for this withdrawal.");
+                    const feePercentage = settings?.withdrawalFeePercentage || 0;
+                    const feeAmount = transactionData.amount * (feePercentage / 100);
+                    const totalDeduction = transactionData.amount + feeAmount;
+
+                    if (userData.winningBalance < totalDeduction) {
+                        throw new Error("User has insufficient winning balance for this withdrawal including fees.");
                     }
-                    t.update(userRef, { winningBalance: FieldValue.increment(-transactionData.amount) });
+                    t.update(userRef, { winningBalance: FieldValue.increment(-totalDeduction) });
                 }
             } else if (transactionData.type === 'Deposit') {
                 if (status === 'Completed') {
-                    const settings = await getPaymentSettings();
                     const feePercentage = settings?.depositFeePercentage || 0;
                     const feeAmount = transactionData.amount * (feePercentage / 100);
                     const netAmount = transactionData.amount - feeAmount;

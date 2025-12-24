@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { firestore } from "@/lib/firebase-admin";
@@ -72,8 +73,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
       });
 
       const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
-      const settings = await getPaymentSettings();
-      const taxPercentage = settings?.winningTaxPercentage || 0;
       
       const userIds = [...new Set(todaysBets.map(doc => doc.data().userId))];
       const userRefs = userIds.map(id => firestore.collection('users').doc(id));
@@ -149,8 +148,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
 
 
         if (isWinner) {
-            const taxAmount = winningAmount * (taxPercentage / 100);
-            const netWinningAmount = winningAmount - taxAmount;
+            const netWinningAmount = winningAmount; // No tax on winnings
 
             const userDoc = userDocsCache[bet.userId];
             const userName = userDoc?.data()?.name || bet.userName;
@@ -216,8 +214,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
       const mergedData: KalyanResult = { ...originalData, ...resultData, date: finalDate };
 
       const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
-      const settings = await getPaymentSettings();
-      const taxPercentage = settings?.winningTaxPercentage || 0;
       
       // Process bets for Close and Jodi sessions
       const marketBetsQuery = firestore.collection('kalyan_bets')
@@ -348,8 +344,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
         }
 
         if (isWinner) {
-            const taxAmount = winningAmount * (taxPercentage / 100);
-            const netWinningAmount = winningAmount - taxAmount;
+            const netWinningAmount = winningAmount; // No tax on winnings
 
             const userDoc = userDocsCache[bet.userId];
             const userName = userDoc?.data()?.name || bet.userName;
