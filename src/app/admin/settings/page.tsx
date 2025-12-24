@@ -52,6 +52,8 @@ export default function SettingsPage() {
     const [rateValues, setRateValues] = useState<RateValues>({});
     const [minDeposit, setMinDeposit] = useState<number | string>("");
     const [minWithdrawal, setMinWithdrawal] = useState<number | string>("");
+    const [winningTaxPercentage, setWinningTaxPercentage] = useState<number | string>("");
+    const [depositFeePercentage, setDepositFeePercentage] = useState<number | string>("");
     const [settingsLoading, setSettingsLoading] = useState(true);
 
     const [isAddDialogOpen, setAddDialogOpen] = useState(false);
@@ -73,6 +75,8 @@ export default function SettingsPage() {
                 const settings = await getPaymentSettings();
                 setMinDeposit(settings?.minDeposit || "");
                 setMinWithdrawal(settings?.minWithdrawal || "");
+                setWinningTaxPercentage(settings?.winningTaxPercentage || "");
+                setDepositFeePercentage(settings?.depositFeePercentage || "");
             } catch (error) {
                 toast({ variant: "destructive", title: "Error", description: "Could not load app settings."});
             } finally {
@@ -145,6 +149,8 @@ export default function SettingsPage() {
         const allSettings = {
             minDeposit: Number(minDeposit) || undefined,
             minWithdrawal: Number(minWithdrawal) || undefined,
+            winningTaxPercentage: Number(winningTaxPercentage) || undefined,
+            depositFeePercentage: Number(depositFeePercentage) || undefined,
         };
         updatePromises.push(updatePaymentSettings(allSettings));
 
@@ -285,6 +291,8 @@ export default function SettingsPage() {
                         <div className="space-y-4">
                             <Skeleton className="h-20 w-full bg-white/20" />
                             <Skeleton className="h-20 w-full bg-white/20" />
+                            <Skeleton className="h-20 w-full bg-white/20" />
+                            <Skeleton className="h-20 w-full bg-white/20" />
                         </div>
                     ) : (
                         <>
@@ -310,6 +318,32 @@ export default function SettingsPage() {
                                         placeholder="e.g., 500"
                                         value={minWithdrawal}
                                         onChange={(e) => setMinWithdrawal(e.target.value)}
+                                        className="flex-1 bg-black/30 border-white/20 text-white"
+                                    />
+                                </div>
+                            </Card>
+                             <Card className="p-4 bg-black/20 border-white/20">
+                               <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                                    <Label htmlFor="winningTaxPercentage" className="text-base font-semibold md:w-2/5 text-white">Winning Tax (%)</Label>
+                                    <Input 
+                                        id="winningTaxPercentage"
+                                        type="number"
+                                        placeholder="e.g., 5"
+                                        value={winningTaxPercentage}
+                                        onChange={(e) => setWinningTaxPercentage(e.target.value)}
+                                        className="flex-1 bg-black/30 border-white/20 text-white"
+                                    />
+                                </div>
+                            </Card>
+                             <Card className="p-4 bg-black/20 border-white/20">
+                               <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                                    <Label htmlFor="depositFeePercentage" className="text-base font-semibold md:w-2/5 text-white">Deposit Fee (%)</Label>
+                                    <Input 
+                                        id="depositFeePercentage"
+                                        type="number"
+                                        placeholder="e.g., 2"
+                                        value={depositFeePercentage}
+                                        onChange={(e) => setDepositFeePercentage(e.target.value)}
                                         className="flex-1 bg-black/30 border-white/20 text-white"
                                     />
                                 </div>

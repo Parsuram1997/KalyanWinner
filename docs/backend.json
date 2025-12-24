@@ -263,6 +263,14 @@
         "minWithdrawal": {
           "type": "number",
           "description": "The minimum amount a user can withdraw in a single transaction."
+        },
+        "winningTaxPercentage": {
+          "type": "number",
+          "description": "The percentage to be deducted as tax from winnings."
+        },
+        "depositFeePercentage": {
+          "type": "number",
+          "description": "The percentage to be deducted as a fee from deposits."
         }
       }
     },

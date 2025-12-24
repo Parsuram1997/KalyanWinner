@@ -4,6 +4,7 @@
 import { firestore } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 import { FieldValue } from 'firebase-admin/firestore';
+import { getPaymentSettings } from "./payment-settings-actions";
 
 interface KalyanResult {
   date: string;
@@ -53,7 +54,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
       const marketBetsQuery = firestore.collection('kalyan_bets')
           .where('market', '==', finalResultData.marketName)
           .where('status', '==', 'Placed')
-          .where('session', '==', 'Open'); // IMPORTANT: Only process OPEN session bets here
+          .where('session', '==', 'Open'); 
 
       const betsSnapshot = await transaction.get(marketBetsQuery);
       
@@ -71,6 +72,8 @@ export async function createKalyanResult(resultData: KalyanResult) {
       });
 
       const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
+      const settings = await getPaymentSettings();
+      const taxPercentage = settings?.winningTaxPercentage || 0;
       
       const userIds = [...new Set(todaysBets.map(doc => doc.data().userId))];
       const userRefs = userIds.map(id => firestore.collection('users').doc(id));
@@ -104,6 +107,11 @@ export async function createKalyanResult(resultData: KalyanResult) {
       
       todaysBets.forEach(doc => {
         const bet = doc.data();
+        // Skip processing Jodi bets on open result
+        if (bet.session === 'Jodi') {
+            return;
+        }
+
         const betNumberAsString = String(bet.number);
         let winningAmount = 0;
         let isWinner = false;
@@ -141,6 +149,9 @@ export async function createKalyanResult(resultData: KalyanResult) {
 
 
         if (isWinner) {
+            const taxAmount = winningAmount * (taxPercentage / 100);
+            const netWinningAmount = winningAmount - taxAmount;
+
             const userDoc = userDocsCache[bet.userId];
             const userName = userDoc?.data()?.name || bet.userName;
             const customId = userDoc?.data()?.customId;
@@ -148,7 +159,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
             if (!userWinnings[bet.userId]) {
                 userWinnings[bet.userId] = { amount: 0, userName: userName, customId: customId };
             }
-            userWinnings[bet.userId].amount += winningAmount;
+            userWinnings[bet.userId].amount += netWinningAmount;
             
             const winTransactionRef = firestore.collection('transactions').doc();
             transaction.set(winTransactionRef, {
@@ -156,7 +167,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
                 userName: userName,
                 customId: customId,
                 type: 'Win',
-                amount: winningAmount,
+                amount: netWinningAmount,
                 status: 'Completed',
                 date: new Date().toISOString(),
                 description: `Won ${bet.gameType} on ${bet.market} with number ${bet.number}`,
@@ -205,6 +216,8 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
       const mergedData: KalyanResult = { ...originalData, ...resultData, date: finalDate };
 
       const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
+      const settings = await getPaymentSettings();
+      const taxPercentage = settings?.winningTaxPercentage || 0;
       
       // Process bets for Close and Jodi sessions
       const marketBetsQuery = firestore.collection('kalyan_bets')
@@ -256,8 +269,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
 
       todaysBets.forEach(doc => {
         const bet = doc.data();
-        // Skip bets that are not for Close or Jodi sessions
-        if (bet.session !== 'Close' && bet.session !== 'Jodi') {
+        if (bet.session !== 'Close' && bet.session !== 'Jodi' && bet.gameType !== 'Close') {
             return;
         }
 
@@ -267,7 +279,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
 
         switch (bet.gameType) {
             case 'Single Digit':
-                 if (bet.session === 'Close' && closeDigit && betNumberAsString === closeDigit) {
+                 if (closeDigit && (bet.session === 'Close' || bet.gameType === 'Close') && betNumberAsString === closeDigit) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
                 }
@@ -325,7 +337,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
         }
 
-        const newStatus = isWinner ? 'Won' : (bet.session === 'Jodi' ? 'Lost' : bet.status);
+        const newStatus = isWinner ? 'Won' : (bet.status === 'Placed' ? 'Lost' : bet.status);
         if (bet.status !== newStatus) {
             transaction.update(doc.ref, { status: newStatus, winningAmount });
             
@@ -336,6 +348,9 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
         }
 
         if (isWinner) {
+            const taxAmount = winningAmount * (taxPercentage / 100);
+            const netWinningAmount = winningAmount - taxAmount;
+
             const userDoc = userDocsCache[bet.userId];
             const userName = userDoc?.data()?.name || bet.userName;
             const customId = userDoc?.data()?.customId;
@@ -343,7 +358,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
             if (!userWinnings[bet.userId]) {
                 userWinnings[bet.userId] = { amount: 0, userName: userName, customId: customId };
             }
-            userWinnings[bet.userId].amount += winningAmount;
+            userWinnings[bet.userId].amount += netWinningAmount;
             
             const winTransactionRef = firestore.collection('transactions').doc();
             transaction.set(winTransactionRef, {
@@ -351,7 +366,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 userName: userName,
                 customId: customId,
                 type: 'Win',
-                amount: winningAmount,
+                amount: netWinningAmount,
                 status: 'Completed',
                 date: new Date().toISOString(),
                 description: `Won ${bet.gameType} on ${bet.market} with number ${bet.number}`,

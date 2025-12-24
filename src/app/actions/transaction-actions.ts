@@ -4,6 +4,7 @@
 import { firestore } from "@/lib/firebase-admin";
 import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
+import { getPaymentSettings } from "./payment-settings-actions";
 
 /**
  * Manually deposits a specified amount into a user's account.
@@ -116,7 +117,12 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
                 }
             } else if (transactionData.type === 'Deposit') {
                 if (status === 'Completed') {
-                    t.update(userRef, { depositBalance: FieldValue.increment(transactionData.amount) });
+                    const settings = await getPaymentSettings();
+                    const feePercentage = settings?.depositFeePercentage || 0;
+                    const feeAmount = transactionData.amount * (feePercentage / 100);
+                    const netAmount = transactionData.amount - feeAmount;
+
+                    t.update(userRef, { depositBalance: FieldValue.increment(netAmount) });
                 }
             }
             
