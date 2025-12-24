@@ -187,12 +187,13 @@ const LedgerCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivity
                         variant={null}
                         className={cn(
                             "text-xs",
-                            activity.status === "Won" || activity.status === "Completed" ? "bg-white/20 text-white" :
+                            activity.type === 'Win' ? "bg-green-400/20 text-green-300" :
+                            activity.status === "Completed" ? "bg-white/20 text-white" :
                             activity.status === "Pending" ? "bg-yellow-300 text-black" :
                             "bg-transparent border border-white/50 text-white/80"
                         )}
                         >
-                        {activity.status}
+                        {activity.type === 'Win' ? 'Won' : activity.status}
                         </Badge>
                     </TableCell>
                     <TableCell className="py-2">{new Date(activity.date).toLocaleDateString()}</TableCell>
@@ -219,12 +220,13 @@ const LedgerCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivity
                         variant={null}
                         className={cn(
                             "text-xs mt-1",
-                            activity.status === "Won" || activity.status === "Completed" ? "bg-white/20 text-white" :
+                            activity.type === 'Win' ? "bg-green-400/20 text-green-300" :
+                            activity.status === "Completed" ? "bg-white/20 text-white" :
                             activity.status === "Pending" ? "bg-yellow-300 text-black" :
                             "bg-transparent border border-white/50 text-white/80"
                         )}
                         >
-                        {activity.status}
+                        {activity.type === 'Win' ? 'Won' : activity.status}
                         </Badge>
                 </div>
                 </div>
@@ -447,4 +449,5 @@ export default function DashboardPage() {
   );
 }
 
+    
     
