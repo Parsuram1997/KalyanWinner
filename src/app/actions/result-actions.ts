@@ -127,7 +127,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
                 }
-                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 break;
             
             case 'Single Panna':
@@ -143,7 +142,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
                     isWinner = true;
                     winningAmount = bet.amount * pannaMultiplier;
                 }
-                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 break;
 
             case 'Jodi':
@@ -151,7 +149,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
                 }
-                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 break;
             
             case 'Open Sangam':
@@ -161,7 +158,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
                        isWinner = true;
                        winningAmount = bet.amount * (payoutMultipliers.get('Open Sangam') || 1200);
                     }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 }
                 break;
 
@@ -172,7 +168,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
                       isWinner = true;
                       winningAmount = bet.amount * (payoutMultipliers.get('Close Sangam') || 1200);
                     }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 }
                 break;
 
@@ -183,10 +178,19 @@ export async function createKalyanResult(resultData: KalyanResult) {
                        isWinner = true;
                        winningAmount = bet.amount * (payoutMultipliers.get('Full Sangam') || 12000);
                     }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 }
                 break;
         }
+
+        const newStatus = isWinner ? 'Won' : 'Lost';
+        transaction.update(doc.ref, { status: newStatus, winningAmount });
+
+        // Also update the original 'Bet' transaction status
+        if (bet.transactionId) {
+            const betTransactionRef = firestore.collection('transactions').doc(bet.transactionId);
+            transaction.update(betTransactionRef, { status: newStatus });
+        }
+
 
         if (isWinner) {
             const userDoc = userDocsCache[bet.userId];
@@ -323,7 +327,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Single Digit') || 9);
                 }
-                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 break;
             
             case 'Single Panna':
@@ -339,7 +342,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                     isWinner = true;
                     winningAmount = bet.amount * pannaMultiplier;
                 }
-                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 break;
 
             case 'Jodi':
@@ -347,7 +349,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
                 }
-                transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 break;
 
             case 'Open Sangam':
@@ -357,7 +358,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                        isWinner = true;
                        winningAmount = bet.amount * (payoutMultipliers.get('Open Sangam') || 1200);
                     }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 }
                 break;
 
@@ -368,7 +368,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                       isWinner = true;
                       winningAmount = bet.amount * (payoutMultipliers.get('Close Sangam') || 1200);
                     }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 }
                 break;
 
@@ -379,10 +378,19 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                        isWinner = true;
                        winningAmount = bet.amount * (payoutMultipliers.get('Full Sangam') || 12000);
                     }
-                    transaction.update(doc.ref, { status: isWinner ? 'Won' : 'Lost', winningAmount });
                 }
                 break;
         }
+
+        const newStatus = isWinner ? 'Won' : 'Lost';
+        transaction.update(doc.ref, { status: newStatus, winningAmount });
+        
+        // Also update the original 'Bet' transaction status
+        if (bet.transactionId) {
+            const betTransactionRef = firestore.collection('transactions').doc(bet.transactionId);
+            transaction.update(betTransactionRef, { status: newStatus });
+        }
+
 
         if (isWinner) {
             const userDoc = userDocsCache[bet.userId];
