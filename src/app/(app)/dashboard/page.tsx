@@ -158,10 +158,10 @@ const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current 
     </Card>
 );
 
-const ActivityCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivity, currentPage, totalPages, setCurrentPage }: { isActivityLoading: boolean, sortedRecentActivity: any[], paginatedActivity: any[], currentPage: number, totalPages: number, setCurrentPage: (page: number | ((prev: number) => number)) => void }) => (
+const LedgerCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivity, currentPage, totalPages, setCurrentPage }: { isActivityLoading: boolean, sortedRecentActivity: any[], paginatedActivity: any[], currentPage: number, totalPages: number, setCurrentPage: (page: number | ((prev: number) => number)) => void }) => (
     <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0 hover:shadow-lg transition-shadow">
     <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+        <CardTitle>My Ledger</CardTitle>
     </CardHeader>
     <CardContent className="p-0 sm:p-6">
         {isActivityLoading ? <Skeleton className="h-40 w-full bg-white/20" /> : sortedRecentActivity && sortedRecentActivity.length > 0 ? (
@@ -396,7 +396,7 @@ export default function DashboardPage() {
         />
       </div>
       <div className="hidden md:block">
-        <ActivityCard 
+        <LedgerCard 
             isActivityLoading={isActivityLoading}
             sortedRecentActivity={sortedRecentActivity || []}
             paginatedActivity={paginatedActivity}
@@ -411,7 +411,7 @@ export default function DashboardPage() {
         <Tabs defaultValue="dashboard" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-black/20 border-white/20 border">
                 <TabsTrigger value="dashboard" className="text-white/80 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Dashboard</TabsTrigger>
-                <TabsTrigger value="activity" className="text-white/80 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Activity</TabsTrigger>
+                <TabsTrigger value="activity" className="text-white/80 data-[state=active]:bg-blue-600 data-[state=active]:text-white">My Ledger</TabsTrigger>
             </TabsList>
             <TabsContent value="dashboard" className="mt-4">
                 <div className="grid gap-6">
@@ -431,7 +431,7 @@ export default function DashboardPage() {
                 </div>
             </TabsContent>
             <TabsContent value="activity" className="mt-4">
-                <ActivityCard 
+                <LedgerCard 
                     isActivityLoading={isActivityLoading}
                     sortedRecentActivity={sortedRecentActivity || []}
                     paginatedActivity={paginatedActivity}
