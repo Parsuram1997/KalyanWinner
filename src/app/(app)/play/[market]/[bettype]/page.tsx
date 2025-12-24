@@ -495,19 +495,17 @@ export default function PlaceBetPage() {
         });
         
         let session: 'Open' | 'Close' | 'Jodi';
-        const openSessionGameTypes = ['Open', 'Jodi', 'Open Sangam', 'Close Sangam', 'Full Sangam'];
-        const dualSessionBetTypes = ['Single Panna', 'Double Panna', 'Triple Panna'];
+        const jodiLikeTypes = ['Jodi', 'Full Sangam', 'Open Sangam', 'Close Sangam'];
 
-        if (betTypeName === 'Close') {
+        if (jodiLikeTypes.includes(betTypeName)) {
+            session = 'Jodi';
+        } else if (betTypeName === 'Open') {
+            session = 'Open';
+        } else if (betTypeName === 'Close') {
             session = 'Close';
-        } else if (openSessionGameTypes.includes(betTypeName)) {
+        } else { // For Pannas
             session = isOpenResultDeclared ? 'Close' : 'Open';
-        } else if (dualSessionBetTypes.includes(betTypeName)) {
-            session = isOpenResultDeclared ? 'Close' : 'Open';
-        } else {
-             session = 'Open';
         }
-
 
         const gameTypeForDb = (betTypeName === 'Open' || betTypeName === 'Close') ? 'Single Digit' : betTypeName;
 

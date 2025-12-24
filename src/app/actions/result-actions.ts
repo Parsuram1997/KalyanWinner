@@ -14,7 +14,7 @@ interface KalyanResult {
 }
 
 // Helper to calculate the digit from a panna
-const getDigit = (panna: string) => {
+const getDigit = (panna: string): string | null => {
   if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return null;
   return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
 };
@@ -45,7 +45,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
           .where("marketName", "==", finalResultData.marketName)
           .where("date", "==", finalResultData.date);
 
-      // --- (1) ALL READS FIRST ---
       const existingResultSnapshot = await transaction.get(existingResultQuery);
       if (!existingResultSnapshot.empty) {
           throw new Error(`A result for ${finalResultData.marketName} on ${finalResultData.date} already exists.`);
@@ -53,12 +52,11 @@ export async function createKalyanResult(resultData: KalyanResult) {
       
       const marketBetsQuery = firestore.collection('kalyan_bets')
           .where('market', '==', finalResultData.marketName)
-          .where('status', '==', 'Placed');
+          .where('status', '==', 'Placed')
+          .where('session', '==', 'Open'); // IMPORTANT: Only process OPEN session bets here
 
-      // Read all relevant bets for the market
       const betsSnapshot = await transaction.get(marketBetsQuery);
       
-      // Filter bets for the specific date on the server-side
        const serverDate = new Date(finalResultData.date);
        const startOfDay = new Date(serverDate.getFullYear(), serverDate.getMonth(), serverDate.getDate());
        const endOfDay = new Date(serverDate.getFullYear(), serverDate.getMonth(), serverDate.getDate() + 1);
@@ -72,11 +70,8 @@ export async function createKalyanResult(resultData: KalyanResult) {
           return false;
       });
 
-
-      // Read all game rates
       const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
       
-      // Read all unique user documents involved in the bets
       const userIds = [...new Set(todaysBets.map(doc => doc.data().userId))];
       const userRefs = userIds.map(id => firestore.collection('users').doc(id));
       const userDocs = userIds.length > 0 ? await transaction.getAll(...userRefs) : [];
@@ -86,7 +81,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
           if(doc.exists) userDocsCache[doc.id] = doc;
       });
 
-      // --- (2) PREPARE DATA AND CALCULATIONS ---
       const payoutMultipliers = new Map<string, number>();
       ratesSnapshot.forEach(doc => {
           const rateData = doc.data();
@@ -105,28 +99,15 @@ export async function createKalyanResult(resultData: KalyanResult) {
 
       const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
 
-      // --- (3) ALL WRITES LAST ---
-
-      // Write 1: Create the new result document
       const newResultRef = resultsRef.doc();
       transaction.set(newResultRef, { ...finalResultData, jodi: jodi || '--' });
       
-      // Writes 2: Update bets and create win transactions
       todaysBets.forEach(doc => {
         const bet = doc.data();
         const betNumberAsString = String(bet.number);
         let winningAmount = 0;
         let isWinner = false;
         
-        // ** IMPORTANT **
-        // Do not process Jodi or Full Sangam bets here. They can only be determined
-        // when the CLOSE result is in. Only process Open session bets.
-        const finalGameTypes = ['Jodi', 'Full Sangam'];
-        if(finalGameTypes.includes(bet.gameType)) {
-            return; // Skip this bet, it will be processed by updateKalyanResult
-        }
-
-
         switch (bet.gameType) {
              case 'Single Digit':
                 if (bet.session === 'Open' && openDigit && betNumberAsString === openDigit) {
@@ -148,32 +129,11 @@ export async function createKalyanResult(resultData: KalyanResult) {
                     winningAmount = bet.amount * pannaMultiplier;
                 }
                 break;
-            
-            case 'Open Sangam':
-                 if (jodi && jodi.length === 2) { 
-                    const [panna, digit] = betNumberAsString.split('x');
-                    if (panna === finalResultData.openPanna && digit === closeDigit) {
-                       isWinner = true;
-                       winningAmount = bet.amount * (payoutMultipliers.get('Open Sangam') || 1200);
-                    }
-                }
-                break;
-
-            case 'Close Sangam':
-                 if (jodi && jodi.length === 2) {
-                    const [digit, panna] = betNumberAsString.split('x');
-                    if (digit === openDigit && panna === finalResultData.closePanna) {
-                      isWinner = true;
-                      winningAmount = bet.amount * (payoutMultipliers.get('Close Sangam') || 1200);
-                    }
-                }
-                break;
         }
 
         const newStatus = isWinner ? 'Won' : 'Lost';
         transaction.update(doc.ref, { status: newStatus, winningAmount });
 
-        // Also update the original 'Bet' transaction status
         if (bet.transactionId) {
             const betTransactionRef = firestore.collection('transactions').doc(bet.transactionId);
             transaction.update(betTransactionRef, { status: newStatus });
@@ -205,7 +165,6 @@ export async function createKalyanResult(resultData: KalyanResult) {
         }
       });
 
-      // Writes 3: Update user balances
       for (const userId in userWinnings) {
         const userRef = firestore.collection('users').doc(userId);
         transaction.update(userRef, { winningBalance: FieldValue.increment(userWinnings[userId].amount) });
@@ -236,7 +195,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
     await firestore.runTransaction(async (transaction) => {
       const resultRef = firestore.collection("kalyan_results").doc(resultId);
       
-      // --- (1) ALL READS FIRST ---
       const fullResultDoc = await transaction.get(resultRef);
       if (!fullResultDoc.exists) {
           throw new Error("Result to update not found.");
@@ -248,6 +206,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
 
       const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
       
+      // Process bets for Close and Jodi sessions
       const marketBetsQuery = firestore.collection('kalyan_bets')
           .where('market', '==', mergedData.marketName)
           .where('status', 'in', ['Placed', 'Lost']);
@@ -276,7 +235,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
           if(doc.exists) userDocsCache[doc.id] = doc;
       });
 
-      // --- (2) PREPARE DATA AND CALCULATIONS ---
       const payoutMultipliers = new Map<string, number>();
       ratesSnapshot.forEach(doc => {
           const rateData = doc.data();
@@ -294,14 +252,15 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
 
       const userWinnings: { [userId: string]: { amount: number, userName: string, customId?: string } } = {};
 
-      // --- (3) ALL WRITES LAST ---
-
-      // Write 1: Update the result
       transaction.update(resultRef, { ...resultData, jodi: jodi || '--' });
 
-      // Writes 2: Update bets and create win transactions
       todaysBets.forEach(doc => {
         const bet = doc.data();
+        // Skip bets that are not for Close or Jodi sessions
+        if (bet.session !== 'Close' && bet.session !== 'Jodi') {
+            return;
+        }
+
         const betNumberAsString = String(bet.number);
         let winningAmount = 0;
         let isWinner = false;
@@ -329,14 +288,14 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
 
             case 'Jodi':
-                if (jodi && jodi.length === 2 && betNumberAsString === jodi) {
+                if (jodi && bet.session === 'Jodi' && betNumberAsString === jodi) {
                     isWinner = true;
                     winningAmount = bet.amount * (payoutMultipliers.get('Jodi') || 90);
                 }
                 break;
 
             case 'Open Sangam':
-                 if (jodi && jodi.length === 2) { 
+                 if (jodi && bet.session === 'Jodi') { 
                     const [panna, digit] = betNumberAsString.split('x');
                     if (panna === mergedData.openPanna && digit === closeDigit) {
                        isWinner = true;
@@ -346,7 +305,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
 
             case 'Close Sangam':
-                 if (jodi && jodi.length === 2) {
+                 if (jodi && bet.session === 'Jodi') {
                     const [digit, panna] = betNumberAsString.split('x');
                     if (digit === openDigit && panna === mergedData.closePanna) {
                       isWinner = true;
@@ -356,7 +315,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
 
             case 'Full Sangam':
-                 if (jodi && jodi.length === 2) { 
+                 if (jodi && bet.session === 'Jodi') { 
                     const [openPannaSangam, closePannaSangam] = betNumberAsString.split('x');
                     if (openPannaSangam === mergedData.openPanna && closePannaSangam === mergedData.closePanna) {
                        isWinner = true;
@@ -366,18 +325,15 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
                 break;
         }
 
-        const newStatus = isWinner ? 'Won' : 'Lost';
-        // Only update if the status is changing. Avoids re-processing bets that are already won/lost correctly.
+        const newStatus = isWinner ? 'Won' : (bet.session === 'Jodi' ? 'Lost' : bet.status);
         if (bet.status !== newStatus) {
             transaction.update(doc.ref, { status: newStatus, winningAmount });
             
-            // Also update the original 'Bet' transaction status
             if (bet.transactionId) {
                 const betTransactionRef = firestore.collection('transactions').doc(bet.transactionId);
                 transaction.update(betTransactionRef, { status: newStatus });
             }
         }
-
 
         if (isWinner) {
             const userDoc = userDocsCache[bet.userId];
@@ -404,7 +360,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
         }
       });
 
-      // Writes 3: Update user balances
       for (const userId in userWinnings) {
         const userRef = firestore.collection('users').doc(userId);
         transaction.update(userRef, { winningBalance: FieldValue.increment(userWinnings[userId].amount) });
