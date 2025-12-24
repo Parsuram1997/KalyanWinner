@@ -104,7 +104,7 @@ export default function DepositPage() {
   const watchedAmount = form.watch("amount");
   const numericAmount = Number(watchedAmount) || 0;
   const depositFee = paymentSettings?.depositFeePercentage ? (numericAmount * paymentSettings.depositFeePercentage) / 100 : 0;
-  const netDepositAmount = numericAmount - depositFee;
+  const totalToPay = numericAmount + depositFee;
 
   const onSubmit = async (values: FormSchemaType) => {
     if (!user) {
@@ -137,8 +137,8 @@ export default function DepositPage() {
     }
   };
   
-  const upiUrl = paymentSettings?.upiId && numericAmount >= minDepositAmount
-    ? `upi://pay?pa=${paymentSettings.upiId}&am=${numericAmount.toFixed(2)}&cu=INR`
+  const upiUrl = paymentSettings?.upiId && totalToPay >= minDepositAmount
+    ? `upi://pay?pa=${paymentSettings.upiId}&am=${totalToPay.toFixed(2)}&cu=INR`
     : "";
 
   const copyToClipboard = (text: string, fieldName: string) => {
@@ -216,8 +216,8 @@ export default function DepositPage() {
                         </div>
                         <Separator className="bg-white/30" />
                         <div className="flex justify-between font-bold">
-                            <span>You Will Get:</span>
-                            <span className="text-green-300">₹{netDepositAmount.toFixed(2)}</span>
+                            <span>Total To Pay:</span>
+                            <span className="text-green-300">₹{totalToPay.toFixed(2)}</span>
                         </div>
                     </div>
                 )}
@@ -234,7 +234,7 @@ export default function DepositPage() {
                             <TabsContent value="upi" className="mt-4">
                                <div className="flex flex-col items-center gap-4 p-4 bg-black/20 rounded-lg">
                                 <div className="text-center w-full">
-                                    <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
+                                    <p className="font-bold text-lg">Amount to Pay: ₹{totalToPay.toLocaleString()}</p>
                                     <div
                                     className="flex items-center justify-center gap-2 cursor-pointer text-white/80 hover:text-white"
                                     onClick={() => copyToClipboard(paymentSettings.upiId!, 'UPI ID')}
@@ -263,7 +263,7 @@ export default function DepositPage() {
                                     />
                                   </div>
                                   <div className="text-center w-full">
-                                      <p className="font-bold text-lg">Amount: ₹{numericAmount.toLocaleString()}</p>
+                                      <p className="font-bold text-lg">Amount to Pay: ₹{totalToPay.toLocaleString()}</p>
                                       <p className="text-xs text-white/80">To: {paymentSettings.payeeName}</p>
                                   </div>
                                 </div>

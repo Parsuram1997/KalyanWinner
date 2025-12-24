@@ -64,7 +64,7 @@ export default function WithdrawPage() {
   const winningBalance = userData?.winningBalance || 0;
   const hasPaymentDetails = userData?.paymentMethod;
   const withdrawalFee = paymentSettings?.withdrawalFeePercentage ? (numericAmount * paymentSettings.withdrawalFeePercentage) / 100 : 0;
-  const totalDeducted = numericAmount + withdrawalFee;
+  const netAmountReceivable = numericAmount - withdrawalFee;
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -100,13 +100,13 @@ export default function WithdrawPage() {
       return;
     }
 
-    if (totalDeducted > winningBalance) {
-        form.setError("amount", { type: "manual", message: "Withdrawal amount plus fee cannot exceed your winning balance." });
+    if (values.amount > winningBalance) {
+        form.setError("amount", { type: "manual", message: "Withdrawal amount cannot exceed your winning balance." });
         return;
     }
 
     try {
-      const description = `Withdrawal of ₹${values.amount} with a ₹${withdrawalFee.toFixed(2)} fee.`;
+      const description = `Withdrawal of ₹${values.amount}. You will receive ₹${netAmountReceivable.toFixed(2)} after a fee of ₹${withdrawalFee.toFixed(2)}.`;
       const result = await createTransaction({
         userId: user.uid,
         userName: user.displayName || 'Unknown',
@@ -224,12 +224,16 @@ export default function WithdrawPage() {
               <div className="text-xs space-y-2 rounded-lg bg-black/20 p-3">
                   <div className="flex justify-between">
                       <span className="text-white/80">Withdrawal Fee ({paymentSettings?.withdrawalFeePercentage || 0}%):</span>
-                      <span className="font-medium">₹{withdrawalFee.toFixed(2)}</span>
+                      <span className="font-medium">- ₹{withdrawalFee.toFixed(2)}</span>
                   </div>
                   <Separator className="bg-white/30" />
                   <div className="flex justify-between font-bold">
-                      <span>Total To Be Deducted:</span>
-                      <span className="text-red-400">₹{totalDeducted.toFixed(2)}</span>
+                      <span>You Will Receive:</span>
+                      <span className="text-green-300">₹{netAmountReceivable.toFixed(2)}</span>
+                  </div>
+                   <div className="flex justify-between text-sm text-white/80">
+                      <span>Total Deducted from Wallet:</span>
+                      <span className="font-semibold text-red-400">₹{numericAmount.toFixed(2)}</span>
                   </div>
               </div>
             )}
@@ -259,5 +263,3 @@ export default function WithdrawPage() {
     </Card>
   );
 }
-
-    

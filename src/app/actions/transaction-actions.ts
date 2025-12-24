@@ -113,21 +113,17 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
 
             if (transactionData.type === 'Withdrawal') {
                  if (status === 'Completed') {
-                    const feePercentage = settings?.withdrawalFeePercentage || 0;
-                    const feeAmount = transactionData.amount * (feePercentage / 100);
-                    const totalDeduction = transactionData.amount; // User gets full amount, fee is deducted extra
-
-                    if (userData.winningBalance < totalDeduction + feeAmount) {
-                        throw new Error("User has insufficient winning balance for this withdrawal including fees.");
+                    const withdrawalAmount = transactionData.amount;
+                    if (userData.winningBalance < withdrawalAmount) {
+                        throw new Error("User has insufficient winning balance for this withdrawal.");
                     }
-                    t.update(userRef, { winningBalance: FieldValue.increment(-(totalDeduction + feeAmount)) });
+                    t.update(userRef, { winningBalance: FieldValue.increment(-withdrawalAmount) });
                 }
             } else if (transactionData.type === 'Deposit') {
                 if (status === 'Completed') {
-                    const feePercentage = settings?.depositFeePercentage || 0;
-                    const feeAmount = transactionData.amount * (feePercentage / 100);
-                    const netAmount = transactionData.amount - feeAmount;
-
+                    // The amount stored in the transaction is the net amount the user should get.
+                    // The fee is what the user paid extra.
+                    const netAmount = transactionData.amount;
                     t.update(userRef, { depositBalance: FieldValue.increment(netAmount) });
                 }
             }
@@ -238,5 +234,3 @@ export async function createTransaction(data: {
         throw new Error(error.message || 'An unexpected error occurred while creating the transaction.');
     }
 }
-
-    
