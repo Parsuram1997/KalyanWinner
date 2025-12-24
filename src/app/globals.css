@@ -87,6 +87,19 @@
     @apply text-foreground font-body;
     background-image: linear-gradient(to bottom right, hsl(var(--primary)/0.2), hsl(var(--secondary)/0.3), hsl(var(--background)));
   }
+  
+  /* Added styles for react-day-picker */
+  .rdp-caption_label {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Adjust gap as needed */
+  }
+
+  .rdp-nav_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 @layer utilities {

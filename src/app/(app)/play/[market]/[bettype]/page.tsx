@@ -255,7 +255,7 @@ function BetForm({
 }
 
 const WalletCard = ({ depositBalance, winningBalance, isLoading }: { depositBalance: number, winningBalance: number, isLoading: boolean }) => (
-    <Card className="bg-gradient-to-br from-gray-800 to-gray-900 text-white border-white/20 h-full flex flex-col">
+    <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0 h-full flex flex-col">
         <CardHeader className="p-4 pb-2">
             <CardTitle className="text-sm font-medium flex items-center justify-between text-white">
                 <span>Wallet Balance</span>
@@ -634,3 +634,5 @@ export default function PlaceBetPage() {
     </div>
   );
 }
+
+    
