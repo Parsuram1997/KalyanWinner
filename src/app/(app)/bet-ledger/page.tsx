@@ -65,7 +65,7 @@ export default function BetLedgerPage() {
     [firestore, user]
   );
   
-  const { data: bets, isLoading } = useCollection<Bet>(betsQuery, { skip: !firestore || !user });
+  const { data: bets, isLoading } = useCollection<Bet>(betsQuery);
 
   const totalPages = Math.ceil((bets?.length || 0) / BETS_PER_PAGE);
 
