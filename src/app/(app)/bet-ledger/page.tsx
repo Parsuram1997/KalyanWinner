@@ -24,6 +24,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 
 type Bet = {
     id: string;
@@ -55,6 +59,7 @@ export default function BetLedgerPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [currentPage, setCurrentPage] = useState(1);
+  const [date, setDate] = useState<Date | undefined>(undefined);
 
   const betsQuery = useMemoFirebase(
     () => (firestore && user ? query(
@@ -67,25 +72,60 @@ export default function BetLedgerPage() {
   
   const { data: bets, isLoading } = useCollection<Bet>(betsQuery);
 
-  const totalPages = Math.ceil((bets?.length || 0) / BETS_PER_PAGE);
+  const filteredBets = useMemo(() => {
+    if (!bets) return [];
+    if (!date) return bets;
+    return bets.filter(bet => {
+        const betDate = bet.createdAt.toDate();
+        return betDate.getFullYear() === date.getFullYear() &&
+               betDate.getMonth() === date.getMonth() &&
+               betDate.getDate() === date.getDate();
+    });
+  }, [bets, date]);
+
+  const totalPages = Math.ceil((filteredBets?.length || 0) / BETS_PER_PAGE);
 
   const paginatedBets = useMemo(() => {
-    if (!bets) return [];
+    if (!filteredBets) return [];
     const startIndex = (currentPage - 1) * BETS_PER_PAGE;
     const endIndex = startIndex + BETS_PER_PAGE;
-    return bets.slice(startIndex, endIndex);
-  }, [bets, currentPage]);
+    return filteredBets.slice(startIndex, endIndex);
+  }, [filteredBets, currentPage]);
   
   const isPageLoading = isUserLoading || isLoading;
 
   return (
     <div className="flex flex-col gap-6">
       <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
-        <CardHeader>
-          <CardTitle>My Bet Ledger</CardTitle>
-          <CardDescription className="text-white/80">
-            A complete history of all your bets.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle>My Bet Ledger</CardTitle>
+                <CardDescription className="text-white/80">
+                    A complete history of all your bets.
+                </CardDescription>
+            </div>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                    variant={"outline"}
+                    className={cn(
+                        "w-[280px] justify-start text-left font-normal bg-transparent text-white hover:bg-white/10 hover:text-white",
+                        !date && "text-white/80"
+                    )}
+                    >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                    <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                    />
+                </PopoverContent>
+            </Popover>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
             {isPageLoading ? (
@@ -168,7 +208,7 @@ export default function BetLedgerPage() {
                 </>
             ) : (
                  <div className="text-center py-16 text-white/80">
-                    <p>You haven't placed any bets yet.</p>
+                    <p>You haven't placed any bets on this date.</p>
                 </div>
             )}
         </CardContent>

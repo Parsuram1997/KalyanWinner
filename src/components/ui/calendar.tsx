@@ -55,7 +55,7 @@ function Calendar({
             nav: "space-x-1 flex items-center",
             nav_button: cn(
               buttonVariants({ variant: "outline" }),
-              "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+              "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hidden"
             ),
             nav_button_previous: "",
             nav_button_next: "",
@@ -93,7 +93,7 @@ function Calendar({
               ];
               
               return (
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center w-full">
                   <Select
                     value={months[displayMonth.getMonth()]}
                     onValueChange={(month) => {
