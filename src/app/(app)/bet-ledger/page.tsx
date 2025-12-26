@@ -28,6 +28,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Filter } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
+import { zonedTimeToUtc, utcToZonedTime, format as formatTz } from 'date-fns-tz';
+import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+
 
 type Bet = {
     id: string;
@@ -113,13 +116,20 @@ export default function BetLedgerPage() {
   const filteredBets = useMemo(() => {
     if (!bets) return [];
     if (!date) return bets;
+
+    const timeZone = 'Asia/Kolkata';
+    const zonedDate = utcToZonedTime(date, timeZone);
+    
+    const startOfSelectedDay = startOfDay(zonedDate);
+    const endOfSelectedDay = endOfDay(zonedDate);
+
     return bets.filter(bet => {
         const betDate = bet.createdAt.toDate();
-        return betDate.getFullYear() === date.getFullYear() &&
-               betDate.getMonth() === date.getMonth() &&
-               betDate.getDate() === date.getDate();
+        const betZonedDate = utcToZonedTime(betDate, timeZone);
+        return isWithinInterval(betZonedDate, { start: startOfSelectedDay, end: endOfSelectedDay });
     });
   }, [bets, date]);
+
 
   const totalPages = Math.ceil((filteredBets?.length || 0) / BETS_PER_PAGE);
 
@@ -300,3 +310,5 @@ export default function BetLedgerPage() {
     </div>
   );
 }
+
+    
