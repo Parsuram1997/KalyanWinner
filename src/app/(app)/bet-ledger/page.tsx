@@ -25,7 +25,9 @@ import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Filter } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 
 type Bet = {
     id: string;
@@ -77,6 +79,7 @@ export default function BetLedgerPage() {
   const [day, setDay] = useState<string | undefined>(undefined);
   const [month, setMonth] = useState<string | undefined>(undefined);
   const [year, setYear] = useState<string | undefined>(undefined);
+  const [isPopoverOpen, setPopoverOpen] = useState(false);
 
   const betsQuery = useMemoFirebase(
     () => (firestore && user ? query(
@@ -95,6 +98,7 @@ export default function BetLedgerPage() {
         setDate(newDate);
         setCurrentPage(1);
     }
+    setPopoverOpen(false);
   }
 
   const handleClear = () => {
@@ -103,6 +107,7 @@ export default function BetLedgerPage() {
     setMonth(undefined);
     setYear(undefined);
     setCurrentPage(1);
+    setPopoverOpen(false);
   }
 
   const filteredBets = useMemo(() => {
@@ -137,21 +142,48 @@ export default function BetLedgerPage() {
                     A complete history of all your bets.
                 </CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                <Select onValueChange={setDay} value={day}>
-                    <SelectTrigger className="w-full sm:w-[80px] bg-transparent text-white border-white/20"><SelectValue placeholder="Day" /></SelectTrigger>
-                    <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                </Select>
-                <Select onValueChange={setMonth} value={month}>
-                    <SelectTrigger className="w-full sm:w-[120px] bg-transparent text-white border-white/20"><SelectValue placeholder="Month" /></SelectTrigger>
-                    <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-                </Select>
-                <Select onValueChange={setYear} value={year}>
-                    <SelectTrigger className="w-full sm:w-[100px] bg-transparent text-white border-white/20"><SelectValue placeholder="Year" /></SelectTrigger>
-                    <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
-                </Select>
-                <Button onClick={handleFilter} className="bg-white text-primary w-full sm:w-auto" size="icon"><Search className="h-4 w-4" /></Button>
-                <Button onClick={handleClear} variant="secondary" className="w-full sm:w-auto">Clear</Button>
+            <div className="flex items-center gap-2">
+                {date && (
+                    <div className="text-xs font-semibold pr-2">Filtered to: {format(date, "dd/MM/yyyy")}</div>
+                )}
+                 <Popover open={isPopoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                         <Button variant="outline" className="w-full sm:w-auto bg-transparent text-white hover:bg-white/10">
+                            <Filter className="mr-2 h-4 w-4" />
+                            Filter by Date
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-screen max-w-xs sm:w-80">
+                        <div className="grid gap-4">
+                            <div className="space-y-2">
+                                <h4 className="font-medium leading-none">Select Date</h4>
+                                <p className="text-sm text-muted-foreground">
+                                Select a day, month, and year to filter bets.
+                                </p>
+                            </div>
+                            <div className="grid gap-2">
+                                <div className="grid grid-cols-3 items-center gap-2">
+                                    <Select onValueChange={setDay} value={day}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Day" /></SelectTrigger>
+                                        <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                    <Select onValueChange={setMonth} value={month}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
+                                        <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                    <Select onValueChange={setYear} value={year}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
+                                        <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                </div>
+                                 <div className="grid grid-cols-2 gap-2 mt-2">
+                                    <Button onClick={handleFilter} className="w-full">Go</Button>
+                                    <Button onClick={handleClear} variant="secondary" className="w-full">Clear</Button>
+                                </div>
+                            </div>
+                        </div>
+                    </PopoverContent>
+                </Popover>
             </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
