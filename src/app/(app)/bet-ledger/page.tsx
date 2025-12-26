@@ -24,10 +24,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search } from "lucide-react";
 
 type Bet = {
     id: string;
@@ -55,11 +53,30 @@ const getStatusClasses = (status: Bet['status']) => {
     }
 };
 
+const months = [
+  { value: "0", label: "January" }, { value: "1", label: "February" }, { value: "2", label: "March" },
+  { value: "3", label: "April" }, { value: "4", label: "May" }, { value: "5", label: "June" },
+  { value: "6", label: "July" }, { value: "7", label: "August" }, { value: "8", label: "September" },
+  { value: "9", label: "October" }, { value: "10", label: "November" }, { value: "11", label: "December" },
+];
+
+const years = [
+  new Date().getFullYear().toString(),
+  (new Date().getFullYear() - 1).toString(),
+];
+
+const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+
+
 export default function BetLedgerPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [currentPage, setCurrentPage] = useState(1);
   const [date, setDate] = useState<Date | undefined>(undefined);
+
+  const [day, setDay] = useState<string | undefined>(undefined);
+  const [month, setMonth] = useState<string | undefined>(undefined);
+  const [year, setYear] = useState<string | undefined>(undefined);
 
   const betsQuery = useMemoFirebase(
     () => (firestore && user ? query(
@@ -71,6 +88,22 @@ export default function BetLedgerPage() {
   );
   
   const { data: bets, isLoading } = useCollection<Bet>(betsQuery);
+
+  const handleFilter = () => {
+    if (day && month && year) {
+        const newDate = new Date(parseInt(year), parseInt(month), parseInt(day));
+        setDate(newDate);
+        setCurrentPage(1);
+    }
+  }
+
+  const handleClear = () => {
+    setDate(undefined);
+    setDay(undefined);
+    setMonth(undefined);
+    setYear(undefined);
+    setCurrentPage(1);
+  }
 
   const filteredBets = useMemo(() => {
     if (!bets) return [];
@@ -104,28 +137,22 @@ export default function BetLedgerPage() {
                     A complete history of all your bets.
                 </CardDescription>
             </div>
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                    variant={"outline"}
-                    className={cn(
-                        "w-[280px] justify-start text-left font-normal bg-transparent text-white hover:bg-white/10 hover:text-white",
-                        !date && "text-white/80"
-                    )}
-                    >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                    <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                    />
-                </PopoverContent>
-            </Popover>
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+                <Select onValueChange={setDay} value={day}>
+                    <SelectTrigger className="w-full sm:w-[80px] bg-transparent text-white border-white/20"><SelectValue placeholder="Day" /></SelectTrigger>
+                    <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select onValueChange={setMonth} value={month}>
+                    <SelectTrigger className="w-full sm:w-[120px] bg-transparent text-white border-white/20"><SelectValue placeholder="Month" /></SelectTrigger>
+                    <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select onValueChange={setYear} value={year}>
+                    <SelectTrigger className="w-full sm:w-[100px] bg-transparent text-white border-white/20"><SelectValue placeholder="Year" /></SelectTrigger>
+                    <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button onClick={handleFilter} className="bg-white text-primary w-full sm:w-auto" size="icon"><Search className="h-4 w-4" /></Button>
+                <Button onClick={handleClear} variant="secondary" className="w-full sm:w-auto">Clear</Button>
+            </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
             {isPageLoading ? (
@@ -208,7 +235,7 @@ export default function BetLedgerPage() {
                 </>
             ) : (
                  <div className="text-center py-16 text-white/80">
-                    <p>You haven't placed any bets on this date.</p>
+                    <p>You haven't placed any bets {date ? "on this date" : "yet"}.</p>
                 </div>
             )}
         </CardContent>
