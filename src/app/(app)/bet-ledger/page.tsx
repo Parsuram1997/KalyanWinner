@@ -130,14 +130,14 @@ export default function BetLedgerPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
-        <CardHeader className="flex flex-row items-center justify-between">
-            <div>
+        <CardHeader className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="w-full">
                 <CardTitle>My Bet Ledger</CardTitle>
                 <CardDescription className="text-white/80">
                     A complete history of all your bets.
                 </CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <Select onValueChange={setDay} value={day}>
                     <SelectTrigger className="w-full sm:w-[80px] bg-transparent text-white border-white/20"><SelectValue placeholder="Day" /></SelectTrigger>
                     <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
