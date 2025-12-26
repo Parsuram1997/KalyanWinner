@@ -22,9 +22,8 @@ import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, Timestamp, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Edit, Trash2, Search } from "lucide-react";
+import { Filter, Edit, Trash2, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +50,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { updateBet, deleteBet } from "@/app/actions/bet-actions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Bet = {
     id: string;
@@ -87,6 +87,18 @@ const getStatusClasses = (status: Bet['status']) => {
     }
 }
 
+const months = [
+  { value: "0", label: "January" }, { value: "1", label: "February" }, { value: "2", label: "March" },
+  { value: "3", label: "April" }, { value: "4", label: "May" }, { value: "5", label: "June" },
+  { value: "6", label: "July" }, { value: "7", label: "August" }, { value: "8", label: "September" },
+  { value: "9", label: "October" }, { value: "10", label: "November" }, { value: "11", label: "December" },
+];
+
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 5 }, (_, i) => (currentYear - i).toString());
+const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+
+
 export default function BetLedgerPage() {
   const firestore = useFirestore();
   const [currentPage, setCurrentPage] = useState(1);
@@ -95,6 +107,12 @@ export default function BetLedgerPage() {
   
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
+
+  const [day, setDay] = useState<string | undefined>(() => date.getDate().toString());
+  const [month, setMonth] = useState<string | undefined>(() => date.getMonth().toString());
+  const [year, setYear] = useState<string | undefined>(() => date.getFullYear().toString());
+  const [isPopoverOpen, setPopoverOpen] = useState(false);
+
 
   const betsQuery = useMemoFirebase(
     () => firestore 
@@ -107,7 +125,7 @@ export default function BetLedgerPage() {
   );
   const { data: allBets, isLoading: isBetsLoading } = useCollection<Bet>(betsQuery, { skip: !firestore });
   
-  const formattedDate = format(date, "yyyy-MM-dd");
+  const formattedDate = date ? format(date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
   const resultsQuery = useMemoFirebase(
     () => firestore 
             ? query(
@@ -126,7 +144,7 @@ export default function BetLedgerPage() {
 
 
   const betsForSelectedDate = useMemo(() => {
-    if (!allBets) return [];
+    if (!allBets || !date) return [];
     const interval = { start: startOfDay(date), end: endOfDay(date) };
     return allBets.filter(bet => 
         bet.createdAt && isWithinInterval(bet.createdAt.toDate(), interval)
@@ -203,6 +221,24 @@ export default function BetLedgerPage() {
 
   const isLoading = isBetsLoading || isResultsLoading;
 
+  const handleFilter = () => {
+    if (day && month && year) {
+        const newDate = new Date(parseInt(year), parseInt(month), parseInt(day));
+        setDate(newDate);
+        setCurrentPage(1);
+    }
+    setPopoverOpen(false);
+  }
+
+  const handleClear = () => {
+    setDate(new Date());
+    setDay(new Date().getDate().toString());
+    setMonth(new Date().getMonth().toString());
+    setYear(new Date().getFullYear().toString());
+    setCurrentPage(1);
+    setPopoverOpen(false);
+  }
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -225,28 +261,45 @@ export default function BetLedgerPage() {
                 }}
               />
             </div>
-            <Popover>
+            <Popover open={isPopoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full sm:w-[280px] justify-start text-left font-normal bg-black/20 border-white/20 hover:bg-black/30 text-white hover:text-white",
-                    !date && "text-white/80"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                 <Button variant="outline" className="w-full sm:w-auto bg-black/20 text-white hover:bg-white/10 border-white/20">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filter by Date
+                    {date && <span className="text-xs font-semibold ml-2 text-yellow-300">{format(date, "dd/MM/yy")}</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(day) => { setDate(day || new Date()); setCurrentPage(1); }}
-                  initialFocus
-                />
+              <PopoverContent className="w-screen max-w-xs sm:w-80">
+                  <div className="grid gap-4">
+                      <div className="space-y-2">
+                          <h4 className="font-medium leading-none">Select Date</h4>
+                          <p className="text-sm text-muted-foreground">
+                          Select a day, month, and year to filter bets.
+                          </p>
+                      </div>
+                      <div className="grid gap-2">
+                          <div className="grid grid-cols-3 items-center gap-2">
+                              <Select onValueChange={setDay} value={day}>
+                                  <SelectTrigger className="w-full"><SelectValue placeholder="Day" /></SelectTrigger>
+                                  <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <Select onValueChange={setMonth} value={month}>
+                                  <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
+                                  <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <Select onValueChange={setYear} value={year}>
+                                  <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
+                                  <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                              </Select>
+                          </div>
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                              <Button onClick={handleFilter} className="w-full">Go</Button>
+                              <Button onClick={handleClear} variant="secondary" className="w-full">Clear</Button>
+                          </div>
+                      </div>
+                  </div>
               </PopoverContent>
-            </Popover>
+          </Popover>
           </div>
         </CardHeader>
         <CardContent>

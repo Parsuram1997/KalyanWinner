@@ -37,8 +37,8 @@ import {
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 
 
@@ -57,6 +57,17 @@ const getPannaSum = (panna: string) => {
     if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '';
     return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
 };
+
+const months = [
+  { value: "0", label: "January" }, { value: "1", label: "February" }, { value: "2", label: "March" },
+  { value: "3", label: "April" }, { value: "4", label: "May" }, { value: "5", label: "June" },
+  { value: "6", label: "July" }, { value: "7", label: "August" }, { value: "8", label: "September" },
+  { value: "9", label: "October" }, { value: "10", label: "November" }, { value: "11", label: "December" },
+];
+
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 5 }, (_, i) => (currentYear - i).toString());
+const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
 
 
 export default function EnterResultsPage() {
@@ -90,8 +101,10 @@ export default function EnterResultsPage() {
     const [selectedResult, setSelectedResult] = useState<KalyanResult | null>(null);
     const [updateClosePanna, setUpdateClosePanna] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [date, setDate] = useState<Date>(new Date());
-    const [holidayDate, setHolidayDate] = useState<Date>(new Date());
+    
+    const [day, setDay] = useState<string | undefined>(() => new Date().getDate().toString());
+    const [month, setMonth] = useState<string | undefined>(() => new Date().getMonth().toString());
+    const [year, setYear] = useState<string | undefined>(() => new Date().getFullYear().toString());
 
     const { paginatedResults, totalPages } = useMemo(() => {
       if (!results) return { paginatedResults: [], totalPages: 0 };
@@ -105,13 +118,13 @@ export default function EnterResultsPage() {
 
     const handleSubmitOpenResult = async (e: React.FormEvent) => {
         e.preventDefault();
-        const form = e.currentTarget as HTMLFormElement;
-        const formattedDate = format(date, "yyyy-MM-dd");
         
-        if (!formattedDate || !openPanna) {
+        if (!day || !month || !year || !openPanna) {
             toast({ variant: "destructive", title: "Missing Fields", description: "Please fill in all result fields." });
             return;
         }
+
+        const formattedDate = format(new Date(parseInt(year), parseInt(month), parseInt(day)), "yyyy-MM-dd");
 
         try {
             await createKalyanResult({
@@ -123,7 +136,6 @@ export default function EnterResultsPage() {
                 title: "Open Result Added",
                 description: `The open panna for ${marketName} has been added.`,
             });
-            form.reset();
             setOpenPanna('');
             setAddOpenResultDialogOpen(false);
         } catch (error: any) {
@@ -157,13 +169,12 @@ export default function EnterResultsPage() {
 
      const handleMarkAsHoliday = async (e: React.FormEvent) => {
         e.preventDefault();
-        const form = e.currentTarget as HTMLFormElement;
-        const formattedDate = format(holidayDate, "yyyy-MM-dd");
-        
-        if (!formattedDate) {
+        if (!day || !month || !year) {
             toast({ variant: "destructive", title: "Missing Date", description: "Please select a date." });
             return;
         }
+
+        const formattedDate = format(new Date(parseInt(year), parseInt(month), parseInt(day)), "yyyy-MM-dd");
 
         try {
             await createKalyanResult({
@@ -175,9 +186,8 @@ export default function EnterResultsPage() {
             });
             toast({
                 title: "Holiday Marked",
-                description: `${format(holidayDate, "PPP")} has been marked as a holiday for ${marketName}.`,
+                description: `${formattedDate} has been marked as a holiday for ${marketName}.`,
             });
-            form.reset();
             setHolidayDialogOpen(false);
         } catch (error: any) {
              toast({
@@ -235,29 +245,22 @@ export default function EnterResultsPage() {
                             <DialogTitle>Mark Holiday for {marketName}</DialogTitle>
                         </DialogHeader>
                         <form className="space-y-4" onSubmit={handleMarkAsHoliday}>
-                             <div>
+                             <div className="space-y-2">
                                 <Label>Date</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                                "w-full justify-start text-left font-normal",
-                                                !holidayDate && "text-muted-foreground"
-                                            )}
-                                        >
-                                            {holidayDate ? format(holidayDate, "PPP") : <span>Pick a date</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={holidayDate}
-                                            onSelect={(d) => setHolidayDate(d || new Date())}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
+                                <div className="grid grid-cols-3 items-center gap-2">
+                                    <Select onValueChange={setDay} value={day}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Day" /></SelectTrigger>
+                                        <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                    <Select onValueChange={setMonth} value={month}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
+                                        <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                    <Select onValueChange={setYear} value={year}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
+                                        <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                             <DialogFooter>
                                 <Button type="submit" className="w-full">Mark as Holiday</Button>
@@ -274,29 +277,22 @@ export default function EnterResultsPage() {
                         <DialogTitle>Add Open Result for {marketName}</DialogTitle>
                     </DialogHeader>
                     <form className="space-y-4" onSubmit={handleSubmitOpenResult}>
-                         <div>
+                         <div className="space-y-2">
                             <Label>Date</Label>
-                             <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !date && "text-muted-foreground"
-                                        )}
-                                    >
-                                        {date ? format(date, "PPP") : <span>Pick a date</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={date}
-                                        onSelect={(d) => setDate(d || new Date())}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
+                            <div className="grid grid-cols-3 items-center gap-2">
+                                <Select onValueChange={setDay} value={day}>
+                                    <SelectTrigger className="w-full"><SelectValue placeholder="Day" /></SelectTrigger>
+                                    <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                </Select>
+                                <Select onValueChange={setMonth} value={month}>
+                                    <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
+                                    <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                                </Select>
+                                <Select onValueChange={setYear} value={year}>
+                                    <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
+                                    <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                                </Select>
+                            </div>
                         </div>
                         <div>
                             <Label htmlFor="open-panna">Open Panna</Label>
@@ -517,5 +513,3 @@ export default function EnterResultsPage() {
     </div>
   );
 }
-
-    
