@@ -28,9 +28,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Filter } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { zonedTimeToUtc, utcToZonedTime, format as formatTz } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
-
 
 type Bet = {
     id: string;
@@ -42,8 +41,6 @@ type Bet = {
     createdAt: Timestamp;
     winningAmount?: number;
 };
-
-const BETS_PER_PAGE = 25;
 
 const getStatusClasses = (status: Bet['status']) => {
     switch (status) {
@@ -76,7 +73,6 @@ const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
 export default function BetLedgerPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const [currentPage, setCurrentPage] = useState(1);
   const [date, setDate] = useState<Date | undefined>(undefined);
 
   const [day, setDay] = useState<string | undefined>(undefined);
@@ -99,7 +95,6 @@ export default function BetLedgerPage() {
     if (day && month && year) {
         const newDate = new Date(parseInt(year), parseInt(month), parseInt(day));
         setDate(newDate);
-        setCurrentPage(1);
     }
     setPopoverOpen(false);
   }
@@ -109,7 +104,6 @@ export default function BetLedgerPage() {
     setDay(undefined);
     setMonth(undefined);
     setYear(undefined);
-    setCurrentPage(1);
     setPopoverOpen(false);
   }
 
@@ -118,28 +112,18 @@ export default function BetLedgerPage() {
     if (!date) return bets;
 
     const timeZone = 'Asia/Kolkata';
-    const zonedDate = utcToZonedTime(date, timeZone);
+    const zonedDate = toZonedTime(date, timeZone);
     
     const startOfSelectedDay = startOfDay(zonedDate);
     const endOfSelectedDay = endOfDay(zonedDate);
 
     return bets.filter(bet => {
         const betDate = bet.createdAt.toDate();
-        const betZonedDate = utcToZonedTime(betDate, timeZone);
+        const betZonedDate = toZonedTime(betDate, timeZone);
         return isWithinInterval(betZonedDate, { start: startOfSelectedDay, end: endOfSelectedDay });
     });
   }, [bets, date]);
 
-
-  const totalPages = Math.ceil((filteredBets?.length || 0) / BETS_PER_PAGE);
-
-  const paginatedBets = useMemo(() => {
-    if (!filteredBets) return [];
-    const startIndex = (currentPage - 1) * BETS_PER_PAGE;
-    const endIndex = startIndex + BETS_PER_PAGE;
-    return filteredBets.slice(startIndex, endIndex);
-  }, [filteredBets, currentPage]);
-  
   const isPageLoading = isUserLoading || isLoading;
 
   return (
@@ -203,7 +187,7 @@ export default function BetLedgerPage() {
                     <Skeleton className="h-20 w-full bg-white/20" />
                     <Skeleton className="h-20 w-full bg-white/20" />
                 </div>
-            ) : paginatedBets && paginatedBets.length > 0 ? (
+            ) : filteredBets && filteredBets.length > 0 ? (
                 <>
                     {/* Desktop Table */}
                     <div className="hidden md:block rounded-md border border-white/20">
@@ -219,7 +203,7 @@ export default function BetLedgerPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {paginatedBets.map((bet) => (
+                                {filteredBets.map((bet) => (
                                     <TableRow key={bet.id} className="border-white/20">
                                         <TableCell className="py-2 text-xs">{new Date(bet.createdAt.toDate()).toLocaleString('en-GB')}</TableCell>
                                         <TableCell className="py-2">
@@ -232,7 +216,7 @@ export default function BetLedgerPage() {
                                         </TableCell>
                                         <TableCell className="text-right font-mono font-semibold py-2 text-red-300">-₹{bet.amount.toLocaleString()}</TableCell>
                                         <TableCell className="text-right font-mono font-semibold py-2 text-green-300">
-                                            {bet.status === 'Won' ? `+₹${bet.winningAmount?.toLocaleString() || 0}` : '-'}
+                                            {bet.status === 'Won' ? '+₹' + (bet.winningAmount?.toLocaleString() || 0) : '-'}
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -242,7 +226,7 @@ export default function BetLedgerPage() {
 
                     {/* Mobile Cards */}
                     <div className="grid gap-4 md:hidden px-4">
-                        {paginatedBets.map((bet) => (
+                        {filteredBets.map((bet) => (
                             <Card key={bet.id} className="p-4 bg-black/20 border-white/20 text-xs">
                                 <div className="flex justify-between items-start">
                                     <div>
@@ -267,7 +251,7 @@ export default function BetLedgerPage() {
                                      <div className="flex justify-between">
                                         <span className="text-white/80">Winnings:</span>
                                         <span className="font-mono font-semibold text-green-300">
-                                            {bet.status === 'Won' ? `+₹${bet.winningAmount?.toLocaleString() || 0}` : '-'}
+                                            {bet.status === 'Won' ? '+₹' + (bet.winningAmount?.toLocaleString() || 0) : '-'}
                                         </span>
                                     </div>
                                 </div>
@@ -281,34 +265,7 @@ export default function BetLedgerPage() {
                 </div>
             )}
         </CardContent>
-        {totalPages > 1 && (
-            <CardFooter className="flex justify-end items-center gap-4 border-t border-white/20 pt-4 px-4 sm:px-6">
-                <span className="text-sm text-white/80">
-                    Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-transparent text-white hover:bg-white/10"
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                >
-                    Previous
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-transparent text-white hover:bg-white/10"
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                >
-                    Next
-                </Button>
-            </CardFooter>
-        )}
       </Card>
     </div>
   );
 }
-
-    

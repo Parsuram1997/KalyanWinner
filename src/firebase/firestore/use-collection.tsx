@@ -54,21 +54,20 @@ export interface InternalQuery extends Query<DocumentData> {
  * @returns {UseCollectionResult<T>} Object with data, isLoading, error.
  */
 export function useCollection<T = any>(
-    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
-    options?: { skip?: boolean }
+    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined
 ): UseCollectionResult<T> {
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
 
   const { user, isUserLoading } = useUser();
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(!options?.skip && !isUserLoading);
+  const [isLoading, setIsLoading] = useState<boolean>(!isUserLoading);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    if (!memoizedTargetRefOrQuery || options?.skip || isUserLoading || !user) {
+    if (!memoizedTargetRefOrQuery || isUserLoading) {
       setData(null);
-      setIsLoading(false);
+      setIsLoading(!isUserLoading);
       setError(null);
       return;
     }
@@ -110,7 +109,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery, options?.skip, isUserLoading, user]); // Re-run if the target query/reference or skip option changes.
+  }, [memoizedTargetRefOrQuery, isUserLoading, user]); // Re-run if the target query/reference or user state changes.
 
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     // throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
