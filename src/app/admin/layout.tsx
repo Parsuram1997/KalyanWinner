@@ -59,7 +59,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 <SidebarMenuButton asChild>
                     <Link href="/admin/admins">
                     <Users />
-                    Admins
+                    Manage Admins
                     </Link>
                 </SidebarMenuButton>
                 </SidebarMenuItem>
