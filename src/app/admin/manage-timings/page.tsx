@@ -90,7 +90,7 @@ export default function ManageTimingsPage() {
   };
 
   const DayDisplay = ({ days }: { days: Market['days'] }) => {
-    if (!days) return <span className="text-gray-400">Not Set</span>;
+    if (!days) return <span className="text-white/70">Not Set</span>;
     const activeDays = Object.entries(days)
         .filter(([_, isActive]) => isActive)
         .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1, 3));
@@ -100,22 +100,22 @@ export default function ManageTimingsPage() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-0">
+    <div className="container mx-auto p-4 text-white">
+      <Card className="bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900 border-white/10">
         <CardHeader>
             <CardTitle className="flex items-center gap-2"><Clock className="h-6 w-6"/> Manage Market Timings</CardTitle>
-            <CardDescription className="text-slate-400">Edit the timings and active days for all ACTIVE markets.</CardDescription>
+            <CardDescription className="text-white/70">Edit the timings and active days for all ACTIVE markets.</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
-            <div className="bg-red-900 border border-red-700 text-red-200 p-4 rounded-md my-4">
+            <div className="bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-md my-4">
                 <h4 className="font-bold flex items-center gap-2"><AlertTriangle/> An error occurred while fetching data:</h4>
                 <pre className="whitespace-pre-wrap text-sm mt-2">{JSON.stringify(error, null, 2)}</pre>
             </div>
           )}
 
           <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="bg-gray-900 text-white border-gray-700 max-w-2xl">
+            <DialogContent className="bg-gray-950 text-white border-gray-700 max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Edit Timings for {editingMarket?.name}</DialogTitle>
               </DialogHeader>
@@ -123,12 +123,12 @@ export default function ManageTimingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="openTime">Open Time</Label>
-                    <Input id="openTime" type="time" {...register("openTime")} />
+                    <Input id="openTime" type="time" {...register("openTime")} className="bg-gray-800 border-gray-600"/>
                     {errors.openTime && <p className="text-sm text-red-500">{errors.openTime.message as string}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="closeTime">Close Time</Label>
-                    <Input id="closeTime" type="time" {...register("closeTime")} />
+                    <Input id="closeTime" type="time" {...register("closeTime")} className="bg-gray-800 border-gray-600"/>
                     {errors.closeTime && <p className="text-sm text-red-500">{errors.closeTime.message as string}</p>}
                   </div>
                 </div>
@@ -159,23 +159,23 @@ export default function ManageTimingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-700">
                     <div className="space-y-2">
                       <Label htmlFor="openBiddingTime">Open Bidding</Label>
-                      <Input id="openBiddingTime" type="time" {...register("openBiddingTime")} />
+                      <Input id="openBiddingTime" type="time" {...register("openBiddingTime")} className="bg-gray-800 border-gray-600"/>
                       {errors.openBiddingTime && <p className="text-sm text-red-500">{errors.openBiddingTime.message as string}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="closeBiddingTime">Close Bidding</Label>
-                      <Input id="closeBiddingTime" type="time" {...register("closeBiddingTime")} />
+                      <Input id="closeBiddingTime" type="time" {...register("closeBiddingTime")} className="bg-gray-800 border-gray-600"/>
                       {errors.closeBiddingTime && <p className="text-sm text-red-500">{errors.closeBiddingTime.message as string}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="closeResultTime">Result Freeze</Label>
-                      <Input id="closeResultTime" type="time" {...register("closeResultTime")} />
+                      <Input id="closeResultTime" type="time" {...register("closeResultTime")} className="bg-gray-800 border-gray-600"/>
                       {errors.closeResultTime && <p className="text-sm text-red-500">{errors.closeResultTime.message as string}</p>}
                     </div>
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
                         {isSubmitting 
                             ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Saving...</>
                             : <><Save className="mr-2 h-4 w-4" /> Update Timings</>
@@ -186,28 +186,28 @@ export default function ManageTimingsPage() {
             </DialogContent>
           </Dialog>
 
-          <div className="rounded-md border border-gray-700 overflow-x-auto">
+          <div className="rounded-md border border-white/20 overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-b-gray-700 hover:bg-gray-800">
-                  <TableHead className="text-gray-300">Market Name</TableHead>
-                  <TableHead className="text-gray-300">Timings (Open/Close)</TableHead>
-                  <TableHead className="text-gray-300">Active Days</TableHead>
-                  <TableHead className="text-gray-300">Bidding (Open/Close)</TableHead>
-                  <TableHead className="text-gray-300">Status</TableHead>
-                  <TableHead className="text-right text-gray-300 pr-6">Actions</TableHead>
+                <TableRow className="border-b-white/20 hover:bg-black/20">
+                  <TableHead className="text-white">Market Name</TableHead>
+                  <TableHead className="text-white">Timings (Open/Close)</TableHead>
+                  <TableHead className="text-white">Active Days</TableHead>
+                  <TableHead className="text-white">Bidding (Open/Close)</TableHead>
+                  <TableHead className="text-white">Status</TableHead>
+                  <TableHead className="text-right text-white pr-6">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading && !error && Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i} className="border-b-gray-700">
+                  <TableRow key={i} className="border-b-white/20">
                     <TableCell colSpan={6} className="p-4">
-                        <div className="h-8 bg-gray-700 rounded w-full animate-pulse"></div>
+                        <div className="h-8 bg-white/10 rounded w-full animate-pulse"></div>
                     </TableCell>
                   </TableRow>
                 ))}
                 {!isLoading && !error && markets?.map((market) => (
-                  <TableRow key={market.id} className="border-b-gray-700 hover:bg-gray-800">
+                  <TableRow key={market.id} className="border-b-white/20 hover:bg-black/20">
                     <TableCell className="font-medium">{market.name}</TableCell>
                     <TableCell>{market.openTime} - {market.closeTime}</TableCell>
                     <TableCell><DayDisplay days={market.days} /></TableCell>
@@ -227,13 +227,13 @@ export default function ManageTimingsPage() {
                   </TableRow>
                 ))}
                 {!isLoading && !error && markets?.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-gray-400 py-8">No active markets found. Activate markets in the 'Manage Markets' page to see them here.</TableCell>
+                  <TableRow className="border-b-white/20">
+                    <TableCell colSpan={6} className="text-center text-white/70 py-8">No active markets found. Activate markets in the 'Manage Markets' page to see them here.</TableCell>
                   </TableRow>
                 )}
                 {!isLoading && error && (
-                    <TableRow>
-                        <TableCell colSpan={6} className="text-center text-gray-400 py-8">An error occurred. Please see the message above.</TableCell>
+                    <TableRow className="border-b-white/20">
+                        <TableCell colSpan={6} className="text-center text-red-400 py-8">An error occurred. Please see the message above.</TableCell>
                     </TableRow>
                 )}
               </TableBody>

@@ -76,16 +76,17 @@ export default function DepositPage() {
       try {
         const settings = await getPaymentSettings();
         if (settings) {
-          setPaymentSettings({ 
-            upiId: settings.upiId, 
+          setPaymentSettings({
+            upiId: settings.upiId,
             payeeName: settings.bankAccountHolder || 'Kalyan Winner',
             minDeposit: settings.minDeposit,
+            depositFeePercentage: settings.depositFeePercentage,
             bankAccountHolder: settings.bankAccountHolder,
             bankAccountNumber: settings.bankAccountNumber,
             bankIfscCode: settings.bankIfscCode,
-            bankName: settings.bankName
+            bankName: settings.bankName,
           });
-          if(settings.minDeposit) {
+          if (settings.minDeposit) {
             form.setValue("amount", settings.minDeposit);
           }
         } else {
@@ -103,7 +104,8 @@ export default function DepositPage() {
   const watchedAmount = form.watch("amount");
   const numericAmount = Number(watchedAmount) || 0;
   const depositFee = paymentSettings?.depositFeePercentage ? (numericAmount * paymentSettings.depositFeePercentage) / 100 : 0;
-  const totalToPay = numericAmount + depositFee;
+  const totalToPay = numericAmount;
+  const netDeposit = numericAmount - depositFee;
 
   const onSubmit = async (values: FormSchemaType) => {
     if (!user) {
@@ -111,8 +113,8 @@ export default function DepositPage() {
       return;
     }
     try {
-      const description = `Deposit of ₹${values.amount} with a ₹${depositFee.toFixed(2)} fee.`;
-      const result = await createTransaction({
+      const description = `Deposit of ₹${values.amount}.`;
+      await createTransaction({
         userId: user.uid,
         userName: user.displayName || 'Unknown',
         amount: values.amount,
@@ -122,15 +124,12 @@ export default function DepositPage() {
         utr: values.utr,
       });
 
-      if (result.success) {
-        toast({
-          title: "Deposit Request Submitted",
-          description: "Your request is pending verification and will be processed shortly.",
-        });
-        router.push("/wallet");
-      } else {
-        throw new Error(result.message);
-      }
+      toast({
+        title: "Deposit Request Submitted",
+        description: "Your request is pending verification and will be processed shortly.",
+      });
+      router.push("/wallet");
+
     } catch (error: any) {
       toast({ variant: "destructive", title: "Submission Failed", description: error.message });
     }
@@ -198,7 +197,7 @@ export default function DepositPage() {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount to Deposit</FormLabel>
+                      <FormLabel>Amount to Pay</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder={`Minimum ₹${minDepositAmount}`} {...field} disabled={currentStep > 1} className="bg-transparent text-white"/>
                       </FormControl>
@@ -209,14 +208,18 @@ export default function DepositPage() {
 
                 {numericAmount >= minDepositAmount && (
                     <div className="text-xs space-y-2 rounded-lg bg-black/20 p-3">
-                        <div className="flex justify-between">
-                            <span className="text-white/80">Deposit Fee ({paymentSettings?.depositFeePercentage || 0}%):</span>
-                            <span className="font-medium">₹{depositFee.toFixed(2)}</span>
-                        </div>
-                        <Separator className="bg-white/30" />
                         <div className="flex justify-between font-bold">
-                            <span>Total To Pay:</span>
+                            <span>Amount to Pay:</span>
                             <span className="text-green-300">₹{totalToPay.toFixed(2)}</span>
+                        </div>
+                         <Separator className="bg-white/30" />
+                        <div className="flex justify-between">
+                            <span className="text-white/80">Processing Fee ({paymentSettings?.depositFeePercentage || 0}%):</span>
+                            <span className="font-medium">- ₹{depositFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-white/80">Net Deposit in Wallet:</span>
+                            <span className="font-medium">₹{netDeposit.toFixed(2)}</span>
                         </div>
                     </div>
                 )}

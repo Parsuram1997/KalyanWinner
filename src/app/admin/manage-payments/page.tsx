@@ -1,3 +1,4 @@
+ 
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { WalletCards } from 'lucide-react';
+import { WalletCards, TrendingUp, TrendingDown, Landmark, Banknote } from 'lucide-react';
 
 interface PaymentSettings {
-  upiId?: string;
-  payeeName?: string;
+    upiId?: string;
+    payeeName?: string;
     bankAccountHolder?: string;
     bankAccountNumber?: string;
     bankIfscCode?: string;
@@ -22,6 +23,8 @@ interface PaymentSettings {
     minDepositForBonus?: number;
     minDeposit?: number;
     minWithdrawal?: number;
+    depositFeePercentage?: number;
+    withdrawalFeePercentage?: number;
 }
 
 export default function ManagePaymentsPage() {
@@ -60,18 +63,25 @@ export default function ManagePaymentsPage() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setSettings(prev => ({ ...prev, [name]: value }));
+        const isFee = name.includes('FeePercentage');
+        const parsedValue = isFee ? value : parseInt(value, 10);
+
+        setSettings(prev => ({ ...prev, [name]: isNaN(parsedValue as number) && !isFee ? '' : parsedValue }));
     };
 
-    const renderInput = (id: keyof PaymentSettings, label: string) => (
+    const renderInput = (id: keyof PaymentSettings, label: string, icon?: React.ReactNode, type = "text") => (
          <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 sm:gap-4">
-            <Label htmlFor={id} className="sm:text-right text-white/80">{label}</Label>
+            <Label htmlFor={id} className="sm:text-right flex items-center gap-2 text-white/80">
+                {icon} {label}
+            </Label>
             <Input
                 id={id}
                 name={id}
-                value={settings[id] as string || ''}
+                type={type}
+                value={settings[id] as any || ''}
                 onChange={handleChange}
                 className="col-span-1 sm:col-span-2 bg-black/20 border-white/20 text-white placeholder:text-white/60 focus:border-white"
+                step={type === "number" ? "0.01" : undefined}
             />
         </div>
     )
@@ -83,29 +93,36 @@ export default function ManagePaymentsPage() {
                     <WalletCards className="h-6 w-6" />
                     Manage Payments
                 </CardTitle>
-                <CardDescription className="text-white/80">Update payment settings for UPI and bank transfers.</CardDescription>
+                <CardDescription className="text-white/80">Update global payment settings, transaction limits, and fees.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
                     <div className="space-y-6">
-                        <Skeleton className="h-10 w-full bg-white/20" />
-                        <Skeleton className="h-10 w-full bg-white/20" />
-                        <Skeleton className="h-10 w-full bg-white/20" />
-                        <Skeleton className="h-10 w-full bg-white/20" />
-                        <Skeleton className="h-10 w-full bg-white/20" />
+                        {[...Array(9)].map((_, i) => <Skeleton key={i} className="h-10 w-full bg-white/10" />)}
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        <div className="space-y-4 p-4 border border-white/20 rounded-lg bg-black/10">
+                            <h3 className="text-lg font-semibold flex items-center gap-2"><Landmark className="h-5 w-5 text-blue-400"/>UPI & Bank Details</h3>
                             {renderInput("upiId", "UPI ID")}
                             {renderInput("bankName", "Bank Name")}
                             {renderInput("bankAccountNumber", "Account Number")}
                             {renderInput("bankAccountHolder", "Account Holder Name")}
                             {renderInput("bankIfscCode", "IFSC Code")}
                         </div>
+                         <div className="space-y-4 p-4 border border-white/20 rounded-lg bg-black/10">
+                            <h3 className="text-lg font-semibold flex items-center gap-2"><Banknote className="h-5 w-5 text-purple-400"/>Transaction Limits</h3>
+                            {renderInput("minDeposit", "Minimum Deposit (₹)", undefined, "number")}
+                            {renderInput("minWithdrawal", "Minimum Withdrawal (₹)", undefined, "number")}
+                        </div>
+                        <div className="space-y-4 p-4 border border-white/20 rounded-lg bg-black/10">
+                            <h3 className="text-lg font-semibold flex items-center gap-2">Fee Settings</h3>
+                            {renderInput("depositFeePercentage", "Deposit Fee (%)", <TrendingDown className="h-4 w-4 text-green-400" />, "number")}
+                            {renderInput("withdrawalFeePercentage", "Withdrawal Fee (%)", <TrendingUp className="h-4 w-4 text-red-400" />, "number")}
+                        </div>
                         <div className="flex justify-end pt-4">
-                            <Button type="submit" disabled={isSubmitting} className="bg-white text-primary hover:bg-white/90">
-                                {isSubmitting ? 'Saving...' : 'Save Settings'}
+                            <Button type="submit" disabled={isSubmitting} size="lg" className="bg-white text-primary hover:bg-white/90 font-bold">
+                                {isSubmitting ? 'Saving...' : 'Save All Settings'}
                             </Button>
                         </div>
                     </form>

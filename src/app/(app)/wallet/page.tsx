@@ -58,6 +58,8 @@ type Transaction = {
     | 'Placed';
   description: string;
   date: string; // Date is stored as an ISO string
+  fee?: number;
+  netAmount?: number;
 };
 
 const FeaturedMarkets = () => {
@@ -193,7 +195,7 @@ export default function WalletPage() {
                             </span>
                           </div>
                           <span className="font-semibold text-base font-mono text-white">
-                            ₹{(balance?.deposit ?? 0).toFixed(0)}
+                            ₹{(balance?.deposit ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -204,7 +206,7 @@ export default function WalletPage() {
                             </span>
                           </div>
                           <span className="font-semibold text-base font-mono text-white">
-                            ₹{(balance?.winning ?? 0).toFixed(0)}
+                            ₹{(balance?.winning ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                           </span>
                         </div>
                       </div>
@@ -215,7 +217,7 @@ export default function WalletPage() {
                           <span className="text-sm">Total Balance</span>
                         </div>
                         <span className="font-bold text-xl font-mono text-white">
-                          ₹{totalBalance.toFixed(0)}
+                          ₹{totalBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </>
@@ -272,29 +274,29 @@ export default function WalletPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <p
-                          className={cn('font-mono text-xs font-semibold', 
-                            tx.type === 'Deposit'
-                              ? 'text-green-400'
-                              : 'text-red-400'
-                          )}
-                        >
-                          {tx.type === 'Deposit' ? '+' : '-'}
-                          {`₹${tx.amount.toFixed(0)}`}
-                        </p>
-                        <Badge
-                            variant={null}
-                            className={cn(
-                                "text-xs",
-                                tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
-                                tx.status === 'Pending' ? "bg-white text-primary" :
-                                tx.status === 'Rejected' ? "bg-red-400 text-white" :
-                                "bg-transparent border border-white/50 text-white/80"
-                            )}
-                        >
-                          {tx.status}
-                        </Badge>
+                      <div className="flex flex-col items-end gap-1 font-mono text-xs">
+                        <div className="flex gap-2 justify-end">
+                            <span className={cn('font-semibold', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
+                                {tx.type === 'Deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                            </span>
+                             <Badge
+                                variant={null}
+                                className={cn(
+                                    "text-xs",
+                                    tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
+                                    tx.status === 'Pending' ? "bg-white text-primary" :
+                                    tx.status === 'Rejected' ? "bg-red-400 text-white" :
+                                    "bg-transparent border border-white/50 text-white/80"
+                                )}
+                            >
+                              {tx.status}
+                            </Badge>
+                        </div>
+                        {tx.status === 'Completed' && tx.fee !== undefined && tx.netAmount !== undefined && (
+                            <div className="text-right text-white/80 text-[10px]">
+                                (Fee: ₹{tx.fee.toLocaleString('en-IN')} | Net: ₹{tx.netAmount.toLocaleString('en-IN')})
+                            </div>
+                        )}
                       </div>
                     </div>
                   ))}

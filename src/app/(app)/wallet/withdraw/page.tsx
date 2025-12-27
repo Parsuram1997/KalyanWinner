@@ -71,7 +71,8 @@ export default function WithdrawPage() {
         try {
             const settings = await getPaymentSettings();
             setPaymentSettings({
-              minWithdrawal: settings?.minWithdrawal
+              minWithdrawal: settings?.minWithdrawal,
+              withdrawalFeePercentage: settings?.withdrawalFeePercentage,
             });
             if(settings && settings.minWithdrawal) {
                 form.setValue("amount", settings.minWithdrawal); 
@@ -105,7 +106,7 @@ export default function WithdrawPage() {
     }
 
     try {
-      const description = `Withdrawal of ₹${values.amount}. You will receive ₹${netAmountReceivable.toFixed(2)} after a fee of ₹${withdrawalFee.toFixed(2)}.`;
+      const description = `Withdrawal of ₹${values.amount}.`;
       const result = await createTransaction({
         userId: user.uid,
         userName: user.displayName || 'Unknown',
@@ -113,6 +114,8 @@ export default function WithdrawPage() {
         type: "Withdrawal",
         status: "Pending",
         description: description,
+        fee: withdrawalFee,
+        netAmount: netAmountReceivable,
       });
 
       if (result.success) {

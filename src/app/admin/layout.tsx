@@ -13,6 +13,7 @@ import {
   Landmark,
   Store,
   Clock,
+  Coins,
 } from "lucide-react";
 import {
   Sidebar,
@@ -145,9 +146,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                    <Link href="/admin/settings">
-                    <Settings />
-                    App Settings
+                    <Link href="/admin/manage-payouts">
+                    <Coins />
+                    Manage Payouts
                     </Link>
                 </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -167,7 +168,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                  <div className="flex flex-1 items-center justify-end gap-2">
                 </div>
             </header>
-            <main className="flex-1 overflow-auto p-4 sm:p-6 min-w-0 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
+            <main className="flex-1 overflow-auto p-4 sm:p-6 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
             </div>
         </SidebarInset>
         </SidebarProvider>

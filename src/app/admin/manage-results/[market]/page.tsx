@@ -215,32 +215,32 @@ export default function EnterResultsPage() {
     }
 
     if (!marketSlug) {
-      return <div>Loading market...</div>
+      return <div className="text-white">Loading market...</div>
     }
 
   return (
-    <div className="flex flex-col gap-6">
-        <Button asChild variant="ghost" className="text-black dark:text-white hover:bg-gray-200 dark:hover:bg-white/10 dark:hover:text-white w-fit">
+    <div className="flex flex-col gap-6 text-white">
+        <Button asChild variant="ghost" className="hover:bg-white/10 w-fit">
              <Link href="/admin/manage-results">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Markets
             </Link>
         </Button>
       
-        <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
+        <Card className="bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900 border-white/10">
           <CardHeader className="flex flex-col gap-4">
             <div>
                 <CardTitle>Results for {marketName}</CardTitle>
-                <CardDescription className="text-white/80">View and manage game results for the last year.</CardDescription>
+                <CardDescription className="text-white/70">View and manage game results for the last year.</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
                 <Dialog open={isHolidayDialogOpen} onOpenChange={setHolidayDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full sm:w-auto bg-black/20 border-white/20 hover:bg-black/30 text-white hover:text-white">
+                        <Button variant="outline" className="w-full sm:w-auto bg-black/30 border-white/20 hover:bg-black/40">
                             <CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="bg-gray-950 text-white border-gray-800">
                         <DialogHeader>
                             <DialogTitle>Mark Holiday for {marketName}</DialogTitle>
                         </DialogHeader>
@@ -249,21 +249,21 @@ export default function EnterResultsPage() {
                                 <Label>Date</Label>
                                 <div className="grid grid-cols-3 items-center gap-2">
                                     <Select onValueChange={setDay} value={day}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Day" /></SelectTrigger>
-                                        <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                        <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Day" /></SelectTrigger>
+                                        <SelectContent className="bg-gray-900 text-white border-gray-700">{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                                     </Select>
                                     <Select onValueChange={setMonth} value={month}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
-                                        <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                                        <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Month" /></SelectTrigger>
+                                        <SelectContent className="bg-gray-900 text-white border-gray-700">{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
                                     </Select>
                                     <Select onValueChange={setYear} value={year}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
-                                        <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                                        <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Year" /></SelectTrigger>
+                                        <SelectContent className="bg-gray-900 text-white border-gray-700">{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
                                     </Select>
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="submit" className="w-full">Mark as Holiday</Button>
+                                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Mark as Holiday</Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
@@ -272,7 +272,7 @@ export default function EnterResultsPage() {
                 <DialogTrigger asChild>
                     <Button className="w-full sm:w-auto bg-white text-primary hover:bg-white/90">Add Open Result</Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="bg-gray-950 text-white border-gray-800">
                     <DialogHeader>
                         <DialogTitle>Add Open Result for {marketName}</DialogTitle>
                     </DialogHeader>
@@ -281,25 +281,25 @@ export default function EnterResultsPage() {
                             <Label>Date</Label>
                             <div className="grid grid-cols-3 items-center gap-2">
                                 <Select onValueChange={setDay} value={day}>
-                                    <SelectTrigger className="w-full"><SelectValue placeholder="Day" /></SelectTrigger>
-                                    <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                    <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Day" /></SelectTrigger>
+                                    <SelectContent className="bg-gray-900 text-white border-gray-700">{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                                 </Select>
                                 <Select onValueChange={setMonth} value={month}>
-                                    <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
-                                    <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                                    <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Month" /></SelectTrigger>
+                                    <SelectContent className="bg-gray-900 text-white border-gray-700">{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
                                 </Select>
                                 <Select onValueChange={setYear} value={year}>
-                                    <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
-                                    <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                                    <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Year" /></SelectTrigger>
+                                    <SelectContent className="bg-gray-900 text-white border-gray-700">{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                         </div>
                         <div>
                             <Label htmlFor="open-panna">Open Panna</Label>
-                            <Input name="openPanna" id="open-panna" placeholder="e.g., 123" value={openPanna} onChange={(e) => setOpenPanna(e.target.value)} />
+                            <Input name="openPanna" id="open-panna" placeholder="e.g., 123" value={openPanna} onChange={(e) => setOpenPanna(e.target.value)} className="bg-gray-900 border-gray-700"/>
                         </div>
                         <DialogFooter>
-                            <Button type="submit" className="w-full">Add Open Result</Button>
+                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Add Open Result</Button>
                         </DialogFooter>
                     </form>
                     </DialogContent>
@@ -310,8 +310,8 @@ export default function EnterResultsPage() {
              {/* Desktop Table */}
              <div className="hidden md:block rounded-md border border-white/20 text-sm">
                 <Table>
-                <TableHeader className="border-b border-white/20">
-                    <TableRow>
+                <TableHeader>
+                    <TableRow className="border-b-white/20 hover:bg-black/20">
                     <TableHead className="text-white">Date</TableHead>
                     <TableHead className="text-center text-white">Open Panna</TableHead>
                     <TableHead className="text-center text-white">Jodi</TableHead>
@@ -321,17 +321,17 @@ export default function EnterResultsPage() {
                 </TableHeader>
                 <TableBody>
                     {isLoading ? (
-                         <TableRow>
+                         <TableRow className="border-b-white/20">
                             <TableCell colSpan={5} className="p-4">
-                               <Skeleton className="h-24 w-full bg-white/20" />
+                               <Skeleton className="h-24 w-full bg-white/10" />
                             </TableCell>
                          </TableRow>
                     ) : error ? (
-                        <TableRow>
-                            <TableCell colSpan={5} className="text-center text-red-300 py-4">{error.message}</TableCell>
+                        <TableRow className="border-b-white/20">
+                            <TableCell colSpan={5} className="text-center text-red-400 py-4">{error.message}</TableCell>
                         </TableRow>
                     ) : paginatedResults && paginatedResults.length > 0 ? paginatedResults.map((result) => (
-                    <TableRow key={result.id} className="border-white/20">
+                    <TableRow key={result.id} className="border-b-white/20 hover:bg-black/20">
                         <TableCell className="py-2">{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell className="font-mono text-center py-2">{result.openPanna}</TableCell>
                         <TableCell className="font-bold text-lg text-white font-mono text-center py-2">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
@@ -344,7 +344,7 @@ export default function EnterResultsPage() {
                               <Button 
                                   variant="outline" 
                                   size="icon" 
-                                  className="bg-transparent text-white hover:bg-white/10 hover:text-white"
+                                  className="bg-transparent hover:bg-white/10"
                                   onClick={() => {
                                       setSelectedResult(result);
                                       setUpdateClosePanna(result.closePanna || "");
@@ -358,7 +358,7 @@ export default function EnterResultsPage() {
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon"><Trash className="h-4 w-4" /></Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="bg-gray-950 text-white border-gray-800">
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
@@ -366,8 +366,8 @@ export default function EnterResultsPage() {
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(result.id)}>Delete</AlertDialogAction>
+                              <AlertDialogCancel className="bg-transparent border-gray-700 hover:bg-gray-800">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(result.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -375,8 +375,8 @@ export default function EnterResultsPage() {
                         </TableCell>
                     </TableRow>
                     )) : (
-                        <TableRow>
-                           <TableCell colSpan={5} className="text-center py-8 text-white/80">No results found for this market.</TableCell>
+                        <TableRow className="border-b-white/20">
+                           <TableCell colSpan={5} className="text-center py-8 text-white/70">No results found for this market.</TableCell>
                         </TableRow>
                     )}
                 </TableBody>
@@ -385,16 +385,16 @@ export default function EnterResultsPage() {
              {/* Mobile List */}
              <div className="grid gap-4 md:hidden">
               {isLoading ? (
-                <div className="p-4"><Skeleton className="h-24 w-full bg-white/20" /></div>
+                <div className="p-4"><Skeleton className="h-24 w-full bg-white/10" /></div>
               ) : error ? (
-                <div className="p-4 text-center text-red-300">{error.message}</div>
+                <div className="p-4 text-center text-red-400">{error.message}</div>
               ) : paginatedResults && paginatedResults.length > 0 ? (
                 paginatedResults.map((result) => (
-                  <Card key={result.id} className="p-4 bg-black/20 border-white/20">
+                  <Card key={result.id} className="p-4 bg-black/30 border-white/20">
                      <div className="flex justify-between items-start">
                           <div>
                               <p className="font-semibold">{new Date(result.date).toLocaleDateString('en-GB')}</p>
-                              <p className="text-xs text-white/80">{marketName}</p>
+                              <p className="text-xs text-white/70">{marketName}</p>
                           </div>
                           {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : (
                             <div className="text-right">
@@ -404,11 +404,11 @@ export default function EnterResultsPage() {
                       </div>
                       <div className={cn("grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/20", result.jodi === 'L' && 'hidden')}>
                           <div className="text-xs">
-                              <p className="text-white/80">Open</p>
+                              <p className="text-white/70">Open</p>
                               <p className="font-mono font-medium">{result.openPanna || '---'}</p>
                           </div>
                            <div className="text-xs text-right">
-                              <p className="text-white/80">Close</p>
+                              <p className="text-white/70">Close</p>
                               <p className="font-mono font-medium">{result.closePanna || '---'}</p>
                           </div>
                       </div>
@@ -419,7 +419,7 @@ export default function EnterResultsPage() {
                                <Button 
                                   variant="outline" 
                                   size="sm" 
-                                  className="bg-transparent text-white hover:bg-white/10 hover:text-white"
+                                  className="bg-transparent hover:bg-white/10"
                                   onClick={() => {
                                       setSelectedResult(result);
                                       setUpdateClosePanna(result.closePanna || "");
@@ -433,16 +433,16 @@ export default function EnterResultsPage() {
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-1" /> Delete</Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="bg-gray-950 text-white border-gray-800">
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
                                 This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(result.id)}>Delete</AlertDialogAction>
+                             <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-transparent border-gray-700 hover:bg-gray-800">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(result.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -450,7 +450,7 @@ export default function EnterResultsPage() {
                   </Card>
                 ))
               ) : (
-                <div className="text-center py-8 text-white/80">
+                <div className="text-center py-8 text-white/70">
                   No results found for this market.
                 </div>
               )}
@@ -458,13 +458,13 @@ export default function EnterResultsPage() {
           </CardContent>
            {totalPages > 1 && (
              <CardFooter className="flex justify-end items-center gap-4 border-t border-white/20 pt-4">
-                <span className="text-sm text-white/80">
+                <span className="text-sm text-white/70">
                     Page {currentPage} of {totalPages}
                 </span>
                 <Button
                     variant="outline"
                     size="sm"
-                    className="bg-transparent text-white hover:bg-white/10 hover:text-white"
+                    className="bg-transparent hover:bg-white/10"
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                 >
@@ -473,7 +473,7 @@ export default function EnterResultsPage() {
                 <Button
                     variant="outline"
                     size="sm"
-                     className="bg-transparent text-white hover:bg-white/10 hover:text-white"
+                     className="bg-transparent hover:bg-white/10"
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                 >
@@ -484,7 +484,7 @@ export default function EnterResultsPage() {
         </Card>
 
        <Dialog open={isUpdateResultDialogOpen} onOpenChange={setUpdateResultDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-gray-950 text-white border-gray-800">
             <DialogHeader>
                 <DialogTitle>{selectedResult?.closePanna ? 'Update' : 'Add Close'} Result for {selectedResult?.marketName}</DialogTitle>
                 <DialogDescription>Date: {selectedResult ? new Date(selectedResult.date).toLocaleDateString('en-GB') : ''}</DialogDescription>
@@ -493,19 +493,19 @@ export default function EnterResultsPage() {
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="update-open-panna" className="text-right">Open Panna</Label>
-                      <Input id="update-open-panna" value={selectedResult?.openPanna || ''} disabled className="col-span-3" />
+                      <Input id="update-open-panna" value={selectedResult?.openPanna || ''} disabled className="col-span-3 bg-gray-800 border-gray-700" />
                     </div>
                      <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="update-close-panna" className="text-right">Close Panna</Label>
-                      <Input id="update-close-panna" value={updateClosePanna} onChange={(e) => setUpdateClosePanna(e.target.value)} className="col-span-3" placeholder="e.g. 456" />
+                      <Input id="update-close-panna" value={updateClosePanna} onChange={(e) => setUpdateClosePanna(e.target.value)} className="col-span-3 bg-gray-800 border-gray-700" placeholder="e.g. 456" />
                     </div>
                      <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="update-jodi" className="text-right">Jodi</Label>
-                      <Input id="update-jodi" value={selectedResult ? `${getPannaSum(selectedResult.openPanna)}${getPannaSum(updateClosePanna)}` : ''} disabled className="col-span-3" />
+                      <Input id="update-jodi" value={selectedResult ? `${getPannaSum(selectedResult.openPanna)}${getPannaSum(updateClosePanna)}` : ''} disabled className="col-span-3 bg-gray-800 border-gray-700" />
                     </div>
                 </div>
                  <DialogFooter>
-                    <Button type="submit">{selectedResult?.closePanna ? 'Update' : 'Add'} Result</Button>
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">{selectedResult?.closePanna ? 'Update' : 'Add'} Result</Button>
                 </DialogFooter>
             </form>
         </DialogContent>
