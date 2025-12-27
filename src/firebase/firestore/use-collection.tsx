@@ -50,7 +50,6 @@ export interface InternalQuery extends Query<DocumentData> {
  * @template T Optional type for document data. Defaults to any.
  * @param {CollectionReference<DocumentData> | Query<DocumentData> | null | undefined} targetRefOrQuery -
  * The Firestore CollectionReference or Query. Waits if null/undefined.
- * @param { skip: boolean } [options] - Optional options object.
  * @returns {UseCollectionResult<T>} Object with data, isLoading, error.
  */
 export function useCollection<T = any>(
@@ -61,7 +60,7 @@ export function useCollection<T = any>(
 
   const { user, isUserLoading } = useUser();
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(!isUserLoading);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
@@ -90,7 +89,6 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
 
-        // This is the fix: Pass the *actual* error from Firestore.
         if (serverError.code === 'permission-denied') {
           const path = (memoizedTargetRefOrQuery.type === 'collection')
             ? (memoizedTargetRefOrQuery as CollectionReference).path
