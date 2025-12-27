@@ -291,8 +291,7 @@ export default function DashboardPage() {
     [firestore, authUser]
   );
   const { data: recentActivity, isLoading: isActivityLoading } = useCollection<any>(
-    transactionsQuery,
-    { skip: !firestore || !authUser }
+    transactionsQuery
   );
 
   const sortedRecentActivity = useMemo(() => {

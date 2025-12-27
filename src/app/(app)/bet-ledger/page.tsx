@@ -7,6 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -66,6 +67,7 @@ const years = [
 ];
 
 const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+const ITEMS_PER_PAGE = 10;
 
 export default function BetLedgerPage() {
   const { user, isUserLoading } = useUser();
@@ -76,9 +78,9 @@ export default function BetLedgerPage() {
   const [month, setMonth] = useState<string | undefined>(undefined);
   const [year, setYear] = useState<string | undefined>(undefined);
   const [isPopoverOpen, setPopoverOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Query to get all bets for the current user.
-  // Filtering by date will be done on the client-side.
   const betsQuery = useMemoFirebase(() => {
     if (!firestore || !user) {
       return null;
@@ -109,6 +111,17 @@ export default function BetLedgerPage() {
 
     return [...filtered].sort((a, b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
   }, [rawBets, date]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [date]);
+
+  const totalPages = Math.ceil((bets?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedBets = useMemo(() => {
+    if (!bets) return [];
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return bets.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [bets, currentPage]);
   
   useEffect(() => {
     if (error) {
@@ -188,7 +201,7 @@ export default function BetLedgerPage() {
                 </Popover>
             </div>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
+        <CardContent className="p-0 sm:p-6 sm:pb-0">
             {isPageLoading ? (
                 <div className="space-y-4 p-4">
                     <Skeleton className="h-20 w-full bg-white/20" />
@@ -200,7 +213,7 @@ export default function BetLedgerPage() {
                     <p>Error loading bets. Please try again later.</p>
                     <p className="text-xs text-white/50">{error.message}</p>
                 </div>
-            ) : bets && bets.length > 0 ? (
+            ) : paginatedBets && paginatedBets.length > 0 ? (
                 <>
                     {/* Desktop Table */}
                     <div className="hidden md:block rounded-md border border-white/20">
@@ -216,7 +229,7 @@ export default function BetLedgerPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {bets.map((bet) => (
+                                {paginatedBets.map((bet) => (
                                     <TableRow key={bet.id} className="border-white/20">
                                         <TableCell className="py-2 text-xs">{new Date(bet.createdAt.toDate()).toLocaleString('en-GB')}</TableCell>
                                         <TableCell className="py-2">
@@ -239,7 +252,7 @@ export default function BetLedgerPage() {
 
                     {/* Mobile Cards */}
                     <div className="grid gap-4 md:hidden px-4">
-                        {bets.map((bet) => (
+                        {paginatedBets.map((bet) => (
                             <Card key={bet.id} className="p-4 bg-black/20 border-white/20 text-xs">
                                 <div className="flex justify-between items-start">
                                     <div>
@@ -278,6 +291,29 @@ export default function BetLedgerPage() {
                 </div>
             )}
         </CardContent>
+        {totalPages > 1 && (
+            <CardFooter className="flex items-center justify-between pt-6">
+                <Button
+                    variant="outline"
+                    className="bg-transparent text-white hover:bg-white/10"
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </Button>
+                <span className="text-sm font-semibold">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                    variant="outline"
+                    className="bg-transparent text-white hover:bg-white/10"
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                    Next
+                </Button>
+            </CardFooter>
+        )}
       </Card>
     </div>
   );
