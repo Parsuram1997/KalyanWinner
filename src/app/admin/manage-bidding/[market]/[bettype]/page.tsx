@@ -123,7 +123,7 @@ export default function BiddingDetailsPage() {
         );
     }, [firestore, marketName, betTypeName]);
 
-    const { data: allBets, isLoading } = useCollection<Bid>(betsQuery, { skip: !betsQuery });
+    const { data: allBets, isLoading } = useCollection<Bid>(betsQuery);
 
     const filteredBetsByDate = useMemo(() => {
         if (!allBets || !date) return [];

@@ -71,8 +71,7 @@ export default function WithdrawPage() {
         try {
             const settings = await getPaymentSettings();
             setPaymentSettings({
-              minWithdrawal: settings?.minWithdrawal,
-              withdrawalFeePercentage: settings?.withdrawalFeePercentage
+              minWithdrawal: settings?.minWithdrawal
             });
             if(settings && settings.minWithdrawal) {
                 form.setValue("amount", settings.minWithdrawal); 

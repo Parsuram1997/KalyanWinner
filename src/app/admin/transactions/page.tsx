@@ -354,10 +354,10 @@ export default function TransactionsPage() {
             : null,
     [firestore, key]
   );
-  const { data: transactions, isLoading: isTransactionsLoading, error: transactionsError } = useCollection<Transaction>(transactionsQuery, { skip: !firestore });
+  const { data: transactions, isLoading: isTransactionsLoading, error: transactionsError } = useCollection<Transaction>(transactionsQuery);
   
   const usersQuery = useMemoFirebase(() => firestore ? collection(firestore, 'users') : null, [firestore]);
-  const { data: users, isLoading: isUsersLoading, error: usersError } = useCollection<User>(usersQuery, { skip: !firestore });
+  const { data: users, isLoading: isUsersLoading, error: usersError } = useCollection<User>(usersQuery);
   
   const userIdToCustomIdMap = useMemo(() => {
     if (!users) return {};

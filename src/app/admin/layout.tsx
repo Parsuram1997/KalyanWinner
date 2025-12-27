@@ -11,7 +11,6 @@ import {
   Settings,
   Ticket,
   Landmark,
-  UserPlus,
   Store,
   Clock,
 } from "lucide-react";
@@ -29,11 +28,11 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
-import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase"; // We still need these for the instances
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
-import { doc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     return (
@@ -166,7 +165,6 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                     <SidebarTrigger className="text-white"/>
                 </div>
                  <div className="flex flex-1 items-center justify-end gap-2">
-                    {/* <ThemeToggle /> */}
                 </div>
             </header>
             <main className="flex-1 overflow-auto p-4 sm:p-6 min-w-0 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
@@ -176,54 +174,61 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     );
 }
 
-// This component is now more robust and handles all auth edge cases.
+// THE FINAL, ULTIMATE, NO-COMPLEXITY GUARD
+// This removes all custom hooks (`useUser`) and uses the raw Firebase SDK to check auth.
 function AdminAuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const firestore = useFirestore();
-
-  const userDocRef = useMemoFirebase(
-    () => (firestore && user ? doc(firestore, "users", user.uid) : null),
-    [firestore, user]
-  );
-  const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
+  const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'unauthorized'>('loading');
 
   useEffect(() => {
-    // After all data has loaded, check the conditions.
-    if (!isUserLoading && !isUserDataLoading) {
-      // If there is no authenticated user, OR
-      // If the user document doesn't exist, OR
-      // If the user's role is not 'Admin',
-      // then redirect to the login page.
-      if (!user || !userData || userData.role !== 'Admin') {
-        router.replace('/admin');
-      }
-    }
-  }, [user, isUserLoading, userData, isUserDataLoading, router]);
+    if (!auth || !firestore) return;
 
-  // While any authentication or data fetching is in progress, show a loading screen.
-  if (isUserLoading || isUserDataLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
-        <Skeleton className="h-20 w-20 rounded-full bg-white/10" />
-      </div>
-    );
-  }
-  
-  // Only if all checks pass, render the main admin layout with the page content.
-  if (user && userData?.role === 'Admin') {
+    // Use Firebase's ground-truth auth state listener
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in, now check their role in Firestore.
+        const userDocRef = doc(firestore, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists() && userDocSnap.data().role === 'Admin') {
+          // User is an admin.
+          setAuthStatus('authorized');
+        } else {
+          // User is not an admin or their doc doesn't exist.
+          setAuthStatus('unauthorized');
+        }
+      } else {
+        // No user is signed in.
+        setAuthStatus('unauthorized');
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [auth, firestore]);
+
+  useEffect(() => {
+    // This effect handles redirection based on the final auth status.
+    if (authStatus === 'unauthorized') {
+      router.replace('/admin');
+    }
+  }, [authStatus, router]);
+
+  // Render based on the status
+  if (authStatus === 'authorized') {
     return <AdminLayoutContent>{children}</AdminLayoutContent>;
   }
 
-  // In any other case (like during the brief moment before a redirect), 
-  // continue showing the loading screen to prevent a blank page flash.
+  // For both 'loading' and 'unauthorized' (before redirect happens),
+  // show a loading screen to prevent content flashing.
   return (
-      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
-        <Skeleton className="h-20 w-20 rounded-full bg-white/10" />
-      </div>
-    );
+    <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-solid border-white border-t-transparent"></div>
+    </div>
+  );
 }
-
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -233,6 +238,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  // For all other admin pages, wrap them in the authentication layout.
+  // For all other admin pages, wrap them in our new, robust authentication layout.
   return <AdminAuthLayout>{children}</AdminAuthLayout>;
 }

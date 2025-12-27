@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 type Market = {
   id: string;
   name: string;
+  active: boolean;
 };
 
 export default function SelectMarketForBiddingPage() {
@@ -26,11 +27,11 @@ export default function SelectMarketForBiddingPage() {
   const activeMarketsQuery = useMemoFirebase(
     () =>
       firestore
-        ? query(collection(firestore, "markets"), where("status", "==", "Active"))
+        ? query(collection(firestore, "markets"), where("active", "==", true))
         : null,
     [firestore]
   );
-  const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery, { skip: !firestore });
+  const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery);
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
 

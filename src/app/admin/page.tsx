@@ -1,16 +1,15 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
-import { signInWithEmailAndPassword, sendPasswordResetEmail, onIdTokenChanged } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader } from "lucide-react";
@@ -18,7 +17,6 @@ import { Loader } from "lucide-react";
 type View = "login" | "forgot_password";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const auth = useAuth();
   const firestore = useFirestore();
   const [email, setEmail] = useState("");
@@ -26,26 +24,10 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState<View>("login");
 
-  useEffect(() => {
-    if (!auth) return;
+  // REMOVED: The problematic useEffect that was calling /api/auth/session
+  // This was conflicting with the client-side auth flow.
 
-    const unsubscribe = onIdTokenChanged(auth, async (user) => {
-      if (user) {
-        const idToken = await user.getIdToken();
-        await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ idToken }),
-        });
-      }
-    });
-
-    return () => unsubscribe();
-  }, [auth]);
-
-    const handleForgotPassword = async () => {
+  const handleForgotPassword = async () => {
     setIsLoading(true);
     if (!auth || !email) {
       toast({ variant: "destructive", title: "Invalid Email", description: "Please enter a valid email address." });
@@ -112,11 +94,13 @@ export default function AdminLoginPage() {
       }
 
       if (userRole === 'Admin') {
-        toast({ title: "Login Successful", description: "Welcome, Admin!" });
-        router.push("/admin/dashboard");
+        toast({ title: "Login Successful", description: "Redirecting to dashboard..." });
+        // Use window.location.href for a full page reload to ensure auth state is propagated before the layout guard runs.
+        window.location.href = "/admin/dashboard";
       } else {
         toast({ variant: "destructive", title: "Access Denied", description: "You do not have permission." });
         await auth.signOut();
+        setIsLoading(false);
       }
 
     } catch (error: any) {
@@ -127,8 +111,7 @@ export default function AdminLoginPage() {
           ? "Invalid email or password."
           : "An unexpected error occurred.",
       });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading is stopped on failure
     }
   };
 

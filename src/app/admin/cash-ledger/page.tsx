@@ -84,7 +84,7 @@ export default function CashLedgerPage() {
             : null,
     [firestore]
   );
-  const { data: deposits, isLoading: depositsLoading } = useCollection<Transaction>(depositsQuery, { skip: !firestore });
+  const { data: deposits, isLoading: depositsLoading } = useCollection<Transaction>(depositsQuery);
 
   // Query 2: Get all completed withdrawals
   const withdrawalsQuery = useMemoFirebase(
@@ -97,7 +97,7 @@ export default function CashLedgerPage() {
             : null,
     [firestore]
   );
-  const { data: withdrawals, isLoading: withdrawalsLoading } = useCollection<Transaction>(withdrawalsQuery, { skip: !firestore });
+  const { data: withdrawals, isLoading: withdrawalsLoading } = useCollection<Transaction>(withdrawalsQuery);
 
   const isLoading = depositsLoading || withdrawalsLoading;
   

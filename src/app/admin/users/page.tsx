@@ -64,7 +64,7 @@ export default function ManageUsersPage() {
     () => (firestore && authUser ? query(collection(firestore, "users"), where("role", "==", "User")) : null),
     [firestore, authUser]
   );
-  const { data: users, isLoading: isUsersLoading } = useCollection<any>(usersQuery, { skip: !firestore });
+  const { data: users, isLoading: isUsersLoading } = useCollection<any>(usersQuery);
   
   const isLoading = isUserLoading || isUsersLoading;
 

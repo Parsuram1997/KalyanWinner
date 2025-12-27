@@ -141,7 +141,7 @@ export default function AggregatedBiddingDetailsPage() {
         );
     }, [firestore, marketName]);
 
-    const { data: allBets, isLoading } = useCollection<Bet>(betsQuery, { skip: !betsQuery });
+    const { data: allBets, isLoading } = useCollection<Bet>(betsQuery);
     
     const filteredBetsByDate = useMemo(() => {
         if (!allBets || !date) return [];

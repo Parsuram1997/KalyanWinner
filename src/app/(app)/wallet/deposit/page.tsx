@@ -80,7 +80,6 @@ export default function DepositPage() {
             upiId: settings.upiId, 
             payeeName: settings.bankAccountHolder || 'Kalyan Winner',
             minDeposit: settings.minDeposit,
-            depositFeePercentage: settings.depositFeePercentage,
             bankAccountHolder: settings.bankAccountHolder,
             bankAccountNumber: settings.bankAccountNumber,
             bankIfscCode: settings.bankIfscCode,

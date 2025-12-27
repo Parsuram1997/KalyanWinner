@@ -123,7 +123,7 @@ export default function BetLedgerPage() {
             : null,
     [firestore]
   );
-  const { data: allBets, isLoading: isBetsLoading } = useCollection<Bet>(betsQuery, { skip: !firestore });
+  const { data: allBets, isLoading: isBetsLoading } = useCollection<Bet>(betsQuery);
   
   const formattedDate = date ? format(date, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
   const resultsQuery = useMemoFirebase(
@@ -135,7 +135,7 @@ export default function BetLedgerPage() {
             : null,
     [firestore, formattedDate]
   );
-  const { data: resultsForSelectedDate, isLoading: isResultsLoading } = useCollection<Result>(resultsQuery, { skip: !firestore });
+  const { data: resultsForSelectedDate, isLoading: isResultsLoading } = useCollection<Result>(resultsQuery);
 
   const resultsMap = useMemo(() => {
     if (!resultsForSelectedDate) return new Map<string, Result>();

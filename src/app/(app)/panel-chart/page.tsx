@@ -23,20 +23,26 @@ type Market = {
 
 export default function SelectChartPage() {
   const firestore = useFirestore();
+  // CORRECTED: The field to check for active markets is `active` (boolean), not `status` (string).
   const activeMarketsQuery = useMemoFirebase(
     () =>
       firestore
-        ? query(collection(firestore, "markets"), where("status", "==", "Active"))
+        ? query(collection(firestore, "markets"), where("active", "==", true))
         : null,
     [firestore]
   );
-  const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery, { skip: !firestore });
+  const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery);
   
-  const generateSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+  // CORRECTED: Slug should be generated with hyphens for cleaner URLs.
+  const generateSlug = (name: string) => name.trim().toLowerCase().replace(/\s+/g, '-');
 
 
   return (
     <div className="flex flex-col gap-6">
+        <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">Panel Charts</h1>
+            <p className="text-muted-foreground">Select a market to view its yearly panel chart.</p>
+        </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (

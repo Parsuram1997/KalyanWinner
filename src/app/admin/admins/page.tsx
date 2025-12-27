@@ -61,7 +61,7 @@ export default function ManageAdminsPage() {
     () => (firestore && authUser ? query(collection(firestore, "users"), where("role", "==", "Admin")) : null),
     [firestore, authUser]
   );
-  const { data: admins, isLoading: isAdminsLoading } = useCollection<any>(adminsQuery, { skip: !firestore });
+  const { data: admins, isLoading: isAdminsLoading } = useCollection<any>(adminsQuery);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);

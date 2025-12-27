@@ -92,7 +92,7 @@ export default function EnterResultsPage() {
         );
     }, [firestore, marketName]);
 
-    const { data: results, isLoading, error } = useCollection<KalyanResult>(resultsQuery, { skip: !firestore || !marketName });
+    const { data: results, isLoading, error } = useCollection<KalyanResult>(resultsQuery);
 
     const [openPanna, setOpenPanna] = useState('');
     const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);

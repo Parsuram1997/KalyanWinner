@@ -37,7 +37,7 @@ export default function BiddingMarketHubPage() {
         : null,
     [firestore]
   );
-  const { data: betTypes, isLoading: isLoadingBetTypes } = useCollection<BetType>(betTypesQuery, { skip: !firestore });
+  const { data: betTypes, isLoading: isLoadingBetTypes } = useCollection<BetType>(betTypesQuery);
 
   const generateSlug = (name: string) => {
     return name

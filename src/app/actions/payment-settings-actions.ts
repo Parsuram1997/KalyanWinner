@@ -17,6 +17,8 @@ type PaymentSettings = {
     minDepositForBonus?: number;
     minDeposit?: number;
     minWithdrawal?: number;
+    depositFeePercentage?: number;
+    withdrawalFeePercentage?: number;
 }
 
 export async function getPaymentSettings(): Promise<PaymentSettings | null> {

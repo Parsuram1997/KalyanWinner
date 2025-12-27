@@ -12,7 +12,7 @@ import {
 import { Ticket, Clock, Loader } from "lucide-react";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,7 @@ type Market = {
   openResultTime: string;
   closeBiddingTime: string;
   closeResultTime: string;
-  status: "Active" | "Inactive";
+  active: boolean;
 };
 
 type Result = {
@@ -53,12 +53,12 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
             collection(firestore, "kalyan_results"),
             where("marketName", "==", marketName),
             where("date", "==", today),
-            limit(1)
+            where("jodi", "!=", "XX")
         ) : null,
         [firestore, marketName, today]
     );
 
-    const { data: results, isLoading } = useCollection<Result>(resultQuery, { skip: !firestore || !today });
+    const { data: results, isLoading } = useCollection<Result>(resultQuery);
     const result = results?.[0];
     
     if (isLoading) {
@@ -208,11 +208,11 @@ export default function MarketSelectionPage() {
     const activeMarketsQuery = useMemoFirebase(
         () =>
         firestore
-            ? query(collection(firestore, "markets"), where("status", "==", "Active"))
+            ? query(collection(firestore, "markets"), where("active", "==", true))
             : null,
         [firestore]
     );
-    const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery, { skip: !firestore });
+    const { data: markets, isLoading } = useCollection<Market>(activeMarketsQuery);
     
   return (
     <div className="flex flex-col gap-6">

@@ -53,8 +53,7 @@ export default function LeaderboardPage() {
   }, [firestore]);
 
   const { data: transactions, isLoading } = useCollection<WinTransaction>(
-    leaderboardQuery,
-    { skip: !firestore }
+    leaderboardQuery
   );
 
   const rankedWinners = useMemo(() => {

@@ -45,10 +45,10 @@ export default function SettingsPage() {
     const firestore = useFirestore();
 
     const ratesQuery = useMemoFirebase(() => firestore ? collection(firestore, "game_rates") : null, [firestore]);
-    const { data: rates, isLoading: ratesLoading } = useCollection<GameRate>(ratesQuery, { skip: !firestore });
+    const { data: rates, isLoading: ratesLoading } = useCollection<GameRate>(ratesQuery);
     
     const betTypesQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "bet_types"), where("status", "==", "Active")) : null, [firestore]);
-    const { data: betTypes, isLoading: betTypesLoading } = useCollection<BetType>(betTypesQuery, { skip: !firestore });
+    const { data: betTypes, isLoading: betTypesLoading } = useCollection<BetType>(betTypesQuery);
 
     const [rateValues, setRateValues] = useState<RateValues>({});
     const [minDeposit, setMinDeposit] = useState<number | string>("");
