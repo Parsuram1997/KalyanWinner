@@ -134,51 +134,53 @@ export default function ResultsPage() {
 
   const isLoading = isAllMarketsLoading || isResultsLoading;
   const pageTitle = market?.name || marketName;
-  const gridTemplateColumns = `minmax(75px, 0.75fr) repeat(${displayDays.length}, minmax(65px, 1fr))`;
+  
+  // Further adjusted grid columns for better responsiveness
+  const gridTemplateColumns = `minmax(65px, 0.75fr) repeat(${displayDays.length}, minmax(35px, 1fr))`;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <Card className="bg-gradient-to-br from-green-600 to-cyan-700 text-white border-0">
-        <CardHeader>
-          <CardTitle className="capitalize">Result Chart: {pageTitle}</CardTitle>
-          <CardDescription className="text-white/80">Weekly Jodi results for the {pageTitle} market.</CardDescription>
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="capitalize text-lg md:text-2xl">Result Chart: {pageTitle}</CardTitle>
+          <CardDescription className="text-white/80 text-xs md:text-sm">Weekly Jodi results for the {pageTitle} market.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-1 md:p-4">
           {isLoading ? (
-             <div className="space-y-4 p-4">
+             <div className="space-y-2 p-2">
+              <Skeleton className="h-8 w-full bg-white/20" />
               <Skeleton className="h-12 w-full bg-white/20" />
-              <Skeleton className="h-20 w-full bg-white/20" />
-              <Skeleton className="h-20 w-full bg-white/20" />
+              <Skeleton className="h-12 w-full bg-white/20" />
             </div>
           ) : weeklyData.length > 0 ? (
-            <div className="overflow-x-auto p-1 bg-black/20 rounded-lg">
-                <div className="font-mono text-center min-w-[600px]">
+            <div className="overflow-x-auto bg-black/20 rounded-md">
+                <div className="font-mono text-center min-w-[320px]">
                     <div style={{ gridTemplateColumns }} className={`grid sticky top-0 z-10 bg-cyan-800/80 backdrop-blur-sm rounded-t-md`}>
-                          <div className="p-1.5 text-xs font-bold flex items-center justify-center">DATE</div>
-                          {displayDays.map(day => <div key={day.key} className="p-1.5 text-xs font-bold border-l border-white/20 flex items-center justify-center">{day.name}</div>)}
+                          <div className="p-1 text-[9px] font-bold flex items-center justify-center">DATE</div>
+                          {displayDays.map(day => <div key={day.key} className="p-1 text-[9px] font-bold border-l border-white/20 flex items-center justify-center">{day.name}</div>)}
                     </div>
                     <div>{
                         weeklyData.map((week, weekIndex) => {
                              const [startDate, endDate] = week.dateRange.split(' to ');
                              return (
                                 <div key={weekIndex} className="grid border-b border-white/20 last:border-0" style={{ gridTemplateColumns }}>
-                                    <div className="p-1.5 text-xs leading-tight bg-cyan-900/50 flex flex-col items-center justify-center font-bold sticky left-0">
+                                    <div className="p-1 text-[9px] leading-tight bg-cyan-900/50 flex flex-col items-center justify-center font-bold sticky left-0">
                                         <span>{startDate}</span>
-                                        <span className="text-[10px]">to</span>
+                                        <span className="text-[7px]">to</span>
                                         <span>{endDate}</span>
                                     </div>
                                     {week.results.map((day, dayIndex) => (
-                                        <div key={dayIndex} className="p-1 text-sm flex items-center justify-center min-h-[50px] border-l border-dashed border-white/10 first:border-l-0">
+                                        <div key={dayIndex} className="p-0.5 flex items-center justify-center min-h-[36px] border-l border-dashed border-white/10 first:border-l-0">
                                            {day ? (
                                                 day.jodi === 'L' ? (
-                                                    <span className="text-sm font-bold text-red-400">HOLIDAY</span>
+                                                    <span className="text-[9px] font-bold text-red-400">HOLIDAY</span>
                                                 ) : (
-                                                    <div className={cn("text-2xl font-extrabold", isRedJodi(day.jodi) && "text-red-400")}>
+                                                    <div className={cn("text-base md:text-lg font-extrabold", isRedJodi(day.jodi) && "text-red-400")}>
                                                         {day.jodi}
                                                     </div>
                                                 )
                                             ) : (
-                                                <span className="text-white/40">**</span>
+                                                <span className="text-white/40 text-xs">**</span>
                                             )}
                                         </div>
                                     ))}
@@ -189,7 +191,7 @@ export default function ResultsPage() {
                 </div>
             </div>
           ) : (
-            <Alert className="bg-black/20 border-yellow-500/50 text-white">
+            <Alert className="bg-black/20 border-yellow-500/50 text-white m-2">
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>No Results Found</AlertTitle>
                 <AlertDescription>
