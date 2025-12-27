@@ -7,7 +7,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -19,17 +18,16 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy, Timestamp } from "firebase/firestore";
+import { collection, query, where, Timestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { toZonedTime } from 'date-fns-tz';
-import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 
 type Bet = {
     id: string;
@@ -69,7 +67,6 @@ const years = [
 
 const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
 
-
 export default function BetLedgerPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -80,16 +77,44 @@ export default function BetLedgerPage() {
   const [year, setYear] = useState<string | undefined>(undefined);
   const [isPopoverOpen, setPopoverOpen] = useState(false);
 
-  const betsQuery = useMemoFirebase(
-    () => (firestore && user ? query(
-        collection(firestore, "kalyan_bets"), 
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc")
-    ) : null),
-    [firestore, user]
-  );
+  // Query to get all bets for the current user.
+  // Filtering by date will be done on the client-side.
+  const betsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) {
+      return null;
+    }
+    return query(collection(firestore, 'kalyan_bets'), where('userId', '==', user.uid));
+  }, [firestore, user]);
   
-  const { data: bets, isLoading } = useCollection<Bet>(betsQuery);
+  const { data: rawBets, isLoading, error } = useCollection<Bet>(betsQuery);
+
+  // Filter and sort bets on the client-side.
+  const bets = useMemo(() => {
+    if (!rawBets) return [];
+
+    let filtered = rawBets;
+
+    if (date) {
+      const timeZone = 'Asia/Kolkata';
+      const zonedDate = toZonedTime(date, timeZone);
+      const startOfSelectedDay = startOfDay(zonedDate);
+      const endOfSelectedDay = endOfDay(zonedDate);
+      
+      filtered = rawBets.filter(bet => {
+        const betDate = bet.createdAt.toDate();
+        const betZonedDate = toZonedTime(betDate, timeZone);
+        return isWithinInterval(betZonedDate, { start: startOfSelectedDay, end: endOfSelectedDay });
+      });
+    }
+
+    return [...filtered].sort((a, b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
+  }, [rawBets, date]);
+  
+  useEffect(() => {
+    if (error) {
+      console.error("Error fetching bets:", error);
+    }
+  }, [error]);
 
   const handleFilter = () => {
     if (day && month && year) {
@@ -106,23 +131,6 @@ export default function BetLedgerPage() {
     setYear(undefined);
     setPopoverOpen(false);
   }
-
-  const filteredBets = useMemo(() => {
-    if (!bets) return [];
-    if (!date) return bets;
-
-    const timeZone = 'Asia/Kolkata';
-    const zonedDate = toZonedTime(date, timeZone);
-    
-    const startOfSelectedDay = startOfDay(zonedDate);
-    const endOfSelectedDay = endOfDay(zonedDate);
-
-    return bets.filter(bet => {
-        const betDate = bet.createdAt.toDate();
-        const betZonedDate = toZonedTime(betDate, timeZone);
-        return isWithinInterval(betZonedDate, { start: startOfSelectedDay, end: endOfSelectedDay });
-    });
-  }, [bets, date]);
 
   const isPageLoading = isUserLoading || isLoading;
 
@@ -187,7 +195,12 @@ export default function BetLedgerPage() {
                     <Skeleton className="h-20 w-full bg-white/20" />
                     <Skeleton className="h-20 w-full bg-white/20" />
                 </div>
-            ) : filteredBets && filteredBets.length > 0 ? (
+            ) : error ? (
+                <div className="text-center py-16 text-red-400">
+                    <p>Error loading bets. Please try again later.</p>
+                    <p className="text-xs text-white/50">{error.message}</p>
+                </div>
+            ) : bets && bets.length > 0 ? (
                 <>
                     {/* Desktop Table */}
                     <div className="hidden md:block rounded-md border border-white/20">
@@ -203,7 +216,7 @@ export default function BetLedgerPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredBets.map((bet) => (
+                                {bets.map((bet) => (
                                     <TableRow key={bet.id} className="border-white/20">
                                         <TableCell className="py-2 text-xs">{new Date(bet.createdAt.toDate()).toLocaleString('en-GB')}</TableCell>
                                         <TableCell className="py-2">
@@ -226,7 +239,7 @@ export default function BetLedgerPage() {
 
                     {/* Mobile Cards */}
                     <div className="grid gap-4 md:hidden px-4">
-                        {filteredBets.map((bet) => (
+                        {bets.map((bet) => (
                             <Card key={bet.id} className="p-4 bg-black/20 border-white/20 text-xs">
                                 <div className="flex justify-between items-start">
                                     <div>
