@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -46,20 +46,21 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import { createMarket, deleteMarket, updateMarket } from "@/app/actions/market-actions";
 import { cn } from "@/lib/utils";
+
 
 type Market = {
     id: string;
     name: string;
-    status: "Active" | "Inactive";
+    active: boolean;
 };
 
 export default function ManageMarketsPage() {
   const firestore = useFirestore();
   
-  const marketsQuery = useMemoFirebase(() => firestore ? collection(firestore, "markets") : null, [firestore]);
+  const marketsQuery = useMemoFirebase(() => firestore ? query(collection(firestore, "markets"), orderBy("name")) : null, [firestore]);
   const { data: markets, isLoading } = useCollection<Market>(marketsQuery, { skip: !firestore });
   
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
@@ -72,6 +73,7 @@ export default function ManageMarketsPage() {
     const formData = new FormData(form);
     const newMarketData = {
       name: formData.get("name") as string,
+      active: false,
     };
     try {
         await createMarket(newMarketData);
@@ -111,10 +113,10 @@ export default function ManageMarketsPage() {
   };
   
   const toggleMarketStatus = async (market: Market) => {
-    const newStatus = market.status === "Active" ? "Inactive" : "Active";
+    const newActiveState = !market.active;
     try {
-        await updateMarket(market.id, { status: newStatus });
-        toast({ title: "Status Updated", description: `${market.name} is now ${newStatus}.` });
+        await updateMarket(market.id, { active: newActiveState });
+        toast({ title: "Status Updated", description: `${market.name} is now ${newActiveState ? 'Active' : 'Inactive'}.` });
     } catch (error: any) {
         toast({ variant: "destructive", title: "Failed to Update Status", description: error.message });
     }
@@ -186,12 +188,12 @@ export default function ManageMarketsPage() {
                     <TableCell className="py-2">
                       <div className="flex items-center gap-2">
                         <Switch
-                          checked={market.status === "Active"}
+                          checked={!!market.active}
                           onCheckedChange={() => toggleMarketStatus(market)}
                           aria-label={`Toggle ${market.name} status`}
                         />
-                        <Badge className={cn("text-xs", market.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
-                          {market.status}
+                        <Badge className={cn("text-xs", market.active ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
+                          {market.active ? "Active" : "Inactive"}
                         </Badge>
                       </div>
                     </TableCell>
@@ -229,8 +231,8 @@ export default function ManageMarketsPage() {
                   <CardHeader>
                       <div className="flex justify-between items-start">
                           <CardTitle>{market.name}</CardTitle>
-                          <Badge className={cn("text-xs", market.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
-                              {market.status}
+                          <Badge className={cn("text-xs", market.active ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
+                              {market.active ? "Active" : "Inactive"}
                           </Badge>
                       </div>
                   </CardHeader>
@@ -238,7 +240,7 @@ export default function ManageMarketsPage() {
                       <div className="flex items-center justify-between">
                           <span className="text-sm text-white/80">Toggle Status:</span>
                           <Switch
-                            checked={market.status === "Active"}
+                            checked={!!market.active}
                             onCheckedChange={() => toggleMarketStatus(market)}
                             aria-label={`Toggle ${market.name} status`}
                           />

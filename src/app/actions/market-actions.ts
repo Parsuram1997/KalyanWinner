@@ -14,12 +14,12 @@ const toTitleCase = (str: string) => {
 
 export async function createMarket(marketData: {
   name: string;
+  active: boolean;
 }) {
   try {
     const standardizedMarketData = {
       ...marketData,
       name: toTitleCase(marketData.name),
-      status: "Active", // Default status
     };
     await firestore.collection("markets").add(standardizedMarketData);
     revalidatePath("/admin/manage-markets");
@@ -32,7 +32,7 @@ export async function createMarket(marketData: {
 
 export async function updateMarket(marketId: string, marketData: {
   name?: string;
-  status?: "Active" | "Inactive";
+  active?: boolean;
 }) {
   try {
     let standardizedMarketData: { [key: string]: any } = { ...marketData };
@@ -41,6 +41,7 @@ export async function updateMarket(marketId: string, marketData: {
     }
     await firestore.collection("markets").doc(marketId).update(standardizedMarketData);
     revalidatePath("/admin/manage-markets");
+    revalidatePath("/admin/manage-timings"); // Revalidate timings page as well
     return { success: true };
   } catch (error: any) {
     console.error("Error updating market:", error);

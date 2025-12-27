@@ -176,6 +176,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     );
 }
 
+// This component is now more robust and handles all auth edge cases.
 function AdminAuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, isUserLoading } = useUser();
@@ -188,14 +189,19 @@ function AdminAuthLayout({ children }: { children: React.ReactNode }) {
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.replace("/admin");
-    }
-    if (!isUserDataLoading && userData && userData.role !== 'Admin') {
+    // After all data has loaded, check the conditions.
+    if (!isUserLoading && !isUserDataLoading) {
+      // If there is no authenticated user, OR
+      // If the user document doesn't exist, OR
+      // If the user's role is not 'Admin',
+      // then redirect to the login page.
+      if (!user || !userData || userData.role !== 'Admin') {
         router.replace('/admin');
+      }
     }
   }, [user, isUserLoading, userData, isUserDataLoading, router]);
 
+  // While any authentication or data fetching is in progress, show a loading screen.
   if (isUserLoading || isUserDataLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
@@ -204,20 +210,29 @@ function AdminAuthLayout({ children }: { children: React.ReactNode }) {
     );
   }
   
+  // Only if all checks pass, render the main admin layout with the page content.
   if (user && userData?.role === 'Admin') {
     return <AdminLayoutContent>{children}</AdminLayoutContent>;
   }
 
-  return null;
+  // In any other case (like during the brief moment before a redirect), 
+  // continue showing the loading screen to prevent a blank page flash.
+  return (
+      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
+        <Skeleton className="h-20 w-20 rounded-full bg-white/10" />
+      </div>
+    );
 }
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  // If we are on the main admin login page, don't use the auth layout.
   if (pathname === '/admin') {
     return <>{children}</>;
   }
 
+  // For all other admin pages, wrap them in the authentication layout.
   return <AdminAuthLayout>{children}</AdminAuthLayout>;
 }
