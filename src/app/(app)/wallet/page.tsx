@@ -298,25 +298,25 @@ export default function WalletPage() {
                   <div className="md:hidden grid gap-3 px-2 sm:px-0">
                     {recentTransactions.map((tx) => (
                       <Card key={tx.id} className="bg-black/20 border-white/20">
-                          <CardHeader className="p-3 flex flex-row items-start justify-between">
-                            <div className="space-y-1">
+                          <CardHeader className="p-3 pb-2">
+                            <div className="flex flex-row items-center justify-between">
                                 <CardTitle className="text-sm">{tx.type}</CardTitle>
-                                <p className="text-xs text-white/70">{new Date(tx.date).toLocaleString()}</p>
+                                <Badge
+                                  variant={null}
+                                  className={cn(
+                                      "text-xs",
+                                      tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
+                                      tx.status === 'Pending' ? "bg-white text-primary" :
+                                      tx.status === 'Rejected' ? "bg-red-400 text-white" :
+                                      "bg-transparent border border-white/50 text-white/80"
+                                  )}
+                                >
+                                  {tx.status}
+                                </Badge>
                             </div>
-                            <Badge
-                              variant={null}
-                              className={cn(
-                                  "text-xs",
-                                  tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
-                                  tx.status === 'Pending' ? "bg-white text-primary" :
-                                  tx.status === 'Rejected' ? "bg-red-400 text-white" :
-                                  "bg-transparent border border-white/50 text-white/80"
-                              )}
-                            >
-                              {tx.status}
-                            </Badge>
+                            <p className="text-xs text-white/70 pt-1">{new Date(tx.date).toLocaleString()}</p>
                           </CardHeader>
-                          <CardContent className="p-3 pt-0">
+                          <CardContent className="p-3 pt-2">
                               <div className="flex items-end justify-between mt-2 pt-2 border-t border-white/20">
                                 <p className="text-xs text-white/80 max-w-[70%]">{tx.description}</p>
                                 <span className={cn('font-mono font-semibold text-lg', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
