@@ -391,7 +391,7 @@ export default function EnterResultsPage() {
                     <div className="p-3 text-center text-red-400">{error.message}</div>
                 ) : paginatedResults && paginatedResults.length > 0 ? (
                     paginatedResults.map((result) => (
-                    <Card key={result.id} className="p-3 bg-black/30 border-white/20">
+                    <Card key={result.id} className="p-3 bg-black/30 border-white/20 text-white">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-semibold text-sm">{new Date(result.date).toLocaleDateString('en-GB')}</p>
