@@ -61,31 +61,27 @@ const MarketResult = ({ marketName }: { marketName: string }) => {
     const { data: results, isLoading } = useCollection<Result>(resultQuery);
     const result = results?.[0];
     
+    const getDigit = (panna: string | undefined): string => {
+        if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '*';
+        return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
+    };
+
     if (isLoading) {
         return <Skeleton className="h-12 w-full mt-2 bg-white/20" />;
     }
 
     const isFullResult = result && result.openPanna && result.closePanna && result.jodi !== 'L';
+    const isOpenResultOnly = result && result.openPanna && !result.closePanna && result.jodi !== 'L';
     const isHoliday = result && result.jodi === 'L';
-    const jodiToShow = result?.jodi || '**';
+    
+    const openDigit = getDigit(result?.openPanna);
+    const jodiToShow = isOpenResultOnly ? `${openDigit}*` : result?.jodi || '**';
 
     return (
         <div className="mt-2 text-center font-mono text-sm flex items-center justify-center">
             {isHoliday ? (
                  <div className="flex items-center justify-center gap-2 text-white font-bold bg-red-600/90 rounded-md px-3 py-1">
                     <span>HOLIDAY</span>
-                </div>
-            ) : isFullResult ? (
-                 <div className="flex items-center justify-center gap-2 text-white">
-                    <div className="flex flex-col items-center">
-                        <span className="text-xl font-bold tracking-widest">{result.openPanna}</span>
-                    </div>
-                    <div className="flex flex-col items-center rounded-md bg-white px-3 py-1 text-slate-900">
-                        <span className="text-2xl font-bold tracking-wider">{jodiToShow}</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <span className="text-xl font-bold tracking-widest">{result.closePanna}</span>
-                    </div>
                 </div>
             ) : (
                  <div className="flex items-center justify-center gap-2 text-white">
