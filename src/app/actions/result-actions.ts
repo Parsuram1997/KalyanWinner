@@ -197,7 +197,9 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
 
       todaysBets.forEach(doc => {
         const bet = doc.data();
-        if (bet.session !== 'Close' && bet.session !== 'Jodi' && bet.gameType !== 'Close') return;
+        
+        // Skip bets that are not for the close session or jodi
+        if (bet.session !== 'Close' && bet.session !== 'Jodi') return;
 
         let winningAmount = 0;
         let isWinner = false;
@@ -206,7 +208,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
         if (multiplier) {
             switch (bet.gameType) {
                 case 'Single Digit':
-                    if (closeDigit && (bet.session === 'Close' || bet.gameType === 'Close') && String(bet.number) === closeDigit) isWinner = true;
+                    if (closeDigit && bet.session === 'Close' && String(bet.number) === closeDigit) isWinner = true;
                     break;
                 case 'Single Panna': case 'Double Panna': case 'Triple Panna':
                     if (bet.session === 'Close' && mergedData.closePanna && String(bet.number) === mergedData.closePanna) isWinner = true;
