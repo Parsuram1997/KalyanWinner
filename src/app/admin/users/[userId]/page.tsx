@@ -197,55 +197,52 @@ export default function UserDetailsPage() {
             <CardDescription className="mt-1 text-white/70">User ID: {user.customId}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <div className="flex items-start flex-col gap-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">Mobile</p></div>
             <p className="font-medium text-white">{user.mobile}</p>
           </div>
-          <div className="flex items-start flex-col gap-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">State</p></div>
             <p className="font-medium text-white">{user.state}</p>
           </div>
-          <div className="flex items-start flex-col gap-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2"><Map className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">District</p></div>
             <p className="font-medium text-white">{user.district}</p>
           </div>
-           <div className="flex items-start flex-col gap-2">
+           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">Joined On</p></div>
             <p className="font-medium text-white">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB') : 'N/A'}</p>
           </div>
-          <div className="flex items-start flex-col gap-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">Total Balance</p></div>
             <p className="font-medium text-white">₹{totalBalance.toFixed(2)}</p>
           </div>
-          <div className="flex items-start flex-col gap-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">Deposit Balance</p></div>
             <p className="font-medium text-white">₹{(user.depositBalance || 0).toFixed(2)}</p>
           </div>
-          <div className="flex items-start flex-col gap-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">Winning Balance</p></div>
             <p className="font-medium text-white">₹{(user.winningBalance || 0).toFixed(2)}</p>
           </div>
          
            {netProfitLoss >= 0 ? (
-            <div className="flex items-start flex-col gap-2">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">Total Profit</p></div>
                 <p className="font-medium text-green-400">₹{netProfitLoss.toFixed(2)}</p>
             </div>
         ) : (
-            <div className="flex items-start flex-col gap-2">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2"><TrendingDown className="h-4 w-4 text-white/70" /><p className="text-sm text-white/70">Total Loss</p></div>
                 <p className="font-medium text-red-400">-₹{Math.abs(netProfitLoss).toFixed(2)}</p>
             </div>
         )}
 
-          <div className="flex items-start flex-col gap-2">
-            <div className="w-5 h-5"></div>
-            <div>
-              <p className="text-sm text-white/70">Status</p>
-              <Badge variant={user.status === "Active" ? "secondary" : "outline"}>
-                {user.status}
-              </Badge>
-            </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2"><div className="w-4 h-4"></div><p className="text-sm text-white/70">Status</p></div>
+            <Badge variant={user.status === "Active" ? "secondary" : "outline"}>
+              {user.status}
+            </Badge>
           </div>
         </CardContent>
         <CardFooter className="border-t border-white/20 flex justify-end pt-6">
