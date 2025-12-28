@@ -313,22 +313,24 @@ export default function WalletPage() {
                     {paginatedTransactions.map((tx) => (
                       <Card key={tx.id} className="bg-black/20 border-white/20 text-white py-3 px-1">
                           <div className="flex justify-between items-start">
-                              <div>
-                                  <p className="text-sm font-semibold text-white">{tx.type}</p>
+                              <div className="flex-1">
+                                  <div className="flex justify-between items-start text-sm">
+                                      <p className="font-semibold text-white">{tx.type}</p>
+                                      <Badge
+                                        variant={null}
+                                        className={cn(
+                                            "text-xs",
+                                            tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
+                                            tx.status === 'Pending' ? "bg-white text-primary" :
+                                            tx.status === 'Rejected' ? "bg-red-400 text-white" :
+                                            "bg-transparent border border-white/50 text-white/80"
+                                        )}
+                                      >
+                                        {tx.status}
+                                      </Badge>
+                                  </div>
                                   <p className="text-xs text-white/70">{new Date(tx.date).toLocaleString()}</p>
                               </div>
-                              <Badge
-                                variant={null}
-                                className={cn(
-                                    "text-xs",
-                                    tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
-                                    tx.status === 'Pending' ? "bg-white text-primary" :
-                                    tx.status === 'Rejected' ? "bg-red-400 text-white" :
-                                    "bg-transparent border border-white/50 text-white/80"
-                                )}
-                              >
-                                {tx.status}
-                              </Badge>
                           </div>
                           <div className="space-y-1">
                               <div className="flex items-end justify-between">
