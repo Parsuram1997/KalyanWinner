@@ -220,7 +220,7 @@ export default function EnterResultsPage() {
 
   return (
     <div className="flex flex-col gap-6 text-white">
-        <Button asChild variant="ghost" className="hover:bg-white/10 w-fit">
+        <Button asChild variant="ghost" className="hover:bg-white/10 w-fit text-white">
              <Link href="/admin/manage-results">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Markets
@@ -230,13 +230,13 @@ export default function EnterResultsPage() {
         <Card className="bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900 border-white/10">
           <CardHeader className="flex flex-col gap-4">
             <div>
-                <CardTitle>Results for {marketName}</CardTitle>
+                <CardTitle className="text-white">Results for {marketName}</CardTitle>
                 <CardDescription className="text-white/70">View and manage game results for the last year.</CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
                 <Dialog open={isHolidayDialogOpen} onOpenChange={setHolidayDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full sm:w-auto bg-black/30 border-white/20 hover:bg-black/40">
+                        <Button variant="outline" className="w-full sm:w-auto bg-black/30 border-white/20 hover:bg-black/40 text-white">
                             <CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday
                         </Button>
                     </DialogTrigger>
@@ -420,7 +420,7 @@ export default function EnterResultsPage() {
                                 <Button 
                                     variant="outline" 
                                     size="sm" 
-                                    className="bg-transparent hover:bg-white/10 text-xs"
+                                    className="bg-transparent hover:bg-white/10 text-xs text-white"
                                     onClick={() => {
                                         setSelectedResult(result);
                                         setUpdateClosePanna(result.closePanna || "");
@@ -465,7 +465,7 @@ export default function EnterResultsPage() {
                 <Button
                     variant="outline"
                     size="sm"
-                    className="bg-transparent hover:bg-white/10 text-xs"
+                    className="bg-transparent hover:bg-white/10 text-xs text-white"
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                 >
@@ -474,7 +474,7 @@ export default function EnterResultsPage() {
                 <Button
                     variant="outline"
                     size="sm"
-                     className="bg-transparent hover:bg-white/10 text-xs"
+                     className="bg-transparent hover:bg-white/10 text-xs text-white"
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                 >
