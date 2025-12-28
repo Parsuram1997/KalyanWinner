@@ -286,7 +286,7 @@ export default function ManageAdminsPage() {
            <div className="grid gap-4 md:hidden">
             {isLoading && <p className="text-center text-white/80 py-8">Loading admins...</p>}
             {!isLoading && paginatedAdmins.map((admin) => (
-              <Card key={admin.id} className="p-4 bg-black/20 border-white/20">
+              <Card key={admin.id} className="p-4 bg-black/20 border-white/20 text-white">
                 <div className="flex justify-between items-start">
                     <div><p className="font-semibold">{admin.name}</p><p className="text-xs text-white/70">{admin.customId}</p></div>
                     <Badge className={cn("text-xs", admin.status === "Active" ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>{admin.status}</Badge>
