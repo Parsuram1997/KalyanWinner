@@ -38,22 +38,19 @@ type Result = {
 
 const MarketResult = ({ marketName }: { marketName: string }) => {
     const firestore = useFirestore();
-    const [today, setToday] = useState('');
-
-    useEffect(() => {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        setToday(`${year}-${month}-${day}`);
-    }, []);
+    
+    // Get today's date string on every render to ensure it's always current
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
 
     const resultQuery = useMemoFirebase(
         () => firestore && today ? query(
             collection(firestore, "kalyan_results"),
             where("marketName", "==", marketName),
-            where("date", "==", today),
-            where("jodi", "!=", "XX")
+            where("date", "==", today)
         ) : null,
         [firestore, marketName, today]
     );
