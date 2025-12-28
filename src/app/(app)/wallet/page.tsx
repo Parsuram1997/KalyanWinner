@@ -163,8 +163,8 @@ export default function WalletPage() {
     <div className="space-y-6">
       <Tabs defaultValue="wallet" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-black/20 p-1">
-          <TabsTrigger value="wallet" className="text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-700 data-[state=active]:text-white">Wallet</TabsTrigger>
-          <TabsTrigger value="activity" className="text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-700 data-[state=active]:text-white">Recent Activity</TabsTrigger>
+          <TabsTrigger value="wallet" className="text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-700 data-[state=active]:text-white">My Wallet</TabsTrigger>
+          <TabsTrigger value="activity" className="text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-700 data-[state=active]:text-white">Passbook</TabsTrigger>
         </TabsList>
         <TabsContent value="wallet" className="mt-4 space-y-6">
           <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
@@ -243,7 +243,7 @@ export default function WalletPage() {
         <TabsContent value="activity" className="mt-4">
           <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
             <CardHeader>
-              <h3 className="text-lg font-semibold">Recent Activity</h3>
+              <h3 className="text-lg font-semibold">Passbook</h3>
             </CardHeader>
             <CardContent className="p-0 sm:p-6">
               {isLoading ? (
