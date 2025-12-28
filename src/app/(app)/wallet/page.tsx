@@ -353,7 +353,7 @@ export default function WalletPage() {
                 </p>
               )}
             </CardContent>
-             {totalPages > 1 && (
+            {totalPages > 1 && (
               <CardFooter className="flex items-center justify-between pt-6">
                 <Button
                     variant="outline"
