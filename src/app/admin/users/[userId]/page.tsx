@@ -192,7 +192,7 @@ export default function UserDetailsPage() {
         <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
               <User className="h-6 w-6" />
-              <span>{user.name}</span>
+              <span className="text-white">{user.name}</span>
             </CardTitle>
             <CardDescription className="mt-1 text-white/70">User ID: {user.customId}</CardDescription>
         </CardHeader>
@@ -292,7 +292,7 @@ export default function UserDetailsPage() {
             <CardHeader>
                  <TabsList className="grid w-full grid-cols-2 bg-black/30 text-white border-white/20">
                     <TabsTrigger value="bets">Bet History</TabsTrigger>
-                    <TabsTrigger value="transactions">Transaction History</TabsTrigger>
+                    <TabsTrigger value="transactions">Passbook</TabsTrigger>
                 </TabsList>
             </CardHeader>
             <TabsContent value="bets">
