@@ -291,7 +291,7 @@ export default function ManageUsersPage() {
            <div className="grid gap-4 md:hidden">
             {isLoading && <p className="text-center text-white/80 py-8">Loading users...</p>}
             {!isLoading && paginatedUsers.map((user) => (
-              <Card key={user.id} className="bg-black/20 border-white/20">
+              <Card key={user.id} className="bg-black/20 border-white/20 text-white">
                 <CardContent className="p-4">
                     <div className="flex justify-between items-start">
                         <div><p className="font-semibold">{user.name}</p><p className="text-xs text-white/70">{user.customId}</p></div>
