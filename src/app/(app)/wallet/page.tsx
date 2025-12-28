@@ -258,7 +258,7 @@ export default function WalletPage() {
         <TabsContent value="activity" className="mt-4">
           <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
             <CardHeader>
-              <h3 className="text-lg font-semibold">Passbook</h3>
+              <h3 className="text-lg font-semibold text-white">Passbook</h3>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -284,7 +284,7 @@ export default function WalletPage() {
                         {paginatedTransactions.map((tx) => (
                           <TableRow key={tx.id} className="border-white/20">
                             <TableCell className="py-2 text-xs text-white/80">{new Date(tx.date).toLocaleString()}</TableCell>
-                            <TableCell className="py-2 text-sm">{tx.description}</TableCell>
+                            <TableCell className="py-2 text-sm text-white">{tx.description}</TableCell>
                             <TableCell className={cn('py-2 font-mono font-semibold', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
                               {tx.type === 'Deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
                             </TableCell>
@@ -311,10 +311,10 @@ export default function WalletPage() {
                   {/* Mobile Cards */}
                   <div className="md:hidden grid gap-3">
                     {paginatedTransactions.map((tx) => (
-                      <Card key={tx.id} className="bg-black/20 border-white/20">
+                      <Card key={tx.id} className="bg-black/20 border-white/20 text-white">
                           <div className="p-3 pb-2">
                             <div className="flex justify-between items-start">
-                                <p className="text-sm font-semibold">{tx.type}</p>
+                                <p className="text-sm font-semibold text-white">{tx.type}</p>
                                 <Badge
                                   variant={null}
                                   className={cn(
@@ -363,7 +363,7 @@ export default function WalletPage() {
                 >
                     Previous
                 </Button>
-                <span className="text-sm font-semibold">
+                <span className="text-sm font-semibold text-white">
                     Page {currentPage} of {totalPages}
                 </span>
                 <Button
