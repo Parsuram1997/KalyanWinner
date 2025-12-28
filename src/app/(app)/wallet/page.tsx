@@ -311,8 +311,8 @@ export default function WalletPage() {
                   {/* Mobile Cards */}
                   <div className="md:hidden grid gap-3">
                     {paginatedTransactions.map((tx) => (
-                      <Card key={tx.id} className="bg-black/20 border-white/20 text-white py-3 px-1">
-                          <div className="flex justify-between items-start">
+                      <Card key={tx.id} className="bg-black/20 border-white/20 text-white py-3">
+                          <div className="flex justify-between items-start px-3">
                               <div className="flex-1">
                                   <div className="flex justify-between items-start text-sm">
                                       <p className="font-semibold text-white">{tx.type}</p>
@@ -332,7 +332,7 @@ export default function WalletPage() {
                                   <p className="text-xs text-white/70">{new Date(tx.date).toLocaleString()}</p>
                               </div>
                           </div>
-                          <div className="space-y-1">
+                          <div className="space-y-1 mt-2 px-3">
                               <div className="flex items-end justify-between">
                                   <p className="text-xs text-white/80 max-w-[70%]">{tx.description}</p>
                                   <span className={cn('font-mono font-semibold text-lg', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
