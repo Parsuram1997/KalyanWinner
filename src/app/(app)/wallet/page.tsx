@@ -330,7 +330,7 @@ export default function WalletPage() {
                               {tx.status}
                             </Badge>
                         </div>
-                        <div className="flex items-end justify-between mt-2 pt-2 border-t border-white/20">
+                        <div className="flex items-end justify-between">
                             <p className="text-xs text-white/80 max-w-[70%]">{tx.description}</p>
                             <span className={cn('font-mono font-semibold text-lg', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
                               {tx.type === 'Deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
