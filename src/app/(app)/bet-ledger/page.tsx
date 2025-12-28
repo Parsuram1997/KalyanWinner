@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -67,7 +66,7 @@ const years = [
 ];
 
 const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 50;
 
 export default function BetLedgerPage() {
   const { user, isUserLoading } = useUser();
