@@ -11,7 +11,7 @@ function initializeAdminApp(): App {
   }
 
   // If the service account key is available in environment variables,
-  // use it to initialize the admin app.
+  // use it to initialize the admin app. This is for local development.
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
@@ -20,13 +20,13 @@ function initializeAdminApp(): App {
       });
     } catch (error) {
       console.error('Error parsing FIREBASE_SERVICE_ACCOUNT_KEY:', error);
-      // Fall through to default initialization
+      // Fall through to default initialization in case of parsing error
     }
   }
   
   // On Google Cloud environments (like App Hosting or Cloud Functions),
   // the SDK automatically discovers the project's credentials.
-  // Calling initializeApp() without arguments is the recommended approach in these cases.
+  // Calling initializeApp() without arguments is the recommended approach.
   return initializeApp();
 }
 
