@@ -233,9 +233,9 @@ export default function CashLedgerPage() {
                 ))}
                 {!isLoading && paginatedData.map((entry) => (
                     <TableRow key={entry.id} className="border-white/20">
-                        <TableCell className="py-2">{new Date(entry.date).toLocaleString('en-GB')}</TableCell>
+                        <TableCell className="py-2 text-white/90">{new Date(entry.date).toLocaleString('en-GB')}</TableCell>
                         <TableCell className="py-2">
-                            <div className="font-medium">{entry.userName}</div>
+                            <div className="font-medium text-white">{entry.userName}</div>
                             <div className="text-xs text-white/80">{entry.description}</div>
                         </TableCell>
                         <TableCell className="text-right font-mono text-green-300 py-2">
@@ -244,7 +244,7 @@ export default function CashLedgerPage() {
                         <TableCell className="text-right font-mono text-orange-300 py-2">
                              {entry.withdrawal > 0 ? `-${entry.withdrawal.toLocaleString('en-IN')}` : ''}
                         </TableCell>
-                        <TableCell className="text-right font-mono font-semibold py-2">
+                        <TableCell className="text-right font-mono font-semibold py-2 text-white">
                             ₹{entry.balance.toLocaleString('en-IN')}
                         </TableCell>
                     </TableRow>
@@ -256,7 +256,7 @@ export default function CashLedgerPage() {
             <div className="grid gap-4 md:hidden">
             {isLoading && <p className="text-center text-white/80 py-8">Loading ledger...</p>}
             {!isLoading && paginatedData.map((entry) => (
-                <Card key={entry.id} className="p-3 text-sm bg-black/20 border-white/20">
+                <Card key={entry.id} className="p-3 text-sm bg-black/20 border-white/20 text-white">
                 <div className="flex justify-between items-start mb-3">
                     <div>
                         <p className="font-semibold">{entry.userName}</p>

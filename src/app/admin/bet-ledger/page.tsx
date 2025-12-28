@@ -327,17 +327,17 @@ export default function BetLedgerPage() {
                     const editable = isBetEditable(bet);
                     return (
                         <TableRow key={bet.id} className="border-white/20">
-                            <TableCell className="py-2 font-medium">{bet.userName}</TableCell>
+                            <TableCell className="py-2 font-medium text-white">{bet.userName}</TableCell>
                             <TableCell className="py-2">
-                                <div>{bet.market}</div>
+                                <div className="text-white">{bet.market}</div>
                                 <div className="text-white/80">{bet.gameType}</div>
                             </TableCell>
-                            <TableCell className="font-mono py-2">{bet.number}</TableCell>
-                            <TableCell className="py-2">{bet.session}</TableCell>
+                            <TableCell className="font-mono py-2 text-white">{bet.number}</TableCell>
+                            <TableCell className="py-2 text-white">{bet.session}</TableCell>
                             <TableCell className="py-2">
                                 <Badge className={cn('text-xs', getStatusClasses(bet.status))}>{bet.status}</Badge>
                             </TableCell>
-                            <TableCell className="text-right font-mono font-semibold py-2">
+                            <TableCell className="text-right font-mono font-semibold py-2 text-white">
                                 ₹{bet.amount.toLocaleString('en-IN')}
                             </TableCell>
                             <TableCell className="py-2 text-center">
@@ -376,10 +376,10 @@ export default function BetLedgerPage() {
             {!isLoading && paginatedData.map((bet) => {
                  const editable = isBetEditable(bet);
                  return (
-                    <Card key={bet.id} className="p-3 text-sm bg-black/20 border-white/20">
+                    <Card key={bet.id} className="p-3 text-sm bg-black/20 border-white/20 text-white">
                     <div className="flex justify-between items-start mb-3">
                         <div>
-                            <p className="font-semibold">{bet.userName}</p>
+                            <p className="font-semibold text-white">{bet.userName}</p>
                             <p className="text-xs text-white/80">{bet.createdAt.toDate().toLocaleString()}</p>
                         </div>
                         <Badge className={cn('text-xs', getStatusClasses(bet.status))}>{bet.status}</Badge>
@@ -387,23 +387,23 @@ export default function BetLedgerPage() {
                     <div className="space-y-2 border-t border-white/20 pt-3 text-xs">
                         <div className="flex justify-between">
                             <span className="text-white/80">Market:</span>
-                            <span className="font-medium">{bet.market}</span>
+                            <span className="font-medium text-white">{bet.market}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-white/80">Game:</span>
-                            <span className="font-medium">{bet.gameType}</span>
+                            <span className="font-medium text-white">{bet.gameType}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-white/80">Number:</span>
-                            <span className="font-mono font-bold">{bet.number}</span>
+                            <span className="font-mono font-bold text-white">{bet.number}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-white/80">Session:</span>
-                            <span className="font-medium">{bet.session}</span>
+                            <span className="font-medium text-white">{bet.session}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-white/80">Amount:</span>
-                            <span className="font-mono font-bold">₹{bet.amount.toLocaleString('en-IN')}</span>
+                            <span className="font-mono font-bold text-white">₹{bet.amount.toLocaleString('en-IN')}</span>
                         </div>
                     </div>
                     <CardFooter className="p-0 pt-3 mt-3 border-t border-white/20 flex justify-end gap-2">
