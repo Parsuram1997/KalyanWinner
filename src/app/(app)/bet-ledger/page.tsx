@@ -251,7 +251,7 @@ export default function BetLedgerPage() {
                     </div>
 
                     {/* Mobile Cards */}
-                    <div className="grid gap-4 md:hidden px-4">
+                    <div className="grid gap-4 md:hidden px-4 pb-4">
                         {paginatedBets.map((bet) => (
                             <Card key={bet.id} className="p-4 bg-black/20 border-white/20 text-xs">
                                 <div className="flex justify-between items-start">
