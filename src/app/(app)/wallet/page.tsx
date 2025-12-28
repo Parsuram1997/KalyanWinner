@@ -260,9 +260,9 @@ export default function WalletPage() {
             <CardHeader>
               <h3 className="text-lg font-semibold">Passbook</h3>
             </CardHeader>
-            <CardContent className="p-0 sm:p-6">
+            <CardContent>
               {isLoading ? (
-                <div className="space-y-2 p-4">
+                <div className="space-y-2">
                   <Skeleton className="h-12 w-full bg-white/20" />
                   <Skeleton className="h-12 w-full bg-white/20" />
                   <Skeleton className="h-12 w-full bg-white/20" />
@@ -309,7 +309,7 @@ export default function WalletPage() {
                   </div>
                   
                   {/* Mobile Cards */}
-                  <div className="md:hidden grid gap-3 px-2 sm:px-0">
+                  <div className="md:hidden grid gap-3">
                     {paginatedTransactions.map((tx) => (
                       <Card key={tx.id} className="bg-black/20 border-white/20">
                           <div className="p-3 pb-2">
