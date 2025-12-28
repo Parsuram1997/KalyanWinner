@@ -134,7 +134,7 @@ export default function PanelChartPage() {
 
   const isLoading = isAllMarketsLoading || isResultsLoading;
   const pageTitle = market?.name || marketName;
-  const gridTemplateColumns = `minmax(60px, 0.5fr) repeat(${displayDays.length}, minmax(45px, 1fr))`;
+  const gridTemplateColumns = `minmax(50px, 0.5fr) repeat(${displayDays.length}, minmax(38px, 1fr))`;
 
   return (
     <div className="flex flex-col gap-4">
@@ -152,32 +152,32 @@ export default function PanelChartPage() {
             </div>
           ) : weeklyData.length > 0 ? (
             <div className="overflow-x-auto bg-black/20 rounded-md">
-                <div className="font-mono text-center min-w-[375px]">
+                <div className="font-mono text-center min-w-full">
                     <div style={{ gridTemplateColumns }} className={`grid sticky top-0 z-10 bg-purple-800/80 backdrop-blur-sm rounded-t-md`}>
-                          <div className="p-1 text-[8px] font-bold flex items-center justify-center">DATE</div>
-                          {displayDays.map(day => <div key={day.key} className="p-1 text-[8px] font-bold border-l border-white/20 flex items-center justify-center">{day.name}</div>)}
+                          <div className="py-1 px-0 text-[7px] font-bold flex items-center justify-center">DATE</div>
+                          {displayDays.map(day => <div key={day.key} className="py-1 px-0 text-[7px] font-bold border-l border-white/20 flex items-center justify-center">{day.name}</div>)}
                     </div>
                     <div>{
                         weeklyData.map((week, weekIndex) => {
                              const [startDate, endDate] = week.dateRange.split(' to ');
                              return (
                                 <div key={weekIndex} className="grid border-b border-white/20 last:border-0" style={{ gridTemplateColumns }}>
-                                    <div className="p-1 text-[8px] leading-tight bg-purple-900/50 flex flex-col items-center justify-center font-bold sticky left-0">
+                                    <div className="text-[7px] leading-tight bg-purple-900/50 flex flex-col items-center justify-center font-bold sticky left-0">
                                         <span>{startDate}</span>
-                                        <span className="text-[7px]">to</span>
+                                        <span className="text-[6px]">to</span>
                                         <span>{endDate}</span>
                                     </div>
                                     {week.results.map((day, dayIndex) => (
-                                        <div key={dayIndex} className="p-0.5 text-xs flex items-center justify-center min-h-[56px] border-l border-dashed border-white/10 first:border-l-0">
+                                        <div key={dayIndex} className="py-0.5 px-0 text-xs flex items-center justify-center min-h-[56px] border-l border-dashed border-white/10 first:border-l-0">
                                            {day ? (
                                                 day.jodi === 'L' ? (
                                                     <span className="text-[9px] font-bold text-red-400">HOLIDAY</span>
                                                 ) : (
-                                                    <div className={cn("w-full h-full flex items-center justify-around font-mono text-[9px]", isRedJodi(day.jodi) && "text-red-400")}>
+                                                    <div className={cn("w-full h-full flex items-center justify-around font-mono text-[8px]", isRedJodi(day.jodi) && "text-red-400")}>
                                                         <div className="flex flex-col font-bold">
                                                             {(day.openPanna || '').split('').map((digit, i) => <span key={`op-${i}`}>{digit}</span>)}
                                                         </div>
-                                                        <div className="text-sm md:text-base font-extrabold px-1">
+                                                        <div className="text-xs md:text-sm font-extrabold px-0.5">
                                                             {day.jodi}
                                                         </div>
                                                         <div className="flex flex-col font-bold">
