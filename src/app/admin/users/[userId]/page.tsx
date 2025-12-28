@@ -190,7 +190,7 @@ export default function UserDetailsPage() {
     <div className="flex flex-col gap-6 text-white">
       <Card className="bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900 border-white/10">
         <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-white">
               <User className="h-6 w-6" />
               <span>{user.name}</span>
             </CardTitle>
