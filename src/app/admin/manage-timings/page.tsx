@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { Edit, Save, Loader2, Clock, Calendar, AlertTriangle } from 'lucide-reac
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 const marketSchema = z.object({
@@ -103,7 +104,7 @@ export default function ManageTimingsPage() {
     <div className="container mx-auto p-4 text-white">
       <Card className="bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900 border-white/10">
         <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Clock className="h-6 w-6"/> Manage Market Timings</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-white"><Clock className="h-6 w-6"/> Manage Market Timings</CardTitle>
             <CardDescription className="text-white/70">Edit the timings and active days for all ACTIVE markets.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -186,7 +187,8 @@ export default function ManageTimingsPage() {
             </DialogContent>
           </Dialog>
 
-          <div className="rounded-md border border-white/20 overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-md border border-white/20 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-b-white/20 hover:bg-black/20">
@@ -208,10 +210,10 @@ export default function ManageTimingsPage() {
                 ))}
                 {!isLoading && !error && markets?.map((market) => (
                   <TableRow key={market.id} className="border-b-white/20 hover:bg-black/20">
-                    <TableCell className="font-medium">{market.name}</TableCell>
-                    <TableCell>{market.openTime} - {market.closeTime}</TableCell>
-                    <TableCell><DayDisplay days={market.days} /></TableCell>
-                    <TableCell>{market.openBiddingTime} - {market.closeBiddingTime}</TableCell>
+                    <TableCell className="font-medium text-white">{market.name}</TableCell>
+                    <TableCell className="text-white">{market.openTime} - {market.closeTime}</TableCell>
+                    <TableCell className="text-white"><DayDisplay days={market.days} /></TableCell>
+                    <TableCell className="text-white">{market.openBiddingTime} - {market.closeBiddingTime}</TableCell>
                     <TableCell>
                       <Badge className={cn(market.active ? 'bg-green-600' : 'bg-red-600', 'text-white')}>
                         {market.active ? 'Active' : 'Inactive'}
@@ -226,19 +228,62 @@ export default function ManageTimingsPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {!isLoading && !error && markets?.length === 0 && (
-                  <TableRow className="border-b-white/20">
-                    <TableCell colSpan={6} className="text-center text-white/70 py-8">No active markets found. Activate markets in the 'Manage Markets' page to see them here.</TableCell>
-                  </TableRow>
-                )}
-                {!isLoading && error && (
-                    <TableRow className="border-b-white/20">
-                        <TableCell colSpan={6} className="text-center text-red-400 py-8">An error occurred. Please see the message above.</TableCell>
-                    </TableRow>
-                )}
               </TableBody>
             </Table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="grid gap-4 md:hidden text-white">
+            {isLoading && !error && Array.from({length: 3}).map((_, i) => (
+                <Card key={i} className="bg-black/20 p-4 border-white/10">
+                    <Skeleton className="h-6 w-3/4 mb-4 bg-white/10" />
+                    <Skeleton className="h-4 w-full mb-2 bg-white/10" />
+                    <Skeleton className="h-4 w-full mb-2 bg-white/10" />
+                    <Skeleton className="h-4 w-full bg-white/10" />
+                </Card>
+            ))}
+            {!isLoading && !error && markets?.map((market) => (
+                <Card key={market.id} className="bg-black/20 p-0 border-white/10">
+                    <CardHeader className="p-4 flex flex-row justify-between items-start">
+                        <CardTitle className="text-base text-white">{market.name}</CardTitle>
+                         <Badge className={cn(market.active ? 'bg-green-600' : 'bg-red-600', 'text-white')}>
+                            {market.active ? 'Active' : 'Inactive'}
+                        </Badge>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-3 text-xs">
+                        <div className="border-t border-white/20 pt-3">
+                            <Label className="text-white/70">Active Days</Label>
+                            <p><DayDisplay days={market.days} /></p>
+                        </div>
+                        <div>
+                            <Label className="text-white/70">Result Timings</Label>
+                            <p>{market.openTime} - {market.closeTime}</p>
+                        </div>
+                        <div>
+                            <Label className="text-white/70">Bidding Timings</Label>
+                            <p>{market.openBiddingTime} - {market.closeBiddingTime}</p>
+                        </div>
+                         <div>
+                            <Label className="text-white/70">Result Freeze</Label>
+                            <p>{market.closeResultTime}</p>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="bg-black/20 p-3 border-t border-white/10 flex justify-end">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(market)} className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white">
+                          <Edit className="h-4 w-4 mr-2" /> Edit
+                        </Button>
+                    </CardFooter>
+                </Card>
+            ))}
+          </div>
+
+          {(!isLoading && !error && markets?.length === 0) && (
+             <div className="text-center text-white/70 py-8">No active markets found. Activate markets in the 'Manage Markets' page to see them here.</div>
+          )}
+          {!isLoading && error && (
+            <div className="text-center text-red-400 py-8">An error occurred. Please see the message above.</div>
+          )}
+
         </CardContent>
       </Card>
     </div>
