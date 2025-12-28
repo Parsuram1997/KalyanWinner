@@ -99,7 +99,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
         const multiplier = payoutMultipliers.get(bet.gameType);
 
         if (multiplier) {
-            switch (bet.gameType) {
+             switch (bet.gameType) {
                 case 'Single Digit':
                     if (bet.session === 'Open' && openDigit && String(bet.number) === openDigit) {
                         isWinner = true;
@@ -108,7 +108,9 @@ export async function createKalyanResult(resultData: KalyanResult) {
                 case 'Single Panna':
                 case 'Double Panna':
                 case 'Triple Panna':
-                    if (bet.session === 'Open' && finalResultData.openPanna && String(bet.number) === finalResultData.openPanna) isWinner = true;
+                    if (bet.session === 'Open' && finalResultData.openPanna && String(bet.number) === finalResultData.openPanna) {
+                         isWinner = true;
+                    }
                     break;
             }
         }
