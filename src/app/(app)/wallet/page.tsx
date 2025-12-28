@@ -36,6 +36,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // Type for user balance data
 type UserBalance = {
@@ -253,33 +254,28 @@ export default function WalletPage() {
                   <Skeleton className="h-12 w-full bg-white/20" />
                 </div>
               ) : recentTransactions.length > 0 ? (
-                <div className="sm:border border-white/20 rounded-md">
-                  {recentTransactions.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className="flex items-center justify-between px-4 py-2 border-b border-b-white/20 last:border-b-0"
-                    >
-                      <div className="flex items-center gap-3">
-                        {tx.type === 'Deposit' ? (
-                          <ArrowDownLeft className="h-4 w-4 text-green-400" />
-                        ) : (
-                          <ArrowUpRight className="h-4 w-4 text-red-400" />
-                        )}
-                        <div className="flex flex-col">
-                          <p className="text-xs font-medium">
-                            {tx.description}
-                          </p>
-                          <p className="text-xs text-white/80">
-                            {new Date(tx.date).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 font-mono text-xs">
-                        <div className="flex gap-2 justify-end">
-                            <span className={cn('font-semibold', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
-                                {tx.type === 'Deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
-                            </span>
-                             <Badge
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block rounded-md border border-white/20">
+                    <Table>
+                      <TableHeader className="border-b-white/20">
+                        <TableRow>
+                          <TableHead className="text-white">Date</TableHead>
+                          <TableHead className="text-white">Description</TableHead>
+                          <TableHead className="text-white">Amount</TableHead>
+                          <TableHead className="text-white">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentTransactions.map((tx) => (
+                          <TableRow key={tx.id} className="border-white/20">
+                            <TableCell className="py-2 text-xs text-white/80">{new Date(tx.date).toLocaleString()}</TableCell>
+                            <TableCell className="py-2 text-sm">{tx.description}</TableCell>
+                            <TableCell className={cn('py-2 font-mono font-semibold', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
+                              {tx.type === 'Deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <Badge
                                 variant={null}
                                 className={cn(
                                     "text-xs",
@@ -288,19 +284,53 @@ export default function WalletPage() {
                                     tx.status === 'Rejected' ? "bg-red-400 text-white" :
                                     "bg-transparent border border-white/50 text-white/80"
                                 )}
-                            >
-                              {tx.status}
-                            </Badge>
+                              >
+                                {tx.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  {/* Mobile Cards */}
+                  <div className="md:hidden grid gap-px sm:gap-0 sm:border-0 border-t border-white/20">
+                    {recentTransactions.map((tx) => (
+                      <div key={tx.id} className="bg-black/20 p-4 sm:border-none border-b border-white/20 last:border-b-0">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-medium text-sm">{tx.type}</p>
+                            <p className="text-xs text-white/70">{new Date(tx.date).toLocaleString()}</p>
+                          </div>
+                          <Badge
+                            variant={null}
+                            className={cn(
+                                "text-xs",
+                                tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
+                                tx.status === 'Pending' ? "bg-white text-primary" :
+                                tx.status === 'Rejected' ? "bg-red-400 text-white" :
+                                "bg-transparent border border-white/50 text-white/80"
+                            )}
+                          >
+                            {tx.status}
+                          </Badge>
                         </div>
-                        {tx.status === 'Completed' && tx.fee !== undefined && tx.netAmount !== undefined && (
-                            <div className="text-right text-white/80 text-[10px]">
+                        <div className="flex items-end justify-between mt-3 pt-3 border-t border-white/20">
+                            <p className="text-xs text-white/80 max-w-[70%]">{tx.description}</p>
+                            <span className={cn('font-mono font-semibold text-lg', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
+                              {tx.type === 'Deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                            </span>
+                        </div>
+                         {tx.status === 'Completed' && tx.fee !== undefined && tx.netAmount !== undefined && (
+                            <div className="text-right text-white/80 text-[10px] mt-1">
                                 (Fee: ₹{tx.fee.toLocaleString('en-IN')} | Net: ₹{tx.netAmount.toLocaleString('en-IN')})
                             </div>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <p className="text-center text-sm text-white/80 p-4">
                   You have no recent activity.
