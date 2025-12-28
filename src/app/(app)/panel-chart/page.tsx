@@ -39,47 +39,51 @@ export default function SelectChartPage() {
 
   return (
     <div className="flex flex-col gap-6">
-        <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">Panel Charts</h1>
-            <p className="text-muted-foreground">Select a market to view its yearly panel chart.</p>
-        </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {isLoading
-          ? Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className="bg-gradient-to-br from-blue-600 to-purple-700 border-0">
+      <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
+        <CardHeader>
+          <CardTitle>Panel Charts</CardTitle>
+          <CardDescription className="text-white/80">Select a market to view its yearly panel chart.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {isLoading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <Card key={i} className="bg-black/20 border-white/20">
+                    <CardHeader className="p-4 pb-2">
+                      <Skeleton className="h-5 w-3/4 bg-white/20" />
+                      <Skeleton className="h-3 w-full mt-1 bg-white/20" />
+                    </CardHeader>
+                    <CardFooter className="p-4 pt-2">
+                      <Skeleton className="h-8 w-full bg-white/20" />
+                    </CardFooter>
+                  </Card>
+                ))
+              : markets?.map((market) => (
+              <Card key={market.id} className="flex flex-col justify-between bg-black/20 border-white/20 text-white">
                 <CardHeader className="p-4 pb-2">
-                  <Skeleton className="h-5 w-3/4 bg-white/20" />
-                   <Skeleton className="h-3 w-full mt-1 bg-white/20" />
+                  <CardTitle className="text-base">{market.name}</CardTitle>
+                  <CardDescription className="text-xs text-white/80">View the yearly panel chart.</CardDescription>
                 </CardHeader>
                 <CardFooter className="p-4 pt-2">
-                  <Skeleton className="h-8 w-full bg-white/20" />
+                  <Button asChild className="w-full bg-white text-primary hover:bg-white/90" size="sm">
+                    <Link href={`/panel-chart/${generateSlug(market.name)}`}>
+                      <GanttChartSquare className="mr-2 h-4 w-4" />
+                      View Chart
+                    </Link>
+                  </Button>
                 </CardFooter>
               </Card>
-            ))
-          : markets?.map((market) => (
-          <Card key={market.id} className="flex flex-col justify-between bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">{market.name}</CardTitle>
-              <CardDescription className="text-xs text-white/80">View the yearly panel chart.</CardDescription>
-            </CardHeader>
-            <CardFooter className="p-4 pt-2">
-               <Button asChild className="w-full" size="sm">
-                <Link href={`/panel-chart/${generateSlug(market.name)}`}>
-                  <GanttChartSquare className="mr-2 h-4 w-4" />
-                  View Chart
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-      {!isLoading && markets?.length === 0 && (
-        <Card className="col-span-full bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
-            <CardContent className="p-8 text-center text-white/80">
-                No active markets found.
-            </CardContent>
-        </Card>
-      )}
+            ))}
+          </div>
+          {!isLoading && markets?.length === 0 && (
+            <Card className="col-span-full bg-black/20 border-white/20">
+                <CardContent className="p-8 text-center text-white/80">
+                    No active markets found.
+                </CardContent>
+            </Card>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
