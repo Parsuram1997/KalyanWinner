@@ -63,6 +63,8 @@ type Transaction = {
   netAmount?: number;
 };
 
+const ITEMS_PER_PAGE = 10;
+
 const FeaturedMarkets = () => {
     const markets = [
       {
@@ -113,6 +115,8 @@ export default function WalletPage() {
   const [balance, setBalance] = useState<UserBalance | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+
 
   const fetchData = useCallback(async () => {
     if (!user || !firestore) return;
@@ -156,9 +160,19 @@ export default function WalletPage() {
   }, [balance]);
 
   const recentTransactions = useMemo(
-    () => transactions.slice(0, 10),
+    () => transactions,
     [transactions]
   );
+  
+  const totalPages = useMemo(
+    () => Math.ceil(recentTransactions.length / ITEMS_PER_PAGE),
+    [recentTransactions]
+  );
+
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return recentTransactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [recentTransactions, currentPage]);
 
   return (
     <div className="space-y-6">
@@ -253,7 +267,7 @@ export default function WalletPage() {
                   <Skeleton className="h-12 w-full bg-white/20" />
                   <Skeleton className="h-12 w-full bg-white/20" />
                 </div>
-              ) : recentTransactions.length > 0 ? (
+              ) : paginatedTransactions.length > 0 ? (
                 <>
                   {/* Desktop Table */}
                   <div className="hidden md:block rounded-md border border-white/20">
@@ -267,7 +281,7 @@ export default function WalletPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {recentTransactions.map((tx) => (
+                        {paginatedTransactions.map((tx) => (
                           <TableRow key={tx.id} className="border-white/20">
                             <TableCell className="py-2 text-xs text-white/80">{new Date(tx.date).toLocaleString()}</TableCell>
                             <TableCell className="py-2 text-sm">{tx.description}</TableCell>
@@ -296,7 +310,7 @@ export default function WalletPage() {
                   
                   {/* Mobile Cards */}
                   <div className="md:hidden grid gap-3 px-2 sm:px-0">
-                    {recentTransactions.map((tx) => (
+                    {paginatedTransactions.map((tx) => (
                       <Card key={tx.id} className="bg-black/20 border-white/20">
                           <div className="p-3 pb-2">
                             <div className="flex justify-between items-start">
@@ -339,6 +353,29 @@ export default function WalletPage() {
                 </p>
               )}
             </CardContent>
+             {totalPages > 1 && (
+              <CardFooter className="flex items-center justify-between pt-6">
+                <Button
+                    variant="outline"
+                    className="bg-transparent text-white hover:bg-white/10"
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </Button>
+                <span className="text-sm font-semibold">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                    variant="outline"
+                    className="bg-transparent text-white hover:bg-white/10"
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                    Next
+                </Button>
+              </CardFooter>
+            )}
           </Card>
         </TabsContent>
       </Tabs>
@@ -346,3 +383,6 @@ export default function WalletPage() {
   );
 }
 
+
+
+    
