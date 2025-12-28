@@ -23,6 +23,7 @@ export async function createUser(userData: {
   }
 
   const authEmail = userData.email;
+  const role = userData.role || 'User';
   
   const userRecord = await auth.createUser({
     email: authEmail,
@@ -31,6 +32,9 @@ export async function createUser(userData: {
     phoneNumber: `+91${userData.mobile}`
   });
 
+  // Immediately set custom claims for the user.
+  await auth.setCustomUserClaims(userRecord.uid, { role: role });
+
   try {
     await firestore.runTransaction(async (transaction) => {
       // --- ALL READS FIRST ---
@@ -38,8 +42,6 @@ export async function createUser(userData: {
       const counterDoc = await transaction.get(counterRef);
 
       // --- ALL WRITES AFTER READS ---
-      const role = userData.role || 'User';
-
       let nextNumber;
       let fieldToUpdate;
       let prefix;
