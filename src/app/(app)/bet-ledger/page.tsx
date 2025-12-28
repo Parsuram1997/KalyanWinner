@@ -201,7 +201,7 @@ export default function BetLedgerPage() {
                 </Popover>
             </div>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6 sm:pb-0">
+        <CardContent className="p-0 sm:p-6">
             {isPageLoading ? (
                 <div className="space-y-4 p-4">
                     <Skeleton className="h-20 w-full bg-white/20" />
