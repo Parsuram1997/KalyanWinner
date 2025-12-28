@@ -63,7 +63,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
       
       const payoutMultipliers = await createPayoutMultipliers(transaction, finalResultData.marketName);
       
-      const marketBetsQuery = firestore.collection('kalyan_bets').where('market', '==', finalResultData.marketName).where('status', '==', 'Placed').where('session', '==', 'Open');
+      const marketBetsQuery = firestore.collection('kalyan_bets').where('market', '==', finalResultData.marketName).where('status', '==', 'Placed');
       const betsSnapshot = await transaction.get(marketBetsQuery);
       
        const serverDate = new Date(finalResultData.date);
@@ -92,7 +92,7 @@ export async function createKalyanResult(resultData: KalyanResult) {
       
       todaysBets.forEach(doc => {
         const bet = doc.data();
-        if (bet.session === 'Jodi') return; // Skip Jodi bets on open result
+        if (bet.session !== 'Open') return;
 
         let winningAmount = 0;
         let isWinner = false;
@@ -202,7 +202,6 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
       todaysBets.forEach(doc => {
         const bet = doc.data();
         
-        // Skip bets that are not for the close session or jodi
         if (bet.session !== 'Close' && bet.session !== 'Jodi') return;
 
         let winningAmount = 0;
