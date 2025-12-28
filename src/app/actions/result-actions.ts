@@ -101,7 +101,9 @@ export async function createKalyanResult(resultData: KalyanResult) {
         if (multiplier) {
             switch (bet.gameType) {
                 case 'Single Digit':
-                    if (bet.session === 'Open' && openDigit && String(bet.number) === openDigit) isWinner = true;
+                    if (bet.session === 'Open' && openDigit && String(bet.number) === openDigit) {
+                        isWinner = true;
+                    }
                     break;
                 case 'Single Panna':
                 case 'Double Panna':
@@ -208,28 +210,30 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
         if (multiplier) {
             switch (bet.gameType) {
                 case 'Single Digit':
-                    if (closeDigit && bet.session === 'Close' && String(bet.number) === closeDigit) isWinner = true;
+                    if (bet.session === 'Close' && closeDigit && String(bet.number) === closeDigit) {
+                        isWinner = true;
+                    }
                     break;
                 case 'Single Panna': case 'Double Panna': case 'Triple Panna':
                     if (bet.session === 'Close' && mergedData.closePanna && String(bet.number) === mergedData.closePanna) isWinner = true;
                     break;
                 case 'Jodi':
-                    if (jodi && bet.session === 'Jodi' && String(bet.number) === jodi) isWinner = true;
+                    if (bet.session === 'Jodi' && jodi && String(bet.number) === jodi) isWinner = true;
                     break;
                 case 'Open Sangam':
-                    if (jodi && bet.session === 'Jodi') {
+                    if (bet.session === 'Jodi' && jodi) {
                         const [panna, digit] = String(bet.number).split('x');
                         if (panna === mergedData.openPanna && digit === closeDigit) isWinner = true;
                     }
                     break;
                 case 'Close Sangam':
-                    if (jodi && bet.session === 'Jodi') {
+                    if (bet.session === 'Jodi' && jodi) {
                         const [digit, panna] = String(bet.number).split('x');
                         if (digit === openDigit && panna === mergedData.closePanna) isWinner = true;
                     }
                     break;
                 case 'Full Sangam':
-                    if (jodi && bet.session === 'Jodi') {
+                    if (bet.session === 'Jodi' && jodi) {
                         const [openPannaSangam, closePannaSangam] = String(bet.number).split('x');
                         if (openPannaSangam === mergedData.openPanna && closePannaSangam === mergedData.closePanna) isWinner = true;
                     }
