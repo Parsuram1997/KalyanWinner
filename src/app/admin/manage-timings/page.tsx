@@ -253,19 +253,19 @@ export default function ManageTimingsPage() {
                     <CardContent className="px-4 pb-4 space-y-3 text-xs">
                         <div className="border-t border-white/20 pt-3">
                             <Label className="text-white/70">Active Days</Label>
-                            <p><DayDisplay days={market.days} /></p>
+                            <p className="text-white"><DayDisplay days={market.days} /></p>
                         </div>
                         <div>
                             <Label className="text-white/70">Result Timings</Label>
-                            <p>{market.openTime} - {market.closeTime}</p>
+                            <p className="text-white">{market.openTime} - {market.closeTime}</p>
                         </div>
                         <div>
                             <Label className="text-white/70">Bidding Timings</Label>
-                            <p>{market.openBiddingTime} - {market.closeBiddingTime}</p>
+                            <p className="text-white">{market.openBiddingTime} - {market.closeBiddingTime}</p>
                         </div>
                          <div>
                             <Label className="text-white/70">Result Freeze</Label>
-                            <p>{market.closeResultTime}</p>
+                            <p className="text-white">{market.closeResultTime}</p>
                         </div>
                     </CardContent>
                     <CardFooter className="bg-black/20 p-3 border-t border-white/10 flex justify-end">
