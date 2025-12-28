@@ -131,7 +131,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
+        <SidebarFooter className="mb-4">
           <SidebarSeparator />
           <UserNav />
         </SidebarFooter>
