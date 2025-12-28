@@ -201,7 +201,8 @@ export default function ManageMarketsPage() {
               </Dialog>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border border-white/20 text-sm">
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-md border border-white/20 text-sm">
             <Table>
               <TableHeader className="border-b border-white/20">
                 <TableRow>
@@ -251,6 +252,57 @@ export default function ManageMarketsPage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Mobile Cards */}
+           <div className="grid gap-4 md:hidden">
+              {isLoading ? <p className="text-center text-white/80 py-8">Loading...</p> : markets?.map((market) => (
+                <Card key={market.id} className="bg-black/20 border-white/20 text-white">
+                  <CardHeader>
+                      <div className="flex justify-between items-start">
+                          <CardTitle className="text-base">{market.name}</CardTitle>
+                           <Badge className={cn("text-xs", market.active ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>
+                              {market.active ? "Active" : "Inactive"}
+                          </Badge>
+                      </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between border-t border-white/20 pt-4">
+                          <span className="text-sm text-white/80">Custom Rates:</span>
+                          {market.rates && Object.keys(market.rates).length > 0 
+                            ? <Badge className="bg-yellow-400/20 text-yellow-300 border border-yellow-400">Yes</Badge> 
+                            : <Badge className="bg-gray-400/20 text-gray-300 border border-gray-400">No</Badge>}
+                      </div>
+                      <div className="flex items-center justify-between">
+                          <span className="text-sm text-white/80">Toggle Status</span>
+                          <Switch
+                            checked={!!market.active}
+                            onCheckedChange={() => toggleMarketStatus(market)}
+                            aria-label={`Toggle ${market.name} status`}
+                          />
+                      </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2 border-t border-white/20 pt-4">
+                       <Button variant="outline" size="sm" onClick={() => openEditDialog(market)} className="bg-transparent text-white hover:bg-white/10"><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-2"/>Delete</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>This will permanently delete the '{market.name}' market.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteMarket(market.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                  </CardFooter>
+                </Card>
+              ))}
+          </div>
+
         </CardContent>
       </Card>
       
