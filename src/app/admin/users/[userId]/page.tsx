@@ -201,49 +201,49 @@ export default function UserDetailsPage() {
             <Phone className="h-5 w-5 text-white/70" />
             <div>
               <p className="text-sm text-white/70">Mobile</p>
-              <p className="font-medium">{user.mobile}</p>
+              <p className="font-medium text-white">{user.mobile}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <MapPin className="h-5 w-5 text-white/70" />
             <div>
               <p className="text-sm text-white/70">State</p>
-              <p className="font-medium">{user.state}</p>
+              <p className="font-medium text-white">{user.state}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Map className="h-5 w-5 text-white/70" />
             <div>
               <p className="text-sm text-white/70">District</p>
-              <p className="font-medium">{user.district}</p>
+              <p className="font-medium text-white">{user.district}</p>
             </div>
           </div>
            <div className="flex items-center gap-3">
             <CalendarDays className="h-5 w-5 text-white/70" />
             <div>
               <p className="text-sm text-white/70">Joined On</p>
-              <p className="font-medium">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB') : 'N/A'}</p>
+              <p className="font-medium text-white">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB') : 'N/A'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Wallet className="h-5 w-5 text-white/70" />
             <div>
               <p className="text-sm text-white/70">Total Balance</p>
-              <p className="font-medium">₹{totalBalance.toFixed(2)}</p>
+              <p className="font-medium text-white">₹{totalBalance.toFixed(2)}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Wallet className="h-5 w-5 text-white/70" />
             <div>
               <p className="text-sm text-white/70">Deposit Balance</p>
-              <p className="font-medium">₹{(user.depositBalance || 0).toFixed(2)}</p>
+              <p className="font-medium text-white">₹{(user.depositBalance || 0).toFixed(2)}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Wallet className="h-5 w-5 text-white/70" />
             <div>
               <p className="text-sm text-white/70">Winning Balance</p>
-              <p className="font-medium">₹{(user.winningBalance || 0).toFixed(2)}</p>
+              <p className="font-medium text-white">₹{(user.winningBalance || 0).toFixed(2)}</p>
             </div>
           </div>
          
@@ -311,13 +311,13 @@ export default function UserDetailsPage() {
                         <TableBody>
                             {paginatedBets && paginatedBets.length > 0 ? paginatedBets.map((bet) => (
                             <TableRow key={bet.id} className="border-white/20">
-                                <TableCell className="py-2">{new Date(bet.createdAt.toDate()).toLocaleDateString('en-GB')}</TableCell>
-                                <TableCell className="py-2">{`${bet.gameType} (${bet.number})`}</TableCell>
-                                <TableCell className="py-2">{bet.market}</TableCell>
+                                <TableCell className="py-2 text-white/80">{new Date(bet.createdAt.toDate()).toLocaleDateString('en-GB')}</TableCell>
+                                <TableCell className="py-2 text-white">{`${bet.gameType} (${bet.number})`}</TableCell>
+                                <TableCell className="py-2 text-white">{bet.market}</TableCell>
                                 <TableCell className="py-2">
                                 <Badge variant={getStatusVariant(bet.status)}>{bet.status}</Badge>
                                 </TableCell>
-                                <TableCell className="text-right py-2">-₹{bet.amount.toFixed(2)}</TableCell>
+                                <TableCell className="text-right py-2 text-white">-₹{bet.amount.toFixed(2)}</TableCell>
                             </TableRow>
                             )) : (
                             <TableRow>
@@ -329,10 +329,10 @@ export default function UserDetailsPage() {
                     </div>
                      <div className="grid gap-4 md:hidden">
                         {!areBetsLoading && paginatedBets && paginatedBets.length > 0 ? paginatedBets.map((bet) => (
-                        <Card key={bet.id} className="p-4 text-xs bg-black/30 border-white/20">
+                        <Card key={bet.id} className="p-4 text-xs bg-black/30 border-white/20 text-white">
                             <div className="flex justify-between items-start mb-2">
                             <div>
-                                <p className="font-semibold">{`${bet.gameType} (${bet.number})`}</p>
+                                <p className="font-semibold text-white">{`${bet.gameType} (${bet.number})`}</p>
                                 <p className="text-white/70">{new Date(bet.createdAt.toDate()).toLocaleString('en-GB')}</p>
                             </div>
                             <Badge variant={getStatusVariant(bet.status)}>{bet.status}</Badge>
@@ -340,11 +340,11 @@ export default function UserDetailsPage() {
                             <div className="space-y-1 border-t border-white/20 pt-2">
                             <div className="flex justify-between">
                                 <span className="text-white/70">Market:</span>
-                                <span className="font-medium">{bet.market}</span>
+                                <span className="font-medium text-white">{bet.market}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-white/70">Amount:</span>
-                                <span className="font-medium">-₹{bet.amount.toFixed(2)}</span>
+                                <span className="font-medium text-white">-₹{bet.amount.toFixed(2)}</span>
                             </div>
                             </div>
                         </Card>
@@ -356,8 +356,8 @@ export default function UserDetailsPage() {
                  {totalBetPages > 1 && (
                     <CardFooter className="flex justify-end items-center gap-4 border-t border-white/20 pt-4">
                         <span className="text-sm text-white/70">Page {betCurrentPage} of {totalBetPages}</span>
-                        <Button variant="outline" size="sm" onClick={() => setBetCurrentPage(p => Math.max(p - 1, 1))} disabled={betCurrentPage === 1}>Previous</Button>
-                        <Button variant="outline" size="sm" onClick={() => setBetCurrentPage(p => Math.min(p + 1, totalBetPages))} disabled={betCurrentPage === totalBetPages}>Next</Button>
+                        <Button variant="outline" size="sm" onClick={() => setBetCurrentPage(p => Math.max(p - 1, 1))} disabled={betCurrentPage === 1} className="bg-transparent hover:bg-white/10">Previous</Button>
+                        <Button variant="outline" size="sm" onClick={() => setBetCurrentPage(p => Math.min(p + 1, totalBetPages))} disabled={betCurrentPage === totalBetPages} className="bg-transparent hover:bg-white/10">Next</Button>
                     </CardFooter>
                 )}
             </TabsContent>
@@ -378,11 +378,11 @@ export default function UserDetailsPage() {
                         <TableBody>
                             {paginatedTxns && paginatedTxns.length > 0 ? paginatedTxns.map((txn) => (
                             <TableRow key={txn.id} className="border-white/20">
-                                <TableCell className="py-2">{new Date(txn.date).toLocaleDateString('en-GB')}</TableCell>
+                                <TableCell className="py-2 text-white/80">{new Date(txn.date).toLocaleDateString('en-GB')}</TableCell>
                                 <TableCell className="py-2"><Badge variant={txn.type === 'Deposit' ? 'default' : 'outline'}>{txn.type}</Badge></TableCell>
                                 <TableCell className="py-2"><Badge variant={getStatusVariant(txn.status)}>{txn.status}</Badge></TableCell>
-                                <TableCell className="text-xs py-2">{txn.utr || txn.description || 'N/A'}</TableCell>
-                                <TableCell className="text-right font-mono py-2">₹{txn.amount.toFixed(2)}</TableCell>
+                                <TableCell className="text-xs py-2 text-white/80">{txn.utr || txn.description || 'N/A'}</TableCell>
+                                <TableCell className="text-right font-mono py-2 text-white">₹{txn.amount.toFixed(2)}</TableCell>
                             </TableRow>
                             )) : (
                             <TableRow>
@@ -394,10 +394,10 @@ export default function UserDetailsPage() {
                     </div>
                      <div className="grid gap-4 md:hidden">
                         {!areTxnsLoading && paginatedTxns && paginatedTxns.length > 0 ? paginatedTxns.map((txn) => (
-                        <Card key={txn.id} className="p-4 text-xs bg-black/30 border-white/20">
+                        <Card key={txn.id} className="p-4 text-xs bg-black/30 border-white/20 text-white">
                              <div className="flex justify-between items-start mb-2">
                                 <div>
-                                    <p className="font-semibold">{txn.type}</p>
+                                    <p className="font-semibold text-white">{txn.type}</p>
                                     <p className="text-white/70">{new Date(txn.date).toLocaleString('en-GB')}</p>
                                 </div>
                                 <Badge variant={getStatusVariant(txn.status)}>{txn.status}</Badge>
@@ -405,7 +405,7 @@ export default function UserDetailsPage() {
                             <div className="space-y-1 border-t border-white/20 pt-2">
                                <div className="flex justify-between">
                                     <span className="text-white/70">Amount:</span>
-                                    <span className="font-mono font-medium">₹{txn.amount.toFixed(2)}</span>
+                                    <span className="font-mono font-medium text-white">₹{txn.amount.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-white/70">Details:</span>
@@ -421,8 +421,8 @@ export default function UserDetailsPage() {
                  {totalTxnPages > 1 && (
                     <CardFooter className="flex justify-end items-center gap-4 border-t border-white/20 pt-4">
                         <span className="text-sm text-white/70">Page {txnCurrentPage} of {totalTxnPages}</span>
-                        <Button variant="outline" size="sm" onClick={() => setTxnCurrentPage(p => Math.max(p - 1, 1))} disabled={txnCurrentPage === 1}>Previous</Button>
-                        <Button variant="outline" size="sm" onClick={() => setTxnCurrentPage(p => Math.min(p + 1, totalTxnPages))} disabled={txnCurrentPage === totalTxnPages}>Next</Button>
+                        <Button variant="outline" size="sm" onClick={() => setTxnCurrentPage(p => Math.max(p - 1, 1))} disabled={txnCurrentPage === 1} className="bg-transparent hover:bg-white/10">Previous</Button>
+                        <Button variant="outline" size="sm" onClick={() => setTxnCurrentPage(p => Math.min(p + 1, totalTxnPages))} disabled={txnCurrentPage === totalTxnPages} className="bg-transparent hover:bg-white/10">Next</Button>
                     </CardFooter>
                 )}
             </TabsContent>
