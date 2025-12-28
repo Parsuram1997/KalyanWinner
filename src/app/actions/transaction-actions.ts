@@ -6,16 +6,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
 import { getPaymentSettings } from "./payment-settings-actions";
 
-/**
- * Manually deposits a specified amount into a user's account.
- * This is an admin-only operation.
- *
- * @param userId - The ID of the user to deposit funds for.
- * @param amount - The numerical amount to deposit.
- * @param remarks - A string comment or note about the transaction.
- * @returns An object indicating the success status and a message.
- */
-export async function manualDeposit(userId: string, amount: number, remarks: string) {
+export async function grantCredit(userId: string, amount: number, remarks: string) {
   if (!userId || !amount || amount <= 0) {
     throw new Error('Invalid userId or amount provided.');
   }
@@ -34,21 +25,19 @@ export async function manualDeposit(userId: string, amount: number, remarks: str
         throw new Error('User data is missing.');
       }
 
-
-      // Increment the user's deposit balance
       transaction.update(userRef, {
+        creditBalance: FieldValue.increment(amount),
         depositBalance: FieldValue.increment(amount),
       });
 
-      // Create a record of the transaction
       transaction.set(transactionRef, {
         userId: userId,
         userName: userData.name || 'Unknown User',
         amount: amount,
-        type: 'Deposit',
+        type: 'Credit',
         method: 'MANUAL',
         status: 'Completed',
-        description: remarks || 'Admin manual deposit',
+        description: remarks || 'Admin credit grant',
         date: new Date().toISOString(),
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
@@ -61,21 +50,138 @@ export async function manualDeposit(userId: string, amount: number, remarks: str
 
     return {
       success: true,
-      message: `Successfully deposited ₹${amount} for the user.`,
+      message: `Successfully granted ₹${amount} credit to the user.`,
     };
 
   } catch (error: any) {
-    console.error('Manual deposit failed:', error);
+    console.error('Grant credit failed:', error);
     throw new Error(error.message || 'An unexpected error occurred during the transaction.');
   }
 }
 
-/**
- * Creates a new transaction record, calculating fees server-side.
- *
- * @param data - The data for the new transaction.
- * @returns An object indicating the success status and a message.
- */
+export async function manualDeposit(userId: string, amount: number, remarks: string) {
+  if (!userId || !amount || amount <= 0) {
+    throw new Error('Invalid userId or amount provided.');
+  }
+
+  const userRef = firestore.collection('users').doc(userId);
+
+  try {
+    let message = '';
+    await firestore.runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists) throw new Error('User not found.');
+      const userData = userDoc.data()!;
+
+      const currentCredit = userData.creditBalance || 0;
+      let amountToRepay = 0;
+      let amountToDeposit = amount;
+
+      if (currentCredit > 0) {
+        amountToRepay = Math.min(amount, currentCredit);
+        amountToDeposit = amount - amountToRepay;
+
+        transaction.update(userRef, { 
+            creditBalance: FieldValue.increment(-amountToRepay)
+        });
+
+        const creditRepayTxRef = firestore.collection('transactions').doc();
+        transaction.set(creditRepayTxRef, {
+            userId, userName: userData.name, type: 'Credit Repayment', 
+            amount: amountToRepay, status: 'Completed', date: new Date().toISOString(),
+            description: `Repaid from manual deposit.`
+        });
+      }
+
+      if (amountToDeposit > 0) {
+          transaction.update(userRef, { depositBalance: FieldValue.increment(amountToDeposit) });
+      }
+
+      const depositTxRef = firestore.collection('transactions').doc();
+      transaction.set(depositTxRef, {
+          userId, userName: userData.name, type: 'Deposit', amount, 
+          method: 'MANUAL', status: 'Completed', date: new Date().toISOString(),
+          description: remarks
+      });
+      
+      message = `Deposited ₹${amount}. ` + (amountToRepay > 0 ? `₹${amountToRepay} was used to repay credit. ` : '') + `Balance updated.`;
+    });
+
+    revalidatePath('/admin/users');
+    revalidatePath(`/admin/users/${userId}`);
+    revalidatePath('/admin/transactions');
+
+    return { success: true, message };
+
+  } catch (error: any) {
+    console.error('Manual deposit failed:', error);
+    throw new Error(error.message || 'An unexpected error occurred.');
+  }
+}
+
+export async function manualWithdrawal(userId: string, amount: number, remarks: string) {
+  if (!userId || !amount || amount <= 0) {
+    throw new Error('Invalid userId or amount provided.');
+  }
+
+  const userRef = firestore.collection('users').doc(userId);
+  const transactionRef = firestore.collection('transactions').doc();
+
+  try {
+    const settings = await getPaymentSettings();
+    const withdrawalFeePercentage = parseFloat(String(settings?.withdrawalFeePercentage)) || 0;
+    const fee = (amount * withdrawalFeePercentage) / 100;
+    const netAmount = amount - fee;
+
+    await firestore.runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists) {
+        throw new Error('User not found.');
+      }
+      const userData = userDoc.data();
+      if (!userData) {
+        throw new Error('User data is missing.');
+      }
+
+      if (userData.winningBalance < amount) {
+        throw new Error('Insufficient winning balance for this withdrawal.');
+      }
+
+      transaction.update(userRef, {
+        winningBalance: FieldValue.increment(-amount),
+      });
+
+      transaction.set(transactionRef, {
+        userId: userId,
+        userName: userData.name || 'Unknown User',
+        amount: amount,
+        fee: fee,
+        netAmount: netAmount,
+        type: 'Withdrawal',
+        method: 'CASH',
+        status: 'Completed',
+        description: remarks || 'Admin manual withdrawal',
+        date: new Date().toISOString(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    });
+
+    revalidatePath('/admin/users');
+    revalidatePath(`/admin/users/${userId}`);
+    revalidatePath('/admin/transactions');
+
+    return {
+      success: true,
+      message: `Withdrew ₹${amount}. Fee: ₹${fee.toFixed(2)}. Net Paid: ₹${netAmount.toFixed(2)}. Balance updated.`,
+    };
+
+  } catch (error: any) {
+    console.error('Manual withdrawal failed:', error);
+    throw new Error(error.message || 'An unexpected error occurred during the transaction.');
+  }
+}
+
 export async function createTransaction(data: {
     userId: string;
     userName: string;
@@ -129,7 +235,7 @@ export async function createTransaction(data: {
         await transactionRef.set({
             userId,
             userName,
-            amount, // Gross amount
+            amount,
             type,
             status,
             utr: utr || null,
@@ -155,13 +261,6 @@ export async function createTransaction(data: {
     }
 }
 
-/**
- * Updates the status of a transaction and applies balance changes.
- *
- * @param transactionId - The ID of the transaction to update.
- * @param status - The new status: 'Completed' or 'Rejected'.
- * @returns An object indicating the success status and a message.
- */
 export async function updateTransactionStatus(transactionId: string, status: 'Completed' | 'Rejected') {
     if (!transactionId || !status) {
         throw new Error('Invalid transactionId or status provided.');
@@ -188,10 +287,7 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
                 if (!userDoc.exists) {
                     throw new Error('User associated with the transaction not found.');
                 }
-                const userData = userDoc.data();
-                if (!userData) {
-                    throw new Error("Could not retrieve user data.");
-                }
+                const userData = userDoc.data()!;
 
                 if (transactionData.type === 'Withdrawal') {
                     const withdrawalAmount = transactionData.amount;
@@ -202,11 +298,34 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
 
                 } else if (transactionData.type === 'Deposit') {
                     const netDepositAmount = transactionData.netAmount;
-                    t.update(userRef, { depositBalance: FieldValue.increment(netDepositAmount) });
+                    const currentCredit = userData.creditBalance || 0;
+                    let amountToRepay = 0;
+                    let amountToDeposit = netDepositAmount;
+
+                    if (currentCredit > 0) {
+                        amountToRepay = Math.min(netDepositAmount, currentCredit);
+                        amountToDeposit = netDepositAmount - amountToRepay;
+
+                        if (amountToRepay > 0) {
+                            t.update(userRef, { 
+                                creditBalance: FieldValue.increment(-amountToRepay)
+                            });
+
+                            const creditRepayTxRef = firestore.collection('transactions').doc();
+                            t.set(creditRepayTxRef, {
+                                userId: transactionData.userId, userName: userData.name, type: 'Credit Repayment', 
+                                amount: amountToRepay, status: 'Completed', date: new Date().toISOString(),
+                                description: `Repaid from user deposit (UTR: ${transactionData.utr}).`
+                            });
+                        }
+                    }
+
+                    if (amountToDeposit > 0) {
+                        t.update(userRef, { depositBalance: FieldValue.increment(amountToDeposit) });
+                    }
                 }
             }
             
-            // For both 'Completed' and 'Rejected', update the transaction status
             t.update(transactionRef, {
                 status: status,
                 updatedAt: FieldValue.serverTimestamp(),
@@ -228,12 +347,6 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
     }
 }
 
-/**
- * Deletes a transaction and reverts balance changes if it was completed.
- *
- * @param transactionId - The ID of the transaction to delete.
- * @returns An object indicating the success status and a message.
- */
 export async function deleteTransaction(transactionId: string) {
     if (!transactionId) {
         throw new Error('Transaction ID is required.');

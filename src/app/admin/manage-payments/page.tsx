@@ -1,4 +1,4 @@
- 
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -52,7 +52,17 @@ export default function ManagePaymentsPage() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await updatePaymentSettings(settings);
+            const settingsToSave = { ...settings };
+            Object.keys(settingsToSave).forEach(keyStr => {
+                const key = keyStr as keyof PaymentSettings;
+                const value = settingsToSave[key];
+                if (value === '') {
+                    delete settingsToSave[key];
+                } else if (typeof value === 'string' && !isNaN(parseFloat(value))) {
+                    (settingsToSave[key] as any) = parseFloat(value);
+                }
+            });
+            await updatePaymentSettings(settingsToSave);
             toast({ title: "Settings updated successfully" });
         } catch (error) {
             toast({ variant: "destructive", title: "Failed to update settings" });
@@ -62,11 +72,12 @@ export default function ManagePaymentsPage() {
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        const isFee = name.includes('FeePercentage');
-        const parsedValue = isFee ? value : parseInt(value, 10);
-
-        setSettings(prev => ({ ...prev, [name]: isNaN(parsedValue as number) && !isFee ? '' : parsedValue }));
+        const { name, value, type } = e.target;
+        if (type === 'number') {
+            setSettings(prev => ({ ...prev, [name]: value }));
+        } else {
+            setSettings(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const renderInput = (id: keyof PaymentSettings, label: string, icon?: React.ReactNode, type = "text") => (
