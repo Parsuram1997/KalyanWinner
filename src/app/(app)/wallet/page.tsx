@@ -36,7 +36,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // Type for user balance data
 type UserBalance = {
@@ -298,9 +298,9 @@ export default function WalletPage() {
                   <div className="md:hidden grid gap-3 px-2 sm:px-0">
                     {recentTransactions.map((tx) => (
                       <Card key={tx.id} className="bg-black/20 border-white/20">
-                          <CardHeader className="p-3 pb-2">
-                            <div className="flex flex-row items-center justify-between">
-                                <CardTitle className="text-sm">{tx.type}</CardTitle>
+                          <div className="p-3 pb-2">
+                            <div className="flex justify-between items-start">
+                                <p className="text-sm font-semibold">{tx.type}</p>
                                 <Badge
                                   variant={null}
                                   className={cn(
@@ -315,7 +315,7 @@ export default function WalletPage() {
                                 </Badge>
                             </div>
                             <p className="text-xs text-white/70 pt-1">{new Date(tx.date).toLocaleString()}</p>
-                          </CardHeader>
+                          </div>
                           <CardContent className="p-3 pt-2">
                               <div className="flex items-end justify-between mt-2 pt-2 border-t border-white/20">
                                 <p className="text-xs text-white/80 max-w-[70%]">{tx.description}</p>
@@ -345,3 +345,4 @@ export default function WalletPage() {
     </div>
   );
 }
+
