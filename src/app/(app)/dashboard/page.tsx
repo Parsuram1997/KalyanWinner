@@ -163,7 +163,7 @@ const LedgerCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivity
     <CardHeader>
         <CardTitle>My Ledger</CardTitle>
     </CardHeader>
-    <CardContent className="p-0 sm:p-6">
+    <CardContent className="p-0 sm:p-6 sm:pb-0">
         {isActivityLoading ? <Skeleton className="h-40 w-full bg-white/20" /> : sortedRecentActivity && sortedRecentActivity.length > 0 ? (
         <>
             <div className="hidden md:block">
@@ -232,7 +232,7 @@ const LedgerCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivity
                 </div>
             ))}
             </div>
-             <div className="flex justify-end items-center gap-4 pt-4 px-4 sm:px-0">
+             <div className="flex justify-end items-center gap-4 pt-4 px-4 sm:px-0 pb-4">
                 <span className="text-sm text-white/80">
                     Page {currentPage} of {totalPages}
                 </span>
@@ -447,6 +447,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
-    
