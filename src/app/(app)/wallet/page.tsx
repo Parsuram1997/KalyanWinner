@@ -311,36 +311,38 @@ export default function WalletPage() {
                   {/* Mobile Cards */}
                   <div className="md:hidden grid gap-3">
                     {paginatedTransactions.map((tx) => (
-                      <Card key={tx.id} className="bg-black/20 border-white/20 text-white p-3">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-semibold text-white">{tx.type}</p>
-                                <p className="text-xs text-white/70">{new Date(tx.date).toLocaleString()}</p>
-                            </div>
-                            <Badge
-                              variant={null}
-                              className={cn(
-                                  "text-xs",
-                                  tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
-                                  tx.status === 'Pending' ? "bg-white text-primary" :
-                                  tx.status === 'Rejected' ? "bg-red-400 text-white" :
-                                  "bg-transparent border border-white/50 text-white/80"
+                      <Card key={tx.id} className="bg-black/20 border-white/20 text-white py-3 px-1">
+                          <div className="flex justify-between items-start">
+                              <div>
+                                  <p className="text-sm font-semibold text-white">{tx.type}</p>
+                                  <p className="text-xs text-white/70">{new Date(tx.date).toLocaleString()}</p>
+                              </div>
+                              <Badge
+                                variant={null}
+                                className={cn(
+                                    "text-xs",
+                                    tx.status === 'Completed' || tx.status === 'Approved' ? "bg-white/20 text-white" :
+                                    tx.status === 'Pending' ? "bg-white text-primary" :
+                                    tx.status === 'Rejected' ? "bg-red-400 text-white" :
+                                    "bg-transparent border border-white/50 text-white/80"
+                                )}
+                              >
+                                {tx.status}
+                              </Badge>
+                          </div>
+                          <div className="space-y-1">
+                              <div className="flex items-end justify-between">
+                                  <p className="text-xs text-white/80 max-w-[70%]">{tx.description}</p>
+                                  <span className={cn('font-mono font-semibold text-lg', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
+                                    {tx.type === 'Deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                                  </span>
+                              </div>
+                              {tx.status === 'Completed' && tx.fee !== undefined && tx.netAmount !== undefined && (
+                                  <div className="text-right text-white/80 text-[10px]">
+                                      (Fee: ₹{tx.fee.toLocaleString('en-IN')} | Net: ₹{tx.netAmount.toLocaleString('en-IN')})
+                                  </div>
                               )}
-                            >
-                              {tx.status}
-                            </Badge>
-                        </div>
-                        <div className="flex items-end justify-between">
-                            <p className="text-xs text-white/80 max-w-[70%]">{tx.description}</p>
-                            <span className={cn('font-mono font-semibold text-lg', tx.type === 'Deposit' ? 'text-green-400' : 'text-red-400')}>
-                              {tx.type === 'Deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
-                            </span>
-                        </div>
-                        {tx.status === 'Completed' && tx.fee !== undefined && tx.netAmount !== undefined && (
-                            <div className="text-right text-white/80 text-[10px] mt-1">
-                                (Fee: ₹{tx.fee.toLocaleString('en-IN')} | Net: ₹{tx.netAmount.toLocaleString('en-IN')})
-                            </div>
-                        )}
+                          </div>
                       </Card>
                     ))}
                   </div>
