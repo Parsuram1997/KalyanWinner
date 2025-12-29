@@ -56,7 +56,7 @@ type Transaction = {
     userId: string;
     userName: string;
     customId?: string;
-    type: "Deposit" | "Withdrawal";
+    type: "Deposit" | "Withdrawal" | "Win" | "Credit" | "Credit Repayment";
     amount: number;
     status: "Pending" | "Approved" | "Rejected" | "Completed";
     date: string;
@@ -106,7 +106,7 @@ const TransactionTable = ({
     isLoading: boolean, 
     userIdToCustomIdMap: { [key: string]: string },
     onShowDetails: (userId: string) => void,
-    onConfirmAction: (details: { txnId: string, newStatus: 'Completed' | 'Rejected', type: 'Deposit' | 'Withdrawal' }) => void,
+    onConfirmAction: (details: { txnId: string, newStatus: 'Completed' | 'Rejected', type: Transaction['type'] }) => void,
     onDelete: (txn: Transaction) => void
 }) => {
     if (isLoading) {
@@ -135,7 +135,7 @@ const TransactionTable = ({
                 <TableHeader className="border-b border-white/20">
                     <TableRow>
                         <TableHead className="text-white">User</TableHead>
-                        <TableHead className="text-white">Amount Details</TableHead>
+                        <TableHead className="text-white">Type & Amount</TableHead>
                         <TableHead className="text-white">Date</TableHead>
                         <TableHead className="text-white">Details (UTR)</TableHead>
                         <TableHead className="text-white">Status</TableHead>
@@ -151,7 +151,8 @@ const TransactionTable = ({
                             </TableCell>
                             <TableCell className="py-2 text-xs">
                                 <div className="font-mono">
-                                    <div>Amount: <span className="font-semibold text-white">₹{txn.amount.toLocaleString('en-IN')}</span></div>
+                                    <Badge variant={txn.type === "Deposit" || txn.type === "Win" || txn.type === "Credit" ? "secondary" : "destructive"}>{txn.type}</Badge>
+                                    <div className="mt-1">Amount: <span className="font-semibold text-white">₹{txn.amount.toLocaleString('en-IN')}</span></div>
                                     {txn.fee !== undefined && <div>Fee: <span className="font-semibold text-white">₹{txn.fee.toLocaleString('en-IN')}</span></div>}
                                     {txn.netAmount !== undefined && <div className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></div>}
                                 </div>
@@ -222,7 +223,7 @@ const TransactionTable = ({
                         <div className="mt-4 pt-4 border-t border-white/20 space-y-3">
                             <div className="flex justify-between items-center text-xs">
                                 <span className="text-white/80">Type:</span>
-                                <Badge variant={txn.type === "Deposit" ? "secondary" : "outline"} className="font-medium text-xs">
+                                <Badge variant={txn.type === "Deposit" || txn.type === "Win" || txn.type === "Credit" ? "secondary" : "destructive"} className="font-medium text-xs">
                                     {txn.type}
                                 </Badge>
                             </div>
@@ -279,14 +280,14 @@ export default function TransactionsPage() {
   const firestore = useFirestore();
   const [key, setKey] = useState(0); 
   const [paymentDetails, setPaymentDetails] = useState<User | null>(null);
-  const [confirmation, setConfirmation] = useState<{ txnId: string, newStatus: 'Completed' | 'Rejected', type: 'Deposit' | 'Withdrawal' } | null>(null);
+  const [confirmation, setConfirmation] = useState<{ txnId: string, newStatus: 'Completed' | 'Rejected', type: Transaction['type'] } | null>(null);
   const [utr, setUtr] = useState("");
 
   const transactionsQuery = useMemoFirebase(
     () => firestore 
             ? query(
                 collection(firestore, 'transactions'), 
-                where('type', 'in', ['Deposit', 'Withdrawal']),
+                where('type', 'in', ['Deposit', 'Withdrawal', 'Win', 'Credit', 'Credit Repayment']),
                 orderBy('date', 'desc')
               )
             : null,
