@@ -63,9 +63,12 @@ export default function AdminDashboardPage() {
         
         // Corrected Deposit Fee Calculation
         const depositFeeTransactions = allTransactions.filter(t => 
-            (t.type === 'Deposit' || t.type === 'Credit' || t.description?.includes('Manual deposit')) && t.status === 'Completed'
+            (t.type === 'Deposit' || t.type === 'Credit') && t.status === 'Completed'
         );
         const totalDepositFee = depositFeeTransactions.reduce((sum, t) => sum + (t.fee || 0), 0);
+        
+        const creditTransactions = allTransactions.filter(t => t.type === 'Credit' && t.status === 'Completed');
+        const totalCreditFee = creditTransactions.reduce((sum, t) => sum + (t.fee || 0), 0);
 
         const totalWithdrawalFee = completedWithdrawals.reduce((sum, t) => sum + (t.fee || 0), 0);
 
@@ -87,6 +90,7 @@ export default function AdminDashboardPage() {
             totalBetTypes: allBetTypes.length.toString(),
             totalDepositFee: formatCurrency(totalDepositFee),
             totalWithdrawalFee: formatCurrency(totalWithdrawalFee),
+            totalCreditFee: formatCurrency(totalCreditFee),
         }
     }, [users, transactions, markets, betTypes, paymentSettings]);
 
@@ -107,6 +111,7 @@ export default function AdminDashboardPage() {
       { name: "Total Deposit", value: stats.totalDeposit, icon: ArrowUpCircle },
       { name: "Total Withdrawal", value: stats.totalWithdrawal, icon: ArrowDownCircle },
       { name: "Total Deposit Fee", value: stats.totalDepositFee, icon: TrendingUp },
+      { name: "Total Credit Fee", value: stats.totalCreditFee, icon: TrendingUp },
       { name: "Total Withdrawal Fee", value: stats.totalWithdrawalFee, icon: TrendingDown },
     ];
 
