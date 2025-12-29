@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Wallet, ArrowUpCircle, ArrowDownCircle, Hourglass, UserPlus, Store, Settings, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, Wallet, ArrowUpCircle, ArrowDownCircle, Hourglass, UserPlus, Store, Settings, TrendingUp, TrendingDown, CreditCard } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -80,6 +80,7 @@ export default function AdminDashboardPage() {
             usersByAdmin: allUsers.filter(u => u.createdBy === 'Admin').length.toString(),
             usersBySelf: allUsers.filter(u => u.createdBy === 'Self' || !u.createdBy).length.toString(),
             allUserWalletBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.depositBalance || 0) + (u.winningBalance || 0), 0)),
+            totalCreditBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.creditBalance || 0), 0)),
             totalDeposit: formatCurrency(completedDeposits.reduce((sum, t) => sum + t.amount, 0)),
             totalWithdrawal: formatCurrency(completedWithdrawals.reduce((sum, t) => sum + t.amount, 0)),
             pendingDepositAmount: formatCurrency(pendingDeposits.reduce((sum, t) => sum + t.amount, 0)),
@@ -101,9 +102,10 @@ export default function AdminDashboardPage() {
       { name: "Total Users", value: stats.totalUsers, icon: Users },
       { name: "Users by Admin", value: stats.usersByAdmin, icon: UserPlus },
       { name: "Self-Registered Users", value: stats.usersBySelf, icon: UserPlus },
+      { name: "Total Credit Balance", value: stats.totalCreditBalance, icon: CreditCard },
+      { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
       { name: "Total Markets", value: stats.totalMarkets, icon: Store },
       { name: "Total Bet Types", value: stats.totalBetTypes, icon: Settings },
-      { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
       { name: "Total Deposit", value: stats.totalDeposit, icon: ArrowUpCircle },
       { name: "Total Withdrawal", value: stats.totalWithdrawal, icon: ArrowDownCircle },
       { name: "Total Deposit Fee", value: stats.totalDepositFee, icon: TrendingUp },
