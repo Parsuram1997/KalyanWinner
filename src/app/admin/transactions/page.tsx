@@ -216,17 +216,13 @@ const TransactionTable = ({
                                 <p className="text-xs text-white/80">{getCustomId(txn)}</p>
                                 <p className="text-xs text-white/80 mt-1">{new Date(txn.date).toLocaleString()}</p>
                             </div>
-                            <Badge className={cn('text-xs', getStatusClasses(txn.status))}>
-                                {txn.status}
-                            </Badge>
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-white/20 space-y-3">
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-white/80">Type:</span>
-                                <Badge variant={txn.type === "Deposit" || txn.type === "Win" || txn.type === "Credit" ? "secondary" : "destructive"} className="font-medium text-xs">
+                            <div className="text-right">
+                               <Badge variant={txn.type === "Deposit" || txn.type === "Win" || txn.type === "Credit" ? "secondary" : "destructive"} className="font-medium text-xs">
                                     {txn.type}
                                 </Badge>
                             </div>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-white/20 space-y-3">
                             <div className="text-xs font-mono">
                                 <div className="flex justify-between"><span>Amount:</span><span className="font-semibold">₹{txn.amount.toLocaleString('en-IN')}</span></div>
                                 {txn.fee !== undefined && <div className="flex justify-between"><span>Fee:</span><span className="font-semibold">₹{txn.fee.toLocaleString('en-IN')}</span></div>}
@@ -243,6 +239,12 @@ const TransactionTable = ({
                                         {txn.utr || txn.description || 'N/A'}
                                     </span>
                                 )}
+                            </div>
+                             <div className="flex justify-between items-center text-xs">
+                                <span className="text-white/80">Status:</span>
+                                <Badge className={cn('text-xs', getStatusClasses(txn.status))}>
+                                    {txn.status}
+                                </Badge>
                             </div>
                         </div>
                     </CardContent>
