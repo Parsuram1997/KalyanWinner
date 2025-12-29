@@ -24,10 +24,11 @@ import { useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase
 import { collection, query, where, doc, orderBy, Timestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useTransition, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { updateUserStatus } from "@/app/actions/user-actions";
 import { manualDeposit, manualWithdrawal, grantCredit } from "@/app/actions/transaction-actions";
+import { getPaymentSettings } from "@/app/actions/payment-settings-actions";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -41,6 +42,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator";
 
 
 const ITEMS_PER_PAGE = 50;
@@ -70,17 +72,24 @@ function ManualTransactionDialog({
     userId, 
     userName, 
     action, 
+    withdrawalFeePercentage,
     children 
 } : {
     userId: string,
     userName: string,
     action: 'deposit' | 'withdraw' | 'credit',
+    withdrawalFeePercentage: number,
     children: React.ReactNode
 }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [remarks, setRemarks] = useState("");
   const [isPending, startTransition] = useTransition();
+  
+  const numericAmount = parseFloat(amount) || 0;
+  const fee = action === 'withdraw' ? (numericAmount * withdrawalFeePercentage) / 100 : 0;
+  const netAmount = numericAmount - fee;
+
 
   const handleAction = async () => {
     if (!userId || !amount) return;
@@ -147,6 +156,19 @@ function ManualTransactionDialog({
                         placeholder="Enter amount in ₹"
                     />
                 </div>
+                {action === 'withdraw' && numericAmount > 0 && (
+                  <Card className="col-span-4 bg-gray-800 border-gray-700 p-3 text-xs space-y-2">
+                      <div className="flex justify-between">
+                          <span className="text-white/70">Withdrawal Fee ({withdrawalFeePercentage}%):</span>
+                          <span>- ₹{fee.toFixed(2)}</span>
+                      </div>
+                      <Separator className="bg-white/20"/>
+                      <div className="flex justify-between font-bold">
+                          <span>Net Payable to User:</span>
+                          <span className="text-green-400">₹{netAmount.toFixed(2)}</span>
+                      </div>
+                  </Card>
+                )}
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="remarks" className="text-right">Remarks</Label>
                     <Input 
@@ -176,6 +198,8 @@ export default function UserDetailsPage() {
   const [isStatusPending, startStatusTransition] = useTransition();
   const [betCurrentPage, setBetCurrentPage] = useState(1);
   const [txnCurrentPage, setTxnCurrentPage] = useState(1);
+  const [paymentSettings, setPaymentSettings] = useState({ withdrawalFeePercentage: 0 });
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   
   const userQuery = useMemoFirebase(() => {
     if (!firestore || !userId) return null;
@@ -192,6 +216,23 @@ export default function UserDetailsPage() {
   }, [firestore, userDocId]);
 
   const { data: user, isLoading: isUserLoading } = useDoc<any>(userRef);
+
+  useEffect(() => {
+      const fetchSettings = async () => {
+          setIsLoadingSettings(true);
+          try {
+              const settings = await getPaymentSettings();
+              setPaymentSettings({
+                  withdrawalFeePercentage: settings?.withdrawalFeePercentage || 0,
+              });
+          } catch (e) {
+              toast({ variant: "destructive", title: "Could not load settings." });
+          } finally {
+              setIsLoadingSettings(false);
+          }
+      };
+      fetchSettings();
+  }, []);
 
   const betsQuery = useMemoFirebase(() => {
       if (!firestore || !userDocId) return null;
@@ -251,7 +292,7 @@ export default function UserDetailsPage() {
   }, [userBets]);
 
 
-  const isLoading = isUserQueryLoading || isUserLoading || areBetsLoading || areTxnsLoading;
+  const isLoading = isUserQueryLoading || isUserLoading || areBetsLoading || areTxnsLoading || isLoadingSettings;
   
   const handleStatusChange = () => {
     if (!userDocId || !user) return;
@@ -365,19 +406,19 @@ export default function UserDetailsPage() {
             <div className="flex gap-2">
                  {userDocId && (
                     <>
-                        <ManualTransactionDialog userId={userDocId} userName={user.name} action="deposit">
+                        <ManualTransactionDialog userId={userDocId} userName={user.name} action="deposit" withdrawalFeePercentage={0}>
                             <Button variant="secondary" size="sm" className="px-3 md:px-4">
                                 <PiggyBank className="h-4 w-4 md:mr-2" />
                                 <span className="hidden md:inline">Deposit</span>
                             </Button>
                         </ManualTransactionDialog>
-                        <ManualTransactionDialog userId={userDocId} userName={user.name} action="credit">
+                        <ManualTransactionDialog userId={userDocId} userName={user.name} action="credit" withdrawalFeePercentage={0}>
                              <Button variant="secondary" size="sm" className="px-3 md:px-4">
                                 <CreditCard className="h-4 w-4 md:mr-2" />
                                 <span className="hidden md:inline">Credit</span>
                             </Button>
                         </ManualTransactionDialog>
-                        <ManualTransactionDialog userId={userDocId} userName={user.name} action="withdraw">
+                        <ManualTransactionDialog userId={userDocId} userName={user.name} action="withdraw" withdrawalFeePercentage={paymentSettings.withdrawalFeePercentage}>
                             <Button variant="destructive" size="sm" className="px-3 md:px-4">
                                 <ArrowRightLeft className="h-4 w-4 md:mr-2" />
                                 <span className="hidden md:inline">Manual Withdraw</span>
