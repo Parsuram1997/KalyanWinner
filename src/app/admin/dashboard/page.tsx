@@ -62,8 +62,9 @@ export default function AdminDashboardPage() {
         const completedWithdrawals = allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Completed');
         
         const creditTransactions = allTransactions.filter(t => t.type === 'Credit' && t.status === 'Completed');
+        const creditRepayTransactions = allTransactions.filter(t => t.type === 'Credit Repayment' && t.status === 'Completed');
+        
         const totalCreditFee = creditTransactions.reduce((sum, t) => sum + (t.fee || 0), 0);
-
         const totalDepositFee = completedDeposits.reduce((sum, t) => sum + (t.fee || 0), 0);
         const totalWithdrawalFee = completedWithdrawals.reduce((sum, t) => sum + (t.fee || 0), 0);
 
@@ -74,7 +75,9 @@ export default function AdminDashboardPage() {
             allUserWalletBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.depositBalance || 0) + (u.winningBalance || 0), 0)),
             totalDepositBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.depositBalance || 0), 0)),
             totalWinningBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.winningBalance || 0), 0)),
-            totalCreditBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.creditBalance || 0), 0)),
+            totalCreditOutstanding: formatCurrency(allUsers.reduce((sum, u) => sum + (u.creditBalance || 0), 0)),
+            totalCreditGiven: formatCurrency(creditTransactions.reduce((sum, t) => sum + t.amount, 0)),
+            totalCreditRepaid: formatCurrency(creditRepayTransactions.reduce((sum, t) => sum + t.amount, 0)),
             totalDeposit: formatCurrency(completedDeposits.reduce((sum, t) => sum + t.amount, 0)),
             totalWithdrawal: formatCurrency(completedWithdrawals.reduce((sum, t) => sum + t.amount, 0)),
             pendingDepositAmount: formatCurrency(pendingDeposits.reduce((sum, t) => sum + t.amount, 0)),
@@ -84,8 +87,8 @@ export default function AdminDashboardPage() {
             totalMarkets: allMarkets.length.toString(),
             totalBetTypes: allBetTypes.length.toString(),
             totalDepositFee: formatCurrency(totalDepositFee),
-            totalWithdrawalFee: formatCurrency(totalWithdrawalFee),
             totalCreditFee: formatCurrency(totalCreditFee),
+            totalWithdrawalFee: formatCurrency(totalWithdrawalFee),
         }
     }, [users, transactions, markets, betTypes, paymentSettings]);
 
@@ -100,7 +103,9 @@ export default function AdminDashboardPage() {
       { name: "Total Deposit Balance", value: stats.totalDepositBalance, icon: PiggyBank },
       { name: "Total Winning Balance", value: stats.totalWinningBalance, icon: Trophy },
       { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
-      { name: "Total Credit Balance", value: stats.totalCreditBalance, icon: CreditCard },
+      { name: "Total Credit Outstanding", value: stats.totalCreditOutstanding, icon: CreditCard },
+      { name: "Total Credit Given", value: stats.totalCreditGiven, icon: TrendingUp },
+      { name: "Total Credit Repaid", value: stats.totalCreditRepaid, icon: TrendingDown },
       { name: "Total Markets", value: stats.totalMarkets, icon: Store },
       { name: "Total Bet Types", value: stats.totalBetTypes, icon: Settings },
       { name: "Total Deposit", value: stats.totalDeposit, icon: ArrowUpCircle },
