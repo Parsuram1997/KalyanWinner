@@ -53,7 +53,7 @@ import { createUser, deleteUser, updateUser } from "@/app/actions/user-actions";
 import { states, districts } from "@/lib/locations";
 import { cn } from "@/lib/utils";
 
-const USERS_PER_PAGE = 10;
+const USERS_PER_PAGE = 25;
 
 export default function ManageUsersPage() {
   const firestore = useFirestore();
