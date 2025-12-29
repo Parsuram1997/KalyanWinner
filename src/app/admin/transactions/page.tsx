@@ -156,8 +156,13 @@ const TransactionTable = ({
                                 <div className="font-mono">
                                     <Badge variant={txn.type === "Deposit" || txn.type === "Win" || txn.type === "Credit" ? "secondary" : "destructive"}>{txn.type}</Badge>
                                     <div className="mt-1">Amount: <span className="font-semibold text-white">₹{Math.abs(txn.amount).toLocaleString('en-IN')}</span></div>
-                                    {txn.fee !== undefined && <div>Fee: <span className="font-semibold text-white">₹{txn.fee.toLocaleString('en-IN')}</span></div>}
-                                    {txn.netAmount !== undefined && <div className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></div>}
+                                    {(txn.fee !== undefined || txn.netAmount !== undefined) && (
+                                        <div className="flex items-center gap-2">
+                                            {txn.fee !== undefined && <span>Fee: <span className="font-semibold text-white">₹{txn.fee.toLocaleString('en-IN')}</span></span>}
+                                            {(txn.fee !== undefined && txn.netAmount !== undefined) && <Separator orientation="vertical" className="h-4 bg-white/30" />}
+                                            {txn.netAmount !== undefined && <span className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></span>}
+                                        </div>
+                                    )}
                                 </div>
                             </TableCell>
                            <TableCell className="py-2 text-xs max-w-[200px]">
@@ -226,18 +231,16 @@ const TransactionTable = ({
                             </div>
                         </div>
                         <div className="mt-4 pt-4 border-t border-white/20 space-y-3">
-                            <div className="text-xs font-mono space-y-1">
-                                <div className="flex justify-between"><span>Amount:</span><span className="font-semibold">₹{Math.abs(txn.amount).toLocaleString('en-IN')}</span></div>
-                                {(txn.fee !== undefined || txn.netAmount !== undefined) && (
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-2">
-                                            {txn.fee !== undefined && <span>Fee: <span className="font-semibold">₹{txn.fee.toLocaleString('en-IN')}</span></span>}
-                                            {(txn.fee !== undefined && txn.netAmount !== undefined) && <Separator orientation="vertical" className="h-4 bg-white/30" />}
-                                            {txn.netAmount !== undefined && <span className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></span>}
-                                        </div>
+                            <div className="text-xs font-mono flex justify-between"><span>Amount:</span><span className="font-semibold">₹{Math.abs(txn.amount).toLocaleString('en-IN')}</span></div>
+                            {(txn.fee !== undefined || txn.netAmount !== undefined) && (
+                                <div className="flex justify-between items-center text-xs font-mono">
+                                    <div className="flex items-center gap-2">
+                                        {txn.fee !== undefined && <span>Fee: <span className="font-semibold">₹{txn.fee.toLocaleString('en-IN')}</span></span>}
+                                        {(txn.fee !== undefined && txn.netAmount !== undefined) && <Separator orientation="vertical" className="h-4 bg-white/30" />}
+                                        {txn.netAmount !== undefined && <span className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></span>}
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                             <div className="flex justify-between items-center text-xs">
                                 <span className="text-white/80 mr-2">Details:</span>
                                 {txn.type === 'Withdrawal' ? (
