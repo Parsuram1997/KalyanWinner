@@ -71,6 +71,7 @@ type User = {
     customId: string;
     name: string;
     phoneNumber?: string;
+    mobile?: string; // Added for compatibility
     paymentMethod?: 'bank' | 'upi';
     bankName?: string;
     accountHolderName?: string;
@@ -412,9 +413,9 @@ export default function TransactionsPage() {
                             <div className="grid grid-cols-2 items-center gap-4">
                                 <span className="text-muted-foreground">Contact</span>
                                 <span className="font-medium">
-                                    {paymentDetails.phoneNumber ? (
-                                        <a href={`tel:${paymentDetails.phoneNumber}`} className="text-blue-600 hover:underline">
-                                            {paymentDetails.phoneNumber}
+                                    {paymentDetails.mobile ? (
+                                        <a href={`tel:${paymentDetails.mobile}`} className="text-blue-600 hover:underline">
+                                            {paymentDetails.mobile}
                                         </a>
                                     ) : (
                                         'Not Available'
