@@ -77,6 +77,11 @@ export async function manualDeposit(userId: string, amount: number, remarks: str
   const userRef = firestore.collection('users').doc(userId);
 
   try {
+    const settings = await getPaymentSettings();
+    const depositFeePercentage = parseFloat(String(settings?.depositFeePercentage)) || 0;
+    const fee = (amount * depositFeePercentage) / 100;
+    const netAmount = amount - fee;
+
     let message = '';
     await firestore.runTransaction(async (transaction) => {
       const userDoc = await transaction.get(userRef);
@@ -85,22 +90,24 @@ export async function manualDeposit(userId: string, amount: number, remarks: str
 
       const currentCredit = userData.creditBalance || 0;
       let amountToRepay = 0;
-      let amountToDeposit = amount;
+      let amountToDeposit = netAmount; // Use netAmount for calculations
 
       if (currentCredit > 0) {
-        amountToRepay = Math.min(amount, currentCredit);
-        amountToDeposit = amount - amountToRepay;
+        amountToRepay = Math.min(netAmount, currentCredit);
+        amountToDeposit = netAmount - amountToRepay;
 
-        transaction.update(userRef, { 
-            creditBalance: FieldValue.increment(-amountToRepay)
-        });
+        if (amountToRepay > 0) {
+            transaction.update(userRef, { 
+                creditBalance: FieldValue.increment(-amountToRepay)
+            });
 
-        const creditRepayTxRef = firestore.collection('transactions').doc();
-        transaction.set(creditRepayTxRef, {
-            userId, userName: userData.name, type: 'Credit Repayment', 
-            amount: amountToRepay, status: 'Completed', date: new Date().toISOString(),
-            description: `Repaid from manual deposit.`
-        });
+            const creditRepayTxRef = firestore.collection('transactions').doc();
+            transaction.set(creditRepayTxRef, {
+                userId, userName: userData.name, type: 'Credit Repayment', 
+                amount: amountToRepay, status: 'Completed', date: new Date().toISOString(),
+                description: `Repaid from manual deposit.`
+            });
+        }
       }
 
       if (amountToDeposit > 0) {
@@ -110,11 +117,13 @@ export async function manualDeposit(userId: string, amount: number, remarks: str
       const depositTxRef = firestore.collection('transactions').doc();
       transaction.set(depositTxRef, {
           userId, userName: userData.name, type: 'Deposit', amount, 
+          fee: fee,
+          netAmount: netAmount,
           method: 'MANUAL', status: 'Completed', date: new Date().toISOString(),
           description: remarks
       });
       
-      message = `Deposited ₹${amount}. ` + (amountToRepay > 0 ? `₹${amountToRepay} was used to repay credit. ` : '') + `Balance updated.`;
+      message = `Deposited ₹${amount} (Net: ₹${netAmount}). ` + (amountToRepay > 0 ? `₹${amountToRepay} was used to repay credit. ` : '') + `Balance updated.`;
     });
 
     revalidatePath('/admin/users');
