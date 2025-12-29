@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -49,8 +49,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { updateBet, deleteBet } from "@/app/actions/bet-actions";
+import { updateBet, deleteBet, deleteMultipleBets } from "@/app/actions/bet-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Bet = {
     id: string;
@@ -107,6 +108,7 @@ export default function BetLedgerPage() {
   
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
+  const [selectedBets, setSelectedBets] = useState<string[]>([]);
 
   const [day, setDay] = useState<string | undefined>(() => date.getDate().toString());
   const [month, setMonth] = useState<string | undefined>(() => date.getMonth().toString());
@@ -164,6 +166,10 @@ export default function BetLedgerPage() {
     );
   }, [betsForSelectedDate, searchTerm]);
 
+  useEffect(() => {
+    setSelectedBets([]);
+  }, [currentPage, filteredBets]);
+
 
   const totalPages = Math.ceil((filteredBets?.length || 0) / ITEMS_PER_PAGE);
   const paginatedData = useMemo(() => {
@@ -202,6 +208,16 @@ export default function BetLedgerPage() {
       }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      await deleteMultipleBets(selectedBets);
+      toast({ title: `${selectedBets.length} Bets Deleted Successfully` });
+      setSelectedBets([]);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Bulk Deletion Failed", description: error.message });
+    }
+  };
+
   const isBetEditable = (bet: Bet) => {
       const result = resultsMap.get(bet.market);
       if (!result) return true; // No result for this market today, so editable.
@@ -238,6 +254,16 @@ export default function BetLedgerPage() {
     setCurrentPage(1);
     setPopoverOpen(false);
   }
+
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked) {
+      setSelectedBets(paginatedData.map(bet => bet.id));
+    } else {
+      setSelectedBets([]);
+    }
+  };
+
+  const isAllSelected = paginatedData.length > 0 && selectedBets.length === paginatedData.length;
 
 
   return (
@@ -303,11 +329,40 @@ export default function BetLedgerPage() {
           </div>
         </CardHeader>
         <CardContent>
+            {selectedBets.length > 0 && (
+                <div className="mb-4 flex items-center justify-between p-3 bg-black/20 rounded-md">
+                    <span className="text-sm font-medium">{selectedBets.length} bet(s) selected</span>
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete Selected
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Delete {selectedBets.length} Bets?</AlertDialogTitle>
+                                <AlertDialogDescription>This action is irreversible and will permanently delete the selected bets.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleBulkDelete}>Confirm Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            )}
             {/* Desktop Table */}
             <div className="hidden md:block rounded-md border border-white/20 text-sm">
             <Table>
                 <TableHeader className="border-b border-white/20">
                 <TableRow>
+                    <TableHead className="w-12 py-2">
+                        <Checkbox 
+                            checked={isAllSelected}
+                            onCheckedChange={handleSelectAll}
+                            aria-label="Select all bets on this page"
+                        />
+                    </TableHead>
                     <TableHead className="py-2 text-white">User</TableHead>
                     <TableHead className="py-2 text-white">Market & Game</TableHead>
                     <TableHead className="py-2 text-white">Number</TableHead>
@@ -320,13 +375,24 @@ export default function BetLedgerPage() {
                 <TableBody>
                 {isLoading && Array.from({ length: 10 }).map((_, i) => (
                     <TableRow key={i} className="border-white/20">
-                        <TableCell colSpan={7} className="py-2"><Skeleton className="h-6 w-full bg-white/20" /></TableCell>
+                        <TableCell colSpan={8} className="py-2"><Skeleton className="h-6 w-full bg-white/20" /></TableCell>
                     </TableRow>
                 ))}
                 {!isLoading && paginatedData.map((bet) => {
                     const editable = isBetEditable(bet);
                     return (
-                        <TableRow key={bet.id} className="border-white/20">
+                        <TableRow key={bet.id} className="border-white/20" data-state={selectedBets.includes(bet.id) ? "selected" : ""}>
+                            <TableCell className="py-2">
+                                <Checkbox
+                                    checked={selectedBets.includes(bet.id)}
+                                    onCheckedChange={(checked) => {
+                                        setSelectedBets(prev => 
+                                            checked ? [...prev, bet.id] : prev.filter(id => id !== bet.id)
+                                        );
+                                    }}
+                                    aria-label={`Select bet ${bet.id}`}
+                                />
+                            </TableCell>
                             <TableCell className="py-2 font-medium text-white">{bet.userName}</TableCell>
                             <TableCell className="py-2">
                                 <div className="text-white">{bet.market}</div>
@@ -376,11 +442,22 @@ export default function BetLedgerPage() {
             {!isLoading && paginatedData.map((bet) => {
                  const editable = isBetEditable(bet);
                  return (
-                    <Card key={bet.id} className="p-3 text-sm bg-black/20 border-white/20 text-white">
+                    <Card key={bet.id} className={cn("p-3 text-sm bg-black/20 border-white/20 text-white", selectedBets.includes(bet.id) && "border-primary")}>
                     <div className="flex justify-between items-start mb-3">
-                        <div>
-                            <p className="font-semibold text-white">{bet.userName}</p>
-                            <p className="text-xs text-white/80">{bet.createdAt.toDate().toLocaleString()}</p>
+                        <div className="flex items-center gap-3">
+                             <Checkbox
+                                checked={selectedBets.includes(bet.id)}
+                                onCheckedChange={(checked) => {
+                                    setSelectedBets(prev => 
+                                        checked ? [...prev, bet.id] : prev.filter(id => id !== bet.id)
+                                    );
+                                }}
+                                aria-label={`Select bet ${bet.id}`}
+                            />
+                            <div>
+                                <p className="font-semibold text-white">{bet.userName}</p>
+                                <p className="text-xs text-white/80">{bet.createdAt.toDate().toLocaleString()}</p>
+                            </div>
                         </div>
                         <Badge className={cn('text-xs', getStatusClasses(bet.status))}>{bet.status}</Badge>
                     </div>
@@ -489,3 +566,4 @@ export default function BetLedgerPage() {
     </div>
   );
 }
+

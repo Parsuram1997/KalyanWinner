@@ -26,3 +26,22 @@ export async function deleteBet(betId: string) {
     throw new Error(error.message || "Failed to delete bet.");
   }
 }
+
+export async function deleteMultipleBets(betIds: string[]) {
+  if (!betIds || betIds.length === 0) {
+    throw new Error("No bet IDs provided for deletion.");
+  }
+  try {
+    const batch = firestore.batch();
+    betIds.forEach(id => {
+      const betRef = firestore.collection("kalyan_bets").doc(id);
+      batch.delete(betRef);
+    });
+    await batch.commit();
+    revalidatePath("/admin/bet-ledger", "page");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting multiple bets:", error);
+    throw new Error(error.message || "Failed to delete bets.");
+  }
+}
