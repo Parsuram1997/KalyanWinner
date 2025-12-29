@@ -50,6 +50,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 type Transaction = {
     id: string;
@@ -157,7 +158,7 @@ const TransactionTable = ({
                                     {txn.netAmount !== undefined && <div className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></div>}
                                 </div>
                             </TableCell>
-                            <TableCell className="py-2 text-xs max-w-[200px]">
+                           <TableCell className="py-2 text-xs max-w-[200px]">
                                 <div className="text-white">{new Date(txn.date).toLocaleString()}</div>
                                 {txn.type === 'Withdrawal' ? (
                                      <Button variant="link" size="xs" className="text-blue-400 p-0 h-auto" onClick={() => onShowDetails(txn.userId)}>
@@ -223,10 +224,15 @@ const TransactionTable = ({
                             </div>
                         </div>
                         <div className="mt-4 pt-4 border-t border-white/20 space-y-3">
-                            <div className="text-xs font-mono">
+                            <div className="text-xs font-mono space-y-1">
                                 <div className="flex justify-between"><span>Amount:</span><span className="font-semibold">₹{Math.abs(txn.amount).toLocaleString('en-IN')}</span></div>
-                                {txn.fee !== undefined && <div className="flex justify-between"><span>Fee:</span><span className="font-semibold">₹{txn.fee.toLocaleString('en-IN')}</span></div>}
-                                {txn.netAmount !== undefined && <div className="flex justify-between text-green-300"><span>Net:</span><span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></div>}
+                                {(txn.fee !== undefined || txn.netAmount !== undefined) && (
+                                    <div className="flex justify-between items-center">
+                                        {txn.fee !== undefined && <span>Fee: <span className="font-semibold">₹{txn.fee.toLocaleString('en-IN')}</span></span>}
+                                        {(txn.fee !== undefined && txn.netAmount !== undefined) && <Separator orientation="vertical" className="h-4 mx-2 bg-white/30" />}
+                                        {txn.netAmount !== undefined && <span className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></span>}
+                                    </div>
+                                )}
                             </div>
                             <div className="flex justify-between items-center text-xs">
                                 <span className="text-white/80 mr-2">Details:</span>
@@ -495,5 +501,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
-    
