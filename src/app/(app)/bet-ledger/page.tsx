@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -252,7 +253,7 @@ export default function BetLedgerPage() {
                     {/* Mobile Cards */}
                     <div className="grid gap-4 md:hidden px-4 pb-4">
                         {paginatedBets.map((bet) => (
-                            <Card key={bet.id} className="p-4 bg-black/20 border-white/20 text-xs">
+                            <Card key={bet.id} className="p-4 bg-black/20 border-white/20 text-xs text-white">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <p className="font-semibold">{bet.market}</p>
@@ -267,7 +268,7 @@ export default function BetLedgerPage() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-white/80">Number:</span>
-                                        <span className="font-mono font-bold text-base">{bet.number}</span>
+                                        <span className="font-mono font-bold text-lg">{bet.number}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-white/80">Bet:</span>
