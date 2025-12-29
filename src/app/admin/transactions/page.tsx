@@ -56,9 +56,9 @@ type Transaction = {
     userId: string;
     userName: string;
     customId?: string;
-    type: "Deposit" | "Withdrawal" | "Win" | "Credit" | "Credit Repayment";
+    type: "Deposit" | "Withdrawal" | "Win" | "Credit" | "Credit Repayment" | "Bet";
     amount: number;
-    status: "Pending" | "Approved" | "Rejected" | "Completed";
+    status: "Pending" | "Approved" | "Rejected" | "Completed" | "Placed";
     date: string;
     utr?: string;
     description?: string;
@@ -84,6 +84,7 @@ const getStatusClasses = (status: Transaction['status']) => {
     switch (status) {
         case 'Completed':
         case 'Approved':
+        case 'Placed':
             return 'bg-green-400/20 text-green-300 border border-green-400';
         case 'Pending':
             return 'bg-blue-400/20 text-blue-300 border border-blue-400';
@@ -152,7 +153,7 @@ const TransactionTable = ({
                             <TableCell className="py-2 text-xs">
                                 <div className="font-mono">
                                     <Badge variant={txn.type === "Deposit" || txn.type === "Win" || txn.type === "Credit" ? "secondary" : "destructive"}>{txn.type}</Badge>
-                                    <div className="mt-1">Amount: <span className="font-semibold text-white">₹{txn.amount.toLocaleString('en-IN')}</span></div>
+                                    <div className="mt-1">Amount: <span className="font-semibold text-white">₹{Math.abs(txn.amount).toLocaleString('en-IN')}</span></div>
                                     {txn.fee !== undefined && <div>Fee: <span className="font-semibold text-white">₹{txn.fee.toLocaleString('en-IN')}</span></div>}
                                     {txn.netAmount !== undefined && <div className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></div>}
                                 </div>
@@ -224,7 +225,7 @@ const TransactionTable = ({
                         </div>
                         <div className="mt-4 pt-4 border-t border-white/20 space-y-3">
                             <div className="text-xs font-mono">
-                                <div className="flex justify-between"><span>Amount:</span><span className="font-semibold">₹{txn.amount.toLocaleString('en-IN')}</span></div>
+                                <div className="flex justify-between"><span>Amount:</span><span className="font-semibold">₹{Math.abs(txn.amount).toLocaleString('en-IN')}</span></div>
                                 {txn.fee !== undefined && <div className="flex justify-between"><span>Fee:</span><span className="font-semibold">₹{txn.fee.toLocaleString('en-IN')}</span></div>}
                                 {txn.netAmount !== undefined && <div className="flex justify-between text-green-300"><span>Net:</span><span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></div>}
                             </div>
@@ -289,7 +290,7 @@ export default function TransactionsPage() {
     () => firestore 
             ? query(
                 collection(firestore, 'transactions'), 
-                where('type', 'in', ['Deposit', 'Withdrawal', 'Win', 'Credit', 'Credit Repayment']),
+                where('type', 'in', ['Deposit', 'Withdrawal', 'Win', 'Credit', 'Credit Repayment', 'Bet']),
                 orderBy('date', 'desc')
               )
             : null,
@@ -413,8 +414,8 @@ export default function TransactionsPage() {
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4 text-sm">
-                            <div className="grid grid-cols-2 items-center gap-4">
-                                <span className="text-muted-foreground">Contact</span>
+                             <div className="grid grid-cols-2 items-center gap-4">
+                                <span className="text-muted-foreground">Mobile</span>
                                 <span className="font-medium">
                                     {paymentDetails.mobile ? (
                                         <a href={`tel:${paymentDetails.mobile}`} className="text-blue-600 hover:underline">
