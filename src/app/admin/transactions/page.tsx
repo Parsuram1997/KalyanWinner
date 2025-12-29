@@ -139,8 +139,8 @@ const TransactionTable = ({
                         <TableHead className="text-white">Type & Amount</TableHead>
                         <TableHead className="text-white">Date</TableHead>
                         <TableHead className="text-white">Details (UTR)</TableHead>
-                        <TableHead className="text-white">Status</TableHead>
-                        <TableHead className="text-right text-white">Actions</TableHead>
+                        <TableHead className="text-center text-white">Status</TableHead>
+                        <TableHead className="text-center text-white">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -170,13 +170,13 @@ const TransactionTable = ({
                                     </span>
                                 )}
                             </TableCell>
-                           <TableCell className="py-2">
+                           <TableCell className="py-2 text-center">
                                 <Badge className={cn('text-xs', getStatusClasses(txn.status))}>
                                     {txn.status}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="py-2">
-                                <div className="flex gap-2 justify-end">
+                            <TableCell className="py-2 text-center">
+                                <div className="flex gap-2 justify-center">
                                 {txn.status === "Pending" && (
                                     <>
                                         <Button variant="outline" size="xs" className="bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => onConfirmAction({ txnId: txn.id, newStatus: 'Completed', type: txn.type })}>Approve</Button>
