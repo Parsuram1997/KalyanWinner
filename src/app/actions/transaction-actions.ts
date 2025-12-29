@@ -386,9 +386,15 @@ export async function deleteTransaction(transactionId: string) {
             if (transactionData.status === 'Completed') {
                 const userRef = firestore.collection('users').doc(transactionData.userId);
                 if (transactionData.type === 'Deposit') {
-                    t.update(userRef, { depositBalance: FieldValue.increment(-transactionData.netAmount) });
+                    // Fallback for older transactions that may not have netAmount
+                    const amountToRevert = transactionData.netAmount ?? transactionData.amount;
+                    if (typeof amountToRevert === 'number') {
+                        t.update(userRef, { depositBalance: FieldValue.increment(-amountToRevert) });
+                    }
                 } else if (transactionData.type === 'Withdrawal') {
-                    t.update(userRef, { winningBalance: FieldValue.increment(transactionData.amount) });
+                     if (typeof transactionData.amount === 'number') {
+                        t.update(userRef, { winningBalance: FieldValue.increment(transactionData.amount) });
+                    }
                 }
             }
 
