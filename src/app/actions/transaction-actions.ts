@@ -15,6 +15,11 @@ export async function grantCredit(userId: string, amount: number, remarks: strin
   const transactionRef = firestore.collection('transactions').doc();
 
   try {
+    const settings = await getPaymentSettings();
+    const depositFeePercentage = parseFloat(String(settings?.depositFeePercentage)) || 0;
+    const fee = (amount * depositFeePercentage) / 100;
+    const netAmount = amount - fee;
+
     await firestore.runTransaction(async (transaction) => {
       const userDoc = await transaction.get(userRef);
       if (!userDoc.exists) {
@@ -25,15 +30,20 @@ export async function grantCredit(userId: string, amount: number, remarks: strin
         throw new Error('User data is missing.');
       }
 
+      // User owes the full amount.
       transaction.update(userRef, {
         creditBalance: FieldValue.increment(amount),
-        depositBalance: FieldValue.increment(amount),
+        // But only the net amount after fee is playable.
+        depositBalance: FieldValue.increment(netAmount),
       });
 
+      // Record the transaction with fee details.
       transaction.set(transactionRef, {
         userId: userId,
         userName: userData.name || 'Unknown User',
         amount: amount,
+        fee: fee,
+        netAmount: netAmount,
         type: 'Credit',
         method: 'MANUAL',
         status: 'Completed',
@@ -50,7 +60,7 @@ export async function grantCredit(userId: string, amount: number, remarks: strin
 
     return {
       success: true,
-      message: `Successfully granted ₹${amount} credit to the user.`,
+      message: `Successfully granted ₹${amount} credit to the user. A fee of ₹${fee.toFixed(2)} was applied, and ₹${netAmount.toFixed(2)} was added to the deposit balance.`,
     };
 
   } catch (error: any) {
