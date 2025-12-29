@@ -60,20 +60,11 @@ export default function AdminDashboardPage() {
         
         const completedDeposits = allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Completed');
         const completedWithdrawals = allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Completed');
+        const completedCredits = allTransactions.filter(t => t.type === 'Credit' && t.status === 'Completed');
 
-        const depositFeePercentage = paymentSettings?.depositFeePercentage || 0;
-        const withdrawalFeePercentage = paymentSettings?.withdrawalFeePercentage || 0;
-
-        const totalDepositFee = completedDeposits.reduce((sum, t) => {
-            const fee = (t.amount * depositFeePercentage) / 100;
-            return sum + fee;
-        }, 0);
-
-        const totalWithdrawalFee = completedWithdrawals.reduce((sum, t) => {
-            const fee = (t.amount * withdrawalFeePercentage) / 100;
-            return sum + fee;
-        }, 0);
-
+        const totalDepositFee = completedDeposits.reduce((sum, t) => sum + (t.fee || 0), 0);
+        const totalWithdrawalFee = completedWithdrawals.reduce((sum, t) => sum + (t.fee || 0), 0);
+        const totalCreditFee = completedCredits.reduce((sum, t) => sum + (t.fee || 0), 0);
 
         return {
             totalUsers: allUsers.length.toString(),
@@ -91,6 +82,7 @@ export default function AdminDashboardPage() {
             totalBetTypes: allBetTypes.length.toString(),
             totalDepositFee: formatCurrency(totalDepositFee),
             totalWithdrawalFee: formatCurrency(totalWithdrawalFee),
+            totalCreditFee: formatCurrency(totalCreditFee),
         }
     }, [users, transactions, markets, betTypes, paymentSettings]);
 
@@ -110,6 +102,7 @@ export default function AdminDashboardPage() {
       { name: "Total Withdrawal", value: stats.totalWithdrawal, icon: ArrowDownCircle },
       { name: "Total Deposit Fee", value: stats.totalDepositFee, icon: TrendingUp },
       { name: "Total Withdrawal Fee", value: stats.totalWithdrawalFee, icon: TrendingDown },
+      { name: "Total Credit Fee", value: stats.totalCreditFee, icon: TrendingUp },
     ];
 
 
