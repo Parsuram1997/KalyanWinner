@@ -192,6 +192,15 @@ export default function WalletPage() {
       }
   }
 
+  const getTransactionStatusClasses = (status: Transaction['status']) => {
+    switch (status) {
+        case 'Completed': return 'bg-green-400/20 text-green-300 border border-green-400';
+        case 'Pending': return 'bg-yellow-400/20 text-yellow-300 border border-yellow-400';
+        case 'Rejected': return 'bg-red-400/20 text-red-300 border border-red-400';
+        default: return 'bg-gray-400/20 text-gray-300 border border-gray-400';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="wallet" className="w-full">
@@ -275,7 +284,6 @@ export default function WalletPage() {
 
         </TabsContent>
         <TabsContent value="activity" className="mt-4">
-            {/* ... Passbook/Activity content is largely the same, but we update the styling logic */}
             <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0">
                 <CardHeader><h3 className="text-lg font-semibold text-white">Passbook</h3></CardHeader>
                 <CardContent>
@@ -287,6 +295,7 @@ export default function WalletPage() {
                     </div>
                 ) : paginatedTransactions.length > 0 ? (
                     <>
+                    {/* Desktop Table */}
                     <div className="hidden md:block rounded-md border border-white/20">
                         <Table>
                         <TableHeader className="border-b-white/20">
@@ -305,16 +314,34 @@ export default function WalletPage() {
                                 <TableCell className={cn('py-2 font-mono font-semibold', getTransactionTypeStyle(tx.type))}>
                                 {tx.type.includes('Repayment') || tx.type === 'Withdrawal' ? '-' : '+'}₹{tx.amount.toLocaleString('en-IN')}
                                 </TableCell>
-                                <TableCell className="py-2"><Badge variant={null} className={/*...*/'text-xs'}>{tx.status}</Badge></TableCell>
+                                <TableCell className="py-2">
+                                  <Badge variant={null} className={cn('text-xs', getTransactionStatusClasses(tx.status))}>
+                                      {tx.status}
+                                  </Badge>
+                                </TableCell>
                             </TableRow>
                             ))}
                         </TableBody>
                         </Table>
                     </div>
+                    
+                    {/* Mobile Cards */}
                     <div className="md:hidden grid gap-3">
                         {paginatedTransactions.map((tx) => (
-                        <Card key={tx.id} className="bg-black/20 border-white/20 text-white py-3">
-                            {/* ... Mobile card view with updated styles */}
+                        <Card key={tx.id} className="bg-black/20 border-white/20 text-white p-3">
+                           <div className="flex justify-between items-start mb-2">
+                                <div>
+                                    <p className="font-semibold text-sm">{tx.description}</p>
+                                    <p className="text-xs text-white/70">{new Date(tx.date).toLocaleString()}</p>
+                                </div>
+                                <Badge variant={null} className={cn('text-xs', getTransactionStatusClasses(tx.status))}>{tx.status}</Badge>
+                            </div>
+                           <div className="flex justify-between items-center border-t border-white/20 pt-2">
+                                <span className="text-sm">Amount:</span>
+                                <span className={cn('font-mono font-semibold', getTransactionTypeStyle(tx.type))}>
+                                  {tx.type.includes('Repayment') || tx.type === 'Withdrawal' ? '-' : '+'}₹{tx.amount.toLocaleString('en-IN')}
+                                </span>
+                           </div>
                         </Card>
                         ))}
                     </div>
@@ -324,7 +351,27 @@ export default function WalletPage() {
                 )}
                 </CardContent>
                 {totalPages > 1 && (
-                    <CardFooter className="flex items-center justify-between pt-6">{/* ... Pagination ... */}</CardFooter>
+                    <CardFooter className="flex items-center justify-between pt-6 border-t border-white/20 mt-4">
+                      <Button
+                          variant="outline"
+                          className="bg-transparent text-white hover:bg-white/10"
+                          onClick={() => setCurrentPage(p => p - 1)}
+                          disabled={currentPage === 1}
+                      >
+                          Previous
+                      </Button>
+                      <span className="text-sm font-semibold">
+                          Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                          variant="outline"
+                          className="bg-transparent text-white hover:bg-white/10"
+                          onClick={() => setCurrentPage(p => p + 1)}
+                          disabled={currentPage === totalPages}
+                      >
+                          Next
+                      </Button>
+                    </CardFooter>
                 )}
             </Card>
         </TabsContent>
