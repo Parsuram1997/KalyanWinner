@@ -137,8 +137,7 @@ const TransactionTable = ({
                     <TableRow>
                         <TableHead className="text-white">User</TableHead>
                         <TableHead className="text-white">Type & Amount</TableHead>
-                        <TableHead className="text-white">Date</TableHead>
-                        <TableHead className="text-white">Details (UTR)</TableHead>
+                        <TableHead className="text-white">Date &amp; Details</TableHead>
                         <TableHead className="text-center text-white">Status</TableHead>
                         <TableHead className="text-center text-white">Actions</TableHead>
                     </TableRow>
@@ -158,16 +157,16 @@ const TransactionTable = ({
                                     {txn.netAmount !== undefined && <div className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></div>}
                                 </div>
                             </TableCell>
-                            <TableCell className="py-2 text-xs">{new Date(txn.date).toLocaleString()}</TableCell>
-                            <TableCell className="py-2 text-xs max-w-[150px]">
+                            <TableCell className="py-2 text-xs max-w-[200px]">
+                                <div className="text-white">{new Date(txn.date).toLocaleString()}</div>
                                 {txn.type === 'Withdrawal' ? (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10 hover:text-white" onClick={() => onShowDetails(txn.userId)}>
-                                        <Eye className="h-4 w-4" />
+                                     <Button variant="link" size="xs" className="text-blue-400 p-0 h-auto" onClick={() => onShowDetails(txn.userId)}>
+                                        View Bank Details
                                     </Button>
                                 ) : (
-                                    <span className="truncate" title={txn.utr || txn.description}>
+                                    <div className="text-white/70 truncate" title={txn.utr || txn.description}>
                                         {txn.utr || txn.description || 'N/A'}
-                                    </span>
+                                    </div>
                                 )}
                             </TableCell>
                            <TableCell className="py-2 text-center">
@@ -232,8 +231,8 @@ const TransactionTable = ({
                             <div className="flex justify-between items-center text-xs">
                                 <span className="text-white/80 mr-2">Details:</span>
                                 {txn.type === 'Withdrawal' ? (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10 hover:text-white -mr-2" onClick={() => onShowDetails(txn.userId)}>
-                                        <Eye className="h-4 w-4" />
+                                    <Button variant="link" size="xs" className="p-0 h-auto text-blue-400" onClick={() => onShowDetails(txn.userId)}>
+                                        View Details <Eye className="ml-1 h-3 w-3" />
                                     </Button>
                                 ) : (
                                     <span className="font-mono text-xs text-right truncate" title={txn.utr || txn.description}>
@@ -496,3 +495,5 @@ export default function TransactionsPage() {
     </div>
   );
 }
+
+    
