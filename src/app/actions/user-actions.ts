@@ -1,284 +1,196 @@
-
 'use server';
 
-import { auth, firestore } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from 'next/cache';
+import { firestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { auth } from '@/lib/firebase-admin';
+
+// Function to generate a unique custom ID
+async function generateUniqueCustomId() {
+    let customId;
+    let isUnique = false;
+    while (!isUnique) {
+        // Generate a random 6-digit number
+        customId = Math.floor(100000 + Math.random() * 900000).toString();
+        const userQuery = await firestore.collection('users').where('customId', '==', customId).get();
+        if (userQuery.empty) {
+            isUnique = true;
+        }
+    }
+    return customId;
+}
 
 
 export async function createUser(userData: {
-  name: string;
-  mobile: string;
-  email: string;
-  state: string;
-  district: string;
-  password: any;
-  role?: 'User' | 'Admin';
-  createdBy?: 'Admin' | 'Self';
+    name: string;
+    mobile: string;
+    email: string;
+    state: string;
+    district: string;
+    password?: string;
+    role: 'User';
+    createdBy: 'Admin';
 }) {
-  
-  const mobileQuery = await firestore.collection("users").where("mobile", "==", userData.mobile).get();
-  if (!mobileQuery.empty) {
-      throw new Error("A user with this mobile number already exists.");
-  }
-
-  const authEmail = userData.email;
-  const role = userData.role || 'User';
-  
-  const userRecord = await auth.createUser({
-    email: authEmail,
-    password: userData.password,
-    displayName: userData.name,
-    phoneNumber: `+91${userData.mobile}`
-  });
-
-  // Immediately set custom claims for the user.
-  await auth.setCustomUserClaims(userRecord.uid, { role: role });
-
-  try {
-    await firestore.runTransaction(async (transaction) => {
-      // --- ALL READS FIRST ---
-      const counterRef = firestore.collection('counters').doc('user_ids');
-      const counterDoc = await transaction.get(counterRef);
-
-      // --- ALL WRITES AFTER READS ---
-      let nextNumber;
-      let fieldToUpdate;
-      let prefix;
-
-      const counterData = counterDoc.exists ? counterDoc.data() : {};
-
-      if (role === 'Admin') {
-          nextNumber = (counterData?.lastAdminNumber || 0) + 1;
-          fieldToUpdate = 'lastAdminNumber';
-          prefix = 'KWADM';
-      } else { // 'User'
-          nextNumber = (counterData?.lastUserNumber || 0) + 1;
-          fieldToUpdate = 'lastUserNumber';
-          prefix = 'KWUSR';
-      }
-
-      if (counterDoc.exists) {
-          transaction.update(counterRef, { [fieldToUpdate]: FieldValue.increment(1) });
-      } else {
-          const initialCounters: {[key: string]: any} = { lastUserNumber: 0, lastAdminNumber: 0 };
-          initialCounters[fieldToUpdate] = 1;
-          transaction.set(counterRef, initialCounters);
-      }
-      
-      const customId = `${prefix}${String(nextNumber).padStart(4, '0')}`;
-      
-      const userProfile: any = {
-        id: userRecord.uid,
-        customId: customId,
-        name: userData.name,
-        mobile: userData.mobile,
-        email: authEmail,
-        state: userData.state,
-        district: userData.district,
-        depositBalance: 0,
-        winningBalance: 0,
-        totalDeposits: 0,
-        totalWithdrawals: 0,
-        status: "Active",
-        role: role, 
-        createdAt: new Date().toISOString(),
-        createdBy: userData.createdBy || 'Self',
-      };
-
-      transaction.set(firestore.collection("users").doc(userRecord.uid), userProfile);
-    });
-
-    revalidatePath('/admin/users');
-    revalidatePath('/admin/admins');
-    return { success: true, userId: userRecord.uid };
-
-  } catch (error: any) {
-    await auth.deleteUser(userRecord.uid);
-    console.error("Error creating user profile in transaction:", error);
-    let errorMessage = "An unexpected error occurred during profile creation.";
-    if (error.message) {
-        errorMessage = error.message;
+    if (!userData.email || !userData.password) {
+        throw new Error('Email and password are required to create a user.');
     }
-    throw new Error(errorMessage);
-  }
+
+    try {
+        // Create user in Firebase Authentication
+        const userRecord = await auth.createUser({
+            email: userData.email,
+            password: userData.password,
+            displayName: userData.name,
+            disabled: false,
+        });
+
+        // Generate a unique custom ID
+        const customId = await generateUniqueCustomId();
+
+        // Prepare user data for Firestore
+        const userDocData = {
+            ...userData,
+            uid: userRecord.uid,
+            customId: customId,
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+            status: 'Active',
+            depositBalance: 0,
+            winningBalance: 0,
+            creditBalance: 0,
+        };
+        
+        // Remove password from the data to be stored in Firestore
+        delete userDocData.password;
+
+        // Add user to Firestore
+        await firestore.collection('users').doc(userRecord.uid).set(userDocData);
+
+        revalidatePath('/admin/users');
+
+        return {
+            success: true,
+            message: 'User created successfully.',
+            user: {
+                id: userRecord.uid,
+                ...userDocData,
+            },
+        };
+    } catch (error: any) {
+        console.error('Error creating user:', error);
+        throw new Error(error.message || 'An unknown error occurred while creating the user.');
+    }
 }
 
 
-export async function updateUser(userId: string, userData: {
-  name?: string;
-  email?: string;
-  state?: string;
-  district?: string;
+export async function updateUser(userId: string, updatedData: {
+    name?: string;
+    email?: string;
+    state?: string;
+    district?: string;
 }) {
-  try {
-    const updateData: any = {};
-    if (userData.name) updateData.name = userData.name;
-    if (userData.state) updateData.state = userData.state;
-    if (userData.district) updateData.district = userData.district;
-    
-    if (userData.email) {
-      updateData.email = userData.email;
-      await auth.updateUser(userId, { email: userData.email, displayName: userData.name });
-    } else if (userData.name) {
-      await auth.updateUser(userId, { displayName: userData.name });
+    if (!userId) {
+        throw new Error('User ID is required to update a user.');
     }
 
-    if (Object.keys(updateData).length > 0) {
-      await firestore.collection("users").doc(userId).update(updateData);
+    const userRef = firestore.collection('users').doc(userId);
+
+    try {
+        await firestore.runTransaction(async (t) => {
+            const userDoc = await t.get(userRef);
+            if (!userDoc.exists) {
+                throw new Error('User not found.');
+            }
+
+            const updatePayload: { [key: string]: any } = {
+                ...updatedData,
+                updatedAt: FieldValue.serverTimestamp(),
+            };
+
+            t.update(userRef, updatePayload);
+        });
+
+        revalidatePath('/admin/users');
+        revalidatePath(`/admin/users/${userId}`);
+
+        return {
+            success: true,
+            message: 'User details updated successfully.',
+        };
+    } catch (error: any) {
+        console.error('Error updating user:', error);
+        throw new Error(error.message || 'An unknown error occurred while updating the user.');
     }
-
-    revalidatePath('/admin/users');
-    revalidatePath(`/admin/users/${userId}`);
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error updating user:", error);
-    let errorMessage = "An unexpected error occurred while updating the user.";
-     if (error.code === 'auth/email-already-exists') {
-        errorMessage = "A user with this email address already exists.";
-    } else if (error.message) {
-        errorMessage = error.message;
-    }
-    throw new Error(errorMessage);
-  }
-}
-
-export async function updateUserStatus(userId: string, status: 'Active' | 'Inactive') {
-  try {
-    await firestore.collection("users").doc(userId).update({ status });
-    revalidatePath(`/admin/users`);
-    revalidatePath(`/admin/users/${userId}`); // Revalidate specific user page
-    return { success: true };
-  } catch (error: any) {
-    console.error(`Error updating user status to ${status}:`, error);
-    throw new Error(error.message || `Failed to update user status.`);
-  }
-}
-
-export async function updateUserPaymentDetails(paymentDetails: {
-  userId: string;
-  paymentMethod: 'bank' | 'upi';
-  bankName?: string;
-  accountHolderName?: string;
-  accountNumber?: string;
-  ifscCode?: string;
-  upiId?: string;
-}) {
-  try {
-    const { userId, paymentMethod, ...details } = paymentDetails;
-    const userRef = firestore.collection("users").doc(userId);
-    let updateData: any;
-
-    if (paymentMethod === 'bank') {
-      updateData = {
-        paymentMethod: 'bank',
-        bankName: details.bankName,
-        accountHolderName: details.accountHolderName,
-        accountNumber: details.accountNumber,
-        ifscCode: details.ifscCode,
-        upiId: FieldValue.delete()
-      };
-    } else if (paymentMethod === 'upi') {
-      updateData = {
-        paymentMethod: 'upi',
-        upiId: details.upiId,
-        bankName: FieldValue.delete(),
-        accountHolderName: FieldValue.delete(),
-        accountNumber: FieldValue.delete(),
-        ifscCode: FieldValue.delete()
-      };
-    } else {
-        throw new Error("Invalid payment method specified.");
-    }
-
-    await userRef.update(updateData);
-    revalidatePath('/wallet/account');
-    revalidatePath('/wallet/withdraw');
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error updating payment details:", error);
-    throw new Error(error.message || "Failed to update payment details.");
-  }
 }
 
 
 export async function deleteUser(userId: string) {
+    if (!userId) {
+        throw new Error('User ID is required to delete a user.');
+    }
+
+    const userRef = firestore.collection('users').doc(userId);
+
     try {
-        // Find all bets and transactions for the user
-        const betsQuery = firestore.collection('kalyan_bets').where('userId', '==', userId);
-        const transactionsQuery = firestore.collection('transactions').where('userId', '==', userId);
-        
-        const [betsSnapshot, transactionsSnapshot] = await Promise.all([
-            betsQuery.get(),
-            transactionsQuery.get()
-        ]);
-
-        const batch = firestore.batch();
-
-        // Queue all bets for deletion
-        betsSnapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-
-        // Queue all transactions for deletion
-        transactionsSnapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-
-        // Queue the user document for deletion
-        const userDocRef = firestore.collection("users").doc(userId);
-        batch.delete(userDocRef);
-
-        // Commit the batch to delete all documents
-        await batch.commit();
-
-        // After Firestore data is cleaned up, delete the user from Auth
+        // First, delete the user from Firebase Authentication
         await auth.deleteUser(userId);
 
-        revalidatePath('/admin/users');
-        revalidatePath('/admin/admins');
-
-        return { success: true, message: "User and all associated data deleted successfully." };
-
-    } catch (error: any) {
-        console.error("Error deleting user and their data:", error);
-        
-        // Handle case where user is already deleted from auth but not from Firestore
-        if (error.code === 'auth/user-not-found') {
-            try {
-                const userDocRef = firestore.collection("users").doc(userId);
-                await userDocRef.delete(); // Attempt to delete just the firestore doc
-                revalidatePath('/admin/users');
-                revalidatePath('/admin/admins');
-                return { success: true, message: "User already deleted from Auth, cleaned up remaining Firestore data." };
-            } catch (firestoreError: any) {
-                console.error("Error cleaning up Firestore user data after auth/user-not-found error:", firestoreError);
-                throw new Error(firestoreError.message || "Failed to clean up user data from Firestore.");
+        // Then, delete the user's document from Firestore
+        await firestore.runTransaction(async (t) => {
+            const userDoc = await t.get(userRef);
+            if (!userDoc.exists) {
+                // If the user doc doesn't exist, it might have been deleted already.
+                // We can consider this a success for idempotency.
+                return;
             }
-        }
+            t.delete(userRef);
+        });
         
-        throw new Error(error.message || "Failed to delete user and associated data.");
+        revalidatePath('/admin/users');
+
+        return {
+            success: true,
+            message: 'User has been permanently deleted.',
+        };
+    } catch (error: any) {
+        // If the user is not found in Auth, it might have been already deleted.
+        // We can proceed to delete from Firestore.
+        if (error.code === 'auth/user-not-found') {
+            await userRef.delete();
+            revalidatePath('/admin/users');
+            return {
+                success: true,
+                message: 'User was not found in authentication, but deleted from database.',
+            };
+        }
+        console.error('Failed to delete user:', error);
+        throw new Error(error.message || 'An unknown error occurred during user deletion.');
     }
 }
 
 
-export async function saveFcmToken(userId: string, token: string) {
-  try {
-    if (!userId || !token) {
-      throw new Error("User ID and token are required.");
-    }
+export async function updateUserStatus(userId: string, newStatus: 'Active' | 'Inactive') {
+  if (!userId || !newStatus) {
+    throw new Error('User ID and new status are required.');
+  }
 
-    const userRef = firestore.collection("users").doc(userId);
-    // Using FieldValue.arrayUnion ensures that we don't add duplicate tokens.
+  const userRef = firestore.collection('users').doc(userId);
+
+  try {
     await userRef.update({
-      fcmTokens: FieldValue.arrayUnion(token),
+      status: newStatus,
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
-    return { success: true, message: "FCM token saved." };
+    revalidatePath('/admin/users');
+    revalidatePath(`/admin/users/${userId}`);
+
+    return {
+      success: true,
+      message: `User status has been updated to ${newStatus}.`,
+    };
   } catch (error: any) {
-    console.error("Error saving FCM token:", error);
-    throw new Error(error.message || "Failed to save FCM token.");
+    console.error('Failed to update user status:', error);
+    throw new Error(error.message || 'An unknown error occurred while updating user status.');
   }
 }

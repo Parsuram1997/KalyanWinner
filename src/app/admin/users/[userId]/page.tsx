@@ -208,14 +208,8 @@ export default function UserDetailsPage() {
   
   const { data: users, isLoading: isUserQueryLoading } = useCollection<any>(userQuery);
 
-  const userDocId = users?.[0]?.id;
-
-  const userRef = useMemoFirebase(() => {
-    if (!firestore || !userDocId) return null;
-    return doc(firestore, "users", userDocId);
-  }, [firestore, userDocId]);
-
-  const { data: user, isLoading: isUserLoading } = useDoc<any>(userRef);
+  const user = users?.[0];
+  const userDocId = user?.id;
 
   useEffect(() => {
       const fetchSettings = async () => {
@@ -292,7 +286,7 @@ export default function UserDetailsPage() {
   }, [userBets]);
 
 
-  const isLoading = isUserQueryLoading || isUserLoading || areBetsLoading || areTxnsLoading || isLoadingSettings;
+  const isLoading = isUserQueryLoading || areBetsLoading || areTxnsLoading || isLoadingSettings;
   
   const handleStatusChange = () => {
     if (!userDocId || !user) return;

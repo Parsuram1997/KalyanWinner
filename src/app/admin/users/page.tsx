@@ -223,10 +223,10 @@ export default function ManageUsersPage() {
           <div className="hidden md:block rounded-md border border-white/20 text-xs">
             <Table>
               <TableHeader className="border-b border-white/20">
-                <TableRow>{["User", "Contact", "Location", "Balance", "Status", "Actions"].map(h => <TableHead key={h} className="text-white py-2">{h}</TableHead>)}</TableRow>
+                <TableRow>{["User", "Contact", "Location", "Status", "Actions"].map(h => <TableHead key={h} className="text-white py-2">{h}</TableHead>)}</TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? <TableRow><TableCell colSpan={6} className="text-center py-4">Loading users...</TableCell></TableRow> : paginatedUsers.map((user) => (
+                {isLoading ? <TableRow><TableCell colSpan={5} className="text-center py-4">Loading users...</TableCell></TableRow> : paginatedUsers.map((user) => (
                   <TableRow key={user.id} className="border-white/20">
                     <TableCell className="py-1">
                       <div className="font-medium text-xs">{user.name}</div>
@@ -234,10 +234,6 @@ export default function ManageUsersPage() {
                     </TableCell>
                      <TableCell className="py-1"><div className="text-xs">{user.email}</div><div className="text-white/70 text-xs">{user.mobile}</div></TableCell>
                     <TableCell className="py-1"><div className="text-xs">{user.state}</div><div className="text-white/70 text-xs">{user.district}</div></TableCell>
-                    <TableCell className="text-xs py-1 font-mono">
-                        <div>Total: ₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(0)}</div>
-                        <div className="text-red-400">Credit: ₹{(user.creditBalance || 0).toFixed(0)}</div>
-                    </TableCell>
                     <TableCell className="py-1"><Badge className={cn("text-xs", user.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>{user.status}</Badge></TableCell>
                     <TableCell className="flex gap-1 py-1">
                        <Button variant="outline" size="icon" asChild className="bg-transparent text-white hover:bg-white/10 h-7 w-7"><Link href={`/admin/users/${user.customId}`}><Eye className="h-3 w-3" /></Link></Button>
@@ -261,8 +257,6 @@ export default function ManageUsersPage() {
                     <div className="mt-4 space-y-2 text-sm border-t border-white/20 pt-3">
                         <div className="flex justify-between"><span className="text-white/70">Contact:</span><div className="text-right"><p>{user.email}</p><p>{user.mobile}</p></div></div>
                         <div className="flex justify-between"><span className="text-white/70">Location:</span><div className="text-right"><p>{user.state}</p><p className="text-xs">{user.district}</p></div></div>
-                        <div className="flex justify-between font-mono"><span className="text-white/70">Balance:</span><span>₹{((user.depositBalance || 0) + (user.winningBalance || 0)).toFixed(0)}</span></div>
-                        <div className="flex justify-between font-mono text-red-400"><span className="text-red-400/70">Credit:</span><span>₹{(user.creditBalance || 0).toFixed(0)}</span></div>
                     </div>
                     <div className="mt-4 flex justify-end gap-2 border-t border-white/20 pt-3">
                         <Button variant="outline" size="sm" asChild className="bg-transparent hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4 mr-1"/> View</Link></Button>
