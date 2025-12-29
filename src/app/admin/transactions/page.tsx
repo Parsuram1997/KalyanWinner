@@ -230,13 +230,13 @@ const TransactionTable = ({
                                 {txn.netAmount !== undefined && <div className="flex justify-between text-green-300"><span>Net:</span><span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></div>}
                             </div>
                             <div className="flex justify-between items-center text-xs">
-                                <span className="text-white/80">Details:</span>
+                                <span className="text-white/80 mr-2">Details:</span>
                                 {txn.type === 'Withdrawal' ? (
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10 hover:text-white" onClick={() => onShowDetails(txn.userId)}>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/10 hover:text-white -mr-2" onClick={() => onShowDetails(txn.userId)}>
                                         <Eye className="h-4 w-4" />
                                     </Button>
                                 ) : (
-                                    <span className="font-mono text-xs truncate" title={txn.utr || txn.description}>
+                                    <span className="font-mono text-xs text-right truncate" title={txn.utr || txn.description}>
                                         {txn.utr || txn.description || 'N/A'}
                                     </span>
                                 )}
