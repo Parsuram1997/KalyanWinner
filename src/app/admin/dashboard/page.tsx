@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Wallet, ArrowUpCircle, ArrowDownCircle, Hourglass, UserPlus, Store, Settings, TrendingUp, TrendingDown, CreditCard, Trophy } from "lucide-react";
+import { Users, Wallet, ArrowUpCircle, ArrowDownCircle, Hourglass, UserPlus, Store, Settings, TrendingUp, TrendingDown, CreditCard, Trophy, PiggyBank } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { useMemo } from "react";
@@ -71,6 +71,7 @@ export default function AdminDashboardPage() {
             usersByAdmin: allUsers.filter(u => u.createdBy === 'Admin').length.toString(),
             usersBySelf: allUsers.filter(u => u.createdBy === 'Self' || !u.createdBy).length.toString(),
             allUserWalletBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.depositBalance || 0) + (u.winningBalance || 0), 0)),
+            totalDepositBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.depositBalance || 0), 0)),
             totalWinningBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.winningBalance || 0), 0)),
             totalCreditBalance: formatCurrency(allUsers.reduce((sum, u) => sum + (u.creditBalance || 0), 0)),
             totalDeposit: formatCurrency(completedDeposits.reduce((sum, t) => sum + t.amount, 0)),
@@ -95,6 +96,7 @@ export default function AdminDashboardPage() {
       { name: "Total Users", value: stats.totalUsers, icon: Users },
       { name: "Users by Admin", value: stats.usersByAdmin, icon: UserPlus },
       { name: "Self-Registered Users", value: stats.usersBySelf, icon: UserPlus },
+      { name: "Total Deposit Balance", value: stats.totalDepositBalance, icon: PiggyBank },
       { name: "Total Winning Balance", value: stats.totalWinningBalance, icon: Trophy },
       { name: "All User Wallet Balance", value: stats.allUserWalletBalance, icon: Wallet },
       { name: "Total Credit Balance", value: stats.totalCreditBalance, icon: CreditCard },
