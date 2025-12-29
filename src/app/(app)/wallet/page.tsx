@@ -65,7 +65,7 @@ type Transaction = {
   netAmount?: number;
 };
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 25;
 
 const FeaturedMarkets = () => {
     const markets = [
