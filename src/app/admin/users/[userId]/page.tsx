@@ -501,10 +501,12 @@ export default function UserDetailsPage() {
                               return (
                                 <TableRow key={txn.id} className="border-white/20">
                                     <TableCell className="py-2 text-white/80">{txnDate ? txnDate.toLocaleDateString('en-GB') : 'N/A'}</TableCell>
-                                    <TableCell className="py-2"><Badge variant={txn.type === 'Deposit' ? 'default' : 'outline'}>{txn.type}</Badge></TableCell>
+                                    <TableCell className="py-2"><Badge variant={txn.type === 'Deposit' || txn.type === 'Credit' ? 'default' : 'outline'}>{txn.type}</Badge></TableCell>
                                     <TableCell className="py-2"><Badge variant={getStatusVariant(txn.status)}>{txn.status}</Badge></TableCell>
                                     <TableCell className="text-xs py-2 text-white/80">{txn.utr || txn.description || 'N/A'}</TableCell>
-                                    <TableCell className="text-right font-mono py-2 text-white">₹{txn.amount.toFixed(2)}</TableCell>
+                                    <TableCell className={cn("text-right font-mono py-2", txn.type.includes('Repay') || txn.type === 'Withdrawal' ? 'text-red-400' : 'text-green-400')}>
+                                        {txn.type.includes('Repay') || txn.type === 'Withdrawal' ? '-' : '+'}₹{txn.amount.toFixed(2)}
+                                    </TableCell>
                                 </TableRow>
                               );
                             }) : (
@@ -530,7 +532,9 @@ export default function UserDetailsPage() {
                                 <div className="space-y-1 border-t border-white/20 pt-2">
                                 <div className="flex justify-between">
                                         <span className="text-white/70">Amount:</span>
-                                        <span className="font-mono font-medium text-white">₹{txn.amount.toFixed(2)}</span>
+                                        <span className={cn("font-mono font-medium", txn.type.includes('Repay') || txn.type === 'Withdrawal' ? 'text-red-400' : 'text-green-400')}>
+                                            {txn.type.includes('Repay') || txn.type === 'Withdrawal' ? '-' : '+'}₹{txn.amount.toFixed(2)}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-white/70">Details:</span>
