@@ -61,12 +61,10 @@ export default function AdminDashboardPage() {
         const completedDeposits = allTransactions.filter(t => t.type === 'Deposit' && t.status === 'Completed');
         const completedWithdrawals = allTransactions.filter(t => t.type === 'Withdrawal' && t.status === 'Completed');
         
-        // Corrected Fee Calculations
-        const totalDepositFee = completedDeposits.reduce((sum, t) => sum + (t.fee || 0), 0);
-        
         const creditTransactions = allTransactions.filter(t => t.type === 'Credit' && t.status === 'Completed');
         const totalCreditFee = creditTransactions.reduce((sum, t) => sum + (t.fee || 0), 0);
 
+        const totalDepositFee = completedDeposits.reduce((sum, t) => sum + (t.fee || 0), 0);
         const totalWithdrawalFee = completedWithdrawals.reduce((sum, t) => sum + (t.fee || 0), 0);
 
         return {
