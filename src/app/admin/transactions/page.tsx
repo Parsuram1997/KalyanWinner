@@ -59,7 +59,7 @@ type Transaction = {
     customId?: string;
     type: "Deposit" | "Withdrawal" | "Win" | "Credit" | "Credit Repayment" | "Bet";
     amount: number;
-    status: "Pending" | "Approved" | "Rejected" | "Completed" | "Placed";
+    status: "Pending" | "Approved" | "Rejected" | "Completed" | "Placed" | "Won" | "Lost";
     date: string;
     utr?: string;
     description?: string;
@@ -86,10 +86,12 @@ const getStatusClasses = (status: Transaction['status']) => {
         case 'Completed':
         case 'Approved':
         case 'Placed':
+        case 'Won':
             return 'bg-green-400/20 text-green-300 border border-green-400';
         case 'Pending':
             return 'bg-blue-400/20 text-blue-300 border border-blue-400';
         case 'Rejected':
+        case 'Lost':
             return 'bg-yellow-400/20 text-yellow-300 border border-yellow-400';
         default:
             return 'bg-red-400/20 text-red-300 border border-red-400';
@@ -228,9 +230,11 @@ const TransactionTable = ({
                                 <div className="flex justify-between"><span>Amount:</span><span className="font-semibold">₹{Math.abs(txn.amount).toLocaleString('en-IN')}</span></div>
                                 {(txn.fee !== undefined || txn.netAmount !== undefined) && (
                                     <div className="flex justify-between items-center">
-                                        {txn.fee !== undefined && <span>Fee: <span className="font-semibold">₹{txn.fee.toLocaleString('en-IN')}</span></span>}
-                                        {(txn.fee !== undefined && txn.netAmount !== undefined) && <Separator orientation="vertical" className="h-4 mx-2 bg-white/30" />}
-                                        {txn.netAmount !== undefined && <span className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></span>}
+                                        <div className="flex items-center gap-2">
+                                            {txn.fee !== undefined && <span>Fee: <span className="font-semibold">₹{txn.fee.toLocaleString('en-IN')}</span></span>}
+                                            {(txn.fee !== undefined && txn.netAmount !== undefined) && <Separator orientation="vertical" className="h-4 bg-white/30" />}
+                                            {txn.netAmount !== undefined && <span className="text-green-300">Net: <span className="font-bold">₹{txn.netAmount.toLocaleString('en-IN')}</span></span>}
+                                        </div>
                                     </div>
                                 )}
                             </div>
