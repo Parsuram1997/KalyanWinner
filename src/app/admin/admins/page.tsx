@@ -94,7 +94,8 @@ export default function ManageAdminsPage() {
       state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
       district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
       password: formData.get("password") as string,
-      role: 'Admin' as 'Admin'
+      role: 'Admin' as 'Admin',
+      createdBy: 'Admin' as 'Admin'
     };
 
     try {

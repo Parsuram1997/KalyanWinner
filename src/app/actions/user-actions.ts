@@ -28,8 +28,8 @@ export async function createUser(userData: {
     state: string;
     district: string;
     password?: string;
-    role: 'User';
-    createdBy: 'Admin';
+    role: 'User' | 'Admin';
+    createdBy: 'Admin' | 'Self';
 }) {
     if (!userData.email || !userData.password) {
         throw new Error('Email and password are required to create a user.');
