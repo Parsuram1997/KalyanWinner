@@ -123,6 +123,58 @@ export async function updateUser(userId: string, updatedData: {
     }
 }
 
+export async function updateUserPaymentDetails(data: {
+    userId: string;
+    paymentMethod: 'bank' | 'upi';
+    bankName?: string;
+    accountHolderName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    upiId?: string;
+}) {
+    const { userId, paymentMethod, ...paymentData } = data;
+
+    if (!userId) {
+        throw new Error('User ID is required.');
+    }
+
+    const userRef = firestore.collection('users').doc(userId);
+
+    try {
+        await firestore.runTransaction(async (t) => {
+            const userDoc = await t.get(userRef);
+            if (!userDoc.exists) {
+                throw new Error('User not found.');
+            }
+
+            const updatePayload: { [key: string]: any } = {
+                ...paymentData,
+                paymentMethod: paymentMethod,
+                updatedAt: FieldValue.serverTimestamp(),
+            };
+
+            if (paymentMethod === 'bank') {
+                updatePayload.upiId = null;
+            } else if (paymentMethod === 'upi') {
+                updatePayload.bankName = null;
+                updatePayload.accountHolderName = null;
+                updatePayload.accountNumber = null;
+                updatePayload.ifscCode = null;
+            }
+
+            t.update(userRef, updatePayload);
+        });
+
+        revalidatePath('/wallet/account');
+        revalidatePath('/wallet/withdraw');
+
+        return { success: true, message: 'Payment details updated successfully.' };
+    } catch (error: any) {
+        console.error('Error updating payment details:', error);
+        throw new Error(error.message || 'An unknown error occurred while updating payment details.');
+    }
+}
+
 
 export async function deleteUser(userId: string) {
     if (!userId) {
