@@ -34,6 +34,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
+import { BottomNavBar } from "@/components/BottomNavBar";
 
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
@@ -146,8 +147,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               {/* <ThemeToggle /> */}
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-4 sm:p-6 min-w-0 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
+          <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 md:p-6 min-w-0 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
         </div>
+         <BottomNavBar />
       </SidebarInset>
     </SidebarProvider>
   )
