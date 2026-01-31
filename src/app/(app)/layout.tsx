@@ -1,10 +1,9 @@
-
 'use client';
 
 import Link from "next/link";
 import Image from 'next/image';
 import {
-  LayoutDashboard,
+  Home,
   Wallet,
   Ticket,
   ClipboardList,
@@ -53,8 +52,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
              <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/dashboard">
-                  <LayoutDashboard />
-                  Dashboard
+                  <Home />
+                  Home
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -70,7 +69,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton asChild>
                 <Link href="/bet-ledger">
                   <ScrollText />
-                  Bet Ledger
+                  Bets
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

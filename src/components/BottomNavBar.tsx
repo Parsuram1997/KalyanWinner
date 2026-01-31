@@ -1,17 +1,16 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Ticket, Wallet, ScrollText, ClipboardList } from 'lucide-react';
+import { Home, Ticket, Wallet, ScrollText, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/play', label: 'Play', icon: Ticket },
   { href: '/wallet', label: 'Wallet', icon: Wallet },
   { href: '/results', label: 'Results', icon: ClipboardList },
-  { href: '/bet-ledger', label: 'My Bets', icon: ScrollText },
+  { href: '/bet-ledger', label: 'Bets', icon: ScrollText },
 ];
 
 export function BottomNavBar() {
