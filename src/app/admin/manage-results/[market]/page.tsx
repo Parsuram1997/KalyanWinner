@@ -279,12 +279,6 @@ export default function EnterResultsPage() {
 
   return (
     <div className="flex flex-col gap-6 text-white">
-        <Button asChild variant="ghost" className="hover:bg-white/10 w-fit text-white">
-             <Link href="/admin/manage-results">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Markets
-            </Link>
-        </Button>
       
         <Card className="bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900 border-white/10">
           <CardHeader className="flex flex-col gap-4">
