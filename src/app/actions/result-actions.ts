@@ -69,7 +69,7 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
 
     // Get the document BEFORE updating to safely get the market name
     const docSnap = await resultRef.get();
-    if (!docSnap.exists()) {
+    if (!docSnap.exists) {
         throw new Error("Result to update was not found.");
     }
     const marketName = docSnap.data()?.marketName || '';
