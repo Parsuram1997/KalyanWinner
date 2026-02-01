@@ -325,6 +325,7 @@ export default function EnterResultsPage() {
                     <TableHeader>
                         <TableRow className="border-b-white/20 hover:bg-black/20">
                             <TableHead className="text-white">Date</TableHead>
+                            <TableHead className="text-white">Day</TableHead>
                             <TableHead className="text-center text-white">Open</TableHead>
                             <TableHead className="text-center text-white">Jodi</TableHead>
                             <TableHead className="text-center text-white">Close</TableHead>
@@ -334,13 +335,13 @@ export default function EnterResultsPage() {
                     <TableBody>
                         {isLoading ? (
                             <TableRow className="border-b-white/20">
-                                <TableCell colSpan={5} className="p-4">
+                                <TableCell colSpan={6} className="p-4">
                                     <Skeleton className="h-24 w-full bg-white/10" />
                                 </TableCell>
                             </TableRow>
                         ) : error ? (
                             <TableRow className="border-b-white/20">
-                                <TableCell colSpan={5} className="text-center text-red-400 py-4">{error.message}</TableCell>
+                                <TableCell colSpan={6} className="text-center text-red-400 py-4">{error.message}</TableCell>
                             </TableRow>
                         ) : paginatedResults && paginatedResults.length > 0 ? paginatedResults.map((result) => {
                             const isOpenResultOnly = result.openPanna && !result.closePanna && result.jodi !== 'L';
@@ -348,6 +349,7 @@ export default function EnterResultsPage() {
                             return (
                                 <TableRow key={result.id} className="border-b-white/20 hover:bg-black/20 text-xs">
                                     <TableCell className="py-2 whitespace-nowrap">{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
+                                    <TableCell className="py-2 whitespace-nowrap">{new Date(result.date).toLocaleDateString('en-GB', { weekday: 'long' })}</TableCell>
                                     <TableCell className="font-mono text-center py-2">{result.openPanna}</TableCell>
                                     <TableCell className="font-bold text-base text-white font-mono text-center py-2">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : jodiToShow}</TableCell>
                                     <TableCell className="font-mono text-center py-2">{result.closePanna || '--'}</TableCell>
@@ -392,7 +394,7 @@ export default function EnterResultsPage() {
                             );
                         }) : (
                             <TableRow className="border-b-white/20">
-                                <TableCell colSpan={5} className="text-center py-8 text-white/70">No results found for this market.</TableCell>
+                                <TableCell colSpan={6} className="text-center py-8 text-white/70">No results found for this market.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>
@@ -413,7 +415,7 @@ export default function EnterResultsPage() {
                         <Card key={result.id} className="p-3 bg-black/30 border-white/20 text-white">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="font-semibold text-sm">{new Date(result.date).toLocaleDateString('en-GB')}</p>
+                                    <p className="font-semibold text-sm">{new Date(result.date).toLocaleDateString('en-GB')} <span className="font-normal text-white/70">({new Date(result.date).toLocaleDateString('en-GB', { weekday: 'long' })})</span></p>
                                     <p className="text-xs text-white/70">{marketName}</p>
                                 </div>
                                 {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : (
