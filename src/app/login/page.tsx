@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from "react";
@@ -110,8 +109,10 @@ export default function LoginPage() {
             if (userData?.role === 'User') {
                 toast({ title: "Login Successful", description: "Welcome back!" });
                 
-                // Store user UID for PIN login flow
+                // Store user info for PIN login flow
                 localStorage.setItem('lastUserUid', user.uid);
+                localStorage.setItem('lastUserName', userData.name || 'User');
+                localStorage.setItem('lastUserCustomId', userData.customId || '');
                 
                 // Check if PIN is set
                 if (userData.pin) {
