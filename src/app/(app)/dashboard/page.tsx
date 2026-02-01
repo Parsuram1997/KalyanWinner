@@ -85,7 +85,13 @@ const WalletCard = ({ isLoading, depositBalance, winningBalance, totalBalance }:
     </Card>
 );
 
-const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current }: { isLoading: boolean, latestResults: any[], api: CarouselApi | undefined, onCarouselApiSet: (api: CarouselApi) => void, current: number }) => (
+const getDigit = (panna: string | undefined): string => {
+    if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return '*';
+    return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
+};
+
+const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current }: { isLoading: boolean, latestResults: any[], api: CarouselApi | undefined, onCarouselApiSet: (api: CarouselApi) => void, current: number }) => {
+    return (
     <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
         <CardHeader>
             <CardTitle className="text-base">Latest Results</CardTitle>
@@ -98,7 +104,12 @@ const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current 
         ) : latestResults.length > 0 ? (
             <Carousel setApi={onCarouselApiSet} className="w-full">
                 <CarouselContent>
-                    {latestResults.map((result) => (
+                    {latestResults.map((result) => {
+                        const isOpenResultOnly = result && result.openPanna && !result.closePanna && result.jodi !== 'L';
+                        const openDigit = getDigit(result.openPanna);
+                        const jodiToShow = isOpenResultOnly ? `${openDigit}*` : result.jodi || '**';
+
+                        return (
                         <CarouselItem key={result.id}>
                             <CardContent className="p-6 pt-0 flex items-center justify-center">
                                 {result.jodi === 'L' ? (
@@ -118,7 +129,7 @@ const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current 
                                                 <span className="text-xl font-bold tracking-tight">{result.openPanna || '***'}</span>
                                             </div>
                                             <div className="flex flex-col items-center rounded-md bg-black/20 px-3 py-1 text-white text-center">
-                                                <span className="text-2xl font-bold tracking-tight">{result.jodi || '**'}</span>
+                                                <span className="text-2xl font-bold tracking-tight">{jodiToShow}</span>
                                                 <span className="text-[10px] font-medium leading-tight">{result.marketName}</span>
                                             </div>
                                             <div className="flex flex-col items-center text-center">
@@ -130,7 +141,7 @@ const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current 
                                 )}
                             </CardContent>
                         </CarouselItem>
-                    ))}
+                    )})}
                 </CarouselContent>
                 <div className="flex justify-center gap-2 mt-2">
                     {latestResults.map((_, index) => (
@@ -156,7 +167,7 @@ const ResultsCard = ({ isLoading, latestResults, api, onCarouselApiSet, current 
             </Button>
         </CardFooter>
     </Card>
-);
+)};
 
 const LedgerCard = ({ isActivityLoading, sortedRecentActivity, paginatedActivity, currentPage, totalPages, setCurrentPage }: { isActivityLoading: boolean, sortedRecentActivity: any[], paginatedActivity: any[], currentPage: number, totalPages: number, setCurrentPage: (page: number | ((prev: number) => number)) => void }) => (
     <Card className="bg-gradient-to-br from-blue-600 to-purple-700 text-white border-0 hover:shadow-lg transition-shadow">
