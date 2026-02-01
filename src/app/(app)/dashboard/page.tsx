@@ -317,11 +317,8 @@ export default function DashboardPage() {
   const [latestResults, setLatestResults] = useState<any[]>([]);
   const [isResultsLoading, setResultsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchLatestResults = async () => {
+  const fetchLatestResults = useCallback(async () => {
       if (!firestore) return;
-      setResultsLoading(true);
-      
       try {
         const marketsQuery = query(collection(firestore, "markets"), orderBy("name"));
         const marketsSnapshot = await getDocs(marketsQuery);
@@ -350,15 +347,16 @@ export default function DashboardPage() {
       } finally {
         setResultsLoading(false);
       }
-    };
+    }, [firestore]);
 
-    if(firestore) {
-      fetchLatestResults();
-    }
-  }, [firestore]);
+  useEffect(() => {
+    fetchLatestResults(); // Initial fetch
+    const intervalId = setInterval(fetchLatestResults, 20000); // Poll every 20 seconds
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [fetchLatestResults]);
 
 
-  const isLoading = isUserLoading || isUserDataLoading || isActivityLoading || isResultsLoading;
+  const isLoading = isUserLoading || isUserDataLoading || isActivityLoading;
 
   const totalPages = Math.ceil((sortedRecentActivity?.length || 0) / ACTIVITY_PER_PAGE);
 
@@ -401,7 +399,7 @@ export default function DashboardPage() {
             totalBalance={totalBalance} 
         />
         <ResultsCard 
-            isLoading={isLoading} 
+            isLoading={isResultsLoading} 
             latestResults={latestResults} 
             api={api}
             onCarouselApiSet={onCarouselApiSet}
@@ -435,7 +433,7 @@ export default function DashboardPage() {
                         totalBalance={totalBalance} 
                     />
                     <ResultsCard 
-                        isLoading={isLoading} 
+                        isLoading={isResultsLoading} 
                         latestResults={latestResults} 
                         api={api}
                         onCarouselApiSet={onCarouselApiSet}
