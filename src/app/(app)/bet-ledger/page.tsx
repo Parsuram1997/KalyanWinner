@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -24,10 +23,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 import { Filter } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, startOfDay, endOfDay, isWithinInterval } from "date-fns";
+import { format, startOfDay, endOfDay, isWithinInterval, parse } from "date-fns";
 import { toZonedTime } from 'date-fns-tz';
 
 type Bet = {
@@ -54,29 +55,22 @@ const getStatusClasses = (status: Bet['status']) => {
     }
 };
 
-const months = [
-  { value: "0", label: "January" }, { value: "1", label: "February" }, { value: "2", label: "March" },
-  { value: "3", label: "April" }, { value: "4", label: "May" }, { value: "5", label: "June" },
-  { value: "6", label: "July" }, { value: "7", label: "August" }, { value: "8", label: "September" },
-  { value: "9", label: "October" }, { value: "10", label: "November" }, { value: "11", label: "December" },
-];
-
-const years = [
-  new Date().getFullYear().toString(),
-  (new Date().getFullYear() - 1).toString(),
-];
-
-const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
 const ITEMS_PER_PAGE = 50;
+
+// Helper to parse date string and validate it
+const parseDateString = (dateStr: string): Date | null => {
+    if (!dateStr || dateStr.length !== 10) return null;
+    const date = parse(dateStr, 'dd/MM/yyyy', new Date());
+    if (isNaN(date.getTime())) return null;
+    return date;
+}
 
 export default function BetLedgerPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [date, setDate] = useState<Date | undefined>(undefined);
-
-  const [day, setDay] = useState<string | undefined>(undefined);
-  const [month, setMonth] = useState<string | undefined>(undefined);
-  const [year, setYear] = useState<string | undefined>(undefined);
+  
+  const [dateInput, setDateInput] = useState<string>('');
   const [isPopoverOpen, setPopoverOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -129,19 +123,40 @@ export default function BetLedgerPage() {
     }
   }, [error]);
 
-  const handleFilter = () => {
-    if (day && month && year) {
-        const newDate = new Date(parseInt(year), parseInt(month), parseInt(day));
-        setDate(newDate);
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/[^0-9]/g, '');
+    let formattedValue = '';
+    if (rawValue.length > 0) {
+        formattedValue = rawValue.slice(0, 2);
     }
-    setPopoverOpen(false);
+    if (rawValue.length > 2) {
+        formattedValue += '/' + rawValue.slice(2, 4);
+    }
+    if (rawValue.length > 4) {
+        formattedValue += '/' + rawValue.slice(4, 8);
+    }
+    setDateInput(formattedValue);
+  };
+
+  const handleFilter = () => {
+    const newDate = parseDateString(dateInput);
+    if (newDate) {
+        setDate(newDate);
+        setPopoverOpen(false);
+    } else if (dateInput) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Date",
+            description: "Please enter a date in DD/MM/YYYY format.",
+        });
+    } else {
+        handleClear();
+    }
   }
 
   const handleClear = () => {
     setDate(undefined);
-    setDay(undefined);
-    setMonth(undefined);
-    setYear(undefined);
+    setDateInput('');
     setPopoverOpen(false);
   }
 
@@ -173,25 +188,20 @@ export default function BetLedgerPage() {
                             <div className="space-y-2">
                                 <h4 className="font-medium leading-none">Select Date</h4>
                                 <p className="text-sm text-muted-foreground">
-                                Select a day, month, and year to filter bets.
+                                Enter a date in DD/MM/YYYY format.
                                 </p>
                             </div>
                             <div className="grid gap-2">
-                                <div className="grid grid-cols-3 items-center gap-2">
-                                    <Select onValueChange={setDay} value={day}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Day" /></SelectTrigger>
-                                        <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                    <Select onValueChange={setMonth} value={month}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
-                                        <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                    <Select onValueChange={setYear} value={year}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
-                                        <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
-                                    </Select>
+                                <div className="space-y-2">
+                                    <Label htmlFor="date-filter">Date</Label>
+                                    <Input
+                                        id="date-filter"
+                                        placeholder="DD/MM/YYYY"
+                                        value={dateInput}
+                                        onChange={handleDateInputChange}
+                                    />
                                 </div>
-                                 <div className="grid grid-cols-2 gap-2 mt-2">
+                                <div className="grid grid-cols-2 gap-2 mt-2">
                                     <Button onClick={handleFilter} className="w-full">Go</Button>
                                     <Button onClick={handleClear} variant="secondary" className="w-full">Clear</Button>
                                 </div>
