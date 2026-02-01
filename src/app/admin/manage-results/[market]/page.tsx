@@ -34,11 +34,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format, getDay } from "date-fns";
 
 
 type KalyanResult = {
@@ -76,6 +76,7 @@ const parseDateString = (dateStr: string): Date | null => {
     return date;
 }
 
+const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 export default function EnterResultsPage() {
     const params = useParams();
@@ -121,6 +122,8 @@ export default function EnterResultsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     
     const [dateInput, setDateInput] = useState(() => format(new Date(), 'dd/MM/yyyy'));
+    const [dayName, setDayName] = useState<string | null>(() => format(new Date(), 'EEEE'));
+
 
     const { paginatedResults, totalPages } = useMemo(() => {
       if (!results) return { paginatedResults: [], totalPages: 0 };
@@ -144,6 +147,13 @@ export default function EnterResultsPage() {
             formattedValue += '/' + rawValue.slice(4, 8);
         }
         setDateInput(formattedValue);
+
+        const parsedDate = parseDateString(formattedValue);
+        if (parsedDate) {
+            setDayName(format(parsedDate, 'EEEE'));
+        } else {
+            setDayName(null);
+        }
     };
 
 
@@ -154,6 +164,16 @@ export default function EnterResultsPage() {
 
         if (!dateObj || !openPanna) {
             toast({ variant: "destructive", title: "Invalid Fields", description: "Please enter a valid date (DD/MM/YYYY) and Open Panna." });
+            return;
+        }
+
+        const selectedDayKey = dayKeys[getDay(dateObj)];
+        if (market && market.days && !market.days[selectedDayKey]) {
+            toast({
+                variant: "destructive",
+                title: "Day is Inactive",
+                description: `This market is not active on ${dayName}. Please choose an active day.`,
+            });
             return;
         }
 
@@ -312,6 +332,7 @@ export default function EnterResultsPage() {
                                         onChange={handleDateInputChange}
                                         className="bg-gray-900 border-gray-700"
                                     />
+                                     {dayName && <p className="text-xs text-center text-yellow-300 font-semibold pt-1">{dayName}</p>}
                                 </div>
                                 <DialogFooter>
                                     <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Mark as Holiday</Button>
@@ -337,6 +358,7 @@ export default function EnterResultsPage() {
                                     onChange={handleDateInputChange}
                                     className="bg-gray-900 border-gray-700"
                                 />
+                                {dayName && <p className="text-xs text-center text-yellow-300 font-semibold pt-1">{dayName}</p>}
                             </div>
                             <div>
                                 <Label htmlFor="open-panna">Open Panna</Label>
