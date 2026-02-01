@@ -3,9 +3,9 @@
 
 import { firestore } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
-import { FieldValue } from 'firebase-admin/firestore';
 
-interface KalyanResult {
+// This interface is slightly different from the one in the component, but it's what the action receives.
+interface KalyanResultPayload {
   date: string;
   marketName: string;
   openPanna: string;
@@ -13,128 +13,100 @@ interface KalyanResult {
   jodi?: string;
 }
 
-// Helper to derive a single digit from a 3-digit panna.
-const getDigit = (panna: string): string | null => {
-  if (!panna || panna.length !== 3 || !/^\d+$/.test(panna)) return null;
-  return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
-};
-
-// Helper to ensure date is in a consistent string format.
-const getISTDateString = (dateInput: string): string => {
-    return dateInput;
-};
-
-// Fetches market-specific and default rates to create a payout multiplier map.
-const createPayoutMultipliers = async (transaction: FirebaseFirestore.Transaction, marketName: string): Promise<Map<string, number>> => {
-    const marketQuery = firestore.collection('markets').where('name', '==', marketName).limit(1);
-    const marketSnapshot = await transaction.get(marketQuery);
-    const marketRates = marketSnapshot.docs.length > 0 ? marketSnapshot.docs[0].data().rates : null;
-
-    const ratesSnapshot = await transaction.get(firestore.collection('game_rates'));
-
-    const payoutMultipliers = new Map<string, number>();
-    ratesSnapshot.forEach(doc => {
-        const rateData = doc.data();
-        if (rateData.name && rateData.payoutAmount && rateData.betAmount > 0) {
-            const payoutAmount = marketRates?.[rateData.name] ?? rateData.payoutAmount;
-            const multiplier = payoutAmount / rateData.betAmount;
-            payoutMultipliers.set(rateData.name, multiplier);
-        }
-    });
-
-    return payoutMultipliers;
-};
-
 /**
- * Processes winnings for a user, automatically repaying any outstanding credit balance first.
+ * Creates a new Kalyan result document in Firestore.
+ * It checks for duplicates for the same market and date.
+ *
+ * @param resultData The data for the new result.
+ * @returns An object indicating success or failure.
  */
-async function processWinnings(transaction: FirebaseFirestore.Transaction, userId: string, totalWinnings: number, userDocsCache: { [key: string]: any }) {
-    const userDoc = userDocsCache[userId];
-    if (!userDoc || !userDoc.exists) return;
-
-    const userData = userDoc.data();
-    const currentCredit = userData.creditBalance || 0;
-
-    if (currentCredit > 0) {
-        const amountToRepay = Math.min(totalWinnings, currentCredit);
-        const remainingWinnings = totalWinnings - amountToRepay;
-
-        if (amountToRepay > 0) {
-            transaction.update(firestore.collection('users').doc(userId), {
-                creditBalance: FieldValue.increment(-amountToRepay),
-            });
-            const creditRepayTxRef = firestore.collection('transactions').doc();
-            transaction.set(creditRepayTxRef, {
-                userId, userName: userData.name, type: 'Credit Repayment',
-                amount: amountToRepay, status: 'Completed', date: new Date().toISOString(),
-                description: 'Repaid from winnings.'
-            });
-        }
-
-        if (remainingWinnings > 0) {
-            transaction.update(firestore.collection('users').doc(userId), {
-                winningBalance: FieldValue.increment(remainingWinnings)
-            });
-        }
-    } else {
-        transaction.update(firestore.collection('users').doc(userId), {
-            winningBalance: FieldValue.increment(totalWinnings)
-        });
-    }
-}
-
-
-export async function createKalyanResult(resultData: KalyanResult) {
+export async function createKalyanResult(resultData: KalyanResultPayload) {
   try {
-    // ... (initial setup is the same)
+    const resultsRef = firestore.collection('kalyan_results');
 
-    await firestore.runTransaction(async (transaction) => {
-      // ... (result creation and bet fetching is the same)
-      // This is a placeholder, actual logic is complex and not shown for brevity
-    });
+    // Prevent duplicate results for the same market and date
+    const existingResultQuery = await resultsRef
+      .where('marketName', '==', resultData.marketName)
+      .where('date', '==', resultData.date)
+      .limit(1)
+      .get();
 
+    if (!existingResultQuery.empty) {
+      throw new Error(`A result for ${resultData.marketName} on ${resultData.date} already exists.`);
+    }
+
+    // Add the new result document to Firestore
+    await resultsRef.add(resultData);
+
+    // Revalidate paths to refresh data on client-side navigations
     revalidatePath("/admin/manage-results", 'page');
+    revalidatePath(`/admin/manage-results/${resultData.marketName.toLowerCase().replace(/\s+/g, '-')}`, 'page');
     revalidatePath("/play", 'page');
-    return { success: true, message: 'Open result saved and Open session winners paid out.' };
+    revalidatePath("/results", 'page'); // also revalidate user-facing results pages
+
+    return { success: true, message: 'Result saved successfully.' };
   } catch (error: any) {
     console.error("Error creating kalyan result:", error);
+    // Re-throw the error so the client form can catch it and display a toast
     throw new Error(error.message || "Failed to create kalyan result.");
   }
 }
 
-export async function updateKalyanResult(resultId: string, resultData: Partial<KalyanResult>) {
+/**
+ * Updates an existing Kalyan result, typically to add the close panna and jodi.
+ *
+ * @param resultId The ID of the document to update.
+ * @param resultData The partial data to update the document with.
+ * @returns An object indicating success or failure.
+ */
+export async function updateKalyanResult(resultId: string, resultData: Partial<KalyanResultPayload>) {
   try {
-    // ... (initial setup is the same)
+    const resultRef = firestore.collection('kalyan_results').doc(resultId);
 
-    await firestore.runTransaction(async (transaction) => {
-      // ... (result update and bet fetching is the same)
-      // This is a placeholder, actual logic is complex and not shown for brevity
-    });
+    // Update the document with the new data
+    await resultRef.update(resultData);
 
+    const doc = await resultRef.get();
+    const marketName = doc.data()?.marketName || '';
+
+    // Revalidate paths
     revalidatePath("/admin/manage-results", 'page');
+    if (marketName) {
+      revalidatePath(`/admin/manage-results/${marketName.toLowerCase().replace(/\s+/g, '-')}`, 'page');
+    }
     revalidatePath("/play", 'page');
-    return { success: true, message: 'Close result updated and remaining winners calculated.' };
+    revalidatePath("/results", 'page'); // also revalidate user-facing results pages
+
+    return { success: true, message: 'Result updated successfully.' };
   } catch (error: any) {
     console.error("Error updating kalyan result:", error);
-    throw new Error(error.message || "Failed to update kalyan result and calculate winnings.");
+    throw new Error(error.message || "Failed to update kalyan result.");
   }
 }
 
+/**
+ * Deletes a Kalyan result from Firestore.
+ *
+ * @param resultId The ID of the document to delete.
+ * @returns An object indicating success or failure.
+ */
 export async function deleteKalyanResult(resultId: string) {
   try {
     const resultRef = firestore.collection('kalyan_results').doc(resultId);
-    
-    // It's good practice to check if the document exists before deleting,
-    // though not strictly necessary if you are sure it exists.
+
     const doc = await resultRef.get();
     if (!doc.exists) {
       throw new Error("Result not found.");
     }
+    const marketName = doc.data()?.marketName || '';
 
     await resultRef.delete();
 
-    // Revalidate the path to ensure the UI is updated after deletion.
+    // Revalidate relevant paths
     revalidatePath('/admin/manage-results', 'page');
+    if (marketName) {
+      revalidatePath(`/admin/manage-results/${marketName.toLowerCase().replace(/\s+/g, '-')}`, 'page');
+    }
 
     return { success: true, message: "Result deleted successfully." };
   } catch (error: any) {
