@@ -38,7 +38,6 @@ import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 
 
@@ -58,16 +57,24 @@ const getPannaSum = (panna: string) => {
     return String(panna.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0) % 10);
 };
 
-const months = [
-  { value: "0", label: "January" }, { value: "1", label: "February" }, { value: "2", label: "March" },
-  { value: "3", label: "April" }, { value: "4", label: "May" }, { value: "5", label: "June" },
-  { value: "6", label: "July" }, { value: "7", label: "August" }, { value: "8", label: "September" },
-  { value: "9", label: "October" }, { value: "10", label: "November" }, { value: "11", label: "December" },
-];
+// Helper to parse date string and validate it
+const parseDateString = (dateStr: string): Date | null => {
+    if (!dateStr || dateStr.length !== 10) return null;
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return null;
 
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 5 }, (_, i) => (currentYear - i).toString());
-const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+    const [day, month, year] = parts.map(p => parseInt(p, 10));
+    if (isNaN(day) || isNaN(month) || isNaN(year) || year.toString().length !== 4) return null;
+    
+    // JS month is 0-indexed, so subtract 1
+    const date = new Date(year, month - 1, day);
+    
+    // Final validation to check if the constructed date is valid (e.g., handles 31/02/2024)
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        return null;
+    }
+    return date;
+}
 
 
 export default function EnterResultsPage() {
@@ -102,9 +109,8 @@ export default function EnterResultsPage() {
     const [updateClosePanna, setUpdateClosePanna] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     
-    const [day, setDay] = useState<string | undefined>(() => new Date().getDate().toString());
-    const [month, setMonth] = useState<string | undefined>(() => new Date().getMonth().toString());
-    const [year, setYear] = useState<string | undefined>(() => new Date().getFullYear().toString());
+    // New state for the single date input
+    const [dateInput, setDateInput] = useState(() => format(new Date(), 'dd/MM/yyyy'));
 
     const { paginatedResults, totalPages } = useMemo(() => {
       if (!results) return { paginatedResults: [], totalPages: 0 };
@@ -114,17 +120,35 @@ export default function EnterResultsPage() {
       const paginatedResults = results.slice(startIndex, endIndex);
       return { paginatedResults, totalPages };
     }, [results, currentPage]);
+    
+    // Handler for the auto-formatting date input
+    const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawValue = e.target.value.replace(/[^0-9]/g, ''); // Remove all non-digits
+        let formattedValue = '';
+        if (rawValue.length > 0) {
+            formattedValue = rawValue.slice(0, 2);
+        }
+        if (rawValue.length > 2) {
+            formattedValue += '/' + rawValue.slice(2, 4);
+        }
+        if (rawValue.length > 4) {
+            formattedValue += '/' + rawValue.slice(4, 8);
+        }
+        setDateInput(formattedValue);
+    };
 
 
     const handleSubmitOpenResult = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!day || !month || !year || !openPanna) {
-            toast({ variant: "destructive", title: "Missing Fields", description: "Please fill in all result fields." });
+        const dateObj = parseDateString(dateInput);
+
+        if (!dateObj || !openPanna) {
+            toast({ variant: "destructive", title: "Invalid Fields", description: "Please enter a valid date (DD/MM/YYYY) and Open Panna." });
             return;
         }
 
-        const formattedDate = format(new Date(parseInt(year), parseInt(month), parseInt(day)), "yyyy-MM-dd");
+        const formattedDate = format(dateObj, "yyyy-MM-dd");
 
         try {
             await createKalyanResult({
@@ -169,12 +193,14 @@ export default function EnterResultsPage() {
 
      const handleMarkAsHoliday = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!day || !month || !year) {
-            toast({ variant: "destructive", title: "Missing Date", description: "Please select a date." });
+        const dateObj = parseDateString(dateInput);
+        
+        if (!dateObj) {
+            toast({ variant: "destructive", title: "Invalid Date", description: "Please enter a valid date in DD/MM/YYYY format." });
             return;
         }
 
-        const formattedDate = format(new Date(parseInt(year), parseInt(month), parseInt(day)), "yyyy-MM-dd");
+        const formattedDate = format(dateObj, "yyyy-MM-dd");
 
         try {
             await createKalyanResult({
@@ -246,21 +272,14 @@ export default function EnterResultsPage() {
                         </DialogHeader>
                         <form className="space-y-4" onSubmit={handleMarkAsHoliday}>
                              <div className="space-y-2">
-                                <Label>Date</Label>
-                                <div className="grid grid-cols-3 items-center gap-2">
-                                    <Select onValueChange={setDay} value={day}>
-                                        <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Day" /></SelectTrigger>
-                                        <SelectContent className="bg-gray-900 text-white border-gray-700">{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                    <Select onValueChange={setMonth} value={month}>
-                                        <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Month" /></SelectTrigger>
-                                        <SelectContent className="bg-gray-900 text-white border-gray-700">{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                    <Select onValueChange={setYear} value={year}>
-                                        <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Year" /></SelectTrigger>
-                                        <SelectContent className="bg-gray-900 text-white border-gray-700">{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                </div>
+                                <Label htmlFor="holiday-date">Date</Label>
+                                <Input
+                                    id="holiday-date"
+                                    placeholder="DD/MM/YYYY"
+                                    value={dateInput}
+                                    onChange={handleDateInputChange}
+                                    className="bg-gray-900 border-gray-700"
+                                />
                             </div>
                             <DialogFooter>
                                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Mark as Holiday</Button>
@@ -278,21 +297,14 @@ export default function EnterResultsPage() {
                     </DialogHeader>
                     <form className="space-y-4" onSubmit={handleSubmitOpenResult}>
                          <div className="space-y-2">
-                            <Label>Date</Label>
-                            <div className="grid grid-cols-3 items-center gap-2">
-                                <Select onValueChange={setDay} value={day}>
-                                    <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Day" /></SelectTrigger>
-                                    <SelectContent className="bg-gray-900 text-white border-gray-700">{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                                </Select>
-                                <Select onValueChange={setMonth} value={month}>
-                                    <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Month" /></SelectTrigger>
-                                    <SelectContent className="bg-gray-900 text-white border-gray-700">{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-                                </Select>
-                                <Select onValueChange={setYear} value={year}>
-                                    <SelectTrigger className="w-full bg-gray-900 border-gray-700"><SelectValue placeholder="Year" /></SelectTrigger>
-                                    <SelectContent className="bg-gray-900 text-white border-gray-700">{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
-                                </Select>
-                            </div>
+                            <Label htmlFor="date">Date</Label>
+                             <Input
+                                id="date"
+                                placeholder="DD/MM/YYYY"
+                                value={dateInput}
+                                onChange={handleDateInputChange}
+                                className="bg-gray-900 border-gray-700"
+                            />
                         </div>
                         <div>
                             <Label htmlFor="open-panna">Open Panna</Label>
