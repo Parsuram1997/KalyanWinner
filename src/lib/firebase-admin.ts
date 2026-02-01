@@ -1,34 +1,18 @@
 
-import { initializeApp, getApps, getApp, type App, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, type App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 
-function initializeAdminApp(): App {
-  // If an app is already initialized, return it.
-  if (getApps().length > 0) {
-    return getApp();
-  }
-
-  // Try to use the service account key from the environment variable if it exists.
-  // This is more explicit and can be more reliable in some environments.
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-    : null;
-
-  if (serviceAccount) {
-    return initializeApp({
-      credential: cert(serviceAccount),
-    });
-  }
-  
-  // On Google Cloud environments (like App Hosting or Cloud Functions),
-  // if the service account key isn't provided, the SDK automatically
-  // discovers the project's credentials.
-  return initializeApp();
+if (!getApps().length) {
+  // Explicitly providing the Project ID makes the initialization more robust in
+  // Google Cloud environments, preventing potential ambiguity in credential discovery.
+  initializeApp({
+    projectId: "studio-7786701397-58781",
+  });
 }
 
-const app = initializeAdminApp();
+const app = getApp();
 const auth = getAuth(app);
 const firestore = getFirestore(app);
 const messaging = getMessaging(app);
