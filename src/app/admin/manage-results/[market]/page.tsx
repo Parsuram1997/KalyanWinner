@@ -11,7 +11,7 @@ import { Edit, Trash, CalendarOff, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where, orderBy, limit } from "firebase/firestore";
 import { createKalyanResult, deleteKalyanResult, updateKalyanResult } from "@/app/actions/result-actions";
 import Link from "next/link";
 import {
@@ -85,6 +85,17 @@ export default function EnterResultsPage() {
 
     const marketName = marketSlug ? marketSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : "";
 
+    const marketQuery = useMemoFirebase(() => {
+      if (!firestore || !marketName) return null;
+      return query(
+        collection(firestore, 'markets'),
+        where('name', '==', marketName),
+        limit(1)
+      );
+    }, [firestore, marketName]);
+    const { data: marketData, isLoading: isMarketLoading } = useCollection<any>(marketQuery);
+    const market = marketData?.[0];
+
     const resultsQuery = useMemoFirebase(() => {
         if (!firestore || !marketName) return null;
         const yearAgo = new Date();
@@ -99,7 +110,7 @@ export default function EnterResultsPage() {
         );
     }, [firestore, marketName]);
 
-    const { data: results, isLoading, error } = useCollection<KalyanResult>(resultsQuery);
+    const { data: results, isLoading: isResultsLoading, error } = useCollection<KalyanResult>(resultsQuery);
 
     const [openPanna, setOpenPanna] = useState('');
     const [isAddOpenResultDialogOpen, setAddOpenResultDialogOpen] = useState(false);
@@ -109,7 +120,6 @@ export default function EnterResultsPage() {
     const [updateClosePanna, setUpdateClosePanna] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     
-    // New state for the single date input
     const [dateInput, setDateInput] = useState(() => format(new Date(), 'dd/MM/yyyy'));
 
     const { paginatedResults, totalPages } = useMemo(() => {
@@ -121,9 +131,8 @@ export default function EnterResultsPage() {
       return { paginatedResults, totalPages };
     }, [results, currentPage]);
     
-    // Handler for the auto-formatting date input
     const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const rawValue = e.target.value.replace(/[^0-9]/g, ''); // Remove all non-digits
+        const rawValue = e.target.value.replace(/[^0-9]/g, '');
         let formattedValue = '';
         if (rawValue.length > 0) {
             formattedValue = rawValue.slice(0, 2);
@@ -240,6 +249,30 @@ export default function EnterResultsPage() {
       }
     }
 
+    const ActiveDaysDisplay = ({ days }: { days: { [key: string]: boolean } | undefined }) => {
+      if (!days) {
+          return <Badge variant="destructive" className="text-xs">Not Set</Badge>;
+      }
+      const activeDays = Object.entries(days)
+          .filter(([_, isActive]) => isActive)
+          .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1, 3));
+
+      if (activeDays.length === 0) {
+          return <Badge variant="destructive" className="text-xs">No Active Days</Badge>;
+      }
+      if (activeDays.length === 7) {
+          return <Badge variant="secondary" className="bg-green-500/20 border-green-500 text-green-300 text-xs">All Days</Badge>;
+      }
+
+      return (
+          <div className="flex flex-wrap gap-1">
+              {activeDays.map(day => <Badge key={day} variant="secondary" className="bg-white/10 text-white text-xs">{day}</Badge>)}
+          </div>
+      );
+    };
+
+    const isLoading = isResultsLoading || isMarketLoading;
+
     if (!marketSlug) {
       return <div className="text-white">Loading market...</div>
     }
@@ -259,63 +292,69 @@ export default function EnterResultsPage() {
                 <CardTitle className="text-white">Results for {marketName}</CardTitle>
                 <CardDescription className="text-white/70">View and manage game results for the last year.</CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-                <Dialog open={isHolidayDialogOpen} onOpenChange={setHolidayDialogOpen}>
+             <div className="flex flex-col sm:flex-row gap-4 w-full justify-between items-start sm:items-center">
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-white/70 tracking-wider">ACTIVE DAYS</Label>
+                    {isLoading ? <Skeleton className="h-6 w-48 bg-white/10" /> : <ActiveDaysDisplay days={market?.days} />}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto self-end">
+                    <Dialog open={isHolidayDialogOpen} onOpenChange={setHolidayDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="w-full sm:w-auto bg-black/30 border-white/20 hover:bg-black/40 text-white">
+                                <CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-gray-950 text-white border-gray-800">
+                            <DialogHeader>
+                                <DialogTitle>Mark Holiday for {marketName}</DialogTitle>
+                            </DialogHeader>
+                            <form className="space-y-4" onSubmit={handleMarkAsHoliday}>
+                                <div className="space-y-2">
+                                    <Label htmlFor="holiday-date">Date</Label>
+                                    <Input
+                                        id="holiday-date"
+                                        placeholder="DD/MM/YYYY"
+                                        value={dateInput}
+                                        onChange={handleDateInputChange}
+                                        className="bg-gray-900 border-gray-700"
+                                    />
+                                </div>
+                                <DialogFooter>
+                                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Mark as Holiday</Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+                    <Dialog open={isAddOpenResultDialogOpen} onOpenChange={setAddOpenResultDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full sm:w-auto bg-black/30 border-white/20 hover:bg-black/40 text-white">
-                            <CalendarOff className="mr-2 h-4 w-4" />Mark as Holiday
-                        </Button>
+                        <Button className="w-full sm:w-auto bg-white text-primary hover:bg-white/90">Add Open Result</Button>
                     </DialogTrigger>
                     <DialogContent className="bg-gray-950 text-white border-gray-800">
                         <DialogHeader>
-                            <DialogTitle>Mark Holiday for {marketName}</DialogTitle>
+                            <DialogTitle>Add Open Result for {marketName}</DialogTitle>
                         </DialogHeader>
-                        <form className="space-y-4" onSubmit={handleMarkAsHoliday}>
-                             <div className="space-y-2">
-                                <Label htmlFor="holiday-date">Date</Label>
+                        <form className="space-y-4" onSubmit={handleSubmitOpenResult}>
+                            <div className="space-y-2">
+                                <Label htmlFor="date">Date</Label>
                                 <Input
-                                    id="holiday-date"
+                                    id="date"
                                     placeholder="DD/MM/YYYY"
                                     value={dateInput}
                                     onChange={handleDateInputChange}
                                     className="bg-gray-900 border-gray-700"
                                 />
                             </div>
+                            <div>
+                                <Label htmlFor="open-panna">Open Panna</Label>
+                                <Input name="openPanna" id="open-panna" placeholder="e.g., 123" value={openPanna} onChange={(e) => setOpenPanna(e.target.value)} className="bg-gray-900 border-gray-700"/>
+                            </div>
                             <DialogFooter>
-                                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Mark as Holiday</Button>
+                                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Add Open Result</Button>
                             </DialogFooter>
                         </form>
-                    </DialogContent>
-                </Dialog>
-                <Dialog open={isAddOpenResultDialogOpen} onOpenChange={setAddOpenResultDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button className="w-full sm:w-auto bg-white text-primary hover:bg-white/90">Add Open Result</Button>
-                </DialogTrigger>
-                <DialogContent className="bg-gray-950 text-white border-gray-800">
-                    <DialogHeader>
-                        <DialogTitle>Add Open Result for {marketName}</DialogTitle>
-                    </DialogHeader>
-                    <form className="space-y-4" onSubmit={handleSubmitOpenResult}>
-                         <div className="space-y-2">
-                            <Label htmlFor="date">Date</Label>
-                             <Input
-                                id="date"
-                                placeholder="DD/MM/YYYY"
-                                value={dateInput}
-                                onChange={handleDateInputChange}
-                                className="bg-gray-900 border-gray-700"
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="open-panna">Open Panna</Label>
-                            <Input name="openPanna" id="open-panna" placeholder="e.g., 123" value={openPanna} onChange={(e) => setOpenPanna(e.target.value)} className="bg-gray-900 border-gray-700"/>
-                        </div>
-                        <DialogFooter>
-                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Add Open Result</Button>
-                        </DialogFooter>
-                    </form>
-                    </DialogContent>
-                </Dialog>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
           </CardHeader>
           <CardContent>
