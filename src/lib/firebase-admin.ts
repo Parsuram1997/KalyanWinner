@@ -1,15 +1,31 @@
 
-import { initializeApp, getApps, getApp, type App } from 'firebase-admin/app';
+import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 
+const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
 if (!getApps().length) {
-  // Explicitly providing the Project ID makes the initialization more robust in
-  // Google Cloud environments, preventing potential ambiguity in credential discovery.
-  initializeApp({
-    projectId: "studio-7786701397-58781",
-  });
+  if (serviceAccountKey) {
+    try {
+      const serviceAccount = JSON.parse(serviceAccountKey);
+      initializeApp({
+        credential: cert(serviceAccount),
+        projectId: "studio-7786701397-58781",
+      });
+    } catch (e) {
+      console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY, falling back to default.", e);
+      initializeApp({
+        projectId: "studio-7786701397-58781",
+      });
+    }
+  } else {
+    // Fallback for environments where the service account is discovered automatically
+    initializeApp({
+      projectId: "studio-7786701397-58781",
+    });
+  }
 }
 
 const app = getApp();
