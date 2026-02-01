@@ -72,7 +72,7 @@ const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
 
 export default function EnterResultsPage() {
     const params = useParams();
-    const marketSlug = params.market as string;
+    const marketSlug = Array.isArray(params.market) ? params.market[0] : params.market as string;
     
     const firestore = useFirestore();
 

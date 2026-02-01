@@ -37,12 +37,16 @@ export async function createKalyanResult(resultData: KalyanResultPayload) {
 
     // Add the new result document to Firestore
     await resultsRef.add(resultData);
+    
+    const slug = resultData.marketName.toLowerCase().replace(/\s+/g, '-');
 
     // Revalidate paths to refresh data on client-side navigations
     revalidatePath("/admin/manage-results", 'page');
-    revalidatePath(`/admin/manage-results/${resultData.marketName.toLowerCase().replace(/\s+/g, '-')}`, 'page');
+    revalidatePath(`/admin/manage-results/${slug}`, 'page');
     revalidatePath("/play", 'page');
-    revalidatePath("/results", 'page'); // also revalidate user-facing results pages
+    revalidatePath("/results", 'page');
+    revalidatePath(`/results/${slug}`, 'page');
+    revalidatePath(`/panel-chart/${slug}`, 'page');
 
     return { success: true, message: 'Result saved successfully.' };
   } catch (error: any) {
@@ -63,19 +67,26 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
   try {
     const resultRef = firestore.collection('kalyan_results').doc(resultId);
 
+    // Get the document BEFORE updating to safely get the market name
+    const docSnap = await resultRef.get();
+    if (!docSnap.exists()) {
+        throw new Error("Result to update was not found.");
+    }
+    const marketName = docSnap.data()?.marketName || '';
+    const slug = marketName.toLowerCase().replace(/\s+/g, '-');
+
     // Update the document with the new data
     await resultRef.update(resultData);
-
-    const doc = await resultRef.get();
-    const marketName = doc.data()?.marketName || '';
 
     // Revalidate paths
     revalidatePath("/admin/manage-results", 'page');
     if (marketName) {
-      revalidatePath(`/admin/manage-results/${marketName.toLowerCase().replace(/\s+/g, '-')}`, 'page');
+      revalidatePath(`/admin/manage-results/${slug}`, 'page');
+      revalidatePath(`/results/${slug}`, 'page');
+      revalidatePath(`/panel-chart/${slug}`, 'page');
     }
     revalidatePath("/play", 'page');
-    revalidatePath("/results", 'page'); // also revalidate user-facing results pages
+    revalidatePath("/results", 'page'); 
 
     return { success: true, message: 'Result updated successfully.' };
   } catch (error: any) {
@@ -99,13 +110,17 @@ export async function deleteKalyanResult(resultId: string) {
       throw new Error("Result not found.");
     }
     const marketName = doc.data()?.marketName || '';
+    const slug = marketName.toLowerCase().replace(/\s+/g, '-');
+
 
     await resultRef.delete();
 
     // Revalidate relevant paths
     revalidatePath('/admin/manage-results', 'page');
     if (marketName) {
-      revalidatePath(`/admin/manage-results/${marketName.toLowerCase().replace(/\s+/g, '-')}`, 'page');
+        revalidatePath(`/admin/manage-results/${slug}`, 'page');
+        revalidatePath(`/results/${slug}`, 'page');
+        revalidatePath(`/panel-chart/${slug}`, 'page');
     }
 
     return { success: true, message: "Result deleted successfully." };
