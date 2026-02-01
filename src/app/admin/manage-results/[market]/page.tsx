@@ -342,51 +342,55 @@ export default function EnterResultsPage() {
                             <TableRow className="border-b-white/20">
                                 <TableCell colSpan={5} className="text-center text-red-400 py-4">{error.message}</TableCell>
                             </TableRow>
-                        ) : paginatedResults && paginatedResults.length > 0 ? paginatedResults.map((result) => (
-                            <TableRow key={result.id} className="border-b-white/20 hover:bg-black/20 text-xs">
-                                <TableCell className="py-2 whitespace-nowrap">{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
-                                <TableCell className="font-mono text-center py-2">{result.openPanna}</TableCell>
-                                <TableCell className="font-bold text-base text-white font-mono text-center py-2">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : result.jodi || '--'}</TableCell>
-                                <TableCell className="font-mono text-center py-2">{result.closePanna || '--'}</TableCell>
-                                <TableCell className="py-2">
-                                    <div className="flex gap-1 justify-center">
-                                        {result.jodi === 'L' ? (
-                                            <Button variant="outline" size="icon" disabled className="bg-transparent cursor-not-allowed h-8 w-8"><Edit className="h-4 w-4" /></Button>
-                                        ) : (
-                                            <Button 
-                                                variant="outline" 
-                                                size="icon" 
-                                                className="bg-transparent hover:bg-white/10 h-8 w-8"
-                                                onClick={() => {
-                                                    setSelectedResult(result);
-                                                    setUpdateClosePanna(result.closePanna || "");
-                                                    setUpdateResultDialogOpen(true);
-                                                }}
-                                            >
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="destructive" size="icon" className="h-8 w-8"><Trash className="h-4 w-4" /></Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent className="bg-gray-950 text-white border-gray-800">
-                                                <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
-                                                </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                <AlertDialogCancel className="bg-transparent border-gray-700 hover:bg-gray-800">Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDelete(result.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )) : (
+                        ) : paginatedResults && paginatedResults.length > 0 ? paginatedResults.map((result) => {
+                            const isOpenResultOnly = result.openPanna && !result.closePanna && result.jodi !== 'L';
+                            const jodiToShow = isOpenResultOnly ? `${getPannaSum(result.openPanna)}*` : (result.jodi || '--');
+                            return (
+                                <TableRow key={result.id} className="border-b-white/20 hover:bg-black/20 text-xs">
+                                    <TableCell className="py-2 whitespace-nowrap">{new Date(result.date).toLocaleDateString('en-GB')}</TableCell>
+                                    <TableCell className="font-mono text-center py-2">{result.openPanna}</TableCell>
+                                    <TableCell className="font-bold text-base text-white font-mono text-center py-2">{result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : jodiToShow}</TableCell>
+                                    <TableCell className="font-mono text-center py-2">{result.closePanna || '--'}</TableCell>
+                                    <TableCell className="py-2">
+                                        <div className="flex gap-1 justify-center">
+                                            {result.jodi === 'L' ? (
+                                                <Button variant="outline" size="icon" disabled className="bg-transparent cursor-not-allowed h-8 w-8"><Edit className="h-4 w-4" /></Button>
+                                            ) : (
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="icon" 
+                                                    className="bg-transparent hover:bg-white/10 h-8 w-8"
+                                                    onClick={() => {
+                                                        setSelectedResult(result);
+                                                        setUpdateClosePanna(result.closePanna || "");
+                                                        setUpdateResultDialogOpen(true);
+                                                    }}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="destructive" size="icon" className="h-8 w-8"><Trash className="h-4 w-4" /></Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent className="bg-gray-950 text-white border-gray-800">
+                                                    <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
+                                                    </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                    <AlertDialogCancel className="bg-transparent border-gray-700 hover:bg-gray-800">Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDelete(result.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        }) : (
                             <TableRow className="border-b-white/20">
                                 <TableCell colSpan={5} className="text-center py-8 text-white/70">No results found for this market.</TableCell>
                             </TableRow>
@@ -402,66 +406,70 @@ export default function EnterResultsPage() {
                 ) : error ? (
                     <div className="p-3 text-center text-red-400">{error.message}</div>
                 ) : paginatedResults && paginatedResults.length > 0 ? (
-                    paginatedResults.map((result) => (
-                    <Card key={result.id} className="p-3 bg-black/30 border-white/20 text-white">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="font-semibold text-sm">{new Date(result.date).toLocaleDateString('en-GB')}</p>
-                                <p className="text-xs text-white/70">{marketName}</p>
-                            </div>
-                            {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : (
-                                <div className="text-right">
-                                    <p className="font-bold text-base text-white">{result.jodi || '--'}</p>
+                    paginatedResults.map((result) => {
+                        const isOpenResultOnly = result.openPanna && !result.closePanna && result.jodi !== 'L';
+                        const jodiToShow = isOpenResultOnly ? `${getPannaSum(result.openPanna)}*` : (result.jodi || '--');
+                        return (
+                        <Card key={result.id} className="p-3 bg-black/30 border-white/20 text-white">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-semibold text-sm">{new Date(result.date).toLocaleDateString('en-GB')}</p>
+                                    <p className="text-xs text-white/70">{marketName}</p>
                                 </div>
-                            )}
-                        </div>
-                        <div className={cn("grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/20", result.jodi === 'L' && 'hidden')}>
-                            <div className="text-xs">
-                                <p className="text-white/70">Open</p>
-                                <p className="font-mono font-medium text-sm">{result.openPanna || '---'}</p>
+                                {result.jodi === 'L' ? <Badge variant="destructive">HOLIDAY</Badge> : (
+                                    <div className="text-right">
+                                        <p className="font-bold text-base text-white">{jodiToShow}</p>
+                                    </div>
+                                )}
                             </div>
-                            <div className="text-xs text-right">
-                                <p className="text-white/70">Close</p>
-                                <p className="font-mono font-medium text-sm">{result.closePanna || '---'}</p>
+                            <div className={cn("grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/20", result.jodi === 'L' && 'hidden')}>
+                                <div className="text-xs">
+                                    <p className="text-white/70">Open</p>
+                                    <p className="font-mono font-medium text-sm">{result.openPanna || '---'}</p>
+                                </div>
+                                <div className="text-xs text-right">
+                                    <p className="text-white/70">Close</p>
+                                    <p className="font-mono font-medium text-sm">{result.closePanna || '---'}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex gap-2 justify-end mt-3 pt-2 border-t border-white/20">
-                            {result.jodi === 'L' ? (
-                                <Button variant="outline" size="sm" disabled className="bg-transparent text-xs"><Edit className="h-3 w-3 mr-1"/> Edit</Button>
-                            ) : (
-                                <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="bg-transparent hover:bg-white/10 text-xs text-white"
-                                    onClick={() => {
-                                        setSelectedResult(result);
-                                        setUpdateClosePanna(result.closePanna || "");
-                                        setUpdateResultDialogOpen(true);
-                                    }}
-                                >
-                                    <Edit className="h-3 w-3 mr-1"/> {result.closePanna ? 'Update' : 'Add Close'}
-                                </Button>
-                            )}
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm" className="text-xs"><Trash className="h-3 w-3 mr-1" /> Delete</Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent className="bg-gray-950 text-white border-gray-800">
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel className="bg-transparent border-gray-700 hover:bg-gray-800">Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(result.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
-                    </Card>
-                    ))
+                            <div className="flex gap-2 justify-end mt-3 pt-2 border-t border-white/20">
+                                {result.jodi === 'L' ? (
+                                    <Button variant="outline" size="sm" disabled className="bg-transparent text-xs"><Edit className="h-3 w-3 mr-1"/> Edit</Button>
+                                ) : (
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="bg-transparent hover:bg-white/10 text-xs text-white"
+                                        onClick={() => {
+                                            setSelectedResult(result);
+                                            setUpdateClosePanna(result.closePanna || "");
+                                            setUpdateResultDialogOpen(true);
+                                        }}
+                                    >
+                                        <Edit className="h-3 w-3 mr-1"/> {result.closePanna ? 'Update' : 'Add Close'}
+                                    </Button>
+                                )}
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="sm" className="text-xs"><Trash className="h-3 w-3 mr-1" /> Delete</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="bg-gray-950 text-white border-gray-800">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This will permanently delete the result for {new Date(result.date).toLocaleDateString('en-GB')}.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel className="bg-transparent border-gray-700 hover:bg-gray-800">Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(result.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        </Card>
+                        )
+                    })
                 ) : (
                     <div className="text-center py-8 text-white/70">
                     No results found for this market.
