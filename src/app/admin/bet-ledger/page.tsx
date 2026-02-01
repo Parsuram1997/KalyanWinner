@@ -24,7 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Filter, Edit, Trash2, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { format, startOfDay, endOfDay, isWithinInterval, parse } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -50,7 +50,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { updateBet, deleteBet, deleteMultipleBets } from "@/app/actions/bet-actions";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type Bet = {
@@ -88,16 +87,13 @@ const getStatusClasses = (status: Bet['status']) => {
     }
 }
 
-const months = [
-  { value: "0", label: "January" }, { value: "1", label: "February" }, { value: "2", label: "March" },
-  { value: "3", label: "April" }, { value: "4", label: "May" }, { value: "5", label: "June" },
-  { value: "6", label: "July" }, { value: "7", label: "August" }, { value: "8", label: "September" },
-  { value: "9", label: "October" }, { value: "10", label: "November" }, { value: "11", label: "December" },
-];
-
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 5 }, (_, i) => (currentYear - i).toString());
-const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+// Helper to parse date string and validate it
+const parseDateString = (dateStr: string): Date | null => {
+    if (!dateStr || dateStr.length !== 10) return null;
+    const date = parse(dateStr, 'dd/MM/yyyy', new Date());
+    if (isNaN(date.getTime())) return null;
+    return date;
+}
 
 
 export default function BetLedgerPage() {
@@ -110,9 +106,7 @@ export default function BetLedgerPage() {
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null);
   const [selectedBets, setSelectedBets] = useState<string[]>([]);
 
-  const [day, setDay] = useState<string | undefined>(() => date.getDate().toString());
-  const [month, setMonth] = useState<string | undefined>(() => date.getMonth().toString());
-  const [year, setYear] = useState<string | undefined>(() => date.getFullYear().toString());
+  const [dateInput, setDateInput] = useState<string>(() => format(new Date(), 'dd/MM/yyyy'));
   const [isPopoverOpen, setPopoverOpen] = useState(false);
 
 
@@ -237,20 +231,41 @@ export default function BetLedgerPage() {
 
   const isLoading = isBetsLoading || isResultsLoading;
 
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/[^0-9]/g, '');
+    let formattedValue = '';
+    if (rawValue.length > 0) {
+        formattedValue = rawValue.slice(0, 2);
+    }
+    if (rawValue.length > 2) {
+        formattedValue += '/' + rawValue.slice(2, 4);
+    }
+    if (rawValue.length > 4) {
+        formattedValue += '/' + rawValue.slice(4, 8);
+    }
+    setDateInput(formattedValue);
+  };
+
   const handleFilter = () => {
-    if (day && month && year) {
-        const newDate = new Date(parseInt(year), parseInt(month), parseInt(day));
+    const newDate = parseDateString(dateInput);
+    if (newDate) {
         setDate(newDate);
         setCurrentPage(1);
+        setPopoverOpen(false);
+    } else if (dateInput) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Date",
+            description: "Please enter a date in DD/MM/YYYY format.",
+        });
+    } else {
+        handleClear();
     }
-    setPopoverOpen(false);
   }
 
   const handleClear = () => {
     setDate(new Date());
-    setDay(new Date().getDate().toString());
-    setMonth(new Date().getMonth().toString());
-    setYear(new Date().getFullYear().toString());
+    setDateInput(format(new Date(), 'dd/MM/yyyy'));
     setCurrentPage(1);
     setPopoverOpen(false);
   }
@@ -300,25 +315,20 @@ export default function BetLedgerPage() {
                       <div className="space-y-2">
                           <h4 className="font-medium leading-none">Select Date</h4>
                           <p className="text-sm text-muted-foreground">
-                          Select a day, month, and year to filter bets.
+                          Enter a date in DD/MM/YYYY format.
                           </p>
                       </div>
                       <div className="grid gap-2">
-                          <div className="grid grid-cols-3 items-center gap-2">
-                              <Select onValueChange={setDay} value={day}>
-                                  <SelectTrigger className="w-full"><SelectValue placeholder="Day" /></SelectTrigger>
-                                  <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                              </Select>
-                              <Select onValueChange={setMonth} value={month}>
-                                  <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
-                                  <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-                              </Select>
-                              <Select onValueChange={setYear} value={year}>
-                                  <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
-                                  <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
-                              </Select>
+                          <div className="space-y-2">
+                              <Label htmlFor="date-filter">Date</Label>
+                              <Input
+                                  id="date-filter"
+                                  placeholder="DD/MM/YYYY"
+                                  value={dateInput}
+                                  onChange={handleDateInputChange}
+                              />
                           </div>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div className="grid grid-cols-2 gap-2 mt-2">
                               <Button onClick={handleFilter} className="w-full">Go</Button>
                               <Button onClick={handleClear} variant="secondary" className="w-full">Clear</Button>
                           </div>
@@ -567,3 +577,5 @@ export default function BetLedgerPage() {
   );
 }
 
+
+    
