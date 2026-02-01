@@ -106,9 +106,21 @@ export default function LoginPage() {
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
-            if (userDocSnap.data()?.role === 'User') {
+            const userData = userDocSnap.data();
+            if (userData?.role === 'User') {
                 toast({ title: "Login Successful", description: "Welcome back!" });
-                router.push("/dashboard");
+                
+                // Store user UID for PIN login flow
+                localStorage.setItem('lastUserUid', user.uid);
+                
+                // Check if PIN is set
+                if (userData.pin) {
+                    router.push("/dashboard");
+                } else {
+                    // If no PIN, redirect to setup page
+                    toast({ title: "Setup PIN", description: "Please create a PIN for faster logins." });
+                    router.push("/setup-pin");
+                }
             } else {
                 toast({ variant: "destructive", title: "Access Denied", description: "Please use the correct portal." });
                 await auth.signOut();
@@ -169,7 +181,9 @@ export default function LoginPage() {
             )}
             </CardContent>
             <CardFooter className="flex-col gap-4">
-                <p className="text-sm text-center w-full text-white/80">Don't have an account? <Link href="/signup" className="font-semibold text-yellow-300 hover:underline">Sign up</Link></p>
+                <p className="text-sm text-center w-full text-white/80">Don't have an account?{" "}
+                <Link href="/signup" className="font-semibold text-yellow-300 hover:underline">Sign up</Link>
+                </p>
                  <Link href="/admin" className="text-xs underline hover:text-yellow-300 text-white/70">Admin Login</Link>
             </CardFooter>
         </Card>

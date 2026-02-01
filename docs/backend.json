@@ -35,6 +35,10 @@
           "type": "string",
           "description": "The district where the user resides."
         },
+        "pin": {
+            "type": "string",
+            "description": "A secure hash of the user's 4 or 6-digit login PIN."
+        },
         "depositBalance": {
           "type": "number",
           "description": "The user's current wallet balance from deposits."

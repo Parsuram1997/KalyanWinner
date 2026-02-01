@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -167,7 +168,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.replace("/login");
+      router.replace("/welcome");
     }
     if (!isUserDataLoading && userData && userData.role !== 'User') {
         router.replace('/login');
