@@ -3,6 +3,9 @@
 
 import { auth, firestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import bcrypt from 'bcryptjs';
+
+const SALT_ROUNDS = 10;
 
 export async function setPinForUser(uid: string, pin: string): Promise<{ success: true } | { success: false, error: string }> {
     if (!uid) {
@@ -16,11 +19,13 @@ export async function setPinForUser(uid: string, pin: string): Promise<{ success
         const userDocRef = firestore.collection('users').doc(uid);
         const userDoc = await userDocRef.get();
         if (!userDoc.exists) {
-            return { success: false, error: 'User account not found in the database.' };
+            return { success: false, error: 'User account not found. Please log in again.' };
         }
+        
+        const hashedPin = bcrypt.hashSync(pin, SALT_ROUNDS);
 
         await userDocRef.update({
-            pin: pin, // In a real-world scenario, this should be a securely hashed PIN
+            pin: hashedPin,
             updatedAt: FieldValue.serverTimestamp(),
         });
 
@@ -36,23 +41,46 @@ export async function setPinForUser(uid: string, pin: string): Promise<{ success
 }
 
 export async function verifyPinAndGetCustomToken(mobile: string, pin: string): Promise<{ success: true, token: string } | { success: false, error: string }> {
-    if (!mobile || !pin || pin.length !== 4 || !/^\d{10}$/.test(mobile)) {
-        return { success: false, error: 'A valid 10-digit mobile number and 4-digit PIN are required.' };
+    if (!mobile || !pin) {
+        return { success: false, error: 'A valid mobile number and PIN are required.' };
+    }
+
+    let numberToQuery = mobile.trim();
+    if (numberToQuery.startsWith('+91')) {
+      numberToQuery = numberToQuery.substring(3);
+    } else if (numberToQuery.startsWith('91')) {
+      numberToQuery = numberToQuery.substring(2);
+    }
+    
+    if (!/^\d{10}$/.test(numberToQuery)) {
+        return { success: false, error: 'A valid 10-digit mobile number is required.' };
+    }
+    if (!/^\d{4}$/.test(pin)) {
+        return { success: false, error: 'A 4-digit PIN is required.' };
     }
 
     try {
         const usersRef = firestore.collection('users');
-        const q = usersRef.where('mobile', '==', mobile).limit(1);
+        const q = usersRef
+            .where('mobile', '==', numberToQuery)
+            .where('role', '==', 'User')
+            .limit(1);
         const querySnapshot = await q.get();
 
         if (querySnapshot.empty) {
-            return { success: false, error: 'No account found with this mobile number.' };
+            return { success: false, error: 'No user account found with this mobile number.' };
         }
 
         const userDoc = querySnapshot.docs[0];
         const userData = userDoc.data();
+        
+        if (!userData.pin) {
+            return { success: false, error: 'No PIN is set for this account. Please log in with your password to set one.' };
+        }
+        
+        const isPinValid = bcrypt.compareSync(pin, userData.pin);
 
-        if (userData.pin !== pin) {
+        if (!isPinValid) {
             return { success: false, error: 'Invalid PIN.' };
         }
 
