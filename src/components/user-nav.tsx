@@ -34,11 +34,10 @@ export function UserNav() {
     try {
       await auth.signOut();
       
-      // Clear user data from local storage
-      localStorage.removeItem('lastUserUid');
-      localStorage.removeItem('lastUserName');
-      localStorage.removeItem('lastUserCustomId');
-      localStorage.removeItem('lastUserMobile');
+      // NOTE: We no longer clear local storage here.
+      // This allows the /welcome page to detect the last user
+      // and offer PIN login as a convenience.
+      // The auth state is properly cleared by auth.signOut().
 
       toast({
         title: "Logged Out",
