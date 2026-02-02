@@ -97,6 +97,7 @@ function PinLoginForm() {
             Welcome
           </CardTitle>
           <p className="text-xl text-yellow-300 pt-1">{userName}</p>
+          <p className="text-xs text-white/70">{customId}</p>
           <CardDescription className="text-white/80 pt-2">
             Enter your PIN to login
           </CardDescription>
@@ -123,7 +124,6 @@ function PinLoginForm() {
           </form>
         </CardContent>
         <CardFooter className="flex-col gap-2 pt-4">
-          <p className="text-xs text-white/70">{customId && `ID: ${customId}`}</p>
           <Button variant="link" onClick={handleLogout} className="text-yellow-300 hover:underline text-sm font-normal">
             Login with another account
           </Button>
