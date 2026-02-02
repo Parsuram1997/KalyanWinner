@@ -169,7 +169,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const firestore = useFirestore();
   const auth = useAuth();
-  const cleanupStarted = useRef(false);
 
   const userDocRef = useMemoFirebase(
     () => (firestore && user ? doc(firestore, "users", user.uid) : null),
@@ -177,37 +176,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
-  useEffect(() => {
-    // Do nothing until all initial data is loaded
-    if (isUserLoading || (user && isUserDataLoading)) {
-      return;
-    }
+  // This ref will track if we have *started* the cleanup process for a ghost user.
+  const cleanupStarted = useRef(false);
 
-    // A. Handle GHOST USER condition.
-    // This runs when auth is loaded, a user is authenticated, but their Firestore doc is definitively not found.
-    if (user && !userData) {
-      if (!cleanupStarted.current) {
-        cleanupStarted.current = true;
-        
-        console.error("CRITICAL: User document not found for authenticated user:", user.uid);
-        
-        toast({ 
-            variant: "destructive", 
-            title: "Account Error", 
-            description: "Your account data could not be found. Please sign up again.",
-            duration: 10000
-        });
-        
-        auth.signOut().then(() => {
-            fetch('/api/auth/session', { method: 'DELETE' });
-            localStorage.clear();
-            router.replace('/signup');
-        });
-      }
-      return; // Stop further execution
-    }
-    
-    // B. Handle PIN RESET special case.
+  // Effect for handling PIN reset, which is a true side effect.
+  useEffect(() => {
     if (user && sessionStorage.getItem('isPinReset') === 'true') {
         sessionStorage.removeItem('isPinReset');
         clearUserPin(user.uid).then((result) => {
@@ -219,8 +192,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             }
         });
     }
-  }, [user, userData, isUserLoading, isUserDataLoading, router, auth]);
-  
+  }, [user, router]); // Only depends on user and router.
+
   // 1. Primary loading states.
   if (isUserLoading || (user && isUserDataLoading)) {
     return <LoadingScreen />;
@@ -232,8 +205,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return <LoadingScreen />;
   }
 
-  // 3. Ghost user is being cleaned up.
+  // 3. Ghost user case: Authenticated, but no corresponding document in Firestore.
   if (!userData) {
+    // We've detected a ghost user. Initiate cleanup ONCE.
+    if (!cleanupStarted.current) {
+        cleanupStarted.current = true; // Set the flag immediately.
+
+        console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+        
+        toast({ 
+            variant: "destructive", 
+            title: "Account Error", 
+            description: "Your account data could not be found. Please sign up again.",
+            duration: 10000
+        });
+        
+        // Start the sign out process. The onAuthStateChanged listener will eventually
+        // re-render the component, at which point the `!user` condition (step 2) will be met.
+        auth.signOut().then(() => {
+            fetch('/api/auth/session', { method: 'DELETE' });
+            localStorage.clear();
+            router.replace('/signup'); // Force redirect for good measure.
+        });
+    }
+    
+    // While the cleanup process (signOut) is happening in the background,
+    // continue to show the loading screen to prevent any flicker or further errors.
     return <LoadingScreen />;
   }
 
