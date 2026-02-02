@@ -176,8 +176,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
-  const cleanupStarted = useRef(false);
-
   // This single useEffect handles all auth-related side-effects.
   useEffect(() => {
     // A. Pin reset logic
@@ -194,29 +192,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return; // Don't continue to other checks
     }
 
-    // B. Ghost user cleanup logic
-    // This runs when auth is loaded, a user is authenticated, but their Firestore doc is definitively not found.
-    if (user && !isUserLoading && !isUserDataLoading && !userData) {
-      if (!cleanupStarted.current) {
-        cleanupStarted.current = true;
-        
-        console.error("CRITICAL: User document not found for authenticated user:", user.uid);
-        
-        toast({ 
-            variant: "destructive", 
-            title: "Account Error", 
-            description: "Your account data could not be found. Please sign up again.",
-            duration: 10000
-        });
-        
-        auth.signOut().then(() => {
-            fetch('/api/auth/session', { method: 'DELETE' });
-            localStorage.clear();
-            router.replace('/signup');
-        });
-      }
-    }
-  }, [user, isUserLoading, isUserDataLoading, userData, auth, router]);
+  }, [user, auth, router]);
 
 
   // 1. Primary loading states.
@@ -231,9 +207,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   // 3. Ghost user case: Authenticated, but no corresponding document in Firestore.
-  // The useEffect above handles the cleanup. We just show a loading screen while it happens.
   if (!userData) {
-    return <LoadingScreen />;
+    return <GhostUserHandler user={user} auth={auth} />;
   }
 
   // 4. Role check: Ensure the user has the 'User' role.
@@ -253,4 +228,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   
   // 6. All checks passed. Render the main application layout.
   return <AppLayoutContent>{children}</AppLayoutContent>;
+}
+
+
+// Helper component to handle the "ghost user" case.
+function GhostUserHandler({ user, auth }: { user: any, auth: any }) {
+    const router = useRouter();
+    const cleanupStarted = useRef(false);
+
+    useEffect(() => {
+        if (!cleanupStarted.current) {
+            cleanupStarted.current = true; // Set flag immediately
+
+            console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+            
+            toast({ 
+                variant: "destructive", 
+                title: "Account Error", 
+                description: "Your account data could not be found. Please sign up again.",
+                duration: 10000
+            });
+            
+            // Perform a full cleanup
+            auth.signOut().then(() => {
+                fetch('/api/auth/session', { method: 'DELETE' }); // Clear server session
+                localStorage.clear(); // Clear all local storage for the site
+                router.replace('/signup'); // Send to signup
+            });
+        }
+    }, [user, auth, router]);
+
+    // Show a loading screen while the cleanup and redirect happen.
+    return <LoadingScreen />;
 }
