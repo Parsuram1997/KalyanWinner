@@ -178,6 +178,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // This one-time effect handles the special case of pin reset.
   useEffect(() => {
+    // A. Handle ghost user condition.
+    // This runs when auth is loaded, a user is authenticated, but their Firestore doc is definitively not found.
+    if (user && !isUserLoading && !isUserDataLoading && !userData) {
+      console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+      
+      toast({ 
+          variant: "destructive", 
+          title: "Account Error", 
+          description: "Your account data could not be found. Please sign up again.",
+          duration: 10000
+      });
+      
+      // Fire and forget cleanup
+      fetch('/api/auth/session', { method: 'DELETE' });
+      localStorage.clear();
+      
+      // Redirect
+      router.replace('/signup');
+      return; // Stop further execution in this effect
+    }
+    
+    // B. This one-time effect handles the special case of pin reset.
     if (user && sessionStorage.getItem('isPinReset') === 'true') {
         sessionStorage.removeItem('isPinReset');
         clearUserPin(user.uid).then((result) => {
@@ -189,7 +211,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             }
         });
     }
-  }, [user, router]);
+  }, [user, userData, isUserLoading, isUserDataLoading, router]);
   
   // 1. Primary loading states. Wait until we know the auth state and have fetched the user doc if a user exists.
   if (isUserLoading || (user && isUserDataLoading)) {
@@ -203,27 +225,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   // From here, `user` object is guaranteed to exist.
-
-  // 3. Ghost user case: Authenticated, but no corresponding document in Firestore.
+  // The ghost user case is handled by the useEffect. If we reach here and !userData,
+  // it's a transient state before the effect's redirect kicks in.
   if (!userData) {
-      console.error("CRITICAL: User document not found for authenticated user:", user.uid);
-      
-      // Use an effect to fire the cleanup and redirect ONCE.
-      useEffect(() => {
-        toast({ 
-            variant: "destructive", 
-            title: "Account Error", 
-            description: "Your account data could not be found. Please sign up again.",
-            duration: 10000
-        });
-        
-        // No need to await or handle response. Fire and forget.
-        fetch('/api/auth/session', { method: 'DELETE' });
-        localStorage.clear();
-        router.replace('/signup');
-
-      }, [router]);
-
       return <LoadingScreen />;
   }
 
@@ -231,13 +235,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // 4. Role check: Ensure the user has the 'User' role.
   if (userData.role !== 'User') {
-      useEffect(() => {
-          auth.signOut().then(() => {
-              fetch('/api/auth/session', { method: 'DELETE' });
-              router.replace('/login');
-          });
-      }, [auth, router]);
-      
+      auth.signOut().then(() => {
+          fetch('/api/auth/session', { method: 'DELETE' });
+          router.replace('/login');
+      });
       return <LoadingScreen />;
   }
 
