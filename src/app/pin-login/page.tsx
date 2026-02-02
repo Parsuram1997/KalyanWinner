@@ -93,10 +93,11 @@ function PinLoginForm() {
       <Card className="bg-black/20 border-white/20 text-white backdrop-blur-md">
         <CardHeader className="items-center text-center">
            <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="object-contain mx-auto mb-4" />
-          <CardTitle className="text-2xl font-bold text-white">
-            Welcome, {userName}!
+          <CardTitle className="text-3xl font-bold text-white">
+            Welcome
           </CardTitle>
-          <CardDescription className="text-white/80">
+          <p className="text-xl text-yellow-300 pt-1">{userName}</p>
+          <CardDescription className="text-white/80 pt-2">
             Enter your PIN to login
           </CardDescription>
         </CardHeader>
