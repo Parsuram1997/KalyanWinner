@@ -178,61 +178,58 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    // Wait until all loading is complete before running any logic
+    // Condition 1: Still loading essential data. Do nothing and wait for the next run.
     if (isUserLoading || (user && isUserDataLoading)) {
       return;
     }
 
-    // CASE 1: No user authenticated. Redirect to welcome page.
+    // Condition 2: No authenticated user found after loading.
     if (!user) {
       router.replace('/welcome');
       return;
     }
 
-    // From here on, we know `user` is an object.
+    // From here, `user` object is guaranteed to exist.
 
-    // CASE 2: Ghost user (Auth user exists, but no Firestore doc). This is the critical case.
+    // Condition 3: Ghost user - Auth user exists, but Firestore doc doesn't.
     if (!userData) {
-      // If cleanup has already been initiated, do nothing further.
-      if (cleanupStarted.current) return;
-      
-      // Mark cleanup as started to prevent loops.
+      if (cleanupStarted.current) return; // Prevent this logic from running multiple times
       cleanupStarted.current = true;
-      
+
       console.error("CRITICAL: User document not found for authenticated user:", user.uid);
       
       toast({ 
           variant: "destructive", 
           title: "Account Error", 
           description: "Your account data could not be found. You will be redirected to sign up.",
-          duration: 10000 // Give user time to see it
+          duration: 10000
       });
 
-      // Perform a direct, forceful logout without waiting for onAuthStateChanged
-      fetch('/api/auth/session', { method: 'DELETE' }); // Delete server session
-      localStorage.clear(); // Clear local state
-      
-      // Redirect to signup to create a new, valid account
+      // Forceful cleanup and redirect
+      fetch('/api/auth/session', { method: 'DELETE' });
+      localStorage.clear();
       router.replace('/signup');
       return;
     }
-    
-    // CASE 3: User is not a 'User' role (e.g., an Admin trying to access user app).
+
+    // From here, `user` and `userData` are guaranteed to exist.
+
+    // Condition 4: Wrong role.
     if (userData.role !== 'User') {
       auth.signOut().then(() => {
           fetch('/api/auth/session', { method: 'DELETE' });
-          router.replace('/login'); // Send them to the user login page, they might have a user account
+          router.replace('/login');
       });
       return;
     }
 
-    // CASE 4: User is valid, but PIN is not set. Redirect to setup.
+    // Condition 5: PIN not set.
     if (!userData.pin && pathname !== '/setup-pin') {
       router.replace(`/setup-pin?uid=${user.uid}`);
       return;
     }
     
-    // CASE 5: Handle PIN reset request from another page (e.g., welcome page)
+    // Condition 6: PIN reset requested.
     if (sessionStorage.getItem('isPinReset') === 'true') {
         sessionStorage.removeItem('isPinReset');
         clearUserPin(user.uid).then((result) => {
@@ -244,20 +241,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             }
         });
     }
-
   }, [user, isUserLoading, userData, isUserDataLoading, auth, router, pathname]);
 
-  // Render logic: Show loading screen until auth state and user doc are resolved.
-  if (isUserLoading || (user && isUserDataLoading)) {
-    return <LoadingScreen />;
+  // This flag determines if we have a "valid" user state to render the content.
+  const isContentReady = 
+    !isUserLoading && 
+    !isUserDataLoading && 
+    user && 
+    userData && 
+    userData.role === 'User' && 
+    (!!userData.pin || pathname === '/setup-pin');
+  
+  // If the state is ready, show the app. Otherwise, show a loading screen.
+  // The useEffect above will handle redirecting away for all invalid states.
+  if (isContentReady) {
+    return <AppLayoutContent>{children}</AppLayoutContent>;
   }
-
-  // If loading is done, but the conditions in useEffect are not met yet,
-  // we might be in a redirect state. Show loading screen to prevent content flashing.
-  if (!user || !userData || userData.role !== 'User' || (!userData.pin && pathname !== '/setup-pin')) {
-    return <LoadingScreen />;
-  }
-
-  // All checks passed, render the actual app content.
-  return <AppLayoutContent>{children}</AppLayoutContent>;
+  
+  return <LoadingScreen />;
 }
