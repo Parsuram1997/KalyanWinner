@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase';
-import { verifyPinAndGetCustomToken } from '@/app/actions/pin-actions';
+import { verifyPinForUser } from '@/app/actions/pin-actions';
 import { signInWithCustomToken } from 'firebase/auth';
 import { Loader } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,7 +25,7 @@ function PinLoginForm() {
   const [userName, setUserName] = useState('');
   const [customId, setCustomId] = useState('');
 
-  const mobile = searchParams.get('mobile');
+  const uid = searchParams.get('uid');
 
   useEffect(() => {
     setUserName(localStorage.getItem('lastUserName') || 'User');
@@ -40,10 +40,10 @@ function PinLoginForm() {
     router.push('/login');
   };
 
-  if (!mobile) {
+  if (!uid) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-white">
-        <p>Mobile number not provided.</p>
+        <p>User information not provided.</p>
         <Link href="/login" className="text-yellow-300 hover:underline mt-4">
           Return to Login
         </Link>
@@ -61,7 +61,7 @@ function PinLoginForm() {
     try {
       if (!auth) throw new Error('Authentication service is not available.');
 
-      const result = await verifyPinAndGetCustomToken(mobile, pin);
+      const result = await verifyPinForUser(uid, pin);
 
       if (result.success) {
         const userCredential = await signInWithCustomToken(auth, result.token);
@@ -76,7 +76,7 @@ function PinLoginForm() {
         toast({ title: 'Login Successful', description: 'Welcome back!' });
         router.push('/dashboard');
       } else {
-        throw new Error(result.error || 'Invalid PIN or mobile number.');
+        throw new Error(result.error || 'Invalid PIN.');
       }
     } catch (error: any) {
       toast({

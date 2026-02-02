@@ -78,7 +78,6 @@ export default function LoginPage() {
     
     const isMobile = !identifier.includes('@') && /^\d{10,15}$/.test(identifier);
     let userEmail = identifier;
-    let userMobile = isMobile ? identifier : '';
 
     if (isMobile) {
         const result = await getEmailForMobile(identifier);
@@ -105,8 +104,6 @@ export default function LoginPage() {
                 localStorage.setItem('lastUserUid', user.uid);
                 localStorage.setItem('lastUserName', userData.name || 'User');
                 localStorage.setItem('lastUserCustomId', userData.customId || '');
-                // Store the mobile number that was actually used to find the user
-                localStorage.setItem('lastUserMobile', userData.mobile || userMobile);
                 
                 if (userData.pin) {
                     router.push("/dashboard");

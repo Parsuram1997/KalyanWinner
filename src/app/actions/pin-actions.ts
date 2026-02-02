@@ -40,39 +40,23 @@ export async function setPinForUser(uid: string, pin: string): Promise<{ success
     }
 }
 
-export async function verifyPinAndGetCustomToken(mobile: string, pin: string): Promise<{ success: true, token: string } | { success: false, error: string }> {
-    if (!mobile || !pin) {
-        return { success: false, error: 'A valid mobile number and PIN are required.' };
-    }
-
-    let numberToQuery = mobile.trim();
-    if (numberToQuery.startsWith('+91')) {
-      numberToQuery = numberToQuery.substring(3);
-    } else if (numberToQuery.startsWith('91')) {
-      numberToQuery = numberToQuery.substring(2);
-    }
-    
-    if (!/^\d{10}$/.test(numberToQuery)) {
-        return { success: false, error: 'A valid 10-digit mobile number is required.' };
+export async function verifyPinForUser(uid: string, pin: string): Promise<{ success: true, token: string } | { success: false, error: string }> {
+    if (!uid || !pin) {
+        return { success: false, error: 'User ID and PIN are required.' };
     }
     if (!/^\d{4}$/.test(pin)) {
         return { success: false, error: 'A 4-digit PIN is required.' };
     }
 
     try {
-        const usersRef = firestore.collection('users');
-        const q = usersRef
-            .where('mobile', '==', numberToQuery)
-            .where('role', '==', 'User')
-            .limit(1);
-        const querySnapshot = await q.get();
+        const userDocRef = firestore.collection('users').doc(uid);
+        const userDoc = await userDocRef.get();
 
-        if (querySnapshot.empty) {
-            return { success: false, error: 'No user account found with this mobile number.' };
+        if (!userDoc.exists) {
+            return { success: false, error: 'User account not found. Please log in again.' };
         }
 
-        const userDoc = querySnapshot.docs[0];
-        const userData = userDoc.data();
+        const userData = userDoc.data()!;
         
         if (!userData.pin) {
             return { success: false, error: 'No PIN is set for this account. Please log in with your password to set one.' };
@@ -89,13 +73,14 @@ export async function verifyPinAndGetCustomToken(mobile: string, pin: string): P
         return { success: true, token: customToken };
 
     } catch (error: any) {
-        console.error(`Error during PIN verification for mobile ${mobile}:`, error);
+        console.error(`Error during PIN verification for user ${uid}:`, error);
         return { 
             success: false, 
             error: error.message || 'An unexpected server error occurred during PIN verification.' 
         };
     }
 }
+
 
 export async function clearUserPin(uid: string): Promise<{ success: true } | { success: false, error: string }> {
     if (!uid) {

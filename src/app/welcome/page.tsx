@@ -12,12 +12,11 @@ export default function WelcomePage() {
 
     useEffect(() => {
         const storedUid = localStorage.getItem('lastUserUid');
-        const storedMobile = localStorage.getItem('lastUserMobile');
 
-        if (storedUid && storedMobile) {
+        if (storedUid) {
             setStatus('Welcome back! Redirecting to PIN login...');
             // Add a small delay for the message to be visible
-            setTimeout(() => router.replace(`/pin-login?mobile=${storedMobile}`), 1000);
+            setTimeout(() => router.replace(`/pin-login?uid=${storedUid}`), 1000);
         } else {
             setStatus('Redirecting to login...');
             setTimeout(() => router.replace('/login'), 1000);
