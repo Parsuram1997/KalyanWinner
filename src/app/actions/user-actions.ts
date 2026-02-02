@@ -29,18 +29,18 @@ export async function createUser(userData: any) {
     const userDocRef = firestore.collection('users').doc(firebaseUser.uid);
 
     const newUser = {
-      uid: firebaseUser.uid,
+      id: firebaseUser.uid,
       customId: `KW${Date.now()}`,
       name,
       mobile,
       email,
       role,
-      password, // Storing password hash is a security risk, but following existing pattern for now.
-                // IMPORTANT: Consider moving to a more secure method post-resolution.
-      balance: 0,
-      totalBets: 0,
-      totalWins: 0,
-      isActive: true,
+      status: 'Active',
+      depositBalance: 0,
+      winningBalance: 0,
+      commissionBalance: 0,
+      totalDeposits: 0,
+      totalWithdrawals: 0,
       createdBy,
       state,
       district,
@@ -67,5 +67,90 @@ export async function createUser(userData: any) {
 
     // Re-throw the original error to be caught by the calling function.
     throw new Error(error.message || 'An unexpected error occurred during signup.');
+  }
+}
+
+
+export async function updateUser(userId: string, userData: any) {
+    try {
+        const userDocRef = firestore.collection('users').doc(userId);
+        await userDocRef.update({
+            ...userData,
+            updatedAt: FieldValue.serverTimestamp(),
+        });
+        return { success: true };
+    } catch (error: any) {
+        console.error(`Error updating user ${userId}:`, error);
+        throw new Error(error.message || "Failed to update user.");
+    }
+}
+
+export async function deleteUser(userId: string) {
+    try {
+        // This will trigger the onDelete cloud function to clean up firestore data
+        await auth.deleteUser(userId);
+        return { success: true };
+    } catch (error: any) {
+        console.error(`Error deleting user ${userId}:`, error);
+        throw new Error(error.message || "Failed to delete user.");
+    }
+}
+
+export async function updateUserStatus(userId: string, status: 'Active' | 'Inactive') {
+    try {
+        const userDocRef = firestore.collection('users').doc(userId);
+        await userDocRef.update({
+            status: status,
+            updatedAt: FieldValue.serverTimestamp(),
+        });
+        return { success: true };
+    } catch (error: any) {
+        console.error(`Error updating status for user ${userId}:`, error);
+        throw new Error(error.message || "Failed to update user status.");
+    }
+}
+
+
+export async function updateUserPaymentDetails(data: {
+  userId: string;
+  paymentMethod: 'bank' | 'upi';
+  bankName?: string;
+  accountHolderName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  upiId?: string;
+}) {
+  const { userId, paymentMethod, ...details } = data;
+  if (!userId) {
+    throw new Error('User ID is required.');
+  }
+
+  try {
+    const userDocRef = firestore.collection('users').doc(userId);
+    const updateData: { [key: string]: any } = {
+        paymentMethod,
+        updatedAt: FieldValue.serverTimestamp(),
+    };
+    
+    // Clear old data and set new data
+    if (paymentMethod === 'bank') {
+        updateData.upiId = FieldValue.delete();
+        updateData.bankName = details.bankName;
+        updateData.accountHolderName = details.accountHolderName;
+        updateData.accountNumber = details.accountNumber;
+        updateData.ifscCode = details.ifscCode;
+    } else if (paymentMethod === 'upi') {
+        updateData.bankName = FieldValue.delete();
+        updateData.accountHolderName = FieldValue.delete();
+        updateData.accountNumber = FieldValue.delete();
+        updateData.ifscCode = FieldValue.delete();
+        updateData.upiId = details.upiId;
+    }
+
+    await userDocRef.update(updateData);
+    return { success: true };
+  } catch (error: any) {
+    console.error(`Error updating payment details for user ${userId}:`, error);
+    throw new Error(error.message || "Failed to update payment details.");
   }
 }

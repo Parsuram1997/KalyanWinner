@@ -203,7 +203,7 @@ export default function UserDetailsPage() {
   
   const userQuery = useMemoFirebase(() => {
     if (!firestore || !userId) return null;
-    return query(collection(firestore, 'users'), where('customId', '==', userId));
+    return query(collection(firestore, 'users'), where('id', '==', userId));
   }, [firestore, userId]);
   
   const { data: users, isLoading: isUserQueryLoading } = useCollection<any>(userQuery);
@@ -596,3 +596,5 @@ export default function UserDetailsPage() {
     </div>
   );
 }
+
+    

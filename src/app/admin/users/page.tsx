@@ -1,4 +1,5 @@
 
+      
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import {
@@ -236,7 +237,7 @@ export default function ManageUsersPage() {
                     <TableCell className="py-1"><div className="text-xs">{user.state}</div><div className="text-white/70 text-xs">{user.district}</div></TableCell>
                     <TableCell className="py-1"><Badge className={cn("text-xs", user.status === 'Active' ? "bg-green-400/20 text-green-300 border border-green-400" : "bg-red-400/20 text-red-300 border border-red-400")}>{user.status}</Badge></TableCell>
                     <TableCell className="flex gap-1 py-1">
-                       <Button variant="outline" size="icon" asChild className="bg-transparent text-white hover:bg-white/10 h-7 w-7"><Link href={`/admin/users/${user.customId}`}><Eye className="h-3 w-3" /></Link></Button>
+                       <Button variant="outline" size="icon" asChild className="bg-transparent text-white hover:bg-white/10 h-7 w-7"><Link href={`/admin/users/${user.id}`}><Eye className="h-3 w-3" /></Link></Button>
                        <Button variant="outline" size="icon" onClick={() => openEditDialog(user)} className="bg-transparent text-white hover:bg-white/10 h-7 w-7"><Edit className="h-3 w-3" /></Button>
                        <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" size="icon" className="h-7 w-7"><Trash className="h-3 w-3" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete the user '{user.name}'.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
                     </TableCell>
@@ -259,7 +260,7 @@ export default function ManageUsersPage() {
                         <div className="flex justify-between"><span className="text-white/70">Location:</span><div className="text-right"><p>{user.state}</p><p className="text-xs">{user.district}</p></div></div>
                     </div>
                     <div className="mt-4 flex justify-end gap-2 border-t border-white/20 pt-3">
-                        <Button variant="outline" size="sm" asChild className="bg-transparent hover:bg-white/10"><Link href={`/admin/users/${user.customId}`}><Eye className="h-4 w-4 mr-1"/> View</Link></Button>
+                        <Button variant="outline" size="sm" asChild className="bg-transparent hover:bg-white/10"><Link href={`/admin/users/${user.id}`}><Eye className="h-4 w-4 mr-1"/> View</Link></Button>
                         <Button variant="outline" size="sm" onClick={() => openEditDialog(user)} className="bg-transparent hover:bg-white/10"><Edit className="h-4 w-4 mr-1"/> Edit</Button>
                         <AlertDialog>
                             <AlertDialogTrigger asChild><Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-1"/> Delete</Button></AlertDialogTrigger>
@@ -295,3 +296,5 @@ export default function ManageUsersPage() {
     </div>
   );
 }
+
+    
