@@ -178,6 +178,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // This single useEffect handles all auth-related side-effects.
   useEffect(() => {
+    // This effect only contains logic that *can* run on every render or when dependencies change.
+    // The "ghost user" logic is handled separately below to avoid hook-in-conditional errors.
+    
     // A. Pin reset logic
     if (user && sessionStorage.getItem('isPinReset') === 'true') {
         sessionStorage.removeItem('isPinReset');
@@ -237,27 +240,33 @@ function GhostUserHandler({ user, auth }: { user: any, auth: any }) {
     const cleanupStarted = useRef(false);
 
     useEffect(() => {
-        if (!cleanupStarted.current) {
-            cleanupStarted.current = true; // Set flag immediately
-
-            console.error("CRITICAL: User document not found for authenticated user:", user.uid);
-            
-            toast({ 
-                variant: "destructive", 
-                title: "Account Error", 
-                description: "Your account data could not be found. Please sign up again.",
-                duration: 10000
-            });
-            
-            // Perform a full cleanup
-            auth.signOut().then(() => {
-                fetch('/api/auth/session', { method: 'DELETE' }); // Clear server session
-                localStorage.clear(); // Clear all local storage for the site
-                router.replace('/signup'); // Send to signup
-            });
+        // This check ensures the logic inside runs ONLY ONCE.
+        if (cleanupStarted.current) {
+            return;
         }
-    }, [user, auth, router]);
+        cleanupStarted.current = true;
 
-    // Show a loading screen while the cleanup and redirect happen.
+        console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+        
+        toast({ 
+            variant: "destructive", 
+            title: "Account Error", 
+            description: "Your account data could not be found. You will be redirected to sign up.",
+            duration: 10000
+        });
+
+        // Perform the hard logout
+        // 1. Clear the server session cookie. This is important.
+        fetch('/api/auth/session', { method: 'DELETE' });
+        // 2. Clear all local data associated with the user.
+        localStorage.clear();
+        
+        // 3. Force a redirect to the signup page. This is the only redirect.
+        // We use router.replace to prevent the user from navigating back to the broken state.
+        router.replace('/signup');
+
+    }, [user, auth, router]); // Keep dependencies, but the ref guard prevents re-execution.
+
+    // Show a loading screen while the redirect is happening.
     return <LoadingScreen />;
 }
