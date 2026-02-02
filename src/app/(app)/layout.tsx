@@ -30,7 +30,7 @@ import {
 import { UserNav } from "@/components/user-nav";
 import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from "@/firebase";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 import { BottomNavBar } from "@/components/BottomNavBar";
@@ -169,6 +169,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const firestore = useFirestore();
   const auth = useAuth();
+  const [isCleaningUp, setIsCleaningUp] = useState(false); // Add state to prevent cleanup loop
   
   const userDocRef = useMemoFirebase(
     () => (firestore && user ? doc(firestore, "users", user.uid) : null),
@@ -180,7 +181,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // A. Handle ghost user condition.
     // This runs when auth is loaded, a user is authenticated, but their Firestore doc is definitively not found.
-    if (user && !isUserLoading && !isUserDataLoading && !userData) {
+    if (user && !isUserLoading && !isUserDataLoading && !userData && !isCleaningUp) {
+      setIsCleaningUp(true); // Set the flag to prevent this block from running again
       console.error("CRITICAL: User document not found for authenticated user:", user.uid);
       
       toast({ 
@@ -211,10 +213,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             }
         });
     }
-  }, [user, userData, isUserLoading, isUserDataLoading, router]);
+  }, [user, userData, isUserLoading, isUserDataLoading, router, isCleaningUp]);
   
   // 1. Primary loading states. Wait until we know the auth state and have fetched the user doc if a user exists.
-  if (isUserLoading || (user && isUserDataLoading)) {
+  if (isUserLoading || (user && isUserDataLoading) || isCleaningUp) {
     return <LoadingScreen />;
   }
 
