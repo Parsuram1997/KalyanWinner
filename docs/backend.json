@@ -37,7 +37,7 @@
         },
         "pin": {
             "type": "string",
-            "description": "A secure hash of the user's 4 or 6-digit login PIN."
+            "description": "A secure bcrypt hash of the user's 4-digit login PIN. The actual PIN is never stored, only this encrypted hash."
         },
         "depositBalance": {
           "type": "number",
