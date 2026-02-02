@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,11 +15,85 @@ import { signInWithCustomToken } from 'firebase/auth';
 import { Loader } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// New component for the PIN input boxes
+const PinInput = ({ length = 4, onPinChange }: { length: number, onPinChange: (pin: string) => void }) => {
+  const [pin, setPin] = useState<string[]>(Array(length).fill(''));
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Effect to call onPinChange whenever the pin array changes.
+  useEffect(() => {
+    onPinChange(pin.join(''));
+  }, [pin, onPinChange]);
+
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const value = e.target.value;
+    // Only allow single digit numbers
+    if (!/^[0-9]$/.test(value) && value !== '') {
+        return;
+    }
+    
+    const newPin = [...pin];
+    newPin[index] = value;
+    setPin(newPin);
+
+    // Move to next input if a digit was entered
+    if (value !== '' && index < length - 1) {
+        inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && pin[index] === '' && index > 0) {
+      // If current is empty and backspace is pressed, move to previous
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+  
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, length);
+    if (paste) {
+      const newPin = Array(length).fill('');
+      paste.split('').forEach((char, index) => {
+        newPin[index] = char;
+      });
+      setPin(newPin);
+      const focusIndex = Math.min(paste.length, length - 1);
+      inputRefs.current[focusIndex]?.focus();
+    }
+  }
+
+  return (
+    <div className="flex justify-center gap-3" onPaste={handlePaste}>
+      {Array.from({ length }).map((_, index) => (
+        <Input
+          key={index}
+          ref={(el) => (inputRefs.current[index] = el)}
+          type="tel" // Use tel for numeric keyboard on mobile
+          inputMode='numeric'
+          maxLength={1}
+          value={pin[index]}
+          onChange={(e) => handleChange(e, index)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          className="h-16 w-12 text-center text-3xl font-bold bg-black/20 border-white/20 text-white"
+          autoComplete="one-time-code"
+        />
+      ))}
+    </div>
+  );
+};
+
+
 function PinLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const auth = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [finalPin, setFinalPin] = useState("");
   
   const [userName, setUserName] = useState('');
   const [customId, setCustomId] = useState('');
@@ -54,8 +128,17 @@ function PinLoginForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const pin = formData.get('pin') as string;
+    const pin = finalPin;
+    
+    if(pin.length !== 4) {
+        toast({
+            variant: 'destructive',
+            title: 'Invalid PIN',
+            description: 'Please enter a 4-digit PIN.',
+        });
+        setIsLoading(false);
+        return;
+    }
 
     try {
       if (!auth) throw new Error('Authentication service is not available.');
@@ -92,7 +175,7 @@ function PinLoginForm() {
     <div className="w-full max-w-sm mx-auto">
       <Card className="bg-black/20 border-white/20 text-white backdrop-blur-md">
         <CardHeader className="items-center text-center">
-           <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="object-contain mx-auto mb-4" />
+           <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={100} height={100} className="object-contain mx-auto mb-4" />
           <CardTitle className="text-3xl font-bold text-white">
             Welcome
           </CardTitle>
@@ -105,20 +188,10 @@ function PinLoginForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="pin" className="text-sm font-medium text-white/80">4-Digit PIN</Label>
-              <Input 
-                id="pin" 
-                name="pin" 
-                type="password" 
-                required 
-                maxLength={4} 
-                pattern="\d{4}" 
-                className="h-14 bg-black/20 border-white/20 text-white text-center text-3xl tracking-[1.5rem]" 
-                disabled={isLoading}
-                autoFocus
-              />
+              <Label htmlFor="pin" className="text-center block text-sm font-medium text-white/80">4-Digit PIN</Label>
+              <PinInput length={4} onPinChange={setFinalPin} />
             </div>
-            <Button type="submit" className="w-full h-12 bg-white text-primary font-bold hover:bg-white/90" disabled={isLoading}>
+            <Button type="submit" className="w-full h-12 bg-white text-primary font-bold hover:bg-white/90" disabled={isLoading || finalPin.length !== 4}>
               {isLoading ? <><Loader className="mr-2 h-4 w-4 animate-spin" /> Verifying...</> : 'Login'}
             </Button>
           </form>
