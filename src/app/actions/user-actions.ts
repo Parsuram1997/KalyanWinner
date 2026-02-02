@@ -4,6 +4,16 @@
 import { auth, firestore } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
+// Helper function to get the role prefix
+const getRolePrefix = (role: string) => {
+    switch (role) {
+        case 'User': return 'USR';
+        case 'Enroller': return 'ENR';
+        case 'Admin': return 'ADM';
+        default: return 'USR';
+    }
+};
+
 // IMPORTANT: This function is now transactional to prevent ghost users.
 // It ensures that both the Firebase Auth user and the Firestore user document are created successfully.
 export async function createUser(userData: any) {
@@ -25,31 +35,55 @@ export async function createUser(userData: any) {
       phoneNumber: `+91${mobile}` // Ensure country code is included
     });
 
-    // 3. Create the user document in Firestore within the same process
     const userDocRef = firestore.collection('users').doc(firebaseUser.uid);
-    const customId = `KW${Date.now()}`;
+    const counterRef = firestore.collection('counters').doc('user_counter');
 
-    const newUser = {
-      id: firebaseUser.uid,
-      customId: customId,
-      name,
-      mobile,
-      email,
-      role,
-      status: 'Active',
-      depositBalance: 0,
-      winningBalance: 0,
-      commissionBalance: 0,
-      totalDeposits: 0,
-      totalWithdrawals: 0,
-      createdBy,
-      state,
-      district,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    };
+    // Use a transaction to ensure atomic counter increment and user creation.
+    const customId = await firestore.runTransaction(async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+        
+        let newCount = 1;
+        if (counterDoc.exists) {
+            newCount = (counterDoc.data()?.count || 0) + 1;
+        }
+        
+        // Format the new custom ID
+        const rolePrefix = getRolePrefix(role);
+        const formattedId = `KW${rolePrefix}${String(newCount).padStart(4, '0')}`;
 
-    await userDocRef.set(newUser);
+        const newUser = {
+          id: firebaseUser.uid,
+          customId: formattedId,
+          name,
+          mobile,
+          email,
+          role,
+          status: 'Active',
+          depositBalance: 0,
+          winningBalance: 0,
+          commissionBalance: 0,
+          totalDeposits: 0,
+          totalWithdrawals: 0,
+          createdBy,
+          state,
+          district,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        };
+
+        // Set the user document
+        transaction.set(userDocRef, newUser);
+        
+        // Update the counter
+        if (counterDoc.exists) {
+            transaction.update(counterRef, { count: newCount });
+        } else {
+            transaction.set(counterRef, { count: newCount });
+        }
+
+        return formattedId;
+    });
+
 
     return { success: true, uid: firebaseUser.uid, customId: customId };
 
