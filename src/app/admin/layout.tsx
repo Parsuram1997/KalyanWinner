@@ -33,6 +33,7 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import { AdminBottomNavBar } from "@/app/admin/components/AdminBottomNavBar";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     return (
@@ -167,8 +168,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                  <div className="flex flex-1 items-center justify-end gap-2">
                 </div>
             </header>
-            <main className="flex-1 overflow-auto p-4 sm:p-6 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
+            <main className="flex-1 overflow-auto p-4 sm:p-6 pb-20 md:p-6 bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">{children}</main>
             </div>
+            <AdminBottomNavBar />
         </SidebarInset>
         </SidebarProvider>
     );
