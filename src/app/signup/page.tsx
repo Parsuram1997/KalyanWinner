@@ -90,7 +90,7 @@ function SignupForm() {
           title: 'Signup Successful',
           description: 'Your account has been created. Please set up your PIN.',
         });
-        router.push('/setup-pin');
+        router.push(`/setup-pin?uid=${user.uid}`);
 
       } else {
           throw new Error('Failed to create user or authentication service is not available.');

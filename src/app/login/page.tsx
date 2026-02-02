@@ -101,7 +101,7 @@ export default function LoginPage() {
                     router.push("/dashboard");
                 } else {
                     toast({ title: "Setup PIN", description: "Please create a PIN for faster logins." });
-                    router.push("/setup-pin");
+                    router.push(`/setup-pin?uid=${user.uid}`);
                 }
             } else {
                 toast({ variant: "destructive", title: "Access Denied", description: "Please use the correct portal." });
