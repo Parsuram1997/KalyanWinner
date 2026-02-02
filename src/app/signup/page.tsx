@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -176,6 +176,20 @@ function SignupForm() {
 }
 
 export default function SignupPage() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    if (!isClient) {
+        return (
+            <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
+                <Loader className="h-12 w-12 text-white animate-spin" />
+            </div>
+        );
+    }
+    
     return (
         <Suspense fallback={
           <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
