@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from "next/link";
@@ -29,7 +30,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
-import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from "@/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,15 +38,6 @@ import { doc } from "firebase/firestore";
 import { BottomNavBar } from "@/components/BottomNavBar";
 import { clearUserPin } from '@/app/actions/pin-actions';
 import { toast } from "@/hooks/use-toast";
-
-async function signOut() {
-    const response = await fetch('/api/auth/session', {
-        method: 'DELETE',
-    });
-    if (!response.ok) {
-        throw new Error('Failed to sign out');
-    }
-}
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   return (
@@ -170,13 +162,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const firestore = useFirestore();
+  const auth = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const userDocRef = useMemoFirebase(
     () => (firestore && user ? doc(firestore, "users", user.uid) : null),
     [firestore, user]
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
-  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     if (isUserLoading) return;
@@ -211,16 +204,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             description: "Your account data could not be found. Please sign up again.",
             duration: 10000
         });
-        setIsRedirecting(true);
-        signOut().then(() => {
-            router.replace('/signup');
-        });
+        
+        if (!isRedirecting) {
+            setIsRedirecting(true);
+            // Sign out on the client first, then clear server session and redirect.
+            auth.signOut().then(() => {
+                fetch('/api/auth/session', { method: 'DELETE' }); // Fire and forget
+                router.replace('/signup');
+            }).catch(err => {
+                // Even if client signout fails, try to redirect
+                console.error("Client signout failed:", err);
+                router.replace('/signup');
+            });
+        }
         return;
     }
 
     if (userData) {
       if (userData.role !== 'User') {
-        router.replace('/login');
+        if (!isRedirecting) {
+            setIsRedirecting(true);
+            auth.signOut().then(() => {
+                fetch('/api/auth/session', { method: 'DELETE' });
+                router.replace('/login');
+            });
+        }
         return;
       }
       if (!userData.pin && pathname !== '/setup-pin') {
@@ -229,7 +237,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }
     }
 
-  }, [user, isUserLoading, userData, isUserDataLoading, router, pathname]);
+  }, [user, isUserLoading, userData, isUserDataLoading, router, pathname, auth, isRedirecting]);
 
   if (isUserLoading || isUserDataLoading || isRedirecting) {
     return (
