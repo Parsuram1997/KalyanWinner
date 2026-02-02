@@ -185,7 +185,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       clearUserPin(user.uid).then((result) => {
         if (result.success) {
           toast({ title: "PIN Cleared", description: "Please set a new PIN." });
-          router.replace('/setup-pin');
+          router.replace(`/setup-pin?uid=${user.uid}`);
         } else {
           toast({ variant: "destructive", title: "Error", description: "Could not clear PIN." });
           setIsRedirecting(false);
@@ -232,7 +232,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         return;
       }
       if (!userData.pin && pathname !== '/setup-pin') {
-        router.replace('/setup-pin');
+        router.replace(`/setup-pin?uid=${user.uid}`);
         return;
       }
     }
