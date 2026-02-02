@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, Suspense } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -13,17 +13,20 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
-import { createUser } from "@/app/actions/user-actions";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { states, districts } from "@/lib/locations";
-import { Loader } from "lucide-react";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
+import { createUser } from '@/app/actions/user-actions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { states, districts } from '@/lib/locations';
+import { Loader } from 'lucide-react';
+import { useAuth } from '@/firebase';
+import { signInWithEmailAndPassword, onIdTokenChanged } from 'firebase/auth';
 
 function SignupForm() {
   const router = useRouter();
+  const auth = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedState, setSelectedState] = useState<string | null>(null);
 
@@ -32,25 +35,29 @@ function SignupForm() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const password = formData.get("password") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
 
     if (password !== confirmPassword) {
-        toast({
-            variant: "destructive",
-            title: "Passwords do not match",
-            description: "Please make sure your passwords match.",
-        });
-        setIsLoading(false);
-        return;
+      toast({
+        variant: 'destructive',
+        title: 'Passwords do not match',
+        description: 'Please make sure your passwords match.',
+      });
+      setIsLoading(false);
+      return;
     }
 
     const userData: any = {
-      name: formData.get("name") as string,
-      mobile: formData.get("mobile") as string,
-      email: formData.get("email") as string,
-      state: states.find(s => s.value === (formData.get("state") as string))?.label || '',
-      district: districts[formData.get("state") as string]?.find(d => d.value === (formData.get("district") as string))?.label || '',
+      name: formData.get('name') as string,
+      mobile: formData.get('mobile') as string,
+      email: email,
+      state: states.find(s => s.value === (formData.get('state') as string))?.label || '',
+      district:
+        districts[formData.get('state') as string]?.find(
+          d => d.value === (formData.get('district') as string),
+        )?.label || '',
       password: password,
       role: 'User' as 'User',
       createdBy: 'Self' as 'Self',
@@ -58,23 +65,47 @@ function SignupForm() {
 
     try {
       const result = await createUser(userData);
-      if (result.success) {
-        toast({
-          title: "Signup Successful",
-          description: "Your account has been created. Please login.",
+
+      if (result.success && auth) {
+        // After successful user creation, sign the user in to create a session.
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Wait for the ID token to be processed by the server
+        onIdTokenChanged(auth, async idTokenUser => {
+          if (idTokenUser && idTokenUser.uid === user.uid) {
+            const idToken = await idTokenUser.getIdToken();
+            await fetch('/api/auth/session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ idToken }),
+            });
+            
+            // Now that session is created, redirect to PIN setup.
+            toast({
+              title: 'Signup Successful',
+              description: 'Your account has been created. Please set up your PIN.',
+            });
+            router.push('/setup-pin');
+          }
         });
-        router.push("/login");
+
+      } else {
+          throw new Error('Failed to create user or authentication service is not available.');
       }
     } catch (error: any) {
       toast({
-        variant: "destructive",
-        title: "Signup Failed",
-        description: error.message || "An unexpected error occurred.",
+        variant: 'destructive',
+        title: 'Signup Failed',
+        description: error.message || 'An unexpected error occurred.',
       });
-    } finally {
       setIsLoading(false);
     }
+    // No need to set isLoading to false here, as the page will redirect on success.
   };
+
 
   return (
      <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2 bg-gradient-to-br from-blue-600 to-purple-700">
@@ -109,7 +140,7 @@ function SignupForm() {
                                     type="tel"
                                     placeholder="9876543210"
                                     required
-                                    onChange={(e) => e.target.value = e.target.value.replace(/\\D/g, '').slice(0,10)}
+                                    onChange={(e) => e.target.value = e.target.value.replace(/\D/g, '').slice(0,10)}
                                     disabled={isLoading}
                                     className="rounded-l-none bg-black/20 border-white/20 text-white placeholder:text-white/50 h-10"
                                 />

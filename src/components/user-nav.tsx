@@ -33,17 +33,23 @@ export function UserNav() {
     const role = userData?.role;
     try {
       await auth.signOut();
+      
+      // Clear user data from local storage
+      localStorage.removeItem('lastUserUid');
+      localStorage.removeItem('lastUserName');
+      localStorage.removeItem('lastUserCustomId');
+      localStorage.removeItem('lastUserMobile');
+
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out.",
       });
+
       // Redirect based on role
       if (role === 'Admin') {
         router.replace('/admin');
-      } else if (role === 'Enroller') {
-        router.replace('/enroller');
       } else {
-        router.replace('/login');
+        router.replace('/welcome');
       }
     } catch (error) {
       toast({

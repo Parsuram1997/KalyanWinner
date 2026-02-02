@@ -1,68 +1,82 @@
-
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
-import { useUser } from '@/firebase';
-import { setLoginPin } from '@/app/actions/pin-actions';
-import { Loader } from 'lucide-react';
+import { useState } from "react";
+import { useAuth } from "@/firebase/provider";
+import { useRouter } from "next/navigation";
+import { setPinForUser } from "@/app/actions/pin-actions";
+
+// UI Components
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
+import { Loader } from "lucide-react";
 
 export default function SetupPinPage() {
+    const { user, isLoading: isUserLoading } = useAuth();
     const router = useRouter();
-    const { user, isUserLoading } = useUser();
-    const [pin, setPin] = useState('');
-    const [confirmPin, setConfirmPin] = useState('');
-    const [isPending, startTransition] = useTransition();
+    const [pin, setPin] = useState("");
+    const [confirmPin, setConfirmPin] = useState("");
+    const [isPending, setIsPending] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!user) {
-            toast({ variant: 'destructive', title: 'Not authenticated. Redirecting to login.' });
-            router.push('/login');
-            return;
-        }
-        if (pin.length !== 4) {
-             toast({ variant: 'destructive', title: 'Invalid PIN', description: 'PIN must be 4 digits.' });
-            return;
-        }
-        if (pin !== confirmPin) {
-            toast({ variant: 'destructive', title: 'PINs do not match.' });
+
+        if (!user || !user.uid) {
+            toast({ variant: "destructive", title: "Authentication Error", description: "User not found. Please log in again." });
+            router.push("/login");
             return;
         }
 
-        startTransition(async () => {
-            try {
-                await setLoginPin(user.uid, pin);
-                toast({ title: 'PIN Set Successfully!', description: 'You can now use your PIN for faster logins.' });
-                router.push('/dashboard');
-            } catch (error: any) {
-                toast({ variant: 'destructive', title: 'Failed to Set PIN', description: error.message });
+        if (pin.length !== 4) {
+            toast({ variant: "destructive", title: "Invalid PIN", description: "Your PIN must be exactly 4 digits." });
+            return;
+        }
+
+        if (pin !== confirmPin) {
+            toast({ variant: "destructive", title: "PINs do not match", description: "Please make sure your PINs match." });
+            return;
+        }
+
+        setIsPending(true);
+
+        try {
+            const result = await setPinForUser(user.uid, pin);
+
+            if (result.success) {
+                toast({ title: "PIN Set Successfully", description: "You can now log in with your new PIN." });
+                router.push("/dashboard");
+            } else {
+                throw new Error(result.error || "An unknown error occurred.");
             }
-        });
+        } catch (error: any) {
+            console.error("PIN Setup Failed:", error);
+            toast({
+                variant: "destructive",
+                title: "PIN Setup Failed",
+                description: error.message || "Could not set your PIN. Please try again.",
+            });
+        } finally {
+            setIsPending(false);
+        }
     };
 
     if (isUserLoading) {
-         return (
-            <div className="flex h-screen w-full flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 text-white">
-                <Loader className="h-12 w-12 animate-spin" />
+        return (
+            <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
+                <Loader className="h-12 w-12 text-white animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 text-white p-4">
-            <Card className="w-full max-w-md bg-black/20 border-white/20 text-white backdrop-blur-md">
+        <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
+            <Card className="w-full max-w-sm bg-black/20 border-white/20 text-white backdrop-blur-md">
                 <CardHeader className="text-center">
-                    <Image src="/kalyanwinnerlogo.png" alt="Kalyan Winner Logo" width={80} height={80} className="mx-auto" />
-                    <CardTitle className="text-3xl font-bold tracking-tight text-white">Create a Login PIN</CardTitle>
+                    <CardTitle className="text-3xl font-bold tracking-tight text-white">Create a PIN</CardTitle>
                     <CardDescription className="text-white/80">
-                        Create a 4-digit PIN for faster and secure access to your account.
+                        For faster and more secure logins, please create a 4-digit PIN.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

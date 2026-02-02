@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -10,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword, sendPasswordResetEmail, onIdTokenChanged } from "firebase/auth";
-import { collection, query, where, getDocs, limit, doc, getDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader } from "lucide-react";
+import { getEmailForMobile } from "@/app/actions/auth-actions"; // Secure server action
 
 type View = "login" | "forgot_password";
 
@@ -35,9 +37,7 @@ export default function LoginPage() {
         const idToken = await user.getIdToken();
         await fetch('/api/auth/session', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ idToken }),
         });
       }
@@ -56,14 +56,11 @@ export default function LoginPage() {
 
     try {
       await sendPasswordResetEmail(auth, email);
-      toast({
-        title: "Password Reset Email Sent",
-        description: `A link to reset your password has been sent to ${email}. Please check your spam folder.`,
-      });
+      toast({ title: "Password Reset Email Sent", description: `A password reset link has been sent to ${email}.` });
       setView("login");
       setEmail("");
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Failed to send reset email", description: "Please ensure the email is correct." });
+      toast({ variant: "destructive", title: "Failed to Send", description: "Please ensure the email address is correct." });
     } finally {
       setIsLoading(false);
     }
@@ -78,24 +75,19 @@ export default function LoginPage() {
       setIsLoading(false);
       return;
     }
-
+    
+    const isMobile = !identifier.includes('@') && /^\d{10,15}$/.test(identifier);
     let userEmail = identifier;
-    if (!identifier.includes('@') && /^\d+$/.test(identifier)) {
-        try {
-            const usersRef = collection(firestore, "users");
-            const q = query(usersRef, where("mobile", "==", identifier), limit(1));
-            const querySnapshot = await getDocs(q);
+    let userMobile = isMobile ? identifier : '';
 
-            if (querySnapshot.empty) throw new Error("No account found with this mobile number.");
-            
-            userEmail = querySnapshot.docs[0].data().email;
-            if (!userEmail) throw new Error("Associated email not found.");
-
-        } catch (error: any) {
-            toast({ variant: "destructive", title: "Login Failed", description: error.message });
+    if (isMobile) {
+        const result = await getEmailForMobile(identifier);
+        if (result.error || !result.email) {
+            toast({ variant: "destructive", title: "Login Failed", description: result.error || "Could not find email for this mobile number." });
             setIsLoading(false);
             return;
         }
+        userEmail = result.email;
     }
     
     try {
@@ -109,16 +101,16 @@ export default function LoginPage() {
             if (userData?.role === 'User') {
                 toast({ title: "Login Successful", description: "Welcome back!" });
                 
-                // Store user info for PIN login flow
+                // Store details for PIN login
                 localStorage.setItem('lastUserUid', user.uid);
                 localStorage.setItem('lastUserName', userData.name || 'User');
                 localStorage.setItem('lastUserCustomId', userData.customId || '');
+                // Store the mobile number that was actually used to find the user
+                localStorage.setItem('lastUserMobile', userData.mobile || userMobile);
                 
-                // Check if PIN is set
                 if (userData.pin) {
                     router.push("/dashboard");
                 } else {
-                    // If no PIN, redirect to setup page
                     toast({ title: "Setup PIN", description: "Please create a PIN for faster logins." });
                     router.push("/setup-pin");
                 }
@@ -127,14 +119,15 @@ export default function LoginPage() {
                 await auth.signOut();
             }
         } else {
-            toast({ variant: "destructive", title: "Profile Not Found" });
+            // This case handles users who exist in Auth but not Firestore (the "ghost" user issue)
+            toast({ variant: "destructive", title: "Account Data Missing", description: "Your account data could not be found. Please contact support." });
             await auth.signOut();
         }
 
     } catch (error: any) {
-        let description = "Invalid credentials. Please check your details.";
-        if (error.code === 'auth/missing-email') {
-            description = "Could not find an email for the provided mobile number.";
+        let description = "Invalid credentials. Please check your email/password.";
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            description = "Invalid email or password.";
         }
         toast({ variant: "destructive", title: "Login Failed", description });
     } finally {

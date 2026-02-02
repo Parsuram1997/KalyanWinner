@@ -30,12 +30,22 @@ import {
 } from "@/components/ui/sidebar";
 import { UserNav } from "@/components/user-nav";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 import { BottomNavBar } from "@/components/BottomNavBar";
+import { clearUserPin } from '@/app/actions/pin-actions';
+import { toast } from "@/hooks/use-toast";
 
+async function signOut() {
+    const response = await fetch('/api/auth/session', {
+        method: 'DELETE',
+    });
+    if (!response.ok) {
+        throw new Error('Failed to sign out');
+    }
+}
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   return (
@@ -158,6 +168,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   const firestore = useFirestore();
 
   const userDocRef = useMemoFirebase(
@@ -165,17 +176,62 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     [firestore, user]
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.replace("/welcome");
-    }
-    if (!isUserDataLoading && userData && userData.role !== 'User') {
-        router.replace('/login');
-    }
-  }, [user, isUserLoading, userData, isUserDataLoading, router]);
+    if (isUserLoading) return;
 
-  if (isUserLoading || isUserDataLoading) {
+    if (!user) {
+      router.replace("/welcome");
+      return;
+    }
+
+    if (sessionStorage.getItem('isPinReset') === 'true') {
+      sessionStorage.removeItem('isPinReset');
+      setIsRedirecting(true);
+      clearUserPin(user.uid).then((result) => {
+        if (result.success) {
+          toast({ title: "PIN Cleared", description: "Please set a new PIN." });
+          router.replace('/setup-pin');
+        } else {
+          toast({ variant: "destructive", title: "Error", description: "Could not clear PIN." });
+          setIsRedirecting(false);
+        }
+      });
+      return;
+    }
+
+    if (isUserDataLoading) return;
+
+    if (userData === null) {
+        console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+        toast({ 
+            variant: "destructive", 
+            title: "Account Error", 
+            description: "Your account data could not be found. Please sign up again.",
+            duration: 10000
+        });
+        setIsRedirecting(true);
+        signOut().then(() => {
+            router.replace('/signup');
+        });
+        return;
+    }
+
+    if (userData) {
+      if (userData.role !== 'User') {
+        router.replace('/login');
+        return;
+      }
+      if (!userData.pin && pathname !== '/setup-pin') {
+        router.replace('/setup-pin');
+        return;
+      }
+    }
+
+  }, [user, isUserLoading, userData, isUserDataLoading, router, pathname]);
+
+  if (isUserLoading || isUserDataLoading || isRedirecting) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
         <Skeleton className="h-20 w-20 rounded-full bg-white/10" />
@@ -183,7 +239,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (user && userData?.role === 'User') {
+  if (user && userData) {
     return <AppLayoutContent>{children}</AppLayoutContent>;
   }
 

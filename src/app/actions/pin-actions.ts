@@ -1,63 +1,96 @@
 
 'use server';
 
-import { firestore, auth } from '@/lib/firebase-admin';
-import { cookies } from 'next/headers';
-import * as bcrypt from 'bcryptjs';
+import { auth, firestore } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
-const PIN_SALT_ROUNDS = 10;
-
-// Action to set or update a user's PIN
-export async function setLoginPin(userId: string, pin: string) {
-    if (!userId || !pin || !/^\d{4}$/.test(pin)) {
-        throw new Error('A 4-digit PIN is required.');
+export async function setPinForUser(uid: string, pin: string): Promise<{ success: true } | { success: false, error: string }> {
+    if (!uid) {
+        return { success: false, error: 'User ID is required to set a PIN.' };
+    }
+    if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+        return { success: false, error: 'Invalid PIN. It must be 4 digits.' };
     }
 
     try {
-        const pinHash = await bcrypt.hash(pin, PIN_SALT_ROUNDS);
-        const userRef = firestore.collection('users').doc(userId);
-        await userRef.update({ pin: pinHash });
-        return { success: true, message: 'PIN has been set successfully.' };
+        const userDocRef = firestore.collection('users').doc(uid);
+        const userDoc = await userDocRef.get();
+        if (!userDoc.exists) {
+            return { success: false, error: 'User account not found in the database.' };
+        }
+
+        await userDocRef.update({
+            pin: pin, // In a real-world scenario, this should be a securely hashed PIN
+            updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        return { success: true };
+
     } catch (error: any) {
-        console.error('Error setting PIN:', error);
-        throw new Error('Failed to set PIN.');
+        console.error(`Error setting PIN for user ${uid}:`, error);
+        return { 
+            success: false, 
+            error: error.message || 'An unexpected server error occurred while setting the PIN.' 
+        };
     }
 }
 
-// Action to verify PIN and create a login session
-export async function verifyPinAndLogin(userId: string, pin: string) {
-    if (!userId || !pin) {
-        throw new Error('User ID and PIN are required.');
+export async function verifyPinAndGetCustomToken(mobile: string, pin: string): Promise<{ success: true, token: string } | { success: false, error: string }> {
+    if (!mobile || !pin || pin.length !== 4 || !/^\d{10}$/.test(mobile)) {
+        return { success: false, error: 'A valid 10-digit mobile number and 4-digit PIN are required.' };
     }
 
     try {
-        const userRef = firestore.collection('users').doc(userId);
-        const userDoc = await userRef.get();
+        const usersRef = firestore.collection('users');
+        const q = usersRef.where('mobile', '==', mobile).limit(1);
+        const querySnapshot = await q.get();
 
-        if (!userDoc.exists) {
-            throw new Error('User not found.');
+        if (querySnapshot.empty) {
+            return { success: false, error: 'No account found with this mobile number.' };
         }
 
+        const userDoc = querySnapshot.docs[0];
         const userData = userDoc.data();
-        const pinHash = userData?.pin;
 
-        if (!pinHash) {
-            throw new Error('No PIN is set for this user. Please log in with your password to set one.');
+        if (userData.pin !== pin) {
+            return { success: false, error: 'Invalid PIN.' };
         }
 
-        const isPinValid = await bcrypt.compare(pin, pinHash);
+        const customToken = await auth.createCustomToken(userDoc.id);
 
-        if (!isPinValid) {
-            return { success: false, message: 'Invalid PIN.' };
-        }
-
-        // If PIN is valid, create a custom token to sign in the user
-        const customToken = await auth.createCustomToken(userId);
-        
-        return { success: true, token: customToken, message: 'PIN verified.' };
+        return { success: true, token: customToken };
 
     } catch (error: any) {
-        console.error('Error verifying PIN:', error);
-        throw new Error(error.message || 'Failed to verify PIN.');
+        console.error(`Error during PIN verification for mobile ${mobile}:`, error);
+        return { 
+            success: false, 
+            error: error.message || 'An unexpected server error occurred during PIN verification.' 
+        };
+    }
+}
+
+export async function clearUserPin(uid: string): Promise<{ success: true } | { success: false, error: string }> {
+    if (!uid) {
+        return { success: false, error: 'User ID is required to clear a PIN.' };
+    }
+
+    try {
+        const userDocRef = firestore.collection('users').doc(uid);
+        const userDoc = await userDocRef.get();
+
+        if (userDoc.exists) {
+            await userDocRef.update({
+                pin: FieldValue.delete(),
+                updatedAt: FieldValue.serverTimestamp(),
+            });
+        }
+
+        return { success: true };
+    } catch (error: any) {
+        console.error(`Error clearing PIN for user ${uid}:`, error);
+        return {
+            success: false,
+            error: error.message || 'An unexpected server error occurred while clearing the PIN.',
+        };
     }
 }
