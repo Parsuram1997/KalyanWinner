@@ -30,7 +30,7 @@ import {
 import { UserNav } from "@/components/user-nav";
 import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from "@/firebase";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 import { BottomNavBar } from "@/components/BottomNavBar";
@@ -155,47 +155,61 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   )
 }
 
+function LoadingScreen() {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
+            <Skeleton className="h-20 w-20 rounded-full bg-white/10" />
+        </div>
+    );
+}
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const firestore = useFirestore();
   const auth = useAuth();
-  const [isRedirecting, setIsRedirecting] = useState(false);
-
+  
   const userDocRef = useMemoFirebase(
     () => (firestore && user ? doc(firestore, "users", user.uid) : null),
     [firestore, user]
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
+  // This one-time effect handles the special case of pin reset.
   useEffect(() => {
-    if (isUserLoading) return;
-
-    if (!user) {
-      router.replace("/welcome");
-      return;
+    if (user && sessionStorage.getItem('isPinReset') === 'true') {
+        sessionStorage.removeItem('isPinReset');
+        clearUserPin(user.uid).then((result) => {
+            if (result.success) {
+                toast({ title: "PIN Cleared", description: "Please set a new PIN." });
+                router.replace(`/setup-pin?uid=${user.uid}`);
+            } else {
+                toast({ variant: "destructive", title: "Error", description: "Could not clear PIN." });
+            }
+        });
     }
+  }, [user, router]);
+  
+  // 1. Primary loading states. Wait until we know the auth state and have fetched the user doc if a user exists.
+  if (isUserLoading || (user && isUserDataLoading)) {
+    return <LoadingScreen />;
+  }
 
-    if (sessionStorage.getItem('isPinReset') === 'true') {
-      sessionStorage.removeItem('isPinReset');
-      setIsRedirecting(true);
-      clearUserPin(user.uid).then((result) => {
-        if (result.success) {
-          toast({ title: "PIN Cleared", description: "Please set a new PIN." });
-          router.replace(`/setup-pin?uid=${user.uid}`);
-        } else {
-          toast({ variant: "destructive", title: "Error", description: "Could not clear PIN." });
-          setIsRedirecting(false);
-        }
-      });
-      return;
-    }
+  // 2. No user is authenticated. Redirect to the welcome screen.
+  if (!user) {
+    router.replace('/welcome');
+    return <LoadingScreen />;
+  }
 
-    if (isUserDataLoading) return;
+  // From here, `user` object is guaranteed to exist.
 
-    if (userData === null) {
-        console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+  // 3. Ghost user case: Authenticated, but no corresponding document in Firestore.
+  if (!userData) {
+      console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+      
+      // Use an effect to fire the cleanup and redirect ONCE.
+      useEffect(() => {
         toast({ 
             variant: "destructive", 
             title: "Account Error", 
@@ -203,50 +217,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             duration: 10000
         });
         
-        if (!isRedirecting) {
-            setIsRedirecting(true);
-            // Don't wait for signOut. Just delete the server session, clear local storage, and redirect.
-            // The auth state will be corrected on the next page load.
-            fetch('/api/auth/session', { method: 'DELETE' });
-            localStorage.removeItem('lastUserUid');
-            localStorage.removeItem('lastUserName');
-            localStorage.removeItem('lastUserCustomId');
-            localStorage.removeItem('lastUserMobile');
-            router.replace('/signup');
-        }
-        return;
-    }
+        // No need to await or handle response. Fire and forget.
+        fetch('/api/auth/session', { method: 'DELETE' });
+        localStorage.clear();
+        router.replace('/signup');
 
-    if (userData) {
-      if (userData.role !== 'User') {
-        if (!isRedirecting) {
-            setIsRedirecting(true);
-            auth.signOut().then(() => {
-                fetch('/api/auth/session', { method: 'DELETE' });
-                router.replace('/login');
-            });
-        }
-        return;
-      }
-      if (!userData.pin && pathname !== '/setup-pin') {
-        router.replace(`/setup-pin?uid=${user.uid}`);
-        return;
-      }
-    }
+      }, [router]);
 
-  }, [user, isUserLoading, userData, isUserDataLoading, router, pathname, auth, isRedirecting]);
-
-  if (isUserLoading || isUserDataLoading || isRedirecting) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-purple-950 to-slate-900">
-        <Skeleton className="h-20 w-20 rounded-full bg-white/10" />
-      </div>
-    );
+      return <LoadingScreen />;
   }
 
-  if (user && userData) {
-    return <AppLayoutContent>{children}</AppLayoutContent>;
+  // From here, `user` and `userData` are guaranteed to exist.
+
+  // 4. Role check: Ensure the user has the 'User' role.
+  if (userData.role !== 'User') {
+      useEffect(() => {
+          auth.signOut().then(() => {
+              fetch('/api/auth/session', { method: 'DELETE' });
+              router.replace('/login');
+          });
+      }, [auth, router]);
+      
+      return <LoadingScreen />;
   }
 
-  return null;
+  // 5. PIN check: Ensure user has a PIN set.
+  if (!userData.pin && pathname !== '/setup-pin') {
+      router.replace(`/setup-pin?uid=${user.uid}`);
+      return <LoadingScreen />;
+  }
+  
+  // 6. All checks passed. Render the main application layout.
+  return <AppLayoutContent>{children}</AppLayoutContent>;
 }
