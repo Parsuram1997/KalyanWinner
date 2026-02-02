@@ -14,6 +14,7 @@ import {
   Clock,
   Trophy,
   ScrollText,
+  Lock,
 } from "lucide-react";
 import {
   Sidebar,
@@ -118,7 +119,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
              <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <Link href="/setup-pin">
-                  <Wallet />
+                  <Lock />
                   Setup PIN
                 </Link>
               </SidebarMenuButton>
@@ -209,10 +210,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           duration: 10000
       });
       
-      fetch('/api/auth/session', { method: 'DELETE' });
-      localStorage.clear();
-      
-      window.location.href = '/signup';
+      auth.signOut().then(() => {
+         fetch('/api/auth/session', { method: 'DELETE' });
+         localStorage.clear();
+         window.location.href = '/signup';
+      });
       return;
     }
 
