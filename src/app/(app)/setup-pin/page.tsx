@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type ClipboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { setPinForUser } from '@/app/actions/pin-actions';
 import { useUser } from '@/firebase';
@@ -13,6 +12,77 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// New component for the PIN input boxes, similar to pin-login page
+const PinInput = ({ length = 4, onPinChange, autoFocus = false }: { length?: number, onPinChange: (pin: string) => void, autoFocus?: boolean }) => {
+  const [pin, setPin] = useState<string[]>(Array(length).fill(''));
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    onPinChange(pin.join(''));
+  }, [pin, onPinChange]);
+
+  useEffect(() => {
+    if (autoFocus) {
+      inputRefs.current[0]?.focus();
+    }
+  }, [autoFocus]);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
+    const value = e.target.value;
+    if (!/^[0-9]$/.test(value) && value !== '') {
+        return;
+    }
+    
+    const newPin = [...pin];
+    newPin[index] = value;
+    setPin(newPin);
+
+    if (value !== '' && index < length - 1) {
+        inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && pin[index] === '' && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+  
+  const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, length);
+    if (paste) {
+      const newPin = Array(length).fill('');
+      paste.split('').forEach((char, index) => {
+        newPin[index] = char;
+      });
+      setPin(newPin);
+      const focusIndex = Math.min(paste.length, length - 1);
+      inputRefs.current[focusIndex]?.focus();
+    }
+  }
+
+  return (
+    <div className="flex justify-center gap-3" onPaste={handlePaste}>
+      {Array.from({ length }).map((_, index) => (
+        <Input
+          key={index}
+          ref={(el) => (inputRefs.current[index] = el)}
+          type="tel"
+          inputMode='numeric'
+          maxLength={1}
+          value={pin[index]}
+          onChange={(e) => handleChange(e, index)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          className="h-16 w-12 text-center text-3xl font-bold bg-black/20 border-white/20 text-white"
+          autoComplete="one-time-code"
+        />
+      ))}
+    </div>
+  );
+};
+
 
 export default function SetupPinPage() {
     const router = useRouter();
@@ -90,34 +160,16 @@ export default function SetupPinPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-8">
                     <div className="space-y-2">
-                        <Label htmlFor="pin" className="text-white">New 4-Digit PIN</Label>
-                        <Input
-                            id="pin"
-                            type="password"
-                            inputMode="numeric"
-                            maxLength={4}
-                            value={pin}
-                            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                            required
-                            className="h-12 text-center text-2xl tracking-[1em] bg-black/20 border-white/20 text-white placeholder:text-white/50"
-                        />
+                        <Label htmlFor="pin" className="text-center block text-white">New 4-Digit PIN</Label>
+                        <PinInput onPinChange={setPin} autoFocus={true} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="confirmPin" className="text-white">Confirm PIN</Label>
-                         <Input
-                            id="confirmPin"
-                            type="password"
-                            inputMode="numeric"
-                            maxLength={4}
-                            value={confirmPin}
-                            onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-                            required
-                            className="h-12 text-center text-2xl tracking-[1em] bg-black/20 border-white/20 text-white placeholder:text-white/50"
-                        />
+                        <Label htmlFor="confirmPin" className="text-center block text-white">Confirm PIN</Label>
+                        <PinInput onPinChange={setConfirmPin} />
                     </div>
-                    <Button type="submit" className="w-full !mt-8 h-12 bg-white text-primary font-bold hover:bg-white/90" disabled={isPending}>
+                    <Button type="submit" className="w-full !mt-8 h-12 bg-white text-primary font-bold hover:bg-white/90" disabled={isPending || pin.length !== 4 || confirmPin.length !== 4}>
                         {isPending ? <><Loader className="mr-2 h-4 w-4 animate-spin" />Saving PIN...</> : 'Set PIN'}
                     </Button>
                 </form>
@@ -125,4 +177,3 @@ export default function SetupPinPage() {
         </Card>
     );
 }
-
