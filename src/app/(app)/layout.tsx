@@ -30,7 +30,7 @@ import {
 import { UserNav } from "@/components/user-nav";
 import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from "@/firebase";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { doc } from "firebase/firestore";
 import { BottomNavBar } from "@/components/BottomNavBar";
@@ -169,39 +169,45 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const firestore = useFirestore();
   const auth = useAuth();
-  const [isCleaningUp, setIsCleaningUp] = useState(false); // Add state to prevent cleanup loop
-  
+  const cleanupStarted = useRef(false);
+
   const userDocRef = useMemoFirebase(
     () => (firestore && user ? doc(firestore, "users", user.uid) : null),
     [firestore, user]
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
-  // This one-time effect handles the special case of pin reset.
   useEffect(() => {
-    // A. Handle ghost user condition.
+    // Do nothing until all initial data is loaded
+    if (isUserLoading || (user && isUserDataLoading)) {
+      return;
+    }
+
+    // A. Handle GHOST USER condition.
     // This runs when auth is loaded, a user is authenticated, but their Firestore doc is definitively not found.
-    if (user && !isUserLoading && !isUserDataLoading && !userData && !isCleaningUp) {
-      setIsCleaningUp(true); // Set the flag to prevent this block from running again
-      console.error("CRITICAL: User document not found for authenticated user:", user.uid);
-      
-      toast({ 
-          variant: "destructive", 
-          title: "Account Error", 
-          description: "Your account data could not be found. Please sign up again.",
-          duration: 10000
-      });
-      
-      // Fire and forget cleanup
-      fetch('/api/auth/session', { method: 'DELETE' });
-      localStorage.clear();
-      
-      // Redirect
-      router.replace('/signup');
-      return; // Stop further execution in this effect
+    if (user && !userData) {
+      if (!cleanupStarted.current) {
+        cleanupStarted.current = true;
+        
+        console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+        
+        toast({ 
+            variant: "destructive", 
+            title: "Account Error", 
+            description: "Your account data could not be found. Please sign up again.",
+            duration: 10000
+        });
+        
+        auth.signOut().then(() => {
+            fetch('/api/auth/session', { method: 'DELETE' });
+            localStorage.clear();
+            router.replace('/signup');
+        });
+      }
+      return; // Stop further execution
     }
     
-    // B. This one-time effect handles the special case of pin reset.
+    // B. Handle PIN RESET special case.
     if (user && sessionStorage.getItem('isPinReset') === 'true') {
         sessionStorage.removeItem('isPinReset');
         clearUserPin(user.uid).then((result) => {
@@ -213,27 +219,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             }
         });
     }
-  }, [user, userData, isUserLoading, isUserDataLoading, router, isCleaningUp]);
+  }, [user, userData, isUserLoading, isUserDataLoading, router, auth]);
   
-  // 1. Primary loading states. Wait until we know the auth state and have fetched the user doc if a user exists.
-  if (isUserLoading || (user && isUserDataLoading) || isCleaningUp) {
+  // 1. Primary loading states.
+  if (isUserLoading || (user && isUserDataLoading)) {
     return <LoadingScreen />;
   }
 
-  // 2. No user is authenticated. Redirect to the welcome screen.
+  // 2. No user is authenticated.
   if (!user) {
     router.replace('/welcome');
     return <LoadingScreen />;
   }
 
-  // From here, `user` object is guaranteed to exist.
-  // The ghost user case is handled by the useEffect. If we reach here and !userData,
-  // it's a transient state before the effect's redirect kicks in.
+  // 3. Ghost user is being cleaned up.
   if (!userData) {
-      return <LoadingScreen />;
+    return <LoadingScreen />;
   }
-
-  // From here, `user` and `userData` are guaranteed to exist.
 
   // 4. Role check: Ensure the user has the 'User' role.
   if (userData.role !== 'User') {
