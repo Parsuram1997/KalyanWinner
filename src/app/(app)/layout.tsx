@@ -178,24 +178,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    // Condition 1: Still loading essential data. Do nothing and wait for the next run.
+    // 1. Wait until all user data is loaded before making any decisions.
     if (isUserLoading || (user && isUserDataLoading)) {
       return;
     }
 
-    // Condition 2: No authenticated user found after loading.
+    // 2. No user is authenticated. Redirect to the welcome/login flow.
     if (!user) {
       router.replace('/welcome');
       return;
     }
+    
+    // --- From here, `user` is guaranteed to exist. ---
 
-    // From here, `user` object is guaranteed to exist.
-
-    // Condition 3: Ghost user - Auth user exists, but Firestore doc doesn't.
+    // 3. Ghost user case: Authenticated, but no corresponding document in Firestore.
     if (!userData) {
-      if (cleanupStarted.current) return; // Prevent this logic from running multiple times
+      // This guard prevents the cleanup logic from running multiple times during re-renders.
+      if (cleanupStarted.current) return;
       cleanupStarted.current = true;
-
+      
       console.error("CRITICAL: User document not found for authenticated user:", user.uid);
       
       toast({ 
@@ -205,16 +206,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           duration: 10000
       });
 
-      // Forceful cleanup and redirect
+      // Forceful cleanup. This does not wait for async operations. It fires and forgets.
       fetch('/api/auth/session', { method: 'DELETE' });
       localStorage.clear();
-      router.replace('/signup');
+      
+      // Force a hard redirect to break out of any React rendering loops.
+      window.location.href = '/signup';
       return;
     }
 
-    // From here, `user` and `userData` are guaranteed to exist.
-
-    // Condition 4: Wrong role.
+    // 4. User is valid, but is not a 'User'. Sign out and redirect to admin login.
     if (userData.role !== 'User') {
       auth.signOut().then(() => {
           fetch('/api/auth/session', { method: 'DELETE' });
@@ -223,13 +224,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Condition 5: PIN not set.
+    // 5. User is valid, but PIN is not set. Redirect to setup.
     if (!userData.pin && pathname !== '/setup-pin') {
       router.replace(`/setup-pin?uid=${user.uid}`);
       return;
     }
     
-    // Condition 6: PIN reset requested.
+    // 6. User is valid and a PIN reset has been requested.
     if (sessionStorage.getItem('isPinReset') === 'true') {
         sessionStorage.removeItem('isPinReset');
         clearUserPin(user.uid).then((result) => {
@@ -241,6 +242,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             }
         });
     }
+
   }, [user, isUserLoading, userData, isUserDataLoading, auth, router, pathname]);
 
   // This flag determines if we have a "valid" user state to render the content.
