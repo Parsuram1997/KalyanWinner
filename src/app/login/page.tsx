@@ -54,9 +54,9 @@ export default function LoginPage() {
     setIsLoading(true);
 
     if (!auth || !firestore) {
-      toast({ variant: "destructive", title: "Authentication not ready" });
-      setIsLoading(false);
-      return;
+        toast({ variant: "destructive", title: "Authentication not ready" });
+        setIsLoading(false);
+        return;
     }
     
     const isMobile = !identifier.includes('@') && /^\d{10,15}$/.test(identifier);
@@ -97,12 +97,9 @@ export default function LoginPage() {
                 localStorage.setItem('lastUserName', userData.name || 'User');
                 localStorage.setItem('lastUserCustomId', userData.customId || '');
                 
-                if (userData.pin) {
-                    router.push("/dashboard");
-                } else {
-                    toast({ title: "Setup PIN", description: "Please create a PIN for faster logins." });
-                    router.push(`/setup-pin?uid=${user.uid}`);
-                }
+                // Always redirect to dashboard after successful login
+                router.push("/dashboard");
+
             } else {
                 toast({ variant: "destructive", title: "Access Denied", description: "Please use the correct portal." });
                 await auth.signOut();
