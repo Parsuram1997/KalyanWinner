@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, Wallet, PiggyBank, Trophy } from "lucide-react";
+import { DollarSign, Wallet, PiggyBank, Trophy, AlertTriangle, Lock } from "lucide-react";
 import Link from "next/link";
 import {
   Table,
@@ -390,6 +390,24 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+       {!isUserDataLoading && userData && !userData.pin && (
+            <Card className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white border-0 shadow-lg">
+                <CardHeader className="flex flex-row items-center gap-4">
+                    <AlertTriangle className="h-8 w-8 text-white" />
+                    <div>
+                        <CardTitle>Secure Your Account</CardTitle>
+                        <CardDescription className="text-white/90">
+                            Create a 4-digit PIN for faster and more secure access to your account.
+                        </CardDescription>
+                    </div>
+                </CardHeader>
+                <CardFooter>
+                    <Button asChild className="bg-white text-black hover:bg-white/90 font-bold">
+                        <Link href="/setup-pin"><Lock className="mr-2 h-4 w-4" />Setup PIN Now</Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        )}
       {/* Desktop Layout */}
       <div className="hidden md:grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         <WalletCard 

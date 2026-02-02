@@ -21,12 +21,9 @@ import { createUser } from '@/app/actions/user-actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { states, districts } from '@/lib/locations';
 import { Loader } from 'lucide-react';
-import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 
 function SignupForm() {
   const router = useRouter();
-  const auth = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedState, setSelectedState] = useState<string | null>(null);
 
@@ -35,7 +32,6 @@ function SignupForm() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
 
@@ -52,7 +48,7 @@ function SignupForm() {
     const userData: any = {
       name: formData.get('name') as string,
       mobile: formData.get('mobile') as string,
-      email: email,
+      email: formData.get('email') as string,
       state: states.find(s => s.value === (formData.get('state') as string))?.label || '',
       district:
         districts[formData.get('state') as string]?.find(
@@ -64,43 +60,19 @@ function SignupForm() {
     };
 
     try {
-      // 1. Create user in database and auth
-      const result = await createUser(userData);
-
-      if (result.success && auth) {
-        // 2. Sign the user in on the client
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // 3. Explicitly create server session
-        const idToken = await user.getIdToken();
-        await fetch('/api/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-        });
-
-        // 4. Save necessary info to local storage for PIN login
-        localStorage.setItem('lastUserUid', user.uid);
-        localStorage.setItem('lastUserName', user.displayName || 'User');
-        localStorage.setItem('lastUserCustomId', result.customId);
-
-        // 5. Redirect to PIN setup
-        toast({
-          title: 'Signup Successful',
-          description: 'Your account has been created. Please set up your PIN.',
-        });
-        router.push(`/setup-pin?uid=${user.uid}`);
-
-      } else {
-          throw new Error('Failed to create user or authentication service is not available.');
-      }
+      await createUser(userData);
+      toast({
+        title: 'Signup Successful',
+        description: 'Your account has been created. Please log in.',
+      });
+      router.push('/login');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Signup Failed',
         description: error.message || 'An unexpected error occurred.',
       });
+    } finally {
       setIsLoading(false);
     }
   };
