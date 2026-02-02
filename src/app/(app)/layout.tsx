@@ -169,6 +169,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const firestore = useFirestore();
   const auth = useAuth();
+  const cleanupStarted = useRef(false);
 
   const userDocRef = useMemoFirebase(
     () => (firestore && user ? doc(firestore, "users", user.uid) : null),
@@ -176,13 +177,55 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
   const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
 
-  // This single useEffect handles all auth-related side-effects.
   useEffect(() => {
-    // This effect only contains logic that *can* run on every render or when dependencies change.
-    // The "ghost user" logic is handled separately below to avoid hook-in-conditional errors.
+    // Don't do anything until all data has been loaded.
+    if (isUserLoading || (user && isUserDataLoading)) {
+      return;
+    }
+
+    // CASE 1: No user authenticated. Redirect to welcome.
+    if (!user) {
+      router.replace('/welcome');
+      return;
+    }
+
+    // CASE 2: Ghost user (Auth user exists, but no Firestore doc).
+    if (!userData) {
+      if (cleanupStarted.current) return;
+      cleanupStarted.current = true;
+
+      console.error("CRITICAL: User document not found for authenticated user:", user.uid);
+      
+      toast({ 
+          variant: "destructive", 
+          title: "Account Error", 
+          description: "Your account data could not be found. You will be redirected to sign up.",
+          duration: 10000
+      });
+
+      fetch('/api/auth/session', { method: 'DELETE' });
+      localStorage.clear();
+      router.replace('/signup');
+      return;
+    }
     
-    // A. Pin reset logic
-    if (user && sessionStorage.getItem('isPinReset') === 'true') {
+    // CASE 3: User is not a 'User' role. Log out and redirect.
+    if (userData.role !== 'User') {
+      auth.signOut().then(() => {
+          fetch('/api/auth/session', { method: 'DELETE' });
+          router.replace('/login');
+      });
+      return;
+    }
+
+    // CASE 4: PIN is not set. Redirect to setup.
+    if (!userData.pin && pathname !== '/setup-pin') {
+      router.replace(`/setup-pin?uid=${user.uid}`);
+      return;
+    }
+    
+    // CASE 5: PIN reset requested.
+    if (sessionStorage.getItem('isPinReset') === 'true') {
         sessionStorage.removeItem('isPinReset');
         clearUserPin(user.uid).then((result) => {
             if (result.success) {
@@ -192,81 +235,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 toast({ variant: "destructive", title: "Error", description: "Could not clear PIN." });
             }
         });
-        return; // Don't continue to other checks
     }
 
-  }, [user, auth, router]);
+  }, [user, isUserLoading, userData, isUserDataLoading, auth, router, pathname]);
 
-
-  // 1. Primary loading states.
+  // Show loading screen while waiting for auth state or user doc.
   if (isUserLoading || (user && isUserDataLoading)) {
     return <LoadingScreen />;
   }
 
-  // 2. No user is authenticated.
-  if (!user) {
-    router.replace('/welcome');
+  // If loading is done, but the conditions in useEffect are not met yet,
+  // we show a loading screen while the effect runs and redirects.
+  if (!user || !userData || userData.role !== 'User' || (!userData.pin && pathname !== '/setup-pin')) {
     return <LoadingScreen />;
   }
 
-  // 3. Ghost user case: Authenticated, but no corresponding document in Firestore.
-  if (!userData) {
-    return <GhostUserHandler user={user} auth={auth} />;
-  }
-
-  // 4. Role check: Ensure the user has the 'User' role.
-  if (userData.role !== 'User') {
-      auth.signOut().then(() => {
-          fetch('/api/auth/session', { method: 'DELETE' });
-          router.replace('/login');
-      });
-      return <LoadingScreen />;
-  }
-
-  // 5. PIN check: Ensure user has a PIN set.
-  if (!userData.pin && pathname !== '/setup-pin') {
-      router.replace(`/setup-pin?uid=${user.uid}`);
-      return <LoadingScreen />;
-  }
-  
-  // 6. All checks passed. Render the main application layout.
+  // All checks passed, render the actual app content.
   return <AppLayoutContent>{children}</AppLayoutContent>;
-}
-
-
-// Helper component to handle the "ghost user" case.
-function GhostUserHandler({ user, auth }: { user: any, auth: any }) {
-    const router = useRouter();
-    const cleanupStarted = useRef(false);
-
-    useEffect(() => {
-        // This check ensures the logic inside runs ONLY ONCE.
-        if (cleanupStarted.current) {
-            return;
-        }
-        cleanupStarted.current = true;
-
-        console.error("CRITICAL: User document not found for authenticated user:", user.uid);
-        
-        toast({ 
-            variant: "destructive", 
-            title: "Account Error", 
-            description: "Your account data could not be found. You will be redirected to sign up.",
-            duration: 10000
-        });
-
-        // Perform the hard logout
-        // 1. Clear the server session cookie. This is important.
-        fetch('/api/auth/session', { method: 'DELETE' });
-        // 2. Clear all local data associated with the user.
-        localStorage.clear();
-        
-        // 3. Force a redirect to the signup page. This is the only redirect.
-        // We use router.replace to prevent the user from navigating back to the broken state.
-        router.replace('/signup');
-
-    }, [user, auth, router]); // Keep dependencies, but the ref guard prevents re-execution.
-
-    // Show a loading screen while the redirect is happening.
-    return <LoadingScreen />;
 }
