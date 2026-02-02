@@ -20,11 +20,15 @@ export async function getEmailForMobile(mobile: string): Promise<{ email: string
     }
     
     const usersRef = firestore.collection("users");
-    const q = usersRef.where("mobile", "==", numberToQuery).limit(1);
+    // Ensure we only find users with the 'User' role to prevent portal conflicts.
+    const q = usersRef
+      .where("mobile", "==", numberToQuery)
+      .where("role", "==", "User")
+      .limit(1);
     const querySnapshot = await q.get();
 
     if (querySnapshot.empty) {
-      return { email: null, error: 'No account is associated with this mobile number.' };
+      return { email: null, error: 'No user account is associated with this mobile number.' };
     }
 
     const email = querySnapshot.docs[0].data().email;
@@ -61,4 +65,3 @@ export async function signOut() {
   const cookieStore = await cookies();
   cookieStore.delete('session');
 }
-
