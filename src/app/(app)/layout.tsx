@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Link from "next/link";
@@ -207,15 +205,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         
         if (!isRedirecting) {
             setIsRedirecting(true);
-            // Sign out on the client first, then clear server session and redirect.
-            auth.signOut().then(() => {
-                fetch('/api/auth/session', { method: 'DELETE' }); // Fire and forget
-                router.replace('/signup');
-            }).catch(err => {
-                // Even if client signout fails, try to redirect
-                console.error("Client signout failed:", err);
-                router.replace('/signup');
-            });
+            // Don't wait for signOut. Just delete the server session, clear local storage, and redirect.
+            // The auth state will be corrected on the next page load.
+            fetch('/api/auth/session', { method: 'DELETE' });
+            localStorage.removeItem('lastUserUid');
+            localStorage.removeItem('lastUserName');
+            localStorage.removeItem('lastUserCustomId');
+            localStorage.removeItem('lastUserMobile');
+            router.replace('/signup');
         }
         return;
     }
