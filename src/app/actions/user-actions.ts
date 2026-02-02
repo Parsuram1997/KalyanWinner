@@ -24,6 +24,9 @@ export async function createUser(userData: any) {
     throw new Error('Missing required fields: email, password, name, and mobile are required.');
   }
 
+  if (!firestore || !auth) {
+    throw new Error("Firebase services are not initialized.");
+  }
   let firebaseUser: any = null;
 
   try {
@@ -92,6 +95,9 @@ export async function createUser(userData: any) {
     // If the Firebase Auth user was created but the Firestore doc failed, delete the Auth user.
     if (firebaseUser && firebaseUser.uid) {
       try {
+        if (!auth) {
+            throw new Error("Auth is not initialized.");
+        }
         await auth.deleteUser(firebaseUser.uid);
         console.log(`Cleaned up orphaned Firebase Auth user: ${firebaseUser.uid}`);
       } catch (cleanupError) {
@@ -108,6 +114,9 @@ export async function createUser(userData: any) {
 
 export async function updateUser(userId: string, userData: any) {
     try {
+        if (!firestore) {
+          throw new Error("Firestore is not initialized.");
+        }
         const userDocRef = firestore.collection('users').doc(userId);
         await userDocRef.update({
             ...userData,
@@ -122,6 +131,9 @@ export async function updateUser(userId: string, userData: any) {
 
 export async function deleteUser(userId: string) {
     try {
+        if (!auth) {
+            throw new Error("Auth is not initialized.");
+        }
         // This will trigger the onDelete cloud function to clean up firestore data
         await auth.deleteUser(userId);
         return { success: true };
@@ -133,6 +145,9 @@ export async function deleteUser(userId: string) {
 
 export async function updateUserStatus(userId: string, status: 'Active' | 'Inactive') {
     try {
+        if (!firestore) {
+          throw new Error("Firestore is not initialized.");
+        }
         const userDocRef = firestore.collection('users').doc(userId);
         await userDocRef.update({
             status: status,
@@ -161,6 +176,9 @@ export async function updateUserPaymentDetails(data: {
   }
 
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const userDocRef = firestore.collection('users').doc(userId);
     const updateData: { [key: string]: any } = {
         paymentMethod,

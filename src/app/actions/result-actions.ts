@@ -22,6 +22,9 @@ interface KalyanResultPayload {
  */
 export async function createKalyanResult(resultData: KalyanResultPayload) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const resultsRef = firestore.collection('kalyan_results');
 
     // Prevent duplicate results for the same market and date
@@ -65,6 +68,9 @@ export async function createKalyanResult(resultData: KalyanResultPayload) {
  */
 export async function updateKalyanResult(resultId: string, resultData: Partial<KalyanResultPayload>) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const resultRef = firestore.collection('kalyan_results').doc(resultId);
 
     // Get the document BEFORE updating to safely get the market name
@@ -103,6 +109,9 @@ export async function updateKalyanResult(resultId: string, resultData: Partial<K
  */
 export async function deleteKalyanResult(resultId: string) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const resultRef = firestore.collection('kalyan_results').doc(resultId);
 
     const doc = await resultRef.get();

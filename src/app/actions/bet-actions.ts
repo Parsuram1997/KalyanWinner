@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 
 export async function updateBet(betId: string, data: { number?: string; amount?: number }) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const betRef = firestore.collection("kalyan_bets").doc(betId);
     await betRef.update(data);
     revalidatePath("/admin/bet-ledger", "page");
@@ -17,6 +20,9 @@ export async function updateBet(betId: string, data: { number?: string; amount?:
 
 export async function deleteBet(betId: string) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const betRef = firestore.collection("kalyan_bets").doc(betId);
     await betRef.delete();
     revalidatePath("/admin/bet-ledger", "page");
@@ -32,9 +38,12 @@ export async function deleteMultipleBets(betIds: string[]) {
     throw new Error("No bet IDs provided for deletion.");
   }
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const batch = firestore.batch();
     betIds.forEach(id => {
-      const betRef = firestore.collection("kalyan_bets").doc(id);
+      const betRef = firestore!.collection("kalyan_bets").doc(id);
       batch.delete(betRef);
     });
     await batch.commit();

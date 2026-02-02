@@ -11,6 +11,9 @@ export async function grantCredit(userId: string, amount: number, remarks: strin
     throw new Error('Invalid userId or amount provided.');
   }
 
+  if (!firestore) {
+    throw new Error("Firestore is not initialized.");
+  }
   const userRef = firestore.collection('users').doc(userId);
   const transactionRef = firestore.collection('transactions').doc();
 
@@ -74,6 +77,9 @@ export async function manualDeposit(userId: string, amount: number, remarks: str
     throw new Error('Invalid userId or amount provided.');
   }
 
+  if (!firestore) {
+    throw new Error("Firestore is not initialized.");
+  }
   const userRef = firestore.collection('users').doc(userId);
 
   try {
@@ -100,7 +106,9 @@ export async function manualDeposit(userId: string, amount: number, remarks: str
             transaction.update(userRef, { 
                 creditBalance: FieldValue.increment(-amountToRepay)
             });
-
+            if (!firestore) {
+                throw new Error("Firestore is not initialized.");
+            }
             const creditRepayTxRef = firestore.collection('transactions').doc();
             transaction.set(creditRepayTxRef, {
                 userId, userName: userData.name, type: 'Credit Repayment', 
@@ -113,7 +121,9 @@ export async function manualDeposit(userId: string, amount: number, remarks: str
       if (amountToDeposit > 0) {
           transaction.update(userRef, { depositBalance: FieldValue.increment(amountToDeposit) });
       }
-
+      if (!firestore) {
+        throw new Error("Firestore is not initialized.");
+      }
       const depositTxRef = firestore.collection('transactions').doc();
       transaction.set(depositTxRef, {
           userId, userName: userData.name, type: 'Deposit', amount, 
@@ -143,6 +153,9 @@ export async function manualWithdrawal(userId: string, amount: number, remarks: 
     throw new Error('Invalid userId or amount provided.');
   }
 
+  if (!firestore) {
+    throw new Error("Firestore is not initialized.");
+  }
   const userRef = firestore.collection('users').doc(userId);
   const transactionRef = firestore.collection('transactions').doc();
 
@@ -222,6 +235,9 @@ export async function createTransaction(data: {
         throw new Error('UTR is required for deposit transactions.');
     }
 
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const userRef = firestore.collection('users').doc(userId);
     const transactionRef = firestore.collection('transactions').doc();
 
@@ -285,6 +301,9 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
         throw new Error('Invalid transactionId or status provided.');
     }
 
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const transactionRef = firestore.collection('transactions').doc(transactionId);
 
     try {
@@ -298,7 +317,9 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
             if (!transactionData || transactionData.status !== 'Pending') {
                  throw new Error('Only PENDING requests can be updated.');
             }
-
+            if (!firestore) {
+                throw new Error("Firestore is not initialized.");
+            }
             const userRef = firestore.collection('users').doc(transactionData.userId);
             
             if (status === 'Completed') {
@@ -329,7 +350,9 @@ export async function updateTransactionStatus(transactionId: string, status: 'Co
                             t.update(userRef, { 
                                 creditBalance: FieldValue.increment(-amountToRepay)
                             });
-
+                            if (!firestore) {
+                                throw new Error("Firestore is not initialized.");
+                            }
                             const creditRepayTxRef = firestore.collection('transactions').doc();
                             t.set(creditRepayTxRef, {
                                 userId: transactionData.userId, userName: userData.name, type: 'Credit Repayment', 
@@ -371,6 +394,9 @@ export async function deleteTransaction(transactionId: string) {
         throw new Error('Transaction ID is required.');
     }
 
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const transactionRef = firestore.collection('transactions').doc(transactionId);
 
     try {
@@ -384,6 +410,9 @@ export async function deleteTransaction(transactionId: string) {
             if (!transactionData) return;
 
             if (transactionData.status === 'Completed') {
+                if (!firestore) {
+                    throw new Error("Firestore is not initialized.");
+                }
                 const userRef = firestore.collection('users').doc(transactionData.userId);
                 if (transactionData.type === 'Deposit') {
                     // Fallback for older transactions that may not have netAmount

@@ -9,6 +9,9 @@ export async function createBetType(betTypeData: {
   description: string;
 }) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     await firestore.collection("bet_types").add({
       ...betTypeData,
       status: "Active", // Default status
@@ -27,6 +30,9 @@ export async function updateBetType(betTypeId: string, betTypeData: {
   status?: "Active" | "Inactive";
 }) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     await firestore.collection("bet_types").doc(betTypeId).update(betTypeData);
     revalidatePath("/admin/manage-bets");
     return { success: true };
@@ -38,6 +44,9 @@ export async function updateBetType(betTypeId: string, betTypeData: {
 
 export async function deleteBetType(betTypeId: string) {
     try {
+        if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
         await firestore.collection("bet_types").doc(betTypeId).delete();
         revalidatePath("/admin/manage-bets");
         return { success: true };

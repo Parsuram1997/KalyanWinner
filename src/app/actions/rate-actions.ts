@@ -6,6 +6,9 @@ import { firestore } from "@/lib/firebase-admin";
 // A new, more powerful function that creates a rate if it doesn't exist or updates it if it does.
 export async function upsertGameRate(rateData: { name: string; betAmount: number; payoutAmount: number }) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const ratesRef = firestore.collection("game_rates");
     const querySnapshot = await ratesRef.where('name', '==', rateData.name).limit(1).get();
 
@@ -27,6 +30,9 @@ export async function upsertGameRate(rateData: { name: string; betAmount: number
 
 export async function createGameRate(rateData: { name: string; betAmount: number; payoutAmount: number }) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     await firestore.collection("game_rates").add(rateData);
     return { success: true };
   } catch (error: any) {
@@ -40,6 +46,9 @@ export async function updateGameRate(rateId: string, rateData: {
   payoutAmount?: number;
 }) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     await firestore.collection("game_rates").doc(rateId).update(rateData);
     return { success: true };
   } catch (error: any) {
@@ -50,6 +59,9 @@ export async function updateGameRate(rateId: string, rateData: {
 
 export async function deleteGameRate(rateId: string) {
     try {
+        if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
         await firestore.collection("game_rates").doc(rateId).delete();
         return { success: true };
     } catch (error: any) {

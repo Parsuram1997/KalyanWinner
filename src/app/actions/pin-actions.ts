@@ -17,6 +17,9 @@ export async function setPinForUser(uid: string, pin: string): Promise<{ success
     }
 
     try {
+        if (!firestore) {
+            throw new Error("Firestore is not initialized.");
+        }
         const userDocRef = firestore.collection('users').doc(uid);
         const userDoc = await userDocRef.get();
         if (!userDoc.exists) {
@@ -50,6 +53,12 @@ export async function verifyPinForUser(uid: string, pin: string): Promise<{ succ
     }
 
     try {
+        if (!firestore) {
+            throw new Error("Firestore is not initialized.");
+        }
+        if (!auth) {
+            throw new Error("Auth is not initialized.");
+        }
         const userDocRef = firestore.collection('users').doc(uid);
         const userDoc = await userDocRef.get();
 
@@ -89,6 +98,9 @@ export async function clearUserPin(uid: string): Promise<{ success: true } | { s
     }
 
     try {
+        if (!firestore) {
+            throw new Error("Firestore is not initialized.");
+        }
         const userDocRef = firestore.collection('users').doc(uid);
         const userDoc = await userDocRef.get();
 

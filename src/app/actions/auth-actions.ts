@@ -6,6 +6,9 @@ import { cookies } from 'next/headers';
 
 export async function getEmailForMobile(mobile: string): Promise<{ email: string | null; error?: string }> {
   try {
+    if (!firestore) {
+      throw new Error('Firestore is not initialized.');
+    }
     let numberToQuery = mobile.trim();
 
     // Normalize the mobile number to 10 digits
@@ -50,7 +53,7 @@ export async function getSession() {
   try {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session')?.value;
-    if (!sessionCookie) {
+    if (!sessionCookie || !auth) {
       return null;
     }
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);

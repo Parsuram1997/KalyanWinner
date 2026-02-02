@@ -1,7 +1,7 @@
 
 import { auth } from '@/lib/firebase-admin';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 export async function POST(request: Request) {
   const { idToken } = await request.json();
@@ -14,32 +14,38 @@ export async function POST(request: Request) {
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
 
   try {
+    if (!auth) {
+      return NextResponse.json({ error: 'Auth service not initialized' }, { status: 500 });
+    }
     const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
-    const cookieStore = cookies();
     const isProduction = process.env.NODE_ENV === 'production';
     
-    cookieStore.set('session', sessionCookie, { 
+    const response = NextResponse.json({ status: 'success' });
+    response.cookies.set('session', sessionCookie, { 
       httpOnly: true, 
       secure: isProduction, 
       maxAge: expiresIn, 
       path: '/' 
     });
 
-    return NextResponse.json({ status: 'success' });
+    return response;
   } catch (error) {
     console.error('Error creating session cookie:', error);
     return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const sessionCookie = cookieStore.get('session');
+    if (!auth) {
+        return NextResponse.json({ error: 'Auth service not initialized' }, { status: 500 });
+    }
+    const sessionCookie = request.cookies.get('session');
+    const response = NextResponse.json({ status: 'success' });
 
     if (sessionCookie) {
         // Clear the cookie by setting its maxAge to 0
-        cookieStore.set('session', '', { 
+        response.cookies.set('session', '', { 
             httpOnly: true, 
             secure: process.env.NODE_ENV === 'production', 
             maxAge: 0, 
@@ -53,7 +59,7 @@ export async function DELETE() {
         }
     }
 
-    return NextResponse.json({ status: 'success' });
+    return response;
   } catch (error) {
       console.error('Error signing out:', error);
       return NextResponse.json({ error: 'Failed to sign out' }, { status: 500 });

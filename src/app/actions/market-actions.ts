@@ -17,6 +17,9 @@ export async function createMarket(marketData: {
   active: boolean;
 }) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     const standardizedMarketData = {
       ...marketData,
       name: toTitleCase(marketData.name),
@@ -35,6 +38,9 @@ export async function updateMarket(marketId: string, marketData: {
   active?: boolean;
 }) {
   try {
+    if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
     let standardizedMarketData: { [key: string]: any } = { ...marketData };
     if (marketData.name) {
       standardizedMarketData.name = toTitleCase(marketData.name);
@@ -51,6 +57,9 @@ export async function updateMarket(marketId: string, marketData: {
 
 export async function deleteMarket(marketId: string) {
     try {
+        if (!firestore) {
+      throw new Error("Firestore is not initialized.");
+    }
         await firestore.collection("markets").doc(marketId).delete();
         revalidatePath("/admin/manage-markets");
         return { success: true };

@@ -4,6 +4,9 @@ import { firestore as db } from '@/lib/firebase-admin';
 
 export async function GET() {
   try {
+    if (!db) {
+      throw new Error("Firestore is not initialized.");
+    }
     const usersRef = db.collection('users');
     const snapshot = await usersRef.limit(5).get(); // Get first 5 users for debugging
 

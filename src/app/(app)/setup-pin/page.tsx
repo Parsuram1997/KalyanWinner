@@ -68,7 +68,7 @@ const PinInput = ({ length = 4, onPinChange, autoFocus = false }: { length?: num
       {Array.from({ length }).map((_, index) => (
         <Input
           key={index}
-          ref={(el) => (inputRefs.current[index] = el)}
+          ref={(el) => { inputRefs.current[index] = el; }}
           type="tel"
           inputMode='numeric'
           maxLength={1}

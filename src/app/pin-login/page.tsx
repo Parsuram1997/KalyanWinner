@@ -72,7 +72,7 @@ const PinInput = ({ length = 4, onPinChange }: { length: number, onPinChange: (p
       {Array.from({ length }).map((_, index) => (
         <Input
           key={index}
-          ref={(el) => (inputRefs.current[index] = el)}
+          ref={(el) => { inputRefs.current[index] = el; }}
           type="tel" // Use tel for numeric keyboard on mobile
           inputMode='numeric'
           maxLength={1}
