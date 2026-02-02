@@ -27,10 +27,11 @@ export async function createUser(userData: any) {
 
     // 3. Create the user document in Firestore within the same process
     const userDocRef = firestore.collection('users').doc(firebaseUser.uid);
+    const customId = `KW${Date.now()}`;
 
     const newUser = {
       id: firebaseUser.uid,
-      customId: `KW${Date.now()}`,
+      customId: customId,
       name,
       mobile,
       email,
@@ -50,7 +51,7 @@ export async function createUser(userData: any) {
 
     await userDocRef.set(newUser);
 
-    return { success: true, uid: firebaseUser.uid };
+    return { success: true, uid: firebaseUser.uid, customId: customId };
 
   } catch (error: any) {
     // 4. If any step fails, attempt to clean up to prevent ghost users.

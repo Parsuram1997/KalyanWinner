@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { states, districts } from '@/lib/locations';
 import { Loader } from 'lucide-react';
 import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword, onIdTokenChanged } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 function SignupForm() {
   const router = useRouter();
@@ -64,33 +64,33 @@ function SignupForm() {
     };
 
     try {
+      // 1. Create user in database and auth
       const result = await createUser(userData);
 
       if (result.success && auth) {
-        // After successful user creation, sign the user in to create a session.
+        // 2. Sign the user in on the client
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Wait for the ID token to be processed by the server
-        onIdTokenChanged(auth, async idTokenUser => {
-          if (idTokenUser && idTokenUser.uid === user.uid) {
-            const idToken = await idTokenUser.getIdToken();
-            await fetch('/api/auth/session', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ idToken }),
-            });
-            
-            // Now that session is created, redirect to PIN setup.
-            toast({
-              title: 'Signup Successful',
-              description: 'Your account has been created. Please set up your PIN.',
-            });
-            router.push('/setup-pin');
-          }
+        // 3. Explicitly create server session
+        const idToken = await user.getIdToken();
+        await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
         });
+
+        // 4. Save necessary info to local storage for PIN login
+        localStorage.setItem('lastUserUid', user.uid);
+        localStorage.setItem('lastUserName', user.displayName || 'User');
+        localStorage.setItem('lastUserCustomId', result.customId);
+
+        // 5. Redirect to PIN setup
+        toast({
+          title: 'Signup Successful',
+          description: 'Your account has been created. Please set up your PIN.',
+        });
+        router.push('/setup-pin');
 
       } else {
           throw new Error('Failed to create user or authentication service is not available.');
@@ -103,7 +103,6 @@ function SignupForm() {
       });
       setIsLoading(false);
     }
-    // No need to set isLoading to false here, as the page will redirect on success.
   };
 
 
