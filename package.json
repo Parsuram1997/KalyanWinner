@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "FIREBASE_CONFIG='{\"projectId\": \"studio-7786701397-58781\"}' next dev",
-    "build": "NODE_ENV=production next build",
-    "start": "next start",
+    "build": "FIREBASE_SERVICE_ACCOUNT_KEY='$FIREBASE_SERVICE_ACCOUNT_KEY' NODE_ENV=production next build",
+    "start": "FIREBASE_SERVICE_ACCOUNT_KEY='$FIREBASE_SERVICE_ACCOUNT_KEY' next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
